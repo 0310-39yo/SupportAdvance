@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/congigs/" />
+  <Folder Name="/docs/" />
+  <Folder Name="/src/" />
+  <Folder Name="/src/Common/" />
+  <Folder Name="/src/Contexts/" />
+  <Folder Name="/src/Contexts/Samples/" />
+  <Folder Name="/src/Contexts/Samples/CarPreferences/" />
+  <Folder Name="/src/Crosscutting/" />
+  <Folder Name="/src/Presentation/" />
+  <Folder Name="/src/SharedKernel/" />
+  <Folder Name="/tests/" />
+</Solution>

@@ -1,0 +1,107 @@
+###############################################################################
+# ENCODING AND LINE ENDING STANDARD FOR THIS PROJECT
+#
+# POLICY: UTF-8 BOMなし with automatic line ending conversion
+#
+# Flow:
+#   1. Local Development
+#      → Encoding: UTF-8 BOMなし (via .editorconfig)
+#      → Line Endings: CRLF (via .editorconfig)
+#
+#   2. Git Commit (core.autocrlf = true)
+#      → Line Endings: CRLF → LF (automatic conversion)
+#      → Remote Repository: LF
+#
+#   3. Git Checkout (core.autocrlf = true)
+#      → Line Endings: LF → CRLF (automatic conversion)
+#      → Local Workspace: CRLF
+#
+# REQUIRED GIT CONFIGURATION:
+#   Windows: git config --global core.autocrlf true
+#   Mac/Linux: git config --global core.autocrlf input
+#
+# Note: .gitattributes uses text=auto to allow core.autocrlf to handle
+# line ending normalization automatically.
+###############################################################################
+
+# Set default behavior to automatically normalize line endings.
+* text=auto
+
+# C# source files
+*.cs text
+
+# Markdown files
+*.md text
+
+# JSON files
+*.json text
+
+# XML files
+*.xml text
+*.csproj text
+*.config text
+
+# YAML files
+*.yml text
+*.yaml text
+
+###############################################################################
+# Set default behavior for command prompt diff.
+#
+# This is need for earlier builds of msysgit that does not have it on by
+# default for csharp files.
+# Note: This is only used by command line
+###############################################################################
+#*.cs     diff=csharp
+
+###############################################################################
+# Set the merge driver for project and solution files
+#
+# Merging from the command prompt will add diff markers to the files if there
+# are conflicts (Merging from VS is not affected by the settings below, in VS
+# the diff markers are never inserted). Diff markers may cause the following 
+# file extensions to fail to load in VS. An alternative would be to treat
+# these files as binary and thus will always conflict and require user
+# intervention with every merge. To do so, just uncomment the entries below
+###############################################################################
+#*.sln       merge=binary
+#*.csproj    merge=binary
+#*.vbproj    merge=binary
+#*.vcxproj   merge=binary
+#*.vcproj    merge=binary
+#*.dbproj    merge=binary
+#*.fsproj    merge=binary
+#*.lsproj    merge=binary
+#*.wixproj   merge=binary
+#*.modelproj merge=binary
+#*.sqlproj   merge=binary
+#*.wwaproj   merge=binary
+
+###############################################################################
+# behavior for image files
+#
+# image files are treated as binary by default.
+###############################################################################
+#*.jpg   binary
+#*.png   binary
+#*.gif   binary
+
+###############################################################################
+# diff behavior for common document formats
+# 
+# Convert binary document formats to text before diffing them. This feature
+# is only available from the command line. Turn it on by uncommenting the 
+# entries below.
+###############################################################################
+#*.doc   diff=astextplain
+#*.DOC   diff=astextplain
+#*.docx  diff=astextplain
+#*.DOCX  diff=astextplain
+#*.dot   diff=astextplain
+#*.DOT   diff=astextplain
+#*.pdf   diff=astextplain
+#*.PDF   diff=astextplain
+#*.rtf   diff=astextplain
+#*.RTF   diff=astextplain
+
+
