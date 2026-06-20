@@ -5,9 +5,14 @@
   <Folder Name="/src/Common/" />
   <Folder Name="/src/Contexts/" />
   <Folder Name="/src/Contexts/Samples/" />
-  <Folder Name="/src/Contexts/Samples/CarPreferences/" />
+  <Folder Name="/src/Contexts/Samples/CarPreferences/">
+    <Project Path="src/Contexts/Samples/CarPreferences/SupportAdvance.Contexts.Samples.CarPreference.Application/SupportAdvance.Contexts.Samples.CarPreference.Application.csproj" Id="7cc6612a-f8c9-48b1-99f3-04605047148a" />
+    <Project Path="src/Contexts/Samples/CarPreferences/SupportAdvance.Contexts.Samples.CarPreference.Domain/SupportAdvance.Contexts.Samples.CarPreference.Domain.csproj" Id="fce83603-ca16-4e85-beee-8ea1b3ac6855" />
+    <Project Path="src/Contexts/Samples/CarPreferences/SupportAdvance.Contexts.Samples.CarPreference.Infrastructure/SupportAdvance.Contexts.Samples.CarPreference.Infrastructure.csproj" Id="1acae213-3fbb-4781-9b67-2d25eb26c170" />
+  </Folder>
   <Folder Name="/src/Crosscutting/" />
   <Folder Name="/src/Presentation/" />
   <Folder Name="/src/SharedKernel/" />
   <Folder Name="/tests/" />
+  <Folder Name="/tests/Common/" />
 </Solution>
