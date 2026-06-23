@@ -12,7 +12,18 @@
   </Folder>
   <Folder Name="/src/Crosscutting/" />
   <Folder Name="/src/Presentation/" />
-  <Folder Name="/src/SharedKernel/" />
+  <Folder Name="/src/SharedKernel/">
+    <Project Path="SupportAdvance.ShaedKernel.Domain/SupportAdvance.ShaedKernel.Domain.csproj" Id="19175723-33b9-4a78-bc42-1b772bd0e66e" />
+  </Folder>
   <Folder Name="/tests/" />
   <Folder Name="/tests/Common/" />
+  <Folder Name="/tests/Contexts/" />
+  <Folder Name="/tests/Contexts/Samples/" />
+  <Folder Name="/tests/Contexts/Samples/CarPreferences/" />
+  <Folder Name="/tests/Crosscutting/" />
+  <Folder Name="/tests/Presentation/" />
+  <Folder Name="/tests/SharedKernel/" />
+  <Folder Name="/tests/SharedKernel/Entities/" />
+  <Folder Name="/tests/SharedKernel/Enums/" />
+  <Folder Name="/tests/SharedKernel/ValueObjects/" />
 </Solution>
