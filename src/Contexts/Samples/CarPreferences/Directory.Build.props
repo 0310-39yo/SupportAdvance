@@ -1,0 +1,5 @@
+<Project>
+  <PropertyGroup>
+    <RootNamespace>SupportAdvance.Contexts.Samples.CarPreferences.$(MSBuildProjectName)</RootNamespace>
+  </PropertyGroup>
+</Project>

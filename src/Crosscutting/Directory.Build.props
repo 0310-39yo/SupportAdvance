@@ -1,0 +1,5 @@
+<Project>
+  <PropertyGroup>
+    <RootNamespace>SupportAdvance.Crosscutting.$(MSBuildProjectName)</RootNamespace>
+  </PropertyGroup>
+</Project>

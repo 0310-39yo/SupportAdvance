@@ -1,0 +1,5 @@
+<Project>
+  <PropertyGroup>
+    <RootNamespace>SupportAdvance.Presentation.$(MSBuildProjectName)</RootNamespace>
+  </PropertyGroup>
+</Project>
