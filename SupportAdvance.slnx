@@ -8,17 +8,21 @@
   <Folder Name="/docs/Crosscutting/" />
   <Folder Name="/docs/Presentation/" />
   <Folder Name="/docs/SharedKernel/" />
-  <Folder Name="/docs/SharedKernel/Entities/" />
-  <Folder Name="/docs/SharedKernel/Enums/" />
   <Folder Name="/docs/SharedKernel/ValueObjects/" />
   <Folder Name="/src/" />
   <Folder Name="/src/Common/" />
   <Folder Name="/src/Contexts/" />
   <Folder Name="/src/Contexts/Samples/" />
-  <Folder Name="/src/Contexts/Samples/CarPreferences/" />
+  <Folder Name="/src/Contexts/Samples/CarPreferences/">
+    <Project Path="src/Contexts/Samples/CarPreferences/Application/Application.csproj" Id="ee349753-46e1-497e-a4d2-3cca66e46d7e" />
+    <Project Path="src/Contexts/Samples/CarPreferences/Domain/Domain.csproj" Id="06949d77-e64d-443c-b134-301c93ac8477" />
+    <Project Path="src/Contexts/Samples/CarPreferences/Infrastructure/Infrastructure.csproj" Id="ee0c55d0-7b0f-43ca-9d5a-c4968381e27c" />
+  </Folder>
   <Folder Name="/src/Crosscutting/" />
   <Folder Name="/src/Presentation/" />
-  <Folder Name="/src/SharedKernel/" />
+  <Folder Name="/src/SharedKernel/">
+    <Project Path="src/SharedKernel/Domain/Domain.csproj" Id="4bbac7ff-5566-4c57-863d-b7734cb4222f" />
+  </Folder>
   <Folder Name="/tests/" />
   <Folder Name="/tests/Common/" />
   <Folder Name="/tests/Contexts/" />
@@ -27,7 +31,5 @@
   <Folder Name="/tests/Crosscutting/" />
   <Folder Name="/tests/Presentation/" />
   <Folder Name="/tests/SharedKernel/" />
-  <Folder Name="/tests/SharedKernel/Entities/" />
-  <Folder Name="/tests/SharedKernel/Enums/" />
   <Folder Name="/tests/SharedKernel/ValueObjects/" />
 </Solution>

@@ -1,0 +1,5 @@
+<Project>
+  <PropertyGroup>
+    <RootNamespace>SupportAdvance.Tests.SharedKernel.$(MSBuildProjectName)</RootNamespace>
+  </PropertyGroup>
+</Project>
