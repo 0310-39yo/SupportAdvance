@@ -142,6 +142,7 @@ SupportAdvance のクリーンアーキテクチャ構成層は以下とする�
 - 上位層（外側）は下位層（内側）の **具象クラスに依存しない**
 - **必ずインターフェース / 抽象基底クラスを経由する**
   
+
 例：
 ```csharp
 // ❌ NG：具象実装に直接依存
@@ -155,20 +156,20 @@ public class OrderUseCase {
 }
 ```
 
-- **インターフェースの定義位置**
-  - インターフェースは、それを使用するレイヤと同じレイヤに定義する
-  - 実装は、より下位（内側）のレイヤに配置する
-  - 特に Repository インターフェースは Application層に定義する
+- **インターフェース（ポート）の定義位置**
+  - インターフェースは、**それを必要とする最も内側の層に定義する**
+  - 実装（アダプター）は、**より下位のレイヤに配置する**
+  - **特に Repository インターフェースは Domain層に定義する**（ポートの原則）
 
 例：
 ```
-Application層: IOrderRepository（インターフェース定義）
-Infrastructure層: SqlServerOrderRepository（実装）
+Domain層: IOrderRepository（インターフェース定義 / ポート）
+Infrastructure層: SqlServerOrderRepository（実装 / アダプター）
 ```
 
 ```
-Presentation層: IViewService（インターフェース定義）
-Infrastructure層: ViewService（実装）
+Presentation層: IOrderPresenter（インターフェース定義 / ポート）
+Presentation層: OrderPresenter（実装 / アダプター）
 ```
 
 #### 3.3.4 依存性注入（DI）の原則
@@ -192,28 +193,41 @@ Infrastructure層: ViewService（実装）
   - UseCase インターフェース（Interactor）：実行可能な操作を定義
 - UseCase の出力ポート
   - Response DTO：戻り値の構造を定義
-  - Repository インターフェース：永続化層へのアクセスポイント
+  - Repository インターフェース（Domain層で定義）：永続化層へのアクセスポイント
   - Presenter インターフェース：プレゼンテーション層への結果返却ポイント
 
 例：
 ```csharp
-// Application層：入出力ポート定義
+// Domain層：Repository ポート定義
+public interface IOrderRepository {
+    void Save(Order order);
+    Order GetById(string id);
+}
+
+// Application層：UseCase ポート定義
 public interface ICreateOrderUseCase {
     void Execute(CreateOrderRequest request);
 }
 
+// Application層：Presenter ポート定義
 public interface IOrderPresenter {
     void Present(CreateOrderResponse response);
 }
 
 // Application層：UseCase実装
 public class CreateOrderInteractor : ICreateOrderUseCase {
-    private readonly IOrderRepository _repository;
+    private readonly IOrderRepository _repository;  // Domain層のポート
     private readonly IOrderPresenter _presenter;
     
     public void Execute(CreateOrderRequest request) {
         // ドメインロジック実行
+        var order = new Order(/* ... */);
+        
+        // Domain層のRepository経由で永続化
+        _repository.Save(order);
+        
         // Presenter経由で結果を返却
+        _presenter.Present(new CreateOrderResponse { /* ... */ });
     }
 }
 ```
@@ -440,7 +454,366 @@ public class OrderAggregateRoot {
 - **Transient**：毎回新しいインスタンスを生成
   - 用途：ステートフルなオブジェクト（DTO, ViewModel等）
 
-## 5. ドメイン層の原則
+## 5. マルチコンテキスト構成でのプロジェクト依存関係
+
+### 5.1 プロジェクト構成と依存関係の原則
+
+SupportAdvance は **Presentation層が全体共通**で、各 **Bounded Context が Domain / Application / Infrastructure** のみを持つ構成である。
+
+```
+src/
+├── Common/                         （全層から参照可能）
+├── SharedKernel/Domain/            （複数Contextで共有）
+├── Crosscutting/                   （横断的関心事）
+├── Presentation/                   （全体共通のUI層）
+└── Contexts/
+    ├── SampleContext1/
+    │   ├── Domain/
+    │   ├── Application/
+    │   └── Infrastructure/
+    └── SampleContext2/
+        ├── Domain/
+        ├── Application/
+        └── Infrastructure/
+```
+
+### 5.1.1 依存関係ダイアグラム（全体像）
+
+```mermaid
+graph TB
+    Common["📦 Common<br/>参照先: なし"]
+    
+    SK["📦 SharedKernel.Domain<br/>参照先: Common"]
+    CC["📦 Crosscutting<br/>参照先: Common / SharedKernel.Domain"]
+    
+    subgraph Context1["Context1（Bounded Context）"]
+        D1["📦 Context1.Domain<br/>参照先: Common / SharedKernel<br/>責務: Entity / ValueObject<br/>ポート定義"]
+        A1["📦 Context1.Application<br/>参照先: Common / SharedKernel / Domain<br/>責務: UseCase実装"]
+        I1["📦 Context1.Infrastructure<br/>参照先: Domain / Application / Crosscutting<br/>責務: ポート実装"]
+        D1 --> A1
+        A1 --> I1
+    end
+    
+    subgraph Context2["Context2（Bounded Context）"]
+        D2["📦 Context2.Domain<br/>参照先: Common / SharedKernel<br/>責務: Entity / ValueObject<br/>ポート定義"]
+        A2["📦 Context2.Application<br/>参照先: Common / SharedKernel / Domain<br/>責務: UseCase実装"]
+        I2["📦 Context2.Infrastructure<br/>参照先: Domain / Application / Crosscutting<br/>責務: ポート実装"]
+        D2 --> A2
+        A2 --> I2
+    end
+    
+    Pres["📦 Presentation<br/>参照先: Common / SharedKernel / Crosscutting<br/>全Context.Infrastructure<br/>責務: UI/ViewModel"]
+    
+    Common --> SK
+    Common --> CC
+    Common --> D1
+    Common --> D2
+    SK --> D1
+    SK --> D2
+    SK --> Pres
+    CC --> I1
+    CC --> I2
+    I1 --> Pres
+    I2 --> Pres
+    
+    classDef foundation fill:#e1f5ff,stroke:#01579b,stroke-width:2px
+    classDef context fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef layer fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef presentation fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
+    
+    class Common,SK,CC foundation
+    class Context1,Context2 context
+    class D1,A1,I1,D2,A2,I2 layer
+    class Pres presentation
+```
+
+**ルール：**
+- ✅ **左から右への依存のみ許可**（内側→外側）
+- ❌ **右から左への参照は禁止**（循環依存防止）
+- ❌ **Context間での直接参照は禁止**
+
+### 5.1.2 プロジェクト参照チェックリスト
+
+以下の形式で各プロジェクトの参照を整理：
+
+**◎ = 参照OK　× = 参照禁止**
+
+| → | Common | SK.Domain | Crosscutting | Context.D | Context.A | Context.I | Other.I | Pres |
+|---|---|---|---|---|---|---|---|---|
+| **Common** | - | × | × | × | × | × | × | × |
+| **SK.Domain** | ◎ | - | × | × | × | × | × | × |
+| **Crosscutting** | ◎ | ◎ | - | × | × | × | × | × |
+| **Context.D** | ◎ | ◎ | × | - | × | × | × | × |
+| **Context.A** | ◎ | ◎ | × | ◎ | - | × | × | × |
+| **Context.I** | ◎ | ◎ | ◎ | ◎ | ◎ | - | × | × |
+| **Other.I** | ◎ | ◎ | ◎ | × | × | × | - | × |
+| **Presentation** | ◎ | ◎ | ◎ | × | × | ◎ | ◎ | - |
+
+**凡例：**
+- ◎ = 参照可能
+- × = 参照禁止
+- Context.D = 当該Context内のDomain層（他Context.Dは参照禁止）
+- Context.A = 当該Context内のApplication層
+- Context.I = 当該Context内のInfrastructure層
+- Other.I = 他のContext.Infrastructure層
+
+### 5.1.3 参照関係の詳細表
+
+```
+Common
+└─ 参照先: なし
+
+SharedKernel.Domain
+└─ 参照先: Common
+
+Crosscutting
+├─ 参照先: Common
+└─ 参照先: SharedKernel.Domain
+
+Context.Domain（各 Bounded Context）
+├─ 参照先: Common
+├─ 参照先: SharedKernel.Domain
+└─ **責務: ポート（Repository等）の定義**
+
+Context.Application（各 Bounded Context）
+├─ 参照先: Common
+├─ 参照先: SharedKernel.Domain
+├─ 参照先: Context.Domain（同一のみ）
+└─ **責務: UseCase実装、ポート使用**
+
+Context.Infrastructure（各 Bounded Context）
+├─ 参照先: Common
+├─ 参照先: SharedKernel.Domain
+├─ 参照先: Context.Domain（同一のみ）
+├─ 参照先: Context.Application（同一のみ）
+├─ 参照先: Crosscutting
+└─ **責務: ポート実装、技術実装**
+
+Presentation（全体共通）
+├─ 参照先: Common
+├─ 参照先: SharedKernel.Domain
+├─ 参照先: Crosscutting
+├─ 参照先: Context1.Infrastructure
+├─ 参照先: Context2.Infrastructure
+├─ 参照先: Context3.Infrastructure（必要に応じて）
+└─ **責務: DI構成、UI/ViewModel**
+```
+
+### 5.2 各プロジェクトの参照関係（.csproj の参照設定）
+
+
+#### Common プロジェクト
+
+**参照先：なし**
+```xml
+<!-- 他に依存しない -->
+```
+
+#### SharedKernel.Domain プロジェクト
+
+**参照先：Common のみ**
+```xml
+<ItemGroup>
+  <ProjectReference Include="..\..\Common\Common.csproj" />
+</ItemGroup>
+```
+
+#### Crosscutting プロジェクト
+
+**参照先：Common / SharedKernel.Domain**
+```xml
+<ItemGroup>
+  <ProjectReference Include="..\..\Common\Common.csproj" />
+  <ProjectReference Include="..\..\SharedKernel\Domain\Domain.csproj" />
+</ItemGroup>
+```
+
+#### Context.Domain プロジェクト（各 Bounded Context）
+
+**責務：** 
+- ドメインエンティティ・ValueObject・ドメインサービスの実装
+- **Repository インターフェース（ポート）の定義**
+
+**参照先：Common / SharedKernel.Domain のみ**
+```xml
+<!-- 例：Contexts/Sample1/Domain/Domain.csproj -->
+<ItemGroup>
+  <ProjectReference Include="..\..\..\Common\Common.csproj" />
+  <ProjectReference Include="..\..\..\SharedKernel\Domain\Domain.csproj" />
+</ItemGroup>
+```
+
+**例：Domain層で Repository インターフェースを定義**
+```csharp
+// Domain/Repositories/IOrderRepository.cs
+namespace Contexts.Sample1.Domain.Repositories {
+    public interface IOrderRepository {
+        void Save(Order order);
+        Order GetById(OrderId id);
+    }
+}
+```
+
+**禁止事項：**
+- ❌ Application, Infrastructure への参照
+- ❌ 他の Context への参照
+- ❌ Presentation への参照
+
+#### Context.Application プロジェクト（各 Bounded Context）
+
+**責務：**
+- UseCase（Interactor）の実装
+- DTO の定義
+- Domain層のポート（インターフェース）を DI で受け取る
+
+**参照先：Common / SharedKernel / 同一Context内の Domain のみ**
+```xml
+<!-- 例：Contexts/Sample1/Application/Application.csproj -->
+<ItemGroup>
+  <ProjectReference Include="..\..\..\Common\Common.csproj" />
+  <ProjectReference Include="..\..\..\SharedKernel\Domain\Domain.csproj" />
+  <ProjectReference Include="..\Domain\Domain.csproj" />
+</ItemGroup>
+```
+
+**例：Application層で Domain のポートを使用**
+```csharp
+// Application/UseCases/CreateOrderInteractor.cs
+using Contexts.Sample1.Domain.Repositories; // Domain層のポート
+
+namespace Contexts.Sample1.Application.UseCases {
+    public class CreateOrderInteractor {
+        private readonly IOrderRepository _repository; // Domain層で定義
+        
+        public CreateOrderInteractor(IOrderRepository repository) {
+            _repository = repository;
+        }
+    }
+}
+```
+
+**禁止事項：**
+- ❌ Infrastructure への直接参照（具象実装は参照不可）
+- ❌ 他の Context への参照
+- ❌ Presentation への参照
+
+#### Context.Infrastructure プロジェクト（各 Bounded Context）
+
+**責務：**
+- Domain層で定義したポート（Repository インターフェース）の具象実装
+- DBアクセス、外部API連携等の技術実装
+
+**参照先：Common / SharedKernel / 同一Context内の Domain / Application**
+```xml
+<!-- 例：Contexts/Sample1/Infrastructure/Infrastructure.csproj -->
+<ItemGroup>
+  <ProjectReference Include="..\..\..\Common\Common.csproj" />
+  <ProjectReference Include="..\..\..\SharedKernel\Domain\Domain.csproj" />
+  <ProjectReference Include="..\Domain\Domain.csproj" />
+  <ProjectReference Include="..\Application\Application.csproj" />
+  <ProjectReference Include="..\..\..\Crosscutting\Crosscutting.csproj" />
+</ItemGroup>
+```
+
+**例：Infrastructure層で Domain のポートを実装**
+```csharp
+// Infrastructure/Repositories/SqlServerOrderRepository.cs
+using Contexts.Sample1.Domain.Repositories; // Domain層のポート
+
+namespace Contexts.Sample1.Infrastructure.Repositories {
+    public class SqlServerOrderRepository : IOrderRepository {
+        public void Save(Order order) {
+            // SQL Server実装
+        }
+        
+        public Order GetById(OrderId id) {
+            // SQL Server実装
+        }
+    }
+}
+```
+
+**許可事項：**
+- ✅ Application / Domain への参照（具象実装）
+- ✅ Crosscutting への参照（ログ、トランザクション等）
+
+**禁止事項：**
+- ❌ 他の Context への参照
+- ❌ Presentation への参照
+
+#### Presentation プロジェクト（全体共通）
+
+**参照先：Common / SharedKernel / Crosscutting / 全 Context の Infrastructure**
+```xml
+<!-- 例：Presentation/Shared/Shared.csproj または UI層 -->
+<ItemGroup>
+  <ProjectReference Include="..\..\Common\Common.csproj" />
+  <ProjectReference Include="..\..\SharedKernel\Domain\Domain.csproj" />
+  <ProjectReference Include="..\..\Crosscutting\Crosscutting.csproj" />
+  
+  <!-- 各Contextの Infrastructure のみ参照（Application / Domain ではなく） -->
+  <ProjectReference Include="..\..\Contexts\Sample1\Infrastructure\Infrastructure.csproj" />
+  <ProjectReference Include="..\..\Contexts\Sample2\Infrastructure\Infrastructure.csproj" />
+</ItemGroup>
+```
+
+**重要**：
+- ✅ Infrastructure のみ参照（Application / Domain ではなく）
+- ✅ Infrastructure 経由で DI コンテナを構成
+
+**禁止事項：**
+- ❌ Application への直接参照
+- ❌ Domain への直接参照
+- ❌ Context間での相互参照
+
+### 5.3 循環依存の防止チェックリスト
+
+各プロジェクトが以下のルールを満たしているか確認：
+
+| プロジェクト | 参照してよいもの | 参照禁止 |
+|---|---|---|
+| **Domain** | Common / SharedKernel | Application / Infrastructure / Presentation / 他Context |
+| **Application** | Common / SharedKernel / Domain（同一Context） | Infrastructure（具象実装） / Presentation / 他Context |
+| **Infrastructure** | Common / SharedKernel / Domain / Application（同一Context） / Crosscutting | Presentation / 他Context |
+| **Presentation** | Common / SharedKernel / Crosscutting / Infrastructure（全Context） | Application / Domain / 直接Context参照 |
+
+### 5.4 Bounded Context 間の通信
+
+**直接参照は禁止。以下のいずれかを使用：**
+
+1. **Domain Events を経由**
+   - 各Context は独立したドメインイベント定義
+   - イベント発行 / 購読を Crosscutting層で処理
+
+2. **Shared API / DTO を経由**
+   - Common に共有DTO を定義
+   - 各Context は Common 経由でのみ通信
+
+3. **Infrastructure 層でのみ統合**
+   - Database / Message Queue 経由
+   - 各Context の Infrastructure が統合責務を持つ
+
+**例（禁止）：**
+```csharp
+// ❌ Context1.Application が Context2.Application を参照
+public class Context1UseCase {
+    private readonly Context2Application _context2; // 禁止
+}
+```
+
+**例（許可）：**
+```csharp
+// ✅ 共有DTOを経由
+public class Context1UseCase {
+    private readonly IEventPublisher _eventPublisher; // Infrastructure経由で注入
+    
+    public void Execute() {
+        _eventPublisher.Publish(new OrderCreatedEvent { /* ... */ });
+    }
+}
+```
+
+## 6. ドメイン層の原則
 
 - ドメイン層は null を一切許容しない
 - 未設定状態は IsSet = false のインスタンス（Unset インスタンス）で表現する
@@ -453,7 +826,7 @@ public class OrderAggregateRoot {
   - UI
   - 時刻取得の具体手段
 
-## 5. 時刻管理の原則
+## 7. 時刻管理の原則
 
 - プログラム実行中の時刻は 必ず 1 つに統一する
 - 時刻取得は DI された `IClock` 経由のみ
@@ -463,7 +836,7 @@ public class OrderAggregateRoot {
 
 `IClock` の DI 登録責務は Infrastructure 層のみにある。
 
-## 6. データ・永続化に関する共通方針
+## 8. データ・永続化に関する共通方針
 
 - データは 論理削除のみ
 - SQL Server を使用するが、将来的な PostgreSQL 切替を前提とする
@@ -471,13 +844,13 @@ public class OrderAggregateRoot {
 - SQL はファイル管理し、起動時キャッシュ + Lazy 読込を行う
 - 参照系: Dapper / 更新系: RepoDB
 
-## 7. AI の役割（現在：GitHub Copilot）
+## 9. AI の役割（現在：GitHub Copilot）
 
 AI（GitHub Copilot）は、以下の全領域において「支援」と「提案」を行う。
 
 **原則：** 最終的な判断・承認・決定責任はすべて人間にある。AI の提案に対しては、人間が必ず検討・確認を行った上で採用の可否を判断する。
 
-### 7.1 実装支援
+### 9.1 実装支援
 
 **AI の責務**
 - クラス、メソッド、関数の実装コード生成
@@ -491,7 +864,7 @@ AI（GitHub Copilot）は、以下の全領域において「支援」と「提�
 - 実装内容の業務ロジック妥当性確認
 - 最終承認・マージ判断
 
-### 7.2 設計・仕様の支援
+### 9.2 設計・仕様の支援
 
 **AI の責務**
 - 要件の整理・構造化の草案提案
@@ -505,7 +878,7 @@ AI（GitHub Copilot）は、以下の全領域において「支援」と「提�
 - 最終設計方針の決定
 - 設計の承認・確定
 
-### 7.3 品質評価・レビューの支援
+### 9.3 品質評価・レビューの支援
 
 **AI の責務**
 - コードの準拠性チェック（AGENTS.md 準拠確認）
@@ -520,7 +893,7 @@ AI（GitHub Copilot）は、以下の全領域において「支援」と「提�
 
 **注記：** 将来的にAI実装ツールが変更される場合でも、役割分担の原則（AI は提案・支援、人間が最終判断・承認）は不変である。
 
-## 8. 文書体系への委譲
+## 10. 文書体系への委譲
 
 以下の詳細ルールは、各ディレクトリ配下の `.agent.md` に委譲する。
 
@@ -530,13 +903,13 @@ AI（GitHub Copilot）は、以下の全領域において「支援」と「提�
 
 本書に詳細を追加しないこと。
 
-## 9. 本書の変更ルール
+## 11. 本書の変更ルール
 
 - 原則変更時のみ更新
 - 設計詳細・手順を書き足さない
 - 本書は 安定文書として扱う
 
-## 10. 最終宣言
+## 12. 最終宣言
 
 AI は SupportAdvance プロジェクトにおいて、
 
