@@ -9,8 +9,9 @@
   <Folder Name="/docs/Presentation/" />
   <Folder Name="/docs/SharedKernel/" />
   <Folder Name="/docs/SharedKernel/ValueObjects/" />
-  <Folder Name="/src/" />
-  <Folder Name="/src/Common/" />
+  <Folder Name="/src/">
+    <Project Path="src/Common/Common.csproj" Id="43a271a2-3ea9-41ca-a1c4-fdeb6e57f59c" />
+  </Folder>
   <Folder Name="/src/Contexts/" />
   <Folder Name="/src/Contexts/Samples/" />
   <Folder Name="/src/Contexts/Samples/CarPreferences/">
@@ -27,8 +28,9 @@
   <Folder Name="/src/SharedKernel/">
     <Project Path="src/SharedKernel/Domain/Domain.csproj" Id="4bbac7ff-5566-4c57-863d-b7734cb4222f" />
   </Folder>
-  <Folder Name="/tests/" />
-  <Folder Name="/tests/Common/" />
+  <Folder Name="/tests/">
+    <Project Path="tests/Common.Tests/Common.Tests.csproj" />
+  </Folder>
   <Folder Name="/tests/Contexts/" />
   <Folder Name="/tests/Contexts/Samples/" />
   <Folder Name="/tests/Contexts/Samples/CarPreferences/" />

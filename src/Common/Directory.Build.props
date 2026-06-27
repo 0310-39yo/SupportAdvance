@@ -1,5 +1,0 @@
-<Project>
-  <PropertyGroup>
-    <RootNamespace>SupportAdvance.Common.$(MSBuildProjectName)</RootNamespace>
-  </PropertyGroup>
-</Project>
