@@ -463,7 +463,7 @@ SupportAdvance は **Presentation層が全体共通**で、各 **Bounded Context
 ```
 src/
 ├── Common/                         （全層から参照可能）
-├── SharedKernel/Domain/            （複数Contextで共有）
+├── SharedKernel/                   （複数Contextで共有）
 ├── Crosscutting/                   （横断的関心事）
 ├── Presentation/                   （全体共通のUI層）
 └── Contexts/
@@ -483,8 +483,8 @@ src/
 graph TB
     Common["📦 Common<br/>参照先: なし"]
     
-    SK["📦 SharedKernel.Domain<br/>参照先: Common"]
-    CC["📦 Crosscutting<br/>参照先: Common / SharedKernel.Domain"]
+    SK["📦 SharedKernel<br/>参照先: Common"]
+    CC["📦 Crosscutting<br/>参照先: Common / SharedKernel"]
     
     subgraph Context1["Context1（Bounded Context）"]
         D1["📦 Context1.Domain<br/>参照先: Common / SharedKernel<br/>責務: Entity / ValueObject<br/>ポート定義"]
@@ -538,10 +538,10 @@ graph TB
 
 **◎ = 参照OK　× = 参照禁止**
 
-| → | Common | SK.Domain | Crosscutting | Context.D | Context.A | Context.I | Other.I | Pres |
+| → | Common | SharedKernel | Crosscutting | Context.D | Context.A | Context.I | Other.I | Pres |
 |---|---|---|---|---|---|---|---|---|
 | **Common** | - | × | × | × | × | × | × | × |
-| **SK.Domain** | ◎ | - | × | × | × | × | × | × |
+| **SharedKernel** | ◎ | - | × | × | × | × | × | × |
 | **Crosscutting** | ◎ | ◎ | - | × | × | × | × | × |
 | **Context.D** | ◎ | ◎ | × | - | × | × | × | × |
 | **Context.A** | ◎ | ◎ | × | ◎ | - | × | × | × |
@@ -563,27 +563,27 @@ graph TB
 Common
 └─ 参照先: なし
 
-SharedKernel.Domain
+SharedKernel
 └─ 参照先: Common
 
 Crosscutting
 ├─ 参照先: Common
-└─ 参照先: SharedKernel.Domain
+└─ 参照先: SharedKernel
 
 Context.Domain（各 Bounded Context）
 ├─ 参照先: Common
-├─ 参照先: SharedKernel.Domain
+├─ 参照先: SharedKernel
 └─ **責務: ポート（Repository等）の定義**
 
 Context.Application（各 Bounded Context）
 ├─ 参照先: Common
-├─ 参照先: SharedKernel.Domain
+├─ 参照先: SharedKernel
 ├─ 参照先: Context.Domain（同一のみ）
 └─ **責務: UseCase実装、ポート使用**
 
 Context.Infrastructure（各 Bounded Context）
 ├─ 参照先: Common
-├─ 参照先: SharedKernel.Domain
+├─ 参照先: SharedKernel
 ├─ 参照先: Context.Domain（同一のみ）
 ├─ 参照先: Context.Application（同一のみ）
 ├─ 参照先: Crosscutting
@@ -591,7 +591,7 @@ Context.Infrastructure（各 Bounded Context）
 
 Presentation（全体共通）
 ├─ 参照先: Common
-├─ 参照先: SharedKernel.Domain
+├─ 参照先: SharedKernel
 ├─ 参照先: Crosscutting
 ├─ 参照先: Context1.Infrastructure
 ├─ 参照先: Context2.Infrastructure
@@ -609,7 +609,7 @@ Presentation（全体共通）
 <!-- 他に依存しない -->
 ```
 
-#### SharedKernel.Domain プロジェクト
+#### SharedKernel プロジェクト
 
 **参照先：Common のみ**
 ```xml
@@ -620,11 +620,11 @@ Presentation（全体共通）
 
 #### Crosscutting プロジェクト
 
-**参照先：Common / SharedKernel.Domain**
+**参照先：Common / SharedKernel**
 ```xml
 <ItemGroup>
   <ProjectReference Include="..\..\Common\Common.csproj" />
-  <ProjectReference Include="..\..\SharedKernel\Domain\Domain.csproj" />
+  <ProjectReference Include="..\..\SharedKernel\SharedKernel.csproj" />
 </ItemGroup>
 ```
 
@@ -634,12 +634,12 @@ Presentation（全体共通）
 - ドメインエンティティ・ValueObject・ドメインサービスの実装
 - **Repository インターフェース（ポート）の定義**
 
-**参照先：Common / SharedKernel.Domain のみ**
+**参照先：Common / SharedKernel のみ**
 ```xml
 <!-- 例：Contexts/Sample1/Domain/Domain.csproj -->
 <ItemGroup>
   <ProjectReference Include="..\..\..\Common\Common.csproj" />
-  <ProjectReference Include="..\..\..\SharedKernel\Domain\Domain.csproj" />
+  <ProjectReference Include="..\..\..\SharedKernel\SharedKernel.csproj" />
 </ItemGroup>
 ```
 
@@ -671,7 +671,7 @@ namespace Contexts.Sample1.Domain.Repositories {
 <!-- 例：Contexts/Sample1/Application/Application.csproj -->
 <ItemGroup>
   <ProjectReference Include="..\..\..\Common\Common.csproj" />
-  <ProjectReference Include="..\..\..\SharedKernel\Domain\Domain.csproj" />
+  <ProjectReference Include="..\..\..\SharedKernel\SharedKernel.csproj" />
   <ProjectReference Include="..\Domain\Domain.csproj" />
 </ItemGroup>
 ```
@@ -708,7 +708,7 @@ namespace Contexts.Sample1.Application.UseCases {
 <!-- 例：Contexts/Sample1/Infrastructure/Infrastructure.csproj -->
 <ItemGroup>
   <ProjectReference Include="..\..\..\Common\Common.csproj" />
-  <ProjectReference Include="..\..\..\SharedKernel\Domain\Domain.csproj" />
+  <ProjectReference Include="..\..\..\SharedKernel\SharedKernel.csproj" />
   <ProjectReference Include="..\Domain\Domain.csproj" />
   <ProjectReference Include="..\Application\Application.csproj" />
   <ProjectReference Include="..\..\..\Crosscutting\Crosscutting.csproj" />
@@ -748,7 +748,7 @@ namespace Contexts.Sample1.Infrastructure.Repositories {
 <!-- 例：Presentation/Shared/Shared.csproj または UI層 -->
 <ItemGroup>
   <ProjectReference Include="..\..\Common\Common.csproj" />
-  <ProjectReference Include="..\..\SharedKernel\Domain\Domain.csproj" />
+  <ProjectReference Include="..\..\SharedKernel\SharedKernel.csproj" />
   <ProjectReference Include="..\..\Crosscutting\Crosscutting.csproj" />
   
   <!-- 各Contextの Infrastructure のみ参照（Application / Domain ではなく） -->

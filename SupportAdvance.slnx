@@ -8,10 +8,10 @@
   <Folder Name="/docs/Crosscutting/" />
   <Folder Name="/docs/Presentation/" />
   <Folder Name="/docs/SharedKernel/" />
-  <Folder Name="/docs/SharedKernel/ValueObjects/" />
   <Folder Name="/src/">
     <Project Path="src/Common/Common.csproj" Id="43a271a2-3ea9-41ca-a1c4-fdeb6e57f59c" />
     <Project Path="src/Crosscutting/Crosscutting.csproj" Id="2aabfa23-332d-42e5-8251-cb920f172f0f" />
+    <Project Path="src/SharedKernel/SharedKernel.csproj" Id="bf2067f5-628a-4063-9d7b-cd4caf033931" />
   </Folder>
   <Folder Name="/src/Contexts/" />
   <Folder Name="/src/Contexts/Samples/" />
@@ -25,12 +25,10 @@
     <Project Path="src/Presentation/WinTrial/WinTrial.csproj" Id="7c4c1d4d-675f-4774-8d66-06853dd1c613" />
     <Project Path="src/Presentation/WpfTrial/WpfTrial.csproj" Id="4af8dc1e-20a5-492f-b7c0-006246a22ce9" />
   </Folder>
-  <Folder Name="/src/SharedKernel/">
-    <Project Path="src/SharedKernel/Domain/Domain.csproj" Id="4bbac7ff-5566-4c57-863d-b7734cb4222f" />
-  </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Common.Tests/Common.Tests.csproj" />
     <Project Path="tests/Crosscutting.Tests/Crosscutting.Tests.csproj" />
+    <Project Path="tests/SharedKernel.Tests/SharedKernel.Tests.csproj" />
   </Folder>
   <Folder Name="/tests/Contexts/" />
   <Folder Name="/tests/Contexts/Samples/" />
@@ -40,7 +38,4 @@
     <Project Path="tests/Contexts/Samples/CarPreferences/Infrastructure.Tests/Infrastructure.Tests.csproj" />
   </Folder>
   <Folder Name="/tests/Presentation/" />
-  <Folder Name="/tests/SharedKernel/">
-    <Project Path="tests/SharedKernel/Domain.Tests/Domain.Tests.csproj" />
-  </Folder>
 </Solution>
