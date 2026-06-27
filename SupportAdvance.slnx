@@ -19,7 +19,11 @@
     <Project Path="src/Contexts/Samples/CarPreferences/Infrastructure/Infrastructure.csproj" Id="ee0c55d0-7b0f-43ca-9d5a-c4968381e27c" />
   </Folder>
   <Folder Name="/src/Crosscutting/" />
-  <Folder Name="/src/Presentation/" />
+  <Folder Name="/src/Presentation/">
+    <Project Path="src/Presentation/Shared/Shared.csproj" Id="d8f895c2-bee1-42bf-a71e-c35cbe78ff0c" />
+    <Project Path="src/Presentation/WinTrial/WinTrial.csproj" Id="7c4c1d4d-675f-4774-8d66-06853dd1c613" />
+    <Project Path="src/Presentation/WpfTrial/WpfTrial.csproj" Id="4af8dc1e-20a5-492f-b7c0-006246a22ce9" />
+  </Folder>
   <Folder Name="/src/SharedKernel/">
     <Project Path="src/SharedKernel/Domain/Domain.csproj" Id="4bbac7ff-5566-4c57-863d-b7734cb4222f" />
   </Folder>
