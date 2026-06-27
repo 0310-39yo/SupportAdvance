@@ -1,5 +1,0 @@
-<Project>
-  <PropertyGroup>
-    <RootNamespace>SupportAdvance.Tests.Crosscutting.$(MSBuildProjectName)</RootNamespace>
-  </PropertyGroup>
-</Project>

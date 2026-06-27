@@ -40,6 +40,7 @@
     <Project Path="tests/Contexts/Samples/CarPreferences/Infrastructure.Tests/Infrastructure.Tests.csproj" />
   </Folder>
   <Folder Name="/tests/Presentation/" />
-  <Folder Name="/tests/SharedKernel/" />
-  <Folder Name="/tests/SharedKernel/ValueObjects/" />
+  <Folder Name="/tests/SharedKernel/">
+    <Project Path="tests/SharedKernel/Domain.Tests/Domain.Tests.csproj" />
+  </Folder>
 </Solution>
