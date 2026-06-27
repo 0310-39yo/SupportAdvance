@@ -25,7 +25,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\..\..\configs\NLog\NLog.config" Link="NLog.config" />
+    <None Include="..\..\..\configs\NLog\NLog.config" Link="NLog.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
   <ItemGroup>
