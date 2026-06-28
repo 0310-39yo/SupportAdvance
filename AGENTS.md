@@ -460,21 +460,43 @@ public class OrderAggregateRoot {
 
 SupportAdvance は **Presentation層が全体共通**で、各 **Bounded Context が Domain / Application / Infrastructure** のみを持つ構成である。
 
+**各フォルダは対応する .csproj ファイルを含む（例：CarPreferences.Domain/ → CarPreferences.Domain.csproj）**
+
 ```
 src/
-├── Common/                         （全層から参照可能）
-├── SharedKernel/                   （複数Contextで共有）
-├── Crosscutting/                   （横断的関心事）
-├── Presentation/                   （全体共通のUI層）
+├── Common/
+├── SharedKernel/
+├── Crosscutting/
+├── Presentation/
 └── Contexts/
     └── Samples/
         ├── CarPreferences.Domain/
-        │   └── CarPreferences.Domain.csproj
         ├── CarPreferences.Application/
-        │   └── CarPreferences.Application.csproj
-        └── CarPreferences.Infrastructure/
-            └── CarPreferences.Infrastructure.csproj
+        ├── CarPreferences.Infrastructure/
+        └── Directory.Build.props
 ```
+
+### 5.1.0 テストプロジェクト構成（tests/ フォルダ）
+
+テストプロジェクトは src/ と同じ階層構造を保持する。
+
+```
+tests/
+├── Common.Tests/                                （Common層のテスト）
+├── Crosscutting.Tests/                          （Crosscutting層のテスト）
+├── SharedKernel.Tests/                          （SharedKernel層のテスト）
+└── Contexts/
+    └── Samples/
+        ├── CarPreferences.Domain.Tests/         （Domain層のテスト）
+        ├── CarPreferences.Application.Tests/    （Application層のテスト）
+        ├── CarPreferences.Infrastructure.Tests/ （Infrastructure層のテスト）
+        └── Directory.Build.props
+```
+
+**テストプロジェクトの参照原則：**
+- Domain.Tests → Common / SharedKernel / Domain
+- Application.Tests → Common / SharedKernel / Domain / Application
+- Infrastructure.Tests → Common / SharedKernel / Domain / Application / Infrastructure / Crosscutting
 
 ### 5.1.1 依存関係ダイアグラム（全体像）
 
