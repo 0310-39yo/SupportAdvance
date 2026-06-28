@@ -6,6 +6,7 @@
   <Folder Name="/docs/Contexts/Samples/" />
   <Folder Name="/docs/Contexts/Samples/CarPreferences/" />
   <Folder Name="/docs/Crosscutting/" />
+  <Folder Name="/docs/Infrastructure/" />
   <Folder Name="/docs/Presentation/" />
   <Folder Name="/docs/SharedKernel/" />
   <Folder Name="/src/">

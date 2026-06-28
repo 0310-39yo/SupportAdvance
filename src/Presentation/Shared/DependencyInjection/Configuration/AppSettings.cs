@@ -1,8 +1,10 @@
+using SupportAdvance.Common.Clocks;
 using SupportAdvance.Common.Configuration;
+using SupportAdvance.Presentation.Shared.DependencyInjection.Clock;
 
 namespace SupportAdvance.Presentation.Shared.DependencyInjection.Configuration;
 
-public class AppSettings: IAppsSettings
+public class AppSettings : IAppsSettings
 {
     /// <summary>
     /// DebugBuild = "Debug"
@@ -13,6 +15,13 @@ public class AppSettings: IAppsSettings
     /// ReleaseBuild = "Release"
     /// </summary>
     public const string ReleaseBuild = "Release";
+
+    /// <summary>
+    /// クロック設定
+    /// JSON バインディング用にクロック設定値を保持します。
+    /// 実際のクロック機能は IClock インターフェース経由で取得してください。
+    /// </summary>
+    public IClockSettings ClockSettings { get; init; } = new ClockSettings();
 
     /// <inheritdoc />
     public string ApplicationBuildType { get; init; } = DebugBuild;
@@ -37,11 +46,4 @@ public class AppSettings: IAppsSettings
 
     /// <inheritdoc />
     public Dictionary<string, string> ConnectionStrings { get; init; } = new();
-
-    /// <summary>
-    /// クロック設定
-    /// JSON バインディング用にクロック設定値を保持します。
-    /// 実際のクロック機能は IClock インターフェース経由で取得してください。
-    /// </summary>
-    public IClockSettings ClockSettings { get; init; } = new ClockSettings();
 }

@@ -14,8 +14,4 @@
     <ProjectReference Include="..\..\SharedKernel\SharedKernel.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="DependencyInjection\Clock\" />
-  </ItemGroup>
-
 </Project>

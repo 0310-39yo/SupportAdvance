@@ -77,7 +77,7 @@ namespace SupportAdvance.Common.Configuration
 {
     /// <summary>
     /// アプリケーション設定を取得するポート（インターフェース）
-    /// 実装は Infrastructure層で行う
+    /// 実装は Presentation/Shared/DependencyInjection層で行う
     /// </summary>
     public interface IAppSettings
     {
@@ -88,11 +88,23 @@ namespace SupportAdvance.Common.Configuration
 }
 ```
 
-**実装は Presentation層のサポート領域で行う**
+```csharp
+// Common/Clocks/IClock.cs
+namespace SupportAdvance.Common.Clocks
+{
+    /// <summary>
+    /// 時刻取得のポート（インターフェース）
+    /// 複数実装（Clock, MockClock等）を Common/Clocks/ に格納
+    /// </summary>
+    public interface IClock
+    {
+        DateTime Now { get; }
+        DateTime UtcNow { get; }
+    }
+}
+```
 
-**⚠️ 注意：** `Presentation/Shared/Infrastructure` という名前は避ける。  
-クリーンアーキテクチャの「Infrastructure層」と混同されるため、  
-`Presentation/Shared/DependencyInjection` または `Presentation/Shared/ServiceConfiguration` を使用する。
+**実装は Presentation層のサポート領域で行う**
 
 ```csharp
 // Presentation/Shared/DependencyInjection/Configuration/AppSettings.cs
@@ -116,6 +128,32 @@ namespace SupportAdvance.Presentation.Shared.DependencyInjection.Configuration
         
         public string GetValue(string key)
             => _configuration[key];
+    }
+}
+```
+
+```csharp
+// Presentation/Shared/DependencyInjection/Clocks/Clock.cs
+// 実装は Common/Clocks/ に複数個（Clock.cs, MockClock.cs等）
+namespace SupportAdvance.Presentation.Shared.DependencyInjection.Clocks
+{
+    /// <summary>
+    /// デフォルトClock実装（appsettings.json から初期化）
+    /// 複数実装の例：Clock, MockClock, SystemClock等
+    /// </summary>
+    public class Clock : IClock
+    {
+        private readonly DateTime _fixedDateTime;
+        
+        public Clock(IAppSettings settings)
+        {
+            // appsettings.json から初期時刻を取得する場合
+            var timeStr = settings.GetValue("Clock:InitialDateTime");
+            _fixedDateTime = DateTime.Parse(timeStr);
+        }
+        
+        public DateTime Now => _fixedDateTime;
+        public DateTime UtcNow => _fixedDateTime.ToUniversalTime();
     }
 }
 ```
@@ -403,6 +441,9 @@ public class OrderPresenter : IOrderPresenter {
 // Presentation/Shared/DependencyInjection/DependencyInjectionExtensions.cs
 namespace SupportAdvance.Presentation.Shared.DependencyInjection;
 
+using SupportAdvance.Common.Clocks;
+using SupportAdvance.Presentation.Shared.DependencyInjection.Clocks;
+
 public static class DependencyInjectionExtensions
 {
     public static IServiceCollection AddApplicationServices(
@@ -411,7 +452,11 @@ public static class DependencyInjectionExtensions
     {
         // 共通サービス（Common層のポート）
         services.AddSingleton<IAppSettings>(new AppSettings(configuration));
-        services.AddSingleton<IClock>(new SystemClock());
+        
+        // Clock実装を Common/Clocks/ から選択して登録
+        // デフォルト: Clock（appsettings.json から初期化）
+        // テスト: MockClock（固定値）
+        services.AddSingleton<IClock>(new Clock(new AppSettings(configuration)));
         
         // Context毎のサービス
         services.AddScoped<IOrderRepository, SqlOrderRepository>();
@@ -499,7 +544,7 @@ public class Order : AggregateRoot {
     
     public void Complete() {
         // 受け取った IClock を使用
-        this.CompletedAt = _clock.Now();
+        this.CompletedAt = _clock.Now;
     }
 }
 
@@ -999,13 +1044,29 @@ public class Context1UseCase {
 
 ## 7. 時刻管理の原則
 
-- プログラム実行中の時刻は 必ず 1 つに統一する
+### 7.1 IClock インターフェースと実装
+
+- **IClock インターフェース定義**：`Common/Clocks/IClock.cs`
+- **複数実装**：`Common/Clocks/` フォルダに複数実装を格納
+  - `Clock.cs`：デフォルト実装（appsettings.json から初期化）
+  - `MockClock.cs`：テスト用実装（固定値）
+  - `SystemClock.cs`：その他実装
+
+### 7.2 時刻取得原則
+
+- プログラム実行中の時刻は **必ず 1 つに統一する**
 - 時刻取得は DI された `IClock` 経由のみ
 - 以下は禁止 
   - `DateTime.Now / UtcNow / Today` の直接呼び出し
-  - `new SystemClock()` 等の手動生成
+  - `new Clock()` / `new SystemClock()` 等の手動生成
+  - Domain層での具体的な時刻取得実装
 
-`IClock` の DI 登録責務は Infrastructure 層のみにある。
+### 7.3 DI 登録責務
+
+- **インターフェース定義**：`Common/Clocks/IClock.cs`
+- **実装クラス配置**：`Common/Clocks/` 内（複数実装をサポート）
+- **DI 登録**：Presentation層のサポート領域（DependencyInjection/Clocks/）で DI コンテナに登録
+- **初期化**：appsettings.json から初期値を読み込み、Clock インスタンスを生成して登録
 
 ## 8. データ・永続化に関する共通方針
 
