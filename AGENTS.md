@@ -60,6 +60,66 @@ SupportAdvance のクリーンアーキテクチャ構成層は以下とする�
 - 全層から参照され得る 純粋・副作用なしの共有要素とする
 - 値オブジェクト、Result型、純粋計算、技術非依存の抽象のみを含む
 
+**Common に含まれるもの**
+- ValueObject（顧客ID、金額など）
+- Result / Option 型
+- Exception定義
+- **ポート（インターフェース）定義**：`IAppSettings`、`IClock` など
+
+**Common に含まれないもの**
+- ファイルI/O、DB、設定ファイル読み込みなどの技術実装
+- 副作用を持つクラス
+
+**例：Common に定義するポート**
+```csharp
+// Common/Configuration/IAppSettings.cs
+namespace SupportAdvance.Common.Configuration
+{
+    /// <summary>
+    /// アプリケーション設定を取得するポート（インターフェース）
+    /// 実装は Infrastructure層で行う
+    /// </summary>
+    public interface IAppSettings
+    {
+        string GetConnectionString(string name);
+        T GetSection<T>(string sectionName);
+        string GetValue(string key);
+    }
+}
+```
+
+**実装は Presentation層のサポート領域で行う**
+
+**⚠️ 注意：** `Presentation/Shared/Infrastructure` という名前は避ける。  
+クリーンアーキテクチャの「Infrastructure層」と混同されるため、  
+`Presentation/Shared/DependencyInjection` または `Presentation/Shared/ServiceConfiguration` を使用する。
+
+```csharp
+// Presentation/Shared/DependencyInjection/Configuration/AppSettings.cs
+// または Presentation/Shared/ServiceConfiguration/Configuration/AppSettings.cs
+namespace SupportAdvance.Presentation.Shared.DependencyInjection.Configuration
+{
+    public class AppSettings : IAppSettings
+    {
+        private readonly IConfiguration _configuration;
+        
+        public AppSettings(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
+        
+        public string GetConnectionString(string name)
+            => _configuration.GetConnectionString(name);
+        
+        public T GetSection<T>(string sectionName)
+            => _configuration.GetSection(sectionName).Get<T>();
+        
+        public string GetValue(string key)
+            => _configuration[key];
+    }
+}
+```
+
 #### Crosscutting
 
 - Crosscutting は クリーンアーキテクチャの構成層ではない
@@ -294,14 +354,47 @@ public class OrderPresenter : IOrderPresenter {
 #### 4.3.1 Presentation層
 
 - **責務**：DI コンテナの全体構成と起動
-- **実装**：起動時（Main / App.xaml.cs など）で全層のサービス登録を行う
+- **実装**：起動時（Main / Program.cs など）で全層のサービス登録を行う
+- **フォルダ構成**：
+  - `Presentation/Shared/DependencyInjection/` で DI 設定を一元管理
+  - ⚠️ 注意：`Infrastructure` という名前は使用しない（クリーンアーキテクチャの Infrastructure層と混同）
+  
 - **例**：
 ```csharp
-// Presentation層（起動時）
-var services = new ServiceCollection();
+// Presentation/Shared/DependencyInjection/DependencyInjectionExtensions.cs
+namespace SupportAdvance.Presentation.Shared.DependencyInjection;
 
-// Domain層の依存
-services.AddSingleton<IClock, SystemClock>();
+public static class DependencyInjectionExtensions
+{
+    public static IServiceCollection AddApplicationServices(
+        this IServiceCollection services,
+        IConfiguration configuration)
+    {
+        // 共通サービス（Common層のポート）
+        services.AddSingleton<IAppSettings>(new AppSettings(configuration));
+        services.AddSingleton<IClock>(new SystemClock());
+        
+        // Context毎のサービス
+        services.AddScoped<IOrderRepository, SqlOrderRepository>();
+        services.AddScoped<ICreateOrderUseCase, CreateOrderInteractor>();
+        
+        return services;
+    }
+}
+```
+
+```csharp
+// Presentation/WinTrial/Program.cs（起動時）
+using SupportAdvance.Presentation.Shared.DependencyInjection;
+
+var builder = WebApplicationBuilder.CreateBuilder(args);
+
+// DI 全体構成
+builder.Services.AddApplicationServices(builder.Configuration);
+
+var app = builder.Build();
+app.Run();
+```
 
 // Application層の依存
 services.AddScoped<IOrderUseCase, CreateOrderInteractor>();
