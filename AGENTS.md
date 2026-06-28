@@ -154,20 +154,58 @@ namespace SupportAdvance.Presentation.Shared.DependencyInjection.Configuration
 - 可能な限り破壊的変更を避け、後方互換性を保つこと
 - SharedKernel の変更は設計レビューを経ること
 
+#### Infrastructure（共通）
+
+- Infrastructure は クリーンアーキテクチャの構成層ではない
+- **複数の Bounded Context で共有する技術実装** の基盤層である
+- Repository基底クラス、DB接続管理、ORM共通設定などを含む
+- 全 Context.Infrastructure が参照する
+
+**Infrastructure に含まれるもの**
+- Repository基底クラス（抽象実装）
+- データベース接続・トランザクション管理
+- ORM共通セットアップ（Dapper / RepoDB）
+- SQL ファイルキャッシング・ローダー
+- マイグレーション基盤
+
+**Infrastructure に含まれないもの**
+- 特定 Context に固有の実装（Context.Infrastructure に配置）
+- Domain / Application のビジネスロジック
+
+**フォルダ構成**
+```
+src/Infrastructure/
+├── Data/
+│   ├── Connections/           （DB接続管理、トランザクション）
+│   ├── Repositories/          （Repository 基底クラス）
+│   └── Migrations/            （マイグレーション）
+└── ORM/
+    ├── Dapper/                （Dapper共通設定）
+    └── RepoDB/                （RepoDB共通設定）
+```
+
+**参照関係**
+- Infrastructure は Common / SharedKernel のみを参照
+- 各 Context.Infrastructure は Infrastructure を参照
+- Presentation は Infrastructure と全 Context.Infrastructure を参照
+
 ### 3.3 層間の依存関係ルール
 
 #### 3.3.1 各層が参照可能な範囲
 
 **プレゼンテーション層が参照可能なもの**
-- アプリケーション層（UseCase / DTO）
 - Common
+- SharedKernel
+- Crosscutting
+- 共通 Infrastructure
+- 全 Context.Infrastructure
 - 自身のレイヤ内モジュール
 
 **アプリケーション層が参照可能なもの**
-- ドメイン層（Entity / ValueObject / DomainService）
 - Common
 - SharedKernel
-- インフラストラクチャ層（インターフェース経由のみ、実装には依存しない）
+- ドメイン層（Entity / ValueObject / DomainService）
+- インターフェース・抽象のみ（具象実装には依存しない）
 - 自身のレイヤ内モジュール
 
 **ドメイン層が参照可能なもの**
@@ -175,12 +213,13 @@ namespace SupportAdvance.Presentation.Shared.DependencyInjection.Configuration
 - SharedKernel
 - 自身のレイヤ内モジュール
 
-**インフラストラクチャ層が参照可能なもの**
-- 全層のインターフェース・抽象（実装ではない）
+**インフラストラクチャ層（共通・Context）が参照可能なもの**
 - Common
 - SharedKernel
-- 自身のレイヤ内モジュール
+- 共通 Infrastructure（Context.Infrastructure の場合）
+- 全層のインターフェース・抽象（実装ではない）
 - 外部ライブラリ / DB / API
+- 自身のレイヤ内モジュール
 
 #### 3.3.2 層間の参照禁止（必須）
 
@@ -551,21 +590,25 @@ public class OrderAggregateRoot {
 
 ### 5.1 プロジェクト構成と依存関係の原則
 
-SupportAdvance は **Presentation層が全体共通**で、各 **Bounded Context が Domain / Application / Infrastructure** のみを持つ構成である。
+SupportAdvance は **Presentation層が全体共通**で、**共通Infrastructure** を共有し、各 **Bounded Context が Domain / Application / Infrastructure** のみを持つ構成である。
 
 **各フォルダは対応する .csproj ファイルを含む（例：CarPreferences.Domain/ → CarPreferences.Domain.csproj）**
 
 ```
 src/
-├── Common/
-├── SharedKernel/
-├── Crosscutting/
-├── Presentation/
+├── Common/                     （全層から参照可能）
+├── SharedKernel/               （複数Context で共有）
+├── Crosscutting/               （横断的関心事）
+├── Infrastructure/             （共通技術実装） ← NEW
+│   ├── Data/                   （DB接続、Repository基底）
+│   ├── ORM/                    （Dapper, RepoDB共通設定）
+│   └── Directory.Build.props
+├── Presentation/               （全体共通UI層）
 └── Contexts/
     └── Samples/
         ├── CarPreferences.Domain/
         ├── CarPreferences.Application/
-        ├── CarPreferences.Infrastructure/
+        ├── CarPreferences.Infrastructure/  （Context固有の実装）
         └── Directory.Build.props
 ```
 
@@ -599,11 +642,12 @@ graph TB
     
     SK["📦 SharedKernel<br/>参照先: Common"]
     CC["📦 Crosscutting<br/>参照先: Common / SharedKernel"]
+    Infra["📦 Infrastructure（共通）<br/>参照先: Common / SharedKernel<br/>責務: DB接続、Repository基底"]
     
     subgraph Context1["Context1（Bounded Context）"]
         D1["📦 Context1.Domain<br/>参照先: Common / SharedKernel<br/>責務: Entity / ValueObject<br/>ポート定義"]
         A1["📦 Context1.Application<br/>参照先: Common / SharedKernel / Domain<br/>責務: UseCase実装"]
-        I1["📦 Context1.Infrastructure<br/>参照先: Domain / Application / Crosscutting<br/>責務: ポート実装"]
+        I1["📦 Context1.Infrastructure<br/>参照先: Common / SharedKernel<br/>Domain / Application / Crosscutting / Infrastructure<br/>責務: ポート実装"]
         D1 --> A1
         A1 --> I1
     end
@@ -611,31 +655,36 @@ graph TB
     subgraph Context2["Context2（Bounded Context）"]
         D2["📦 Context2.Domain<br/>参照先: Common / SharedKernel<br/>責務: Entity / ValueObject<br/>ポート定義"]
         A2["📦 Context2.Application<br/>参照先: Common / SharedKernel / Domain<br/>責務: UseCase実装"]
-        I2["📦 Context2.Infrastructure<br/>参照先: Domain / Application / Crosscutting<br/>責務: ポート実装"]
+        I2["📦 Context2.Infrastructure<br/>参照先: Common / SharedKernel<br/>Domain / Application / Crosscutting / Infrastructure<br/>責務: ポート実装"]
         D2 --> A2
         A2 --> I2
     end
     
-    Pres["📦 Presentation<br/>参照先: Common / SharedKernel / Crosscutting<br/>全Context.Infrastructure<br/>責務: UI/ViewModel"]
+    Pres["📦 Presentation<br/>参照先: Common / SharedKernel / Crosscutting<br/>Infrastructure / 全Context.Infrastructure<br/>責務: UI/ViewModel/DI"]
     
     Common --> SK
     Common --> CC
+    Common --> Infra
     Common --> D1
     Common --> D2
-    SK --> D1
-    SK --> D2
+    SK --> Infra
     SK --> Pres
     CC --> I1
     CC --> I2
+    Infra --> I1
+    Infra --> I2
+    Infra --> Pres
     I1 --> Pres
     I2 --> Pres
     
     classDef foundation fill:#e1f5ff,stroke:#01579b,stroke-width:2px
+    classDef infrastructure fill:#fff9c4,stroke:#f57f17,stroke-width:2px
     classDef context fill:#fff3e0,stroke:#e65100,stroke-width:2px
     classDef layer fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
     classDef presentation fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
     
     class Common,SK,CC foundation
+    class Infra infrastructure
     class Context1,Context2 context
     class D1,A1,I1,D2,A2,I2 layer
     class Pres presentation
@@ -652,20 +701,22 @@ graph TB
 
 **◎ = 参照OK　× = 参照禁止**
 
-| → | Common | SharedKernel | Crosscutting | Context.D | Context.A | Context.I | Other.I | Pres |
-|---|---|---|---|---|---|---|---|---|
-| **Common** | - | × | × | × | × | × | × | × |
-| **SharedKernel** | ◎ | - | × | × | × | × | × | × |
-| **Crosscutting** | ◎ | ◎ | - | × | × | × | × | × |
-| **Context.D** | ◎ | ◎ | × | - | × | × | × | × |
-| **Context.A** | ◎ | ◎ | × | ◎ | - | × | × | × |
-| **Context.I** | ◎ | ◎ | ◎ | ◎ | ◎ | - | × | × |
-| **Other.I** | ◎ | ◎ | ◎ | × | × | × | - | × |
-| **Presentation** | ◎ | ◎ | ◎ | × | × | ◎ | ◎ | - |
+| → | Common | SharedKernel | Crosscutting | **Infra** | Context.D | Context.A | Context.I | Other.I | Pres |
+|---|---|---|---|---|---|---|---|---|---|
+| **Common** | - | × | × | × | × | × | × | × | × |
+| **SharedKernel** | ◎ | - | × | × | × | × | × | × | × |
+| **Crosscutting** | ◎ | ◎ | - | × | × | × | × | × | × |
+| **Infrastructure（共通）** | ◎ | ◎ | × | - | × | × | × | × | × |
+| **Context.D** | ◎ | ◎ | × | × | - | × | × | × | × |
+| **Context.A** | ◎ | ◎ | × | × | ◎ | - | × | × | × |
+| **Context.I** | ◎ | ◎ | ◎ | ◎ | ◎ | ◎ | - | × | × |
+| **Other.I** | ◎ | ◎ | ◎ | ◎ | × | × | × | - | × |
+| **Presentation** | ◎ | ◎ | ◎ | ◎ | × | × | ◎ | ◎ | - |
 
 **凡例：**
 - ◎ = 参照可能
 - × = 参照禁止
+- **Infra** = 共通 Infrastructure層
 - Context.D = 当該Context内のDomain層（他Context.Dは参照禁止）
 - Context.A = 当該Context内のApplication層
 - Context.I = 当該Context内のInfrastructure層
@@ -684,6 +735,11 @@ Crosscutting
 ├─ 参照先: Common
 └─ 参照先: SharedKernel
 
+Infrastructure（共通）
+├─ 参照先: Common
+├─ 参照先: SharedKernel
+└─ **責務: Repository基底クラス、DB接続・トランザクション管理、ORM共通設定**
+
 Context.Domain（各 Bounded Context）
 ├─ 参照先: Common
 ├─ 参照先: SharedKernel
@@ -698,15 +754,17 @@ Context.Application（各 Bounded Context）
 Context.Infrastructure（各 Bounded Context）
 ├─ 参照先: Common
 ├─ 参照先: SharedKernel
+├─ 参照先: Infrastructure（共通）
 ├─ 参照先: Context.Domain（同一のみ）
 ├─ 参照先: Context.Application（同一のみ）
 ├─ 参照先: Crosscutting
-└─ **責務: ポート実装、技術実装**
+└─ **責務: ポート実装、Context固有の技術実装**
 
 Presentation（全体共通）
 ├─ 参照先: Common
 ├─ 参照先: SharedKernel
 ├─ 参照先: Crosscutting
+├─ 参照先: Infrastructure（共通）
 ├─ 参照先: Context1.Infrastructure
 ├─ 参照先: Context2.Infrastructure
 ├─ 参照先: Context3.Infrastructure（必要に応じて）

@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Common\Common.csproj" />
+    <ProjectReference Include="..\SharedKernel\SharedKernel.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Data\Connections\" />
+    <Folder Include="Data\Repositories\" />
+    <Folder Include="Data\Migrations\" />
+    <Folder Include="ORM\Dapper\" />
+    <Folder Include="ORM\RepoDB\" />
+  </ItemGroup>
+
+</Project>

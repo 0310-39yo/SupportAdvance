@@ -9,7 +9,13 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Common\Common.csproj" />
     <ProjectReference Include="..\..\Contexts\Samples\CarPreferences.Infrastructure\CarPreferences.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Crosscutting\Crosscutting.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\Infrastructure.csproj" />
     <ProjectReference Include="..\..\SharedKernel\SharedKernel.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="DependencyInjection\Clock\" />
   </ItemGroup>
 
 </Project>
