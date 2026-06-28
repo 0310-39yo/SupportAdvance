@@ -467,14 +467,13 @@ src/
 ├── Crosscutting/                   （横断的関心事）
 ├── Presentation/                   （全体共通のUI層）
 └── Contexts/
-    ├── SampleContext1/
-    │   ├── Domain/
-    │   ├── Application/
-    │   └── Infrastructure/
-    └── SampleContext2/
-        ├── Domain/
-        ├── Application/
-        └── Infrastructure/
+    └── Samples/
+        ├── CarPreferences.Domain/
+        │   └── CarPreferences.Domain.csproj
+        ├── CarPreferences.Application/
+        │   └── CarPreferences.Application.csproj
+        └── CarPreferences.Infrastructure/
+            └── CarPreferences.Infrastructure.csproj
 ```
 
 ### 5.1.1 依存関係ダイアグラム（全体像）
@@ -636,17 +635,17 @@ Presentation（全体共通）
 
 **参照先：Common / SharedKernel のみ**
 ```xml
-<!-- 例：Contexts/Sample1/Domain/Domain.csproj -->
+<!-- 例：Contexts/Samples/CarPreferences.Domain/CarPreferences.Domain.csproj -->
 <ItemGroup>
-  <ProjectReference Include="..\..\..\Common\Common.csproj" />
-  <ProjectReference Include="..\..\..\SharedKernel\SharedKernel.csproj" />
+  <ProjectReference Include="..\..\Common\Common.csproj" />
+  <ProjectReference Include="..\..\SharedKernel\SharedKernel.csproj" />
 </ItemGroup>
 ```
 
 **例：Domain層で Repository インターフェースを定義**
 ```csharp
 // Domain/Repositories/IOrderRepository.cs
-namespace Contexts.Sample1.Domain.Repositories {
+namespace SampleContext.Domain.Repositories {
     public interface IOrderRepository {
         void Save(Order order);
         Order GetById(OrderId id);
@@ -668,20 +667,20 @@ namespace Contexts.Sample1.Domain.Repositories {
 
 **参照先：Common / SharedKernel / 同一Context内の Domain のみ**
 ```xml
-<!-- 例：Contexts/Sample1/Application/Application.csproj -->
+<!-- 例：Contexts/Samples/CarPreferences.Application/CarPreferences.Application.csproj -->
 <ItemGroup>
-  <ProjectReference Include="..\..\..\Common\Common.csproj" />
-  <ProjectReference Include="..\..\..\SharedKernel\SharedKernel.csproj" />
-  <ProjectReference Include="..\Domain\Domain.csproj" />
+  <ProjectReference Include="..\..\Common\Common.csproj" />
+  <ProjectReference Include="..\..\SharedKernel\SharedKernel.csproj" />
+  <ProjectReference Include="..\CarPreferences.Domain\CarPreferences.Domain.csproj" />
 </ItemGroup>
 ```
 
 **例：Application層で Domain のポートを使用**
 ```csharp
 // Application/UseCases/CreateOrderInteractor.cs
-using Contexts.Sample1.Domain.Repositories; // Domain層のポート
+using SampleContext.Domain.Repositories; // Domain層のポート
 
-namespace Contexts.Sample1.Application.UseCases {
+namespace SampleContext.Application.UseCases {
     public class CreateOrderInteractor {
         private readonly IOrderRepository _repository; // Domain層で定義
         
@@ -705,22 +704,22 @@ namespace Contexts.Sample1.Application.UseCases {
 
 **参照先：Common / SharedKernel / 同一Context内の Domain / Application**
 ```xml
-<!-- 例：Contexts/Sample1/Infrastructure/Infrastructure.csproj -->
+<!-- 例：Contexts/Samples/CarPreferences.Infrastructure/CarPreferences.Infrastructure.csproj -->
 <ItemGroup>
-  <ProjectReference Include="..\..\..\Common\Common.csproj" />
-  <ProjectReference Include="..\..\..\SharedKernel\SharedKernel.csproj" />
-  <ProjectReference Include="..\Domain\Domain.csproj" />
-  <ProjectReference Include="..\Application\Application.csproj" />
-  <ProjectReference Include="..\..\..\Crosscutting\Crosscutting.csproj" />
+  <ProjectReference Include="..\..\Common\Common.csproj" />
+  <ProjectReference Include="..\..\SharedKernel\SharedKernel.csproj" />
+  <ProjectReference Include="..\CarPreferences.Domain\CarPreferences.Domain.csproj" />
+  <ProjectReference Include="..\CarPreferences.Application\CarPreferences.Application.csproj" />
+  <ProjectReference Include="..\..\Crosscutting\Crosscutting.csproj" />
 </ItemGroup>
 ```
 
 **例：Infrastructure層で Domain のポートを実装**
 ```csharp
 // Infrastructure/Repositories/SqlServerOrderRepository.cs
-using Contexts.Sample1.Domain.Repositories; // Domain層のポート
+using SampleContext.Domain.Repositories; // Domain層のポート
 
-namespace Contexts.Sample1.Infrastructure.Repositories {
+namespace SampleContext.Infrastructure.Repositories {
     public class SqlServerOrderRepository : IOrderRepository {
         public void Save(Order order) {
             // SQL Server実装
@@ -752,8 +751,7 @@ namespace Contexts.Sample1.Infrastructure.Repositories {
   <ProjectReference Include="..\..\Crosscutting\Crosscutting.csproj" />
   
   <!-- 各Contextの Infrastructure のみ参照（Application / Domain ではなく） -->
-  <ProjectReference Include="..\..\Contexts\Sample1\Infrastructure\Infrastructure.csproj" />
-  <ProjectReference Include="..\..\Contexts\Sample2\Infrastructure\Infrastructure.csproj" />
+  <ProjectReference Include="..\..\Contexts\Samples\CarPreferences.Infrastructure\CarPreferences.Infrastructure.csproj" />
 </ItemGroup>
 ```
 

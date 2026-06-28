@@ -31,6 +31,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Common\Common.csproj" />
+    <ProjectReference Include="..\..\Contexts\Samples\CarPreferences.Infrastructure\CarPreferences.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Crosscutting\Crosscutting.csproj" />
+    <ProjectReference Include="..\..\SharedKernel\SharedKernel.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Update="appsettings.Intrinsic.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
