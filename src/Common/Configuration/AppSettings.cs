@@ -1,8 +1,7 @@
 using SupportAdvance.Common.Clocks;
 using SupportAdvance.Common.Configuration;
-using SupportAdvance.Presentation.Shared.DependencyInjection.Clock;
 
-namespace SupportAdvance.Presentation.Shared.DependencyInjection.Configuration;
+namespace SupportAdvance.Common.Configuration;
 
 public class AppSettings : IAppsSettings
 {

@@ -1,6 +1,6 @@
 using SupportAdvance.Common.Clocks;
 
-namespace SupportAdvance.Presentation.Shared.DependencyInjection.Clock;
+namespace SupportAdvance.Common.Clocks;
 
 /// <summary>
 /// クロック設定の具体実装
