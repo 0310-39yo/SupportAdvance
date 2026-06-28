@@ -37,4 +37,10 @@
     </Folder>
     <Folder Name="/tests/Presentation/" />
   </Folder>
+  <Folder Name="/tests/Contexts/" />
+  <Folder Name="/tests/Contexts/Samples/">
+    <Project Path="tests/Contexts/Samples/CarPreferences.Application.Tests/CarPreferences.Application.Tests.csproj" />
+    <Project Path="tests/Contexts/Samples/CarPreferences.Domain.Tests/CarPreferences.Domain.Tests.csproj" />
+    <Project Path="tests/Contexts/Samples/CarPreferences.Infrastructure.Tests/CarPreferences.Infrastructure.Tests.csproj" />
+  </Folder>
 </Solution>
