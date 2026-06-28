@@ -1,4 +1,4 @@
-﻿namespace SupportAdvance.Presentation.WinTrial
+﻿namespace SupportAdvance.Presentation.WinTrial.Views
 {
     partial class Form1
     {

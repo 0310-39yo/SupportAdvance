@@ -22,6 +22,7 @@
 
   <ItemGroup>
     <Folder Include="configs\" />
+    <Folder Include="ViewModels\" />
   </ItemGroup>
 
   <ItemGroup>
