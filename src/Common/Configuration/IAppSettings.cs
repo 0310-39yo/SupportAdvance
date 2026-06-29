@@ -15,7 +15,7 @@ namespace SupportAdvance.Common.Configuration;
 /// 【注記】
 /// IClockSettings は Common.Settings に独立。DI コンテナから別途取得。
 /// </summary>
-public interface IAppsSettings :
+public interface IAppSettings :
     IApplicationSettings,
     IFileSystemSettings,
     IDatabaseSettings

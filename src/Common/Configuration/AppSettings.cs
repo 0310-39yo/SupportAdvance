@@ -1,9 +1,8 @@
 using SupportAdvance.Common.Clocks;
-using SupportAdvance.Common.Configuration;
 
 namespace SupportAdvance.Common.Configuration;
 
-public class AppSettings : IAppsSettings
+public class AppSettings : IAppSettings
 {
     /// <summary>
     /// DebugBuild = "Debug"

@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using SupportAdvance.Common.Configuration;
+using SupportAdvance.Infrastructure;
 using SupportAdvance.Presentation.Shared;
 using SupportAdvance.Presentation.WinTrial.Views;
 
@@ -18,7 +19,13 @@ internal static class Program
         ApplicationConfiguration.Initialize();
         DapperTypeHandlerRegistration.Register();
 
-        using var host = HostBuilderFactory.Create(null, (context, services) => { services.AddWinTrialModules(); })
+        using var host = HostBuilderFactory.Create(null, (context, services) =>
+            {
+                services
+                    .AddInfrastructureModels(context.Configuration)
+                    .AddWinTrialModules()
+                    ;
+            })
             .Build();
 
         host.Start();
