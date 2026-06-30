@@ -7,11 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Common\Common.csproj" />
-    <ProjectReference Include="..\SharedKernel\SharedKernel.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Folder Include="Data\Connections\" />
     <Folder Include="Data\Repositories\" />
     <Folder Include="Data\Migrations\" />
@@ -28,6 +23,11 @@
     <PackageReference Include="RepoDb.PostgreSql.BulkOperations" Version="1.14.0" />
     <PackageReference Include="RepoDb.SqlServer" Version="1.14.0" />
     <PackageReference Include="RepoDb.SqlServer.BulkOperations" Version="1.14.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Application\Application.csproj" />
+    <ProjectReference Include="..\Crosscutting\Crosscutting.csproj" />
   </ItemGroup>
 
 </Project>

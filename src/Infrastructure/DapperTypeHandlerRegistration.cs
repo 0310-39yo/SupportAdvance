@@ -1,7 +1,7 @@
 using System.Data;
 using Dapper;
 
-namespace SupportAdvance.Presentation.Shared;
+namespace SupportAdvance.Infrastructure;
 
 /// <summary>
 /// Dapper型ハンドラ登録支援ヘルパークラス

@@ -12,9 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Common\Common.csproj" />
-    <ProjectReference Include="..\..\..\Crosscutting\Crosscutting.csproj" />
-    <ProjectReference Include="..\..\..\SharedKernel\SharedKernel.csproj" />
+    <ProjectReference Include="..\..\..\Infrastructure\Infrastructure.csproj" />
     <ProjectReference Include="..\CarPreferences.Application\CarPreferences.Application.csproj" />
     <ProjectReference Include="..\CarPreferences.Domain\CarPreferences.Domain.csproj" />
   </ItemGroup>

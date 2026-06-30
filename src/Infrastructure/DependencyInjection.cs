@@ -13,6 +13,9 @@ public static class DependencyInjection
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configuration);
 
+        // ステップ0: Dapper初期化（起動時の一度だけ）
+        DapperTypeHandlerRegistration.Register();
+
         // ステップ1: appsettings.json から統合設定からバインド
         var appSettings = configuration
                               .GetSection("AppSettings")

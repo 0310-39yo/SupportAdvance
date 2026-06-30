@@ -1,6 +1,9 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using SupportAdvance.Common.Configuration;
+using SupportAdvance.Contexts.Samples.CarPreferences.Application;
+using SupportAdvance.Contexts.Samples.CarPreferences.Infrastructure;
+using SupportAdvance.Crosscutting;
 using SupportAdvance.Infrastructure;
 using SupportAdvance.Presentation.Shared;
 using SupportAdvance.Presentation.WinTrial.Views;
@@ -17,12 +20,15 @@ internal static class Program
     {
         DebugConsoleHelper.OpenConsoleForDebug();
         ApplicationConfiguration.Initialize();
-        DapperTypeHandlerRegistration.Register();
 
         using var host = HostBuilderFactory.Create(null, (context, services) =>
             {
                 services
+                    .AddCrosscuttingModels(context.Configuration)
                     .AddInfrastructureModels(context.Configuration)
+                    .AddCarPreferencesInfrastructureModels()
+                    
+                    .AddCarPreferencesApplicationModels()
                     .AddWinTrialModules()
                     ;
             })
@@ -33,7 +39,7 @@ internal static class Program
         using var scope = host.Services.CreateScope();
         var mainForm = scope.ServiceProvider.GetRequiredService<Form1>() ??
                        ActivatorUtilities.CreateInstance<Form1>(scope.ServiceProvider);
-        Application.Run(mainForm);
+        System.Windows.Forms.Application.Run(mainForm);
         host.StopAsync().GetAwaiter().GetResult();
     }
 }
