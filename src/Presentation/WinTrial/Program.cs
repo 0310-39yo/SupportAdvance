@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using SupportAdvance.Application;
 using SupportAdvance.Common.Configuration;
 using SupportAdvance.Contexts.Samples.CarPreferences.Application;
 using SupportAdvance.Contexts.Samples.CarPreferences.Infrastructure;
@@ -27,7 +28,7 @@ internal static class Program
                     .AddCrosscuttingModels(context.Configuration)
                     .AddInfrastructureModels(context.Configuration)
                     .AddCarPreferencesInfrastructureModels()
-                    
+                    .AddApplicationModels()
                     .AddCarPreferencesApplicationModels()
                     .AddWinTrialModules()
                     ;
