@@ -28,24 +28,25 @@ namespace SupportAdvance.Presentation.WinTrial.Views
         /// </summary>
         private void InitializeComponent()
         {
-            button1 = new Button();
+            sfButton1 = new Syncfusion.WinForms.Controls.SfButton();
             SuspendLayout();
             // 
-            // button1
+            // sfButton1
             // 
-            button1.Location = new Point(92, 51);
-            button1.Name = "button1";
-            button1.Size = new Size(103, 33);
-            button1.TabIndex = 0;
-            button1.Text = "button1";
-            button1.UseVisualStyleBackColor = true;
+            sfButton1.FlatStyle = FlatStyle.Popup;
+            sfButton1.Font = new Font("Segoe UI Semibold", 9F);
+            sfButton1.Location = new Point(35, 35);
+            sfButton1.Name = "sfButton1";
+            sfButton1.Size = new Size(96, 28);
+            sfButton1.TabIndex = 1;
+            sfButton1.Text = "テストボタン";
             // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(488, 302);
-            Controls.Add(button1);
+            ClientSize = new Size(484, 302);
+            Controls.Add(sfButton1);
             Name = "Form1";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "Form1";
@@ -53,7 +54,6 @@ namespace SupportAdvance.Presentation.WinTrial.Views
         }
 
         #endregion
-
-        private Button button1;
+        private Syncfusion.WinForms.Controls.SfButton sfButton1;
     }
 }

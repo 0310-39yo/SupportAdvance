@@ -22,6 +22,9 @@ internal static class Program
         DebugConsoleHelper.OpenConsoleForDebug();
         ApplicationConfiguration.Initialize();
 
+        // Syncfusion ライセンスキーを環境変数から登録
+        SyncfusionLicenseHelper.RegisterLicenseFromEnvironment();
+
         using var host = HostBuilderFactory.Create(null, (context, services) =>
             {
                 services
@@ -38,7 +41,7 @@ internal static class Program
         host.Start();
 
         using var scope = host.Services.CreateScope();
-        var mainForm = scope.ServiceProvider.GetRequiredService<Form1>() ??
+        var mainForm = ServiceProviderServiceExtensions.GetRequiredService<Form1>(scope.ServiceProvider) ??
                        ActivatorUtilities.CreateInstance<Form1>(scope.ServiceProvider);
         System.Windows.Forms.Application.Run(mainForm);
         host.StopAsync().GetAwaiter().GetResult();

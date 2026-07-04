@@ -27,6 +27,6 @@ public partial class Form1 : Form
         _logger.LogWarning("警告");
         _logger.LogInformation(_appSettings?.ApplicationBuildType ?? "Unknown");
 
-        button1.Command = _viewModel.ExecuteSampleUseCaseCommand;
+        sfButton1.Command = _viewModel.ExecuteSampleUseCaseCommand;
     }
 }
