@@ -28,8 +28,7 @@ public static class HostBuilderFactory
         return Host.CreateDefaultBuilder().ConfigureAppConfiguration((context, config) =>
             {
                 //appsettings.json などの構成読み込み（インフラ層の仕事）
-                ConfigurationHelper.ConfigureApp(config,
-                    environmentName ?? context.HostingEnvironment.EnvironmentName ?? EnvironmentInfo.Environment);
+                ConfigurationHelper.ConfigureApp(config, environmentName ?? EnvironmentInfo.Environment);
 
                 var builtConfig = config.Build();
                 var appsettings = builtConfig.GetSection(nameof(AppSettings)).Get<AppSettings>() ??

@@ -12,7 +12,7 @@ public static class ConfigurationHelper
     /// </summary>
     /// <param name="config">構成ビルダー</param>
     /// <param name="environmentName">環境名</param>
-    public static void ConfigureApp(IConfigurationBuilder config, string environmentName)
+    public static void ConfigureApp(IConfigurationBuilder config, string? environmentName)
     {
         ArgumentNullException.ThrowIfNull(config);
         ArgumentException.ThrowIfNullOrEmpty(environmentName);
