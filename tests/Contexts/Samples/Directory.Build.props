@@ -1,0 +1,5 @@
+<Project>
+  <PropertyGroup>
+    <RootNamespace>SupportAdvance.Tests.Contexts.Samples.$(MSBuildProjectName)</RootNamespace>
+  </PropertyGroup>
+</Project>
