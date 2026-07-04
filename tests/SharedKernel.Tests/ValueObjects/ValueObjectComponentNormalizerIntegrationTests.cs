@@ -3,9 +3,9 @@ namespace SupportAdvance.SharedKernel.Tests.ValueObjects;
 using SupportAdvance.SharedKernel.Tests.ValueObjects.Fixtures;
 
 /// <summary>
-/// ValueObjectComponentNormalizer の動作をValueObject経由でテスト
-/// 仕様: ValueObjectComponentNormalizer単体テスト仕様書.md
-/// 
+/// ValueObjectComponentNormalizer の動作を ValueObject 経由でテスト
+/// 仕様: ValueObjectComponentNormalizer 単体テスト仕様書.md
+///
 /// 注：ValueObjectComponentNormalizer は internal なので、
 /// ValueObject（Equals, GetHashCode, ToString）を通じて間接的にテストする
 /// </summary>
@@ -39,7 +39,7 @@ public class ValueObjectComponentNormalizerIntegrationTests
     /// <summary>
     /// 観点: VCN-A-02
     /// IsSet フラグが異なるとハッシュコード・等価性に反映される
-    /// → 正規化が IsSet を含めているので
+    /// → 正規化が IsSet を含めている側面
     /// </summary>
     [Fact]
     public void VCN_A02_IsSetIntegratedInNormalization_ConfirmedByHashCode()
@@ -115,10 +115,7 @@ public class ValueObjectComponentNormalizerIntegrationTests
     [Fact]
     public void VCN_C03_NormalizationWithNullComponent()
     {
-        // Arrange - null を含む複数要素のシナリオ
-        //（ValueObject直接のテストでは null component を持つことはないので、
-        // 内部的には Normalize が null を含む場合でも処理できることを確認）
-
+        // Arrange
         var obj1 = OrderId.Create("ID-003", isSet: true);
         var obj2 = OrderId.Create("ID-003", isSet: true);
 
@@ -133,7 +130,7 @@ public class ValueObjectComponentNormalizerIntegrationTests
     }
 
     /// <summary>
-    /// ToString がIsSetを含めて正規化されることを確認
+    /// ToString でIsSetを含めて正規化されることを確認
     /// </summary>
     [Fact]
     public void VCN_NormalizationInToString()
@@ -219,6 +216,8 @@ public class ValueObjectComponentNormalizerIntegrationTests
         // Act & Assert
         // 正規化が正しく機能するので、obj1 と obj2 は同じハッシュコード＆等価 → 重複排除される
         Assert.Equal(2, hashSet.Count);
+        Assert.Contains(obj1, hashSet);
+        Assert.Contains(obj3, hashSet);
     }
 
     /// <summary>
@@ -230,15 +229,19 @@ public class ValueObjectComponentNormalizerIntegrationTests
         // Arrange
         var key1 = OrderId.Create("ID-008", isSet: true);
         var key1Same = OrderId.Create("ID-008", isSet: true);
+        var key2 = OrderId.Create("ID-009", isSet: true);
 
-        var dict = new Dictionary<OrderId, string> { { key1, "Value1" } };
+        var dict = new Dictionary<OrderId, string>
+        {
+            { key1, "Value1" },
+            { key2, "Value2" }
+        };
 
         // Act
-        var canRetrieve = dict.TryGetValue(key1Same, out var value);
+        var found = dict.TryGetValue(key1Same, out var value);
 
         // Assert
-        // 正規化により、key1 と key1Same は同じハッシュコード＆等価なので取得できる
-        Assert.True(canRetrieve);
+        Assert.True(found);
         Assert.Equal("Value1", value);
     }
 }

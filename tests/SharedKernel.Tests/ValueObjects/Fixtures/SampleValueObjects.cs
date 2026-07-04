@@ -86,3 +86,72 @@ public class ProductPrice : ValueObject
         yield return Currency;
     }
 }
+
+/// <summary>
+/// EnumValueObject の具体実装例
+/// OrderStatus（注文ステータス：下書き、承認済、完了）
+/// </summary>
+public sealed class OrderStatus : EnumValueObject<int>
+{
+    /// <summary>
+    /// 下書き（内部値：1）
+    /// </summary>
+    public static readonly OrderStatus Draft = new(1);
+
+    /// <summary>
+    /// 承認済（内部値：2）
+    /// </summary>
+    public static readonly OrderStatus Approved = new(2);
+
+    /// <summary>
+    /// 完了（内部値：3）
+    /// </summary>
+    public static readonly OrderStatus Completed = new(3);
+
+    /// <summary>
+    /// プライベートコンストラクタ - 静的フィールド経由でのみ生成
+    /// </summary>
+    private OrderStatus(int value)
+        : base(value)
+    {
+    }
+
+    /// <summary>
+    /// 内部値から OrderStatus を逆引きする
+    /// </summary>
+    public static OrderStatus From(int value)
+    {
+        return value switch
+        {
+            1 => Draft,
+            2 => Approved,
+            3 => Completed,
+            _ => throw new ArgumentOutOfRangeException(nameof(value), "Invalid order status value")
+        };
+    }
+
+    /// <summary>
+    /// 選択肢の妥当性をチェック（1～3）
+    /// </summary>
+    protected override void Validate(int value)
+    {
+        if (value is < 1 or > 3)
+        {
+            throw new ArgumentOutOfRangeException(nameof(value), "Order status must be between 1 and 3");
+        }
+    }
+
+    /// <summary>
+    /// 内部値から業務名称（日本語表示名）を取得
+    /// </summary>
+    protected override string GetDisplayName()
+    {
+        return ValueField switch
+        {
+            1 => "下書き",
+            2 => "承認済",
+            3 => "完了",
+            _ => string.Empty
+        };
+    }
+}
