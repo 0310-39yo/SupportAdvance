@@ -10,6 +10,7 @@ public sealed class RespondentAgeTests
 {
     #region From メソッドテスト
 
+    /// <summary>VO-OPT-02: From\uff08有効値\uff09で設定済みインスタンス返却確認</summary>
     [Theory]
     [InlineData(0)]
     [InlineData(1)]
@@ -17,7 +18,7 @@ public sealed class RespondentAgeTests
     [InlineData(50)]
     [InlineData(75)]
     [InlineData(150)]
-    public void From_WithValidAge_CreatesInstance(int age)
+    public void VO_OPT_02_From_WithValidAge_CreatesInstance(int age)
     {
         // Act
         var result = RespondentAge.From(age);
@@ -30,6 +31,7 @@ public sealed class RespondentAgeTests
         Assert.Equal(age.ToString(), result.ToString());
     }
 
+    /// <summary>VO-VR-01,02,03: From\uff08無効値\uff09で ArgumentOutOfRangeException スロー確認</summary>
     [Theory]
     [InlineData(-1)]
     [InlineData(-100)]
@@ -46,8 +48,9 @@ public sealed class RespondentAgeTests
 
     #region Unset メソッドテスト
 
+    /// <summary>VO-OPT-01, VO-TS-01: Unset() で未設定インスタンス返却確認</summary>
     [Fact]
-    public void Unset_CreatesUnsetInstance()
+    public void VO_OPT_01_Unset_CreatesUnsetInstance()
     {
         // Act
         var result = RespondentAge.Unset();
@@ -58,8 +61,9 @@ public sealed class RespondentAgeTests
         Assert.Equal("Unset", result.ToString());
     }
 
+    /// <summary>VO-EQ-04: Unset() の複数呼び出しが等価確認</summary>
     [Fact]
-    public void Unset_MultipleCalls_ReturnEqualInstances()
+    public void VO_EQ_04_Unset_MultipleCalls_ReturnEqualInstances()
     {
         // Act
         var result1 = RespondentAge.Unset();
@@ -73,6 +77,7 @@ public sealed class RespondentAgeTests
 
     #region TryFrom(int?) メソッドテスト
 
+    /// <summary>VO-OPT-04: TryFrom\uff08有効値\uff09で true と設定済み返却確認</summary>
     [Theory]
     [InlineData(0)]
     [InlineData(1)]
@@ -92,8 +97,9 @@ public sealed class RespondentAgeTests
         Assert.Equal(age, value);
     }
 
+    /// <summary>VO-OPT-03: TryFrom(null) で true と Unset 返却確認</summary>
     [Fact]
-    public void TryFrom_WithNullInput_ReturnsUnsetAndTrue()
+    public void VO_OPT_03_TryFrom_WithNullInput_ReturnsUnsetAndTrue()
     {
         // Act
         var success = RespondentAge.TryFrom(null, out var result);
@@ -105,6 +111,7 @@ public sealed class RespondentAgeTests
         Assert.Equal(RespondentAge.Unset(), result);
     }
 
+    /// <summary>VO-OPT-05: TryFrom\uff08無効値\uff09で false と Unset 返却確認</summary>
     [Theory]
     [InlineData(-1)]
     [InlineData(-100)]
@@ -127,6 +134,7 @@ public sealed class RespondentAgeTests
 
     #region TryFrom(int) メソッドテスト（非nullable版）
 
+    /// <summary>VO-OPT-04: TryFrom(int)\uff08nullable版\uff09で有効値を受け言れ確認</summary>
     [Theory]
     [InlineData(0)]
     [InlineData(25)]
@@ -142,6 +150,7 @@ public sealed class RespondentAgeTests
         Assert.Equal(age, value);
     }
 
+    /// <summary>VO-OPT-05: TryFrom(int)\uff08nullable版\uff09で無効値を戜撃確認</summary>
     [Theory]
     [InlineData(-1)]
     [InlineData(151)]
@@ -159,6 +168,7 @@ public sealed class RespondentAgeTests
 
     #region TryGetValue メソッドテスト
 
+    /// <summary>VO-OPT-06: TryGetValue\uff08IsSet=true\uff09で true と値返却確認</summary>
     [Theory]
     [InlineData(0)]
     [InlineData(1)]
@@ -178,6 +188,7 @@ public sealed class RespondentAgeTests
         Assert.Equal(age, value);
     }
 
+    /// <summary>VO-OPT-07: TryGetValue\uff08IsSet=false\uff09で false 返却確認</summary>
     [Fact]
     public void TryGetValue_WhenUnset_ReturnsFalseWithDefault()
     {
@@ -213,6 +224,7 @@ public sealed class RespondentAgeTests
         Assert.True(instance1 == instance2 || instance1.Equals(instance2)); // 後者はIEquatable
     }
 
+    /// <summary>VO-EQ-04: Equals\uff08Unset=Unset\uff09で true 確認</summary>
     [Fact]
     public void Equals_WithUnset_SameInstance_ReturnsTrue()
     {
@@ -223,11 +235,12 @@ public sealed class RespondentAgeTests
         Assert.Equal(instance, instance);
     }
 
+    /// <summary>VO-NE-01: NotEqual\uff08\u7570なる値\uff09で false 確認</summary>
     [Theory]
     [InlineData(0, 25)]
     [InlineData(1, 150)]
     [InlineData(25, 50)]
-    public void Equals_WithDifferentValues_ReturnsFalse(int age1, int age2)
+    public void VO_NE_01_Equals_WithDifferentValues_ReturnsFalse(int age1, int age2)
     {
         // Arrange
         var instance1 = RespondentAge.From(age1);
@@ -238,6 +251,7 @@ public sealed class RespondentAgeTests
         Assert.False(instance1.Equals(instance2));
     }
 
+    /// <summary>VO-NE-02: NotEqual\uff08IsSet\u76d8\u7570\uff09で false 確認</summary>
     [Theory]
     [InlineData(0)]
     [InlineData(25)]
@@ -253,8 +267,9 @@ public sealed class RespondentAgeTests
         Assert.False(valid.Equals(unset));
     }
 
+    /// <summary>VO-NE-04: Equals(null) で false 確認</summary>
     [Fact]
-    public void Equals_WithNull_ReturnsFalse()
+    public void VO_NE_04_Equals_WithNull_ReturnsFalse()
     {
         // Arrange
         var instance = RespondentAge.From(25);
@@ -264,8 +279,9 @@ public sealed class RespondentAgeTests
         Assert.False(instance == null);
     }
 
+    /// <summary>VO-EQ-02: Equals\uff08自己参照\uff09で true 確認</summary>
     [Fact]
-    public void Equals_WithSelfReference_ReturnsTrue()
+    public void VO_EQ_02_Equals_WithSelfReference_ReturnsTrue()
     {
         // Arrange
         var instance = RespondentAge.From(25);
@@ -274,6 +290,7 @@ public sealed class RespondentAgeTests
         Assert.True(instance.Equals(instance));
     }
 
+    /// <summary>VO-EQ-01: Equals(object)\uff08同一値\uff09で true 確認</summary>
     [Fact]
     public void Equals_Object_WithSameValues_ReturnsTrue()
     {
@@ -286,6 +303,7 @@ public sealed class RespondentAgeTests
         Assert.True(instance1.Equals(instance2AsObject));
     }
 
+    /// <summary>VO-NE-01: NotEqual(object)\uff08\u7570なる値\uff09で false 確認</summary>
     [Fact]
     public void Equals_Object_WithDifferentValues_ReturnsFalse()
     {
@@ -302,12 +320,13 @@ public sealed class RespondentAgeTests
 
     #region ハッシング テスト
 
+    /// <summary>VO-HC-01: GetHashCode\uff08同一値\uff09で同一ハッシュ確認</summary>
     [Theory]
     [InlineData(0)]
     [InlineData(1)]
     [InlineData(25)]
     [InlineData(150)]
-    public void GetHashCode_WithSameValues_ReturnsSameHashCode(int age)
+    public void VO_HC_01_GetHashCode_WithSameValues_ReturnsSameHashCode(int age)
     {
         // Arrange
         var instance1 = RespondentAge.From(age);
@@ -317,6 +336,7 @@ public sealed class RespondentAgeTests
         Assert.Equal(instance1.GetHashCode(), instance2.GetHashCode());
     }
 
+    /// <summary>VO-HC-04: GetHashCode\uff08Unset\uff09を複数呼び出しで一貴性確認</summary>
     [Fact]
     public void GetHashCode_UnsetInstances_ReturnsSameHashCode()
     {
@@ -328,6 +348,7 @@ public sealed class RespondentAgeTests
         Assert.Equal(instance1.GetHashCode(), instance2.GetHashCode());
     }
 
+    /// <summary>VO-HC-01: GetHashCodeを Dictionary で実装可能確認</summary>
     [Fact]
     public void GetHashCode_CanBeUsedInDictionary()
     {
@@ -347,6 +368,7 @@ public sealed class RespondentAgeTests
         Assert.Equal("Unset", dict[RespondentAge.Unset()]);
     }
 
+    /// <summary>VO-HC-01: GetHashCodeを HashSet で実装可能確認</summary>
     [Fact]
     public void GetHashCode_CanBeUsedInHashSet()
     {
@@ -369,6 +391,7 @@ public sealed class RespondentAgeTests
 
     #region ToString テスト
 
+    /// <summary>VO-TS-02: ToString\uff08IsSet=true\uff09で値を文字列化確認</summary>
     [Theory]
     [InlineData(0, "0")]
     [InlineData(1, "1")]
@@ -388,6 +411,7 @@ public sealed class RespondentAgeTests
         Assert.Equal(expected, result);
     }
 
+    /// <summary>VO-TS-01: ToString\uff08IsSet=false\uff09で "Unset" 返却確認</summary>
     [Fact]
     public void ToString_WhenUnset_ReturnsUnsetString()
     {
@@ -405,6 +429,7 @@ public sealed class RespondentAgeTests
 
     #region 0 vs null 区別テスト
 
+    /// <summary>VO-NE-02, VO-VR-01: From(0) と Unset が畵異握確認\uff080 を\u6709効値として受け入れ\uff09</summary>
     [Fact]
     public void From0_WithIsSetTrue_IsDifferentFromUnset()
     {
@@ -425,6 +450,7 @@ public sealed class RespondentAgeTests
         Assert.NotEqual(age0, unset);
     }
 
+    /// <summary>VO-EQ-01, VO-HC-01: GetEqualityComponents で IsSet フラグから確認されている</summary>
     [Fact]
     public void Age0_GetEqualityComponents_IncludesIsSetFlag()
     {
@@ -440,6 +466,7 @@ public sealed class RespondentAgeTests
         Assert.Equal(age0.GetHashCode(), age0_another.GetHashCode());
     }
 
+    /// <summary>VO-OPT-03, VO-OPT-04: TryFrom(0) と TryFrom(null) が区別されている確認</summary>
     [Fact]
     public void TryFrom_Zero_CreatesValidSet_DifferentFromUnset()
     {

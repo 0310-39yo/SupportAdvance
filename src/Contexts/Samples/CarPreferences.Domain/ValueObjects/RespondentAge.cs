@@ -1,4 +1,4 @@
-﻿using SupportAdvance.SharedKernel.ValueObjects;
+using SupportAdvance.SharedKernel.ValueObjects;
 
 namespace SupportAdvance.Contexts.Samples.CarPreferences.Domain.ValueObjects;
 
@@ -28,6 +28,27 @@ public sealed class RespondentAge : PrimitiveValueObject<int>, IOptionalValueObj
     }
 
     /// <summary>
+    /// 指定されたRespondentAgeと等価かどうかを判定する
+    /// 【責務】指定されたRespondentAgeと等価かどうかを判定する
+    /// </summary>
+    /// <param name="other">比較対象のRespondentAge</param>
+    /// <returns>等価である場合はtrue、そうでない場合はfalse</returns>
+    public bool Equals(RespondentAge? other)
+    {
+        if (other is null)
+        {
+            return false;
+        }
+
+        if (ReferenceEquals(this, other))
+        {
+            return true;
+        }
+
+        return IsSet == other.IsSet && ValueField == other.ValueField;
+    }
+
+    /// <summary>
     /// 指定された整数値からRespondentAgeのインスタンスを生成する
     /// 【責務】指定された整数値を持つRespondentAgeを表現する
     /// </summary>
@@ -42,6 +63,33 @@ public sealed class RespondentAge : PrimitiveValueObject<int>, IOptionalValueObj
     /// </summary>
     /// <returns>未設定状態のRespondentAgeのインスタンス</returns>
     public static RespondentAge Unset() => new(false);
+
+    /// <summary>
+    /// 指定された整数値からRespondentAgeのインスタンスを生成する
+    /// 【責務】指定された整数値を持つRespondentAgeを表現する
+    /// </summary>
+    /// <param name="input">整数値</param>
+    /// <param name="result">生成されたRespondentAgeのインスタンス</param>
+    /// <returns>生成に成功した場合はtrue、失敗した場合はfalse</returns>
+    public static bool TryFrom(int input, out RespondentAge result) => TryFrom((int?)input, out result);
+
+    /// <summary>
+    /// 保持する値を取得する
+    /// 【責務】保持する値を取得する
+    /// </summary>
+    /// <param name="value">取得する値の格納先</param>
+    /// <returns>値が設定されている場合はtrue、未設定の場合はfalse</returns>
+    public new bool TryGetValue(out int value)
+    {
+        if (!IsSet)
+        {
+            value = 0;
+            return false;
+        }
+
+        value = ValueField;
+        return true;
+    }
 
     /// <summary>
     /// 指定された整数値からRespondentAgeのインスタンスを生成する
@@ -73,52 +121,12 @@ public sealed class RespondentAge : PrimitiveValueObject<int>, IOptionalValueObj
     }
 
     /// <summary>
-    /// 指定された整数値からRespondentAgeのインスタンスを生成する
-    /// 【責務】指定された整数値を持つRespondentAgeを表現する
-    /// </summary>
-    /// <param name="input">整数値</param>
-    /// <param name="result">生成されたRespondentAgeのインスタンス</param>
-    /// <returns>生成に成功した場合はtrue、失敗した場合はfalse</returns>
-    public static bool TryFrom(int input, out RespondentAge result) => TryFrom((int?)input, out result);
-
-    /// <summary>
-    /// 保持する値を取得する
-    /// 【責務】保持する値を取得する
-    /// </summary>
-    /// <param name="value">取得する値の格納先</param>
-    /// <returns>値が設定されている場合はtrue、未設定の場合はfalse</returns>
-    public new bool TryGetValue(out int value)
-    {
-        if(!IsSet)
-        {
-            value = 0;
-            return false;
-        }
-
-        value = ValueField;
-        return true;
-    }
-
-    /// <summary>
     /// 指定されたオブジェクトと等価かどうかを判定する
     /// 【責務】指定されたオブジェクトと等価かどうかを判定する
     /// </summary>
     /// <param name="obj">比較対象のオブジェクト</param>
     /// <returns>等価である場合はtrue、そうでない場合はfalse</returns>
     public override bool Equals(object? obj) => Equals(obj as RespondentAge);
-
-    /// <summary>
-    /// 指定されたRespondentAgeと等価かどうかを判定する
-    /// 【責務】指定されたRespondentAgeと等価かどうかを判定する
-    /// </summary>
-    /// <param name="other">比較対象のRespondentAge</param>
-    /// <returns>等価である場合はtrue、そうでない場合はfalse</returns>
-    public bool Equals(RespondentAge? other)
-    {
-        if (other is null) return false;
-        if (ReferenceEquals(this, other)) return true;
-        return IsSet == other.IsSet && ValueField == other.ValueField;
-    }
 
     /// <summary>
     /// ハッシュコードを取得する
@@ -139,14 +147,14 @@ public sealed class RespondentAge : PrimitiveValueObject<int>, IOptionalValueObj
         if (IsSet)
         {
             yield return ValueField;
-        } 
+        }
     }
 
     /// <summary>
     /// 正規化済み値の検証を行う
     /// 【責務】業務ルールに基づく値の妥当性のチェック
     /// Ageは0歳以上150歳以下である必要があるため、範囲外の値の場合は
-    /// ArgumentOutOfRangeExceptionをスローする     
+    /// ArgumentOutOfRangeExceptionをスローする
     /// </summary>
     /// <param name="normalized">正規化済みの値</param>
     /// <exception cref="ArgumentOutOfRangeException">値が有効な範囲外の場合にスローされる</exception>

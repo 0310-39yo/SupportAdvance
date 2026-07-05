@@ -74,7 +74,7 @@ public class CarModelTests
   [InlineData(4, "Coupe")]
   [InlineData(5, "Minivan")]
   [InlineData(6, "Other")]
-  public void StaticFields_AreInitialized_WithCorrectValues(int expectedValue, string fieldName)
+  public void VO_IS_01_StaticFields_AreInitialized_WithCorrectValues(int expectedValue, string fieldName)
   {
     // Arrange & Act
     CarModel field = expectedValue switch
@@ -113,7 +113,7 @@ public class CarModelTests
   [InlineData(4)]
   [InlineData(5)]
   [InlineData(6)]
-  public void From_WithValidValue1to6_ReturnsExpectedInstance(int value)
+  public void VO_OPT_02_From_WithValidValue1to6_ReturnsExpectedInstance(int value)
   {
     // Act
     var result = CarModel.From(value);
@@ -294,14 +294,14 @@ public class CarModelTests
   // ================== T-007: Equals / GetHashCode 正常系 ==================
 
   [Fact]
-  public void Sedan_EqualsSedan_ReturnsTrue()
+  public void VO_EQ_01_Sedan_EqualsSedan_ReturnsTrue()
   {
     // Act & Assert
     Assert.Equal(CarModel.Sedan, CarModel.Sedan);
   }
 
   [Fact]
-  public void From1_EqualsSedan_ReturnsTrue()
+  public void VO_EQ_01_From1_EqualsSedan_ReturnsTrue()
   {
     // Act
     var from1 = CarModel.From(1);
@@ -311,7 +311,7 @@ public class CarModelTests
   }
 
   [Fact]
-  public void Sedan_GetHashCode_IsConsistent()
+  public void VO_HC_04_Sedan_GetHashCode_IsConsistent()
   {
     // Act
     var hashCode1 = CarModel.Sedan.GetHashCode();
@@ -322,7 +322,7 @@ public class CarModelTests
   }
 
   [Fact]
-  public void From1_GetHashCode_EqualsSedanHashCode()
+  public void VO_HC_01_From1_GetHashCode_EqualsSedanHashCode()
   {
     // Act
     var from1 = CarModel.From(1);
@@ -334,7 +334,7 @@ public class CarModelTests
   }
 
   [Fact]
-  public void Sedan_EqualsNull_ReturnsFalse()
+  public void VO_NE_04_Sedan_EqualsNull_ReturnsFalse()
   {
     // Act & Assert
     Assert.Null(null);  // null 比較
@@ -382,21 +382,21 @@ public class CarModelTests
   // ================== T-010: Equals メソッド（不等価） ==================
 
   [Fact]
-  public void Sedan_NotEqualCoupe_ReturnsFalse()
+  public void VO_NE_01_Sedan_NotEqualCoupe_ReturnsFalse()
   {
     // Act & Assert
     Assert.NotEqual(CarModel.Sedan, CarModel.Coupe);
   }
 
   [Fact]
-  public void Sedan_NotEqualUnset_ReturnsFalse()
+  public void VO_NE_02_Sedan_NotEqualUnset_ReturnsFalse()
   {
     // Act & Assert
     Assert.NotEqual(CarModel.Sedan, CarModel.Unset());
   }
 
   [Fact]
-  public void Unset_EqualsUnset_ReturnsTrue()
+  public void VO_EQ_04_Unset_EqualsUnset_ReturnsTrue()
   {
     // Arrange
     var unset1 = CarModel.Unset();
