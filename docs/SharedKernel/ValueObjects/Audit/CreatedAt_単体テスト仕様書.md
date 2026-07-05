@@ -180,7 +180,7 @@
 | GetHashCode テスト | 5 | 同値:1, Dictionary:1, HashSet:1, 異値:1, 複数値:1 |
 | ToString テスト | 2 | ISO形式:2 |
 | 値の不変性テスト | 2 | Valueプロパティ:2 |
-| 不変性テスト | 1 | イミュータブル確認 |
+| ValueObject 不変性確認テスト | 1 | イミュータブル確認 |
 | 複数呼び出しテスト | 1 | インスタンス作成テスト |
 | 境界値テスト | 2 | MinValue直後:1, MaxValue直前:1 |
 | DateTimeKind テスト | 3 | UTC/Local/Unspecified |
