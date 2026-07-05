@@ -5,7 +5,7 @@ namespace SupportAdvance.SharedKernel.ValueObjects;
 /// 選択肢に対応する内部値を保持し、業務名称（表示名）を管理する。
 /// 派生クラスは Validate と GetDisplayName をオーバーライドして
 /// 選択肢ごとの検証と名称変換を実装する。
-/// IsSet は常に true（Unset 状態なし）
+/// IsSet の初期値は protected コンストラクタで制御可能
 /// GetEqualityComponents では IsSet と ValueField に基づき等価性を判定
 /// </summary>
 /// <typeparam name="TValue">選択肢の内部値型（struct 制約）</typeparam>
@@ -19,20 +19,40 @@ public abstract class EnumValueObject<TValue> : ValueObject
     protected readonly TValue ValueField;
 
     /// <summary>
+    /// Unset インスタンス用のコンストラクタ
+    /// </summary>
+    protected EnumValueObject() : this(default, false)
+    {
+    }
+
+    /// <summary>
     /// 派生クラスから呼び出すコンストラクタ
     /// 値を設定して IsSet を true で初期化し、Validate を実行する
     /// </summary>
     /// <param name="value">設定する選択肢の内部値</param>
-    protected EnumValueObject(TValue value)
+    protected EnumValueObject(TValue value) : this(value, true)
     {
-        IsSet = true;
-        ValueField = value;
-        Validate(value);
+    }
+
+    /// <summary>
+    /// 派生クラスから呼び出すコンストラクタ（protected）
+    /// 値と IsSet フラグを指定可能
+    /// </summary>
+    /// <param name="value">設定する選択肢の内部値</param>
+    /// <param name="isSet">設定状態フラグ</param>
+    protected EnumValueObject(TValue value, bool isSet)
+    {
+        IsSet = isSet;
+        ValueField = isSet ? value : default;
+        if (isSet)
+        {
+            Validate(value);
+        }
     }
 
     /// <summary>
     /// 選択肢の内部値を安全に取得する
-    /// EnumValueObject では IsSet は常に true なため、戻り値は常に true
+    /// IsSet が false の場合は false を返す
     /// </summary>
     /// <param name="value">取得した内部値（out パラメータ）</param>
     /// <returns>取得に成功した場合 true、失敗した場合 false</returns>
@@ -80,8 +100,9 @@ public abstract class EnumValueObject<TValue> : ValueObject
     /// <summary>
     /// オブジェクトを文字列で表現（ログ出力、UI 表示）
     /// IsSet が true なら GetDisplayName() の結果を返す
-    /// IsSet が false なら "Unset" を返す（形式上、実装上は到達しない）
+    /// IsSet が false なら "Unset" を返す
     /// </summary>
     /// <returns>文字列表現</returns>
     public override string ToString() => IsSet ? GetDisplayName() : "Unset";
 }
+

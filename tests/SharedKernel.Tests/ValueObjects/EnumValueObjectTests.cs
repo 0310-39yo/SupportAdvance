@@ -544,4 +544,100 @@ public class EnumValueObjectTests
         Assert.Equal(draft1, draft2);
         Assert.True(ReferenceEquals(draft1, draft2));  // 実は同じインスタンス参照
     }
+
+    // ================================================================================
+    // 2.8+ デフォルト値(0) vs Unset(null相当) の識別テスト（0 vs null セマンティクス）
+    // ================================================================================
+
+    /// <summary>
+    /// Test-DefaultValue-001: ValueField=0 でも IsSet=true なら値確定
+    /// EnumValueObject 自体は常に IsSet=true（明示的なテスト）
+    /// </summary>
+    [Fact]
+    public void EnumValueObject_AlwaysHasIsSetTrue_EvenWithDefaultValue()
+    {
+        // Arrange: OrderStatus は常に IsSet=true（派生クラスレベル）
+        var draft = OrderStatus.Draft;
+
+        // Act
+        var isSet = draft.IsSet;
+        var hasTryGetValue = draft.TryGetValue(out var value);
+
+        // Assert
+        Assert.True(isSet);
+        Assert.True(hasTryGetValue);
+        Assert.Equal(1, value);
+    }
+
+    /// <summary>
+    /// Test-DefaultValue-002: From() で復元後も IsSet=true が保持される
+    /// </summary>
+    [Fact]
+    public void From_CreatedInstance_AlwaysHasIsSetTrue()
+    {
+        // Arrange & Act
+        var created = OrderStatus.From(2);
+
+        // Assert
+        Assert.True(created.IsSet);
+        Assert.True(created.TryGetValue(out var value));
+        Assert.Equal(2, value);
+    }
+
+    /// <summary>
+    /// Test-DefaultValue-003: Equals/GetHashCode は IsSet に基づく
+    /// （同じ選択肢なら等価、IsSet 状態も含めて比較）
+    /// </summary>
+    [Fact]
+    public void Equality_IsBasedOnIsSet_AndValueField()
+    {
+        // Arrange
+        var draft1 = OrderStatus.Draft;
+        var draft2 = OrderStatus.From(1);  // Draft と同じ値
+
+        // Act
+        var areEqual = draft1.Equals(draft2);
+        var hashEqual = draft1.GetHashCode() == draft2.GetHashCode();
+
+        // Assert
+        Assert.True(areEqual);
+        Assert.True(hashEqual);
+    }
+
+    /// <summary>
+    /// Test-DefaultValue-004: ToString は IsSet に基づいて表示
+    /// EnumValueObject は常に IsSet=true なので GetDisplayName() を呼び出す
+    /// </summary>
+    [Fact]
+    public void ToString_Returns_DisplayName_WhenIsSetTrue()
+    {
+        // Arrange
+        var completed = OrderStatus.Completed;
+
+        // Act
+        var stringRepresentation = completed.ToString();
+
+        // Assert
+        Assert.NotEmpty(stringRepresentation);
+        Assert.NotEqual("Unset", stringRepresentation);  // "Unset" にはならない（IsSet是常に true）
+        Assert.Equal("完了", stringRepresentation);
+    }
+
+    /// <summary>
+    /// Test-DefaultValue-005: All static instances have IsSet=true
+    /// EnumValueObject は派生クラスでも常に IsSet=true
+    /// </summary>
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(3)]
+    public void AllStaticInstances_HaveIsSetTrue(int value)
+    {
+        // Arrange & Act
+        var instance = OrderStatus.From(value);
+
+        // Assert
+        Assert.True(instance.IsSet);
+        Assert.True(instance.TryGetValue(out _));
+    }
 }

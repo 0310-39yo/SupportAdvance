@@ -33,7 +33,7 @@
 | シグネチャ | `public bool IsSet { get; protected init; }` |
 | 戻り値 | true（常に。IsSet=true のみが有効状態） |
 | 例外 | 例外を投げない |
-| 用途 | 等価性判定、ToString 判定 |
+| 用途 | 等価性判定、ToString 判定、**0 vs null の識別** |
 
 **設計判断**
 
@@ -262,3 +262,4 @@ var status3 = OrderStatus.From(99);  // → ArgumentOutOfRangeException スロ�
 | 版 | 日付 | 作成者 | 変更内容 |
 |----|------|--------|---------|
 | 1.0 | 2026-07-04 | 加藤 正人 | 初版作成 |
+
