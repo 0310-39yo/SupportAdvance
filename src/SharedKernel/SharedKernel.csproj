@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="ValueObjects\IClockValueObject.cs" />
+    <None Include="ValueObjects\Abstractions\IClockValueObject.cs" />
   </ItemGroup>
 
 </Project>

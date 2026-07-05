@@ -1,4 +1,4 @@
-using SupportAdvance.SharedKernel.ValueObjects;
+﻿using SupportAdvance.SharedKernel.ValueObjects;
 
 namespace SupportAdvance.Contexts.Samples.CarPreferences.Domain.ValueObjects;
 

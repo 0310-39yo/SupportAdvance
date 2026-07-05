@@ -1,6 +1,7 @@
+using SupportAdvance.SharedKernel.ValueObjects;
+
 namespace SupportAdvance.SharedKernel.Tests.ValueObjects.Fixtures;
 
-using SupportAdvance.SharedKernel.ValueObjects;
 using System.Reflection;
 
 /// <summary>
