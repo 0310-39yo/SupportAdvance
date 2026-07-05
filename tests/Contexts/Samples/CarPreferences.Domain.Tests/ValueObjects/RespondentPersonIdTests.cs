@@ -1,7 +1,6 @@
-using Xunit;
 using SupportAdvance.Contexts.Samples.CarPreferences.Domain.ValueObjects;
 
-namespace SupportAdvance.Tests.Contexts.Samples.CarPreferences.Domain.ValueObjects;
+namespace SupportAdvance.Tests.Contexts.Samples.CarPreferences.Domain.Tests.ValueObjects;
 
 /// <summary>
 /// RespondentPersonId の単体テスト

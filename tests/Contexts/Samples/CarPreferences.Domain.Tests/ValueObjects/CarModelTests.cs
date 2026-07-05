@@ -1,7 +1,6 @@
 using SupportAdvance.Contexts.Samples.CarPreferences.Domain.ValueObjects;
-using Xunit;
 
-namespace SupportAdvance.Tests.Contexts.Samples.CarPreferences.Domain.ValueObjects;
+namespace SupportAdvance.Tests.Contexts.Samples.CarPreferences.Domain.Tests.ValueObjects;
 
 /// <summary>
 /// CarModel ValueObject の単体テスト

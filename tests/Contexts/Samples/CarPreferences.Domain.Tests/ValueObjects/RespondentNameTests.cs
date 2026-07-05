@@ -1,8 +1,6 @@
-using Xunit;
 using SupportAdvance.Contexts.Samples.CarPreferences.Domain.ValueObjects;
-using SupportAdvance.SharedKernel.ValueObjects;
 
-namespace SupportAdvance.Tests.Contexts.Samples.CarPreferences.Domain.ValueObjects;
+namespace SupportAdvance.Tests.Contexts.Samples.CarPreferences.Domain.Tests.ValueObjects;
 
 /// <summary>
 /// RespondentName の単体テスト
