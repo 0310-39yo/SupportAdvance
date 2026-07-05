@@ -4,11 +4,11 @@ using SupportAdvance.Contexts.Samples.CarPreferences.Domain.ValueObjects;
 namespace SupportAdvance.Tests.Contexts.Samples.CarPreferences.Domain.ValueObjects;
 
 /// <summary>
-/// RespondentAge ‚Ì’P‘ÌƒeƒXƒg
+/// RespondentAge ã®å˜ä½“ãƒ†ã‚¹ãƒˆ
 /// </summary>
 public sealed class RespondentAgeTests
 {
-    #region From ƒƒ\ƒbƒhƒeƒXƒg
+    #region From ãƒ¡ã‚½ãƒƒãƒ‰ãƒ†ã‚¹ãƒˆ
 
     [Theory]
     [InlineData(0)]
@@ -44,7 +44,7 @@ public sealed class RespondentAgeTests
 
     #endregion
 
-    #region Unset ƒƒ\ƒbƒhƒeƒXƒg
+    #region Unset ãƒ¡ã‚½ãƒƒãƒ‰ãƒ†ã‚¹ãƒˆ
 
     [Fact]
     public void Unset_CreatesUnsetInstance()
@@ -71,7 +71,7 @@ public sealed class RespondentAgeTests
 
     #endregion
 
-    #region TryFrom(int?) ƒƒ\ƒbƒhƒeƒXƒg
+    #region TryFrom(int?) ãƒ¡ã‚½ãƒƒãƒ‰ãƒ†ã‚¹ãƒˆ
 
     [Theory]
     [InlineData(0)]
@@ -125,7 +125,7 @@ public sealed class RespondentAgeTests
 
     #endregion
 
-    #region TryFrom(int) ƒƒ\ƒbƒhƒeƒXƒgi”ñnullable”Åj
+    #region TryFrom(int) ãƒ¡ã‚½ãƒƒãƒ‰ãƒ†ã‚¹ãƒˆï¼ˆénullableç‰ˆï¼‰
 
     [Theory]
     [InlineData(0)]
@@ -157,7 +157,7 @@ public sealed class RespondentAgeTests
 
     #endregion
 
-    #region TryGetValue ƒƒ\ƒbƒhƒeƒXƒg
+    #region TryGetValue ãƒ¡ã‚½ãƒƒãƒ‰ãƒ†ã‚¹ãƒˆ
 
     [Theory]
     [InlineData(0)]
@@ -194,7 +194,7 @@ public sealed class RespondentAgeTests
 
     #endregion
 
-    #region “™‰¿«ƒeƒXƒg
+    #region ç­‰ä¾¡æ€§ãƒ†ã‚¹ãƒˆ
 
     [Theory]
     [InlineData(0, 0)]
@@ -210,7 +210,7 @@ public sealed class RespondentAgeTests
         // Act & Assert
         Assert.Equal(instance1, instance2);
         Assert.True(instance1.Equals(instance2));
-        Assert.True(instance1 == instance2 || instance1.Equals(instance2)); // ŒãÒ‚ÍIEquatable
+        Assert.True(instance1 == instance2 || instance1.Equals(instance2)); // å¾Œè€…ã¯IEquatable
     }
 
     [Fact]
@@ -300,7 +300,7 @@ public sealed class RespondentAgeTests
 
     #endregion
 
-    #region ƒnƒbƒVƒ“ƒO ƒeƒXƒg
+    #region ãƒãƒƒã‚·ãƒ³ã‚° ãƒ†ã‚¹ãƒˆ
 
     [Theory]
     [InlineData(0)]
@@ -367,7 +367,7 @@ public sealed class RespondentAgeTests
 
     #endregion
 
-    #region ToString ƒeƒXƒg
+    #region ToString ãƒ†ã‚¹ãƒˆ
 
     [Theory]
     [InlineData(0, "0")]
@@ -403,7 +403,7 @@ public sealed class RespondentAgeTests
 
     #endregion
 
-    #region 0 vs null ‹æ•ÊƒeƒXƒg
+    #region 0 vs null åŒºåˆ¥ãƒ†ã‚¹ãƒˆ
 
     [Fact]
     public void From0_WithIsSetTrue_IsDifferentFromUnset()
@@ -413,15 +413,15 @@ public sealed class RespondentAgeTests
         var unset = RespondentAge.Unset();
 
         // Act & Assert
-        // From(0) ‚Í IsSet=true, ValueField=0
+        // From(0) ã¯ IsSet=true, ValueField=0
         Assert.True(age0.IsSet);
         Assert.True(age0.TryGetValue(out int age0Value));
         Assert.Equal(0, age0Value);
 
-        // Unset() ‚Í IsSet=false
+        // Unset() ã¯ IsSet=false
         Assert.False(unset.IsSet);
 
-        // “™‰¿«‚Í IsSet ƒtƒ‰ƒO‚Å”»’è ¨ ˆÙ‚È‚é
+        // ç­‰ä¾¡æ€§ã¯ IsSet ãƒ•ãƒ©ã‚°ã§åˆ¤å®š â†’ ç•°ãªã‚‹
         Assert.NotEqual(age0, unset);
     }
 
@@ -432,7 +432,7 @@ public sealed class RespondentAgeTests
         var age0 = RespondentAge.From(0);
 
         // Act
-        // GetEqualityComponents ‚Í protected ‚È‚Ì‚ÅAEquals ‚Ì“®ì‚ÅŠm”F
+        // GetEqualityComponents ã¯ protected ãªã®ã§ã€Equals ã®å‹•ä½œã§ç¢ºèª
         var age0_another = RespondentAge.From(0);
 
         // Assert
@@ -461,22 +461,22 @@ public sealed class RespondentAgeTests
 
     #endregion
 
-    #region IOptionalValueObject ‘Î‰ƒeƒXƒg
+    #region IOptionalValueObject å¯¾å¿œãƒ†ã‚¹ãƒˆ
 
     [Fact]
     public void RespondentAge_ImplementsIOptionalValueObject()
     {
         // Act & Assert
-        // RespondentAge ‚Í IOptionalValueObject<RespondentAge, int> ‚ğÀ‘•‚µ‚Ä‚¢‚é
-        // ƒCƒ“ƒ^[ƒtƒF[ƒX‚ÌÀ‘•Šm”F‚ÍAFrom/Unset/TryFrom ‚ÌƒRƒ“ƒgƒ‰ƒNƒg‚ÅŒŸØ
+        // RespondentAge ã¯ IOptionalValueObject<RespondentAge, int> ã‚’å®Ÿè£…ã—ã¦ã„ã‚‹
+        // ã‚¤ãƒ³ã‚¿ãƒ¼ãƒ•ã‚§ãƒ¼ã‚¹ã®å®Ÿè£…ç¢ºèªã¯ã€From/Unset/TryFrom ã®ã‚³ãƒ³ãƒˆãƒ©ã‚¯ãƒˆã§æ¤œè¨¼
         var age = RespondentAge.From(25);
         var unset = RespondentAge.Unset();
 
-        // IsSet ƒvƒƒpƒeƒB‚ğ‚Â‚±‚Æ‚ğŠm”F
+        // IsSet ãƒ—ãƒ­ãƒ‘ãƒ†ã‚£ã‚’æŒã¤ã“ã¨ã‚’ç¢ºèª
         Assert.True(age.IsSet);
         Assert.False(unset.IsSet);
 
-        // From, Unset, TryFrom ƒƒ\ƒbƒh‚ª‘¶İ‚·‚é‚±‚Æ‚ğŠm”F
+        // From, Unset, TryFrom ãƒ¡ã‚½ãƒƒãƒ‰ãŒå­˜åœ¨ã™ã‚‹ã“ã¨ã‚’ç¢ºèª
         Assert.NotNull(age);
         Assert.NotNull(unset);
     }
@@ -489,19 +489,19 @@ public sealed class RespondentAgeTests
         var unset = RespondentAge.Unset();
 
         // Act & Assert
-        // From: value ‚ğİ’èiIsSet=truej
+        // From: value ã‚’è¨­å®šï¼ˆIsSet=trueï¼‰
         Assert.True(age.IsSet);
         Assert.True(age.TryGetValue(out var value));
         Assert.Equal(25, value);
 
-        // Unset: ’l‚È‚µiIsSet=falsej
+        // Unset: å€¤ãªã—ï¼ˆIsSet=falseï¼‰
         Assert.False(unset.IsSet);
         Assert.False(unset.TryGetValue(out _));
     }
 
     #endregion
 
-    #region ƒGƒbƒWƒP[ƒXƒeƒXƒg
+    #region ã‚¨ãƒƒã‚¸ã‚±ãƒ¼ã‚¹ãƒ†ã‚¹ãƒˆ
 
     [Fact]
     public void From_Boundary_ZeroAndOneHundredFifty()
@@ -536,8 +536,8 @@ public sealed class RespondentAgeTests
         var age2 = RespondentAge.From(25);
 
         // Assert
-        Assert.NotSame(age1, age2); // ˆÙ‚È‚éƒCƒ“ƒXƒ^ƒ“ƒX
-        Assert.Equal(age1, age2);   // ’A‚µ“™‰¿
+        Assert.NotSame(age1, age2); // ç•°ãªã‚‹ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹
+        Assert.Equal(age1, age2);   // ä½†ã—ç­‰ä¾¡
     }
 
     #endregion
