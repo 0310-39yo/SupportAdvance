@@ -14,7 +14,7 @@ public sealed class CreatedAt : PrimitiveValueObject<DateTime>, IEquatable<Creat
     /// 【責務】指定された日時を持つCreatedAtを表現する
     /// </summary>
     /// <param name="value">日時値</param>
-    /// <returnss>指定された日時を持つCreatedAtのインスタンス</returns>
+    /// <returns>指定された日時を持つCreatedAtのインスタンス</returns>
     /// <remarks>Validate は、基礎クラスのコンストラクタで自動実行される</remarks>
     private CreatedAt(DateTime value) : base(value, true)
     {
