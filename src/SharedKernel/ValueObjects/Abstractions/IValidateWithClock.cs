@@ -3,10 +3,10 @@ using SupportAdvance.Common.Clocks;
 namespace SupportAdvance.SharedKernel.ValueObjects;
 
 /// <summary>
-/// 指定された時刻を基準として、値を検証するためのインターフェイス
+/// IClock を使用して値を検証するインターフェース
 /// </summary>
 /// <typeparam name="TValue">検証対象の値の型</typeparam>
-public interface IClockValueObject<in TValue>
+public interface IValidateWithClock<TValue>
 {
     /// <summary>
     /// 指定された時刻を基準として、値を検証する。

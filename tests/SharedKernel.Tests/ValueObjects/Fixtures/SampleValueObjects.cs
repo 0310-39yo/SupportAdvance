@@ -134,7 +134,7 @@ public sealed class OrderStatus : EnumValueObject<int>
     /// <summary>
     /// 選択肢の妥当性をチェック（1～3）
     /// </summary>
-    protected override void Validate(int value)
+    public override void Validate(int value)
     {
         if (value is < 1 or > 3)
         {

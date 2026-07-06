@@ -73,7 +73,7 @@ public abstract class EnumValueObject<TValue> : ValueObject
     /// 無効な value の場合、ArgumentOutOfRangeException をスロー
     /// </summary>
     /// <param name="value">検証対象の選択肢の内部値</param>
-    protected abstract void Validate(TValue value);
+    public abstract void Validate(TValue value);
 
     /// <summary>
     /// 派生クラスが実装し、ValueField に対応する業務名称を返す

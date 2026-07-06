@@ -1,74 +1,75 @@
 using SupportAdvance.SharedKernel.ValueObjects;
+using SupportAdvance.SharedKernel.ValueObjects.Abstractions;
 
 namespace SupportAdvance.Contexts.Samples.CarPreferences.Domain.ValueObjects;
 
 /// <summary>
-/// Ô‚Ìƒ‚ƒfƒ‹‚ğ•\‚·ValueObject
-/// “à•”’l‚ğ int ‚ÅŠÇ—‚µA’è‹`Ï‚İƒCƒ“ƒXƒ^ƒ“ƒX‚ğÃ“IƒtƒB[ƒ‹ƒh‚Å’ñ‹Ÿ‚·‚é
-/// UI ‚©‚ç–¢İ’èó‘Ô‚ª”­¶‚·‚é‰Â”\«‚ª‚ ‚é‚½‚ß IOptionalValueObject ‚ğÀ‘•
+/// è»Šã®ãƒ¢ãƒ‡ãƒ«ã‚’è¡¨ã™ValueObject
+/// å†…éƒ¨å€¤ã‚’ int ã§ç®¡ç†ã—ã€å®šç¾©æ¸ˆã¿ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã‚’é™çš„ãƒ•ã‚£ãƒ¼ãƒ«ãƒ‰ã§æä¾›ã™ã‚‹
+/// UI ã‹ã‚‰æœªè¨­å®šçŠ¶æ…‹ãŒç™ºç”Ÿã™ã‚‹å¯èƒ½æ€§ãŒã‚ã‚‹ãŸã‚ IOptionalValueObject ã‚’å®Ÿè£…
 /// </summary>
 public sealed class CarModel : EnumValueObject<int>, IOptionalValueObject<CarModel, int>, IEquatable<CarModel>
 {
-    /// <summary>•s–¾</summary>
+    /// <summary>ä¸æ˜</summary>
     public static readonly CarModel Unknown = new(0);
 
-    /// <summary>ƒZƒ_ƒ“</summary>
+    /// <summary>ã‚»ãƒ€ãƒ³</summary>
     public static readonly CarModel Sedan = new(1);
 
     /// <summary>SUV</summary>
     public static readonly CarModel SportUtility = new(2);
 
-    /// <summary>ƒnƒbƒ`ƒoƒbƒN</summary>
+    /// <summary>ãƒãƒƒãƒãƒãƒƒã‚¯</summary>
     public static readonly CarModel Hatchback = new(3);
 
-    /// <summary>ƒN[ƒy</summary>
+    /// <summary>ã‚¯ãƒ¼ãƒš</summary>
     public static readonly CarModel Coupe = new(4);
 
-    /// <summary>ƒƒ“ƒ{ƒbƒNƒX</summary>
+    /// <summary>ãƒ¯ãƒ³ãƒœãƒƒã‚¯ã‚¹</summary>
     public static readonly CarModel Minivan = new(5);
 
-    /// <summary>‚»‚Ì‘¼</summary>
+    /// <summary>ãã®ä»–</summary>
     public static readonly CarModel Other = new(6);
 
-    /// <summary>–¢İ’èó‘Ô‚ÌCarModelƒCƒ“ƒXƒ^ƒ“ƒX</summary>
+    /// <summary>æœªè¨­å®šçŠ¶æ…‹ã®CarModelã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹</summary>
     private static readonly CarModel UnsetInstance = new();
 
     /// <summary>
-    /// w’è‚³‚ê‚½“à•”’l‚©‚çCarModel‚ÌƒCƒ“ƒXƒ^ƒ“ƒX‚ğ¶¬‚·‚é
+    /// æŒ‡å®šã•ã‚ŒãŸå†…éƒ¨å€¤ã‹ã‚‰CarModelã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã‚’ç”Ÿæˆã™ã‚‹
     /// </summary>
-    /// <param name="value">“à•”’l</param>
+    /// <param name="value">å†…éƒ¨å€¤</param>
     private CarModel(int value) : base(value)
     {
     }
 
     /// <summary>
-    /// –¢İ’èó‘Ô‚ÌCarModel‚ğ¶¬‚·‚éƒRƒ“ƒXƒgƒ‰ƒNƒ^
+    /// æœªè¨­å®šçŠ¶æ…‹ã®CarModelã‚’ç”Ÿæˆã™ã‚‹ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
     /// </summary>
     private CarModel() : base()
     {
     }
 
     /// <summary>
-    /// w’è‚³‚ê‚½“à•”’l‚©‚çCarModel‚ÌƒCƒ“ƒXƒ^ƒ“ƒX‚ğ¶¬‚·‚é
+    /// æŒ‡å®šã•ã‚ŒãŸå†…éƒ¨å€¤ã‹ã‚‰CarModelã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã‚’ç”Ÿæˆã™ã‚‹
     /// </summary>
-    /// <param name="value">“à•”’l</param>
-    /// <returns>¶¬‚³‚ê‚½CarModel‚ÌƒCƒ“ƒXƒ^ƒ“ƒX</returns>
+    /// <param name="value">å†…éƒ¨å€¤</param>
+    /// <returns>ç”Ÿæˆã•ã‚ŒãŸCarModelã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹</returns>
     public static CarModel From(int value) => new(value);
 
     /// <summary>
-    /// –¢İ’èó‘Ô‚ÌCarModel‚ÌƒCƒ“ƒXƒ^ƒ“ƒX‚ğ¶¬‚·‚é
+    /// æœªè¨­å®šçŠ¶æ…‹ã®CarModelã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã‚’ç”Ÿæˆã™ã‚‹
     /// </summary>
-    /// <returns>–¢İ’èó‘Ô‚ÌCarModel‚ÌƒCƒ“ƒXƒ^ƒ“ƒX</returns>
+    /// <returns>æœªè¨­å®šçŠ¶æ…‹ã®CarModelã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹</returns>
     public static CarModel Unset() => UnsetInstance;
 
     /// <summary>
-    /// w’è‚³‚ê‚½“à•”’l‚©‚çCarModel‚Ì¶¬‚ğ‚İ‚é
-    /// null ‚Ìê‡‚Í Unset() ‚ğ•Ô‚µ‚Ä true ‚ğ•Ô‚·i³íˆ—j
-    /// ’l‚ª–³Œø‚Èê‡‚Í Unset() ‚ğ•Ô‚µ‚Ä false ‚ğ•Ô‚·iƒGƒ‰[ˆ—j
+    /// æŒ‡å®šã•ã‚ŒãŸå†…éƒ¨å€¤ã‹ã‚‰CarModelã®ç”Ÿæˆã‚’è©¦ã¿ã‚‹
+    /// null ã®å ´åˆã¯ Unset() ã‚’è¿”ã—ã¦ true ã‚’è¿”ã™ï¼ˆæ­£å¸¸å‡¦ç†ï¼‰
+    /// å€¤ãŒç„¡åŠ¹ãªå ´åˆã¯ Unset() ã‚’è¿”ã—ã¦ false ã‚’è¿”ã™ï¼ˆã‚¨ãƒ©ãƒ¼å‡¦ç†ï¼‰
     /// </summary>
-    /// <param name="input">“à•”’linull‹–—ej</param>
-    /// <param name="result">¶¬‚³‚ê‚½CarModel‚ÌƒCƒ“ƒXƒ^ƒ“ƒX</param>
-    /// <returns>¶¬‚É¬Œ÷‚µ‚½ê‡‚Ü‚½‚Ínull‚Ìê‡‚ÍtrueA¸”s‚µ‚½ê‡‚Ífalse</returns>
+    /// <param name="input">å†…éƒ¨å€¤ï¼ˆnullè¨±å®¹ï¼‰</param>
+    /// <param name="result">ç”Ÿæˆã•ã‚ŒãŸCarModelã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹</param>
+    /// <returns>ç”Ÿæˆã«æˆåŠŸã—ãŸå ´åˆã¾ãŸã¯nullã®å ´åˆã¯trueã€å¤±æ•—ã—ãŸå ´åˆã¯false</returns>
     public static bool TryFrom(int? input, out CarModel result)
     {
         if (!input.HasValue)
@@ -90,18 +91,18 @@ public sealed class CarModel : EnumValueObject<int>, IOptionalValueObject<CarMod
     }
 
     /// <summary>
-    /// w’è‚³‚ê‚½“à•”’l‚©‚çCarModel‚Ì¶¬‚ğ‚İ‚éi®”’l‚É‚æ‚éŒÄ‚Ño‚µj
+    /// æŒ‡å®šã•ã‚ŒãŸå†…éƒ¨å€¤ã‹ã‚‰CarModelã®ç”Ÿæˆã‚’è©¦ã¿ã‚‹ï¼ˆæ•´æ•°å€¤ã«ã‚ˆã‚‹å‘¼ã³å‡ºã—ï¼‰
     /// </summary>
-    /// <param name="input">“à•”’l</param>
-    /// <param name="result">¶¬‚³‚ê‚½CarModel‚ÌƒCƒ“ƒXƒ^ƒ“ƒX</param>
-    /// <returns>¶¬‚É¬Œ÷‚µ‚½ê‡‚ÍtrueA¸”s‚µ‚½ê‡‚Ífalse</returns>
+    /// <param name="input">å†…éƒ¨å€¤</param>
+    /// <param name="result">ç”Ÿæˆã•ã‚ŒãŸCarModelã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹</param>
+    /// <returns>ç”Ÿæˆã«æˆåŠŸã—ãŸå ´åˆã¯trueã€å¤±æ•—ã—ãŸå ´åˆã¯false</returns>
     public static bool TryFrom(int input, out CarModel result) => TryFrom((int?)input, out result);
 
     /// <summary>
-    /// w’è‚³‚ê‚½CarModel‚Æ“™‰¿‚©‚Ç‚¤‚©‚ğ”»’è‚·‚é
+    /// æŒ‡å®šã•ã‚ŒãŸCarModelã¨ç­‰ä¾¡ã‹ã©ã†ã‹ã‚’åˆ¤å®šã™ã‚‹
     /// </summary>
-    /// <param name="other">”äŠr‘ÎÛ‚ÌCarModel</param>
-    /// <returns>“™‰¿‚Å‚ ‚éê‡‚ÍtrueA‚»‚¤‚Å‚È‚¢ê‡‚Ífalse</returns>
+    /// <param name="other">æ¯”è¼ƒå¯¾è±¡ã®CarModel</param>
+    /// <returns>ç­‰ä¾¡ã§ã‚ã‚‹å ´åˆã¯trueã€ãã†ã§ãªã„å ´åˆã¯false</returns>
     public bool Equals(CarModel? other)
     {
         if (other is null) return false;
@@ -110,24 +111,24 @@ public sealed class CarModel : EnumValueObject<int>, IOptionalValueObject<CarMod
     }
 
     /// <summary>
-    /// w’è‚³‚ê‚½ƒIƒuƒWƒFƒNƒg‚Æ“™‰¿‚©‚Ç‚¤‚©‚ğ”»’è‚·‚é
+    /// æŒ‡å®šã•ã‚ŒãŸã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã¨ç­‰ä¾¡ã‹ã©ã†ã‹ã‚’åˆ¤å®šã™ã‚‹
     /// </summary>
-    /// <param name="obj">”äŠr‘ÎÛ‚ÌƒIƒuƒWƒFƒNƒg</param>
-    /// <returns>“™‰¿‚Å‚ ‚éê‡‚ÍtrueA‚»‚¤‚Å‚È‚¢ê‡‚Ífalse</returns>
+    /// <param name="obj">æ¯”è¼ƒå¯¾è±¡ã®ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆ</param>
+    /// <returns>ç­‰ä¾¡ã§ã‚ã‚‹å ´åˆã¯trueã€ãã†ã§ãªã„å ´åˆã¯false</returns>
     public override bool Equals(object? obj) => Equals(obj as CarModel);
 
     /// <summary>
-    /// ƒnƒbƒVƒ…ƒR[ƒh‚ğæ“¾‚·‚é
+    /// ãƒãƒƒã‚·ãƒ¥ã‚³ãƒ¼ãƒ‰ã‚’å–å¾—ã™ã‚‹
     /// </summary>
-    /// <returns>ƒIƒuƒWƒFƒNƒg‚ÌƒnƒbƒVƒ…ƒR[ƒh</returns>
+    /// <returns>ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®ãƒãƒƒã‚·ãƒ¥ã‚³ãƒ¼ãƒ‰</returns>
     public override int GetHashCode() => HashCode.Combine(IsSet, ValueField);
 
     /// <summary>
-    /// w’è‚³‚ê‚½“à•”’l‚Ì‘Ã“–«‚ğŒŸØ‚·‚é
+    /// æŒ‡å®šã•ã‚ŒãŸå†…éƒ¨å€¤ã®å¦¥å½“æ€§ã‚’æ¤œè¨¼ã™ã‚‹
     /// </summary>
-    /// <param name="value">ŒŸØ‘ÎÛ‚Ì“à•”’l</param>
-    /// <exception cref="ArgumentOutOfRangeException">’l‚ª—LŒø‚È”ÍˆÍŠO‚Ìê‡</exception>
-    protected override void Validate(int value)
+    /// <param name="value">æ¤œè¨¼å¯¾è±¡ã®å†…éƒ¨å€¤</param>
+    /// <exception cref="ArgumentOutOfRangeException">å€¤ãŒæœ‰åŠ¹ãªç¯„å›²å¤–ã®å ´åˆ</exception>
+    public override void Validate(int value)
     {
         if (value < 0 || value > 6)
         {
@@ -136,18 +137,18 @@ public sealed class CarModel : EnumValueObject<int>, IOptionalValueObject<CarMod
     }
 
     /// <summary>
-    /// Ô‚Ìƒ‚ƒfƒ‹‚Ì‹Æ–±–¼Ì‚ğ•Ô‚·
+    /// è»Šã®ãƒ¢ãƒ‡ãƒ«ã®æ¥­å‹™åç§°ã‚’è¿”ã™
     /// </summary>
-    /// <returns>‹Æ–±–¼Ì</returns>
+    /// <returns>æ¥­å‹™åç§°</returns>
     protected override string GetDisplayName() => ValueField switch
     {
-        0 => "•s–¾",
-        1 => "ƒZƒ_ƒ“",
+        0 => "ä¸æ˜",
+        1 => "ã‚»ãƒ€ãƒ³",
         2 => "SUV",
-        3 => "ƒnƒbƒ`ƒoƒbƒN",
-        4 => "ƒN[ƒy",
-        5 => "ƒƒ“ƒ{ƒbƒNƒX",
-        6 => "‚»‚Ì‘¼",
+        3 => "ãƒãƒƒãƒãƒãƒƒã‚¯",
+        4 => "ã‚¯ãƒ¼ãƒš",
+        5 => "ãƒ¯ãƒ³ãƒœãƒƒã‚¯ã‚¹",
+        6 => "ãã®ä»–",
         _ => throw new ArgumentOutOfRangeException(nameof(ValueField), $"Unknown car model: {ValueField}")
     };
 }

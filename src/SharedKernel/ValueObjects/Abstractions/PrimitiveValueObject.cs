@@ -74,7 +74,7 @@ public abstract class PrimitiveValueObject<TValue> : ValueObject
     /// デフォルト実装は何も行っていない
     /// 派生クラスはビジネスルールに従って例外をスローさせる
     /// </remarks>
-    protected virtual void Validate(TValue normalized)
+    public virtual void Validate(TValue normalized)
     {
     }
 

@@ -1,11 +1,11 @@
-namespace SupportAdvance.SharedKernel.ValueObjects;
+namespace SupportAdvance.SharedKernel.ValueObjects.Abstractions;
 
 /// <summary>
 /// 値が設定されているかどうかを表すオプション値オブジェクトのインターフェイス
 /// </summary>
 /// <typeparam name="TSelf">オプション値オブジェクト自身の型</typeparam>
 /// <typeparam name="TValue">内部値の型</typeparam>
-public interface IOptionalValueObject<TSelf, TValue>
+public interface IOptionalValueObject<TSelf, TValue> : IValidatable<TValue>
     where TSelf : IOptionalValueObject<TSelf, TValue>
 {
     /// <summary>

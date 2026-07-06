@@ -117,7 +117,7 @@ public sealed class UpdatedAt : PrimitiveValueObject<DateTime>, IEquatable<Updat
     /// </summary>
     /// <param name="normalized">正規化済みの値</param>
     /// <exception cref="ArgumentException">値が有効な日時でない場合にスローされる</exception>
-    protected override void Validate(DateTime normalized)
+    public override void Validate(DateTime normalized)
     {
         base.Validate(normalized);
 

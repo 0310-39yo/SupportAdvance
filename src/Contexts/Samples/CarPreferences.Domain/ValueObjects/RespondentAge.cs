@@ -1,4 +1,5 @@
 using SupportAdvance.SharedKernel.ValueObjects;
+using SupportAdvance.SharedKernel.ValueObjects.Abstractions;
 
 namespace SupportAdvance.Contexts.Samples.CarPreferences.Domain.ValueObjects;
 
@@ -158,7 +159,7 @@ public sealed class RespondentAge : PrimitiveValueObject<int>, IOptionalValueObj
     /// </summary>
     /// <param name="normalized">正規化済みの値</param>
     /// <exception cref="ArgumentOutOfRangeException">値が有効な範囲外の場合にスローされる</exception>
-    protected override void Validate(int normalized)
+    public override void Validate(int normalized)
     {
         base.Validate(normalized);
 
