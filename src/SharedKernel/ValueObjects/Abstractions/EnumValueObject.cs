@@ -83,14 +83,12 @@ public abstract class EnumValueObject<TValue> : ValueObject
     protected abstract string GetDisplayName();
 
     /// <summary>
-    /// ValueObject 基底の Equals / GetHashCode で使用するコンポーネントを列挙
-    /// IsSet と ValueField の両方をコンポーネントとして列挙
-    /// ValueObjectComponentNormalizer により IsSet の重複排除が自動実行
+    /// 等価性判定のための値コンポーネントを返す（IsSet を除く）
+    /// IsSet は ValueObject.GetEqualityComponents で自動的に先頭に付加される
     /// </summary>
-    /// <returns>等価性判定に使用するコンポーネント列挙</returns>
-    protected override IEnumerable<object?> GetEqualityComponents()
+    /// <returns>ValueField（IsSet = true の場合）を含むコンポーネント列挙</returns>
+    protected override IEnumerable<object?> GetValueComponents()
     {
-        yield return IsSet;
         if (IsSet)
         {
             yield return ValueField;

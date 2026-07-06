@@ -1,57 +1,33 @@
 namespace SupportAdvance.SharedKernel.ValueObjects;
 
 /// <summary>
-/// <see cref="ValueObject" />のコンポーネントを正規化するユーティリティ
-/// <see cref="ValueObject.GetEqualityComponents()" />の戻り値に<see cref="ValueObject.IsSet" />を
-/// 重複なく先頭に付加し、正規化された列挙を返す
+/// <see cref="ValueObject" /> の等価性コンポーネントを正規化するユーティリティ
+///
+/// ValueObject.GetEqualityComponents() が IsSet を先頭に yield return した後、
+/// 値コンポーネント（GetValueComponents() の結果）に対して単純に IsSet を先頭に付加します。
 /// </summary>
 internal static class ValueObjectComponentNormalizer
 {
     /// <summary>
-    /// <see cref="ValueObject" />のコンポーネントを正規化する
-    /// IsSetを先頭に含む正規済のコンポーネントの列挙を返す
+    /// ValueObject の等価性コンポーネントを正規化します。
+    ///
+    /// 【処理】
+    /// 1. IsSet を先頭に yield return
+    /// 2. components（値コンポーネント）の要素をそのまま yield return
     /// </summary>
-    /// <param name="instance">正規化対象のValueObject</param>
-    /// <param name="components">正規化対象のコンポーネント列挙(null可)</param>
-    /// <returns>IsSetを先頭に付加した、正規化されたコンポーネント列挙</returns>
+    /// <param name="instance">正規化対象の ValueObject</param>
+    /// <param name="components">値コンポーネント（IsSet を除く）の列挙（null 可）</param>
+    /// <returns>IsSet を先頭に含む完全なコンポーネント列挙</returns>
     internal static IEnumerable<object?> Normalize(ValueObject instance, IEnumerable<object?>? components)
     {
-        // componentsがnullの場合、IsSetを返す
-        if (components is null)
-        {
-            yield return instance.IsSet;
-            yield break;
-        }
-
-        using var enumerator = components.GetEnumerator();
-
-        // 空列挙の場合、IsSetを返す
-        if (!enumerator.MoveNext())
-        {
-            yield return instance.IsSet;
-            yield break;
-        }
-
-        var first = enumerator.Current;
-
-        // 先頭要素がIsSetと一致するbool値の場合はそのまま使用(重複削除)
-        if (first is bool b && b == instance.IsSet)
-        {
-            yield return first;
-            while (enumerator.MoveNext())
-            {
-                yield return enumerator.Current!;
-            }
-
-            yield break;
-        }
-
-        // それ以外はIsSetを先頭に追加し、残りの要素を返す
         yield return instance.IsSet;
-        yield return first!;
-        while (enumerator.MoveNext())
+
+        if (components is not null)
         {
-            yield return enumerator.Current!;
+            foreach (var component in components)
+            {
+                yield return component;
+            }
         }
     }
 }

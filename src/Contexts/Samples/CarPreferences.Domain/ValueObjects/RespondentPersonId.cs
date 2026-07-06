@@ -124,14 +124,12 @@ public sealed class RespondentPersonId : PrimitiveValueObject<int>, IOptionalVal
     public override int GetHashCode() => HashCode.Combine(IsSet, ValueField);
 
     /// <summary>
-    /// 等価性の比較に使用するコンポーネントを取得する
-    /// 【責務】IsSetとValueFieldを返すことで、等価性の比較に使用するコンポーネントを提供する
+    /// 等価性判定のための値コンポーネントを返す（IsSet を除く）
+    /// IsSet は ValueObject.GetEqualityComponents で自動的に先頭に付加される
     /// </summary>
-    /// <returns></returns>
-    protected override IEnumerable<object?> GetEqualityComponents()
+    /// <returns>ValueField（IsSet = true の場合）を含むコンポーネント列</returns>
+    protected override IEnumerable<object?> GetValueComponents()
     {
-        yield return IsSet;
-
         if (IsSet)
         {
             yield return ValueField;

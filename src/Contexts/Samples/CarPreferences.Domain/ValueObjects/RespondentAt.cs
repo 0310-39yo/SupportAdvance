@@ -80,9 +80,21 @@ public sealed class RespondentAt : PrimitiveValueObject<DateTime>,
 
 
 
+    /// <summary>
+    /// ビジネスロジック検証: 現在時刻を基準として、回答日時が妥当であるかをチェック
+    ///
+    /// 【検証内容】
+    ///   - 未来日が設定されていないか（回答は必ず過去日時であるべき）
+    ///
+    /// 【基本検証との役割分担】
+    ///   - Validate: DateTime の形式チェック（MinValue/MaxValue の除外）
+    ///   - ValidateWithClock: ビジネスロジック（未来日の除外）
+    /// </summary>
+    /// <param name="value">検証対象の回答日時</param>
+    /// <param name="clock">現在時刻を供給するクロック</param>
+    /// <exception cref="ArgumentException">未来日が指定された場合</exception>
     public void ValidateWithClock(DateTime value, IClock clock)
     {
-        // 未来日のチェック（JstNow.Value は LocalDateTime なので DateTime に変換）
         var nowJst = clock.JstNow.Value;
         if (value > nowJst)
         {
@@ -100,16 +112,39 @@ public sealed class RespondentAt : PrimitiveValueObject<DateTime>,
     {
         if (other is null) return false;
         if (ReferenceEquals(this, other)) return true;
-        return ValueField == other.ValueField;
+        return IsSet == other.IsSet && (!IsSet || ValueField == other.ValueField);
     }
 
-    public override int GetHashCode() => ValueField.GetHashCode();
-
-    protected override IEnumerable<object?> GetEqualityComponents()
+    public override int GetHashCode()
     {
-        yield return ValueField;
+        if (!IsSet)
+        {
+            return HashCode.Combine(false);
+        }
+        return HashCode.Combine(true, ValueField);
     }
 
+    protected override IEnumerable<object?> GetValueComponents()
+    {
+        if (IsSet)
+        {
+            yield return ValueField;
+        }
+    }
+
+    /// <summary>
+    /// 基本検証: DateTime の形式的な妥当性をチェック
+    ///
+    /// 【検証内容】
+    ///   - DateTime.MinValue/MaxValue の除外（これらは無効な時刻表現）
+    ///   - その他の形式チェック（必要に応じて派生クラスで拡張可能）
+    ///
+    /// 【Clock を必要としない理由】
+    ///   DateTime の形式的な有効性のチェックのため、現在時刻は不要です。
+    ///   ビジネスロジック的な検証（未来日チェック）は ValidateWithClock で実施します。
+    /// </summary>
+    /// <param name="normalized">検証対象の日時</param>
+    /// <exception cref="ArgumentException">MinValue または MaxValue が指定された場合</exception>
     public override void Validate(DateTime normalized)
     {
         base.Validate(normalized);

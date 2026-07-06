@@ -2,29 +2,6 @@ using SupportAdvance.SharedKernel.ValueObjects;
 
 namespace SupportAdvance.SharedKernel.Tests.ValueObjects.Fixtures;
 
-using System.Reflection;
-
-/// <summary>
-/// ValueObject の protected init プロパティを設定するヘルパー
-/// </summary>
-internal static class ValueObjectHelper
-{
-    /// <summary>
-    /// リフレクションを使用して ValueObject の IsSet プロパティを設定する
-    /// </summary>
-    internal static void SetIsSet(ValueObject obj, bool isSet)
-    {
-        var field = typeof(ValueObject).GetField(
-            "<IsSet>k__BackingField",
-            BindingFlags.NonPublic | BindingFlags.Instance);
-
-        if (field != null)
-        {
-            field.SetValue(obj, isSet);
-        }
-    }
-}
-
 /// <summary>
 /// 単一コンポーネントを持つサンプルValueObject
 /// OrderId（注文ID）
@@ -33,25 +10,23 @@ public class OrderId : ValueObject
 {
     public string Value { get; }
 
-    private OrderId(string value)
+    private OrderId(string value, bool isSet = true)
     {
         Value = value;
+        IsSet = isSet;
     }
 
     /// <summary>
     /// OrderId を作成するファクトリメソッド
-    /// IsSet の状態を指定できる
     /// </summary>
-    public static OrderId Create(string value, bool isSet = true)
-    {
-        var result = new OrderId(value);
-        ValueObjectHelper.SetIsSet(result, isSet);
-        return result;
-    }
+    public static OrderId Create(string value, bool isSet = true) => new(value, isSet);
 
-    protected override IEnumerable<object?> GetEqualityComponents()
+    protected override IEnumerable<object?> GetValueComponents()
     {
-        yield return Value;
+        if (IsSet)
+        {
+            yield return Value;
+        }
     }
 }
 
@@ -64,27 +39,26 @@ public class ProductPrice : ValueObject
     public decimal Amount { get; }
     public string Currency { get; }
 
-    private ProductPrice(decimal amount, string currency)
+    private ProductPrice(decimal amount, string currency, bool isSet = true)
     {
         Amount = amount;
         Currency = currency;
+        IsSet = isSet;
     }
 
     /// <summary>
     /// ProductPrice を作成するファクトリメソッド
-    /// IsSet の状態を指定できる
     /// </summary>
     public static ProductPrice Create(decimal amount, string currency, bool isSet = true)
-    {
-        var result = new ProductPrice(amount, currency);
-        ValueObjectHelper.SetIsSet(result, isSet);
-        return result;
-    }
+        => new(amount, currency, isSet);
 
-    protected override IEnumerable<object?> GetEqualityComponents()
+    protected override IEnumerable<object?> GetValueComponents()
     {
-        yield return Amount;
-        yield return Currency;
+        if (IsSet)
+        {
+            yield return Amount;
+            yield return Currency;
+        }
     }
 }
 

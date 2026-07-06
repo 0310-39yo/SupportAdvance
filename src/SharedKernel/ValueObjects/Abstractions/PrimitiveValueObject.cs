@@ -56,14 +56,33 @@ public abstract class PrimitiveValueObject<TValue> : ValueObject
     }
 
     /// <summary>
-    /// 入力値を正規化する
+    /// 入力値を正規化（変換）します。
+    ///
+    /// 【責務】
+    /// 値をビジネスルールに適合した形に変換します。
+    ///   - 文字列: トリム、大文字小文字統一、複数空白の単一化など
+    ///   - 数値: 丸め処理、単位変換など
+    ///   - 日時: タイムゾーン統一など
+    ///
+    /// 【重要】値の変換のみを行います
+    /// 検証（有効性チェック）は Validate メソッドで別途実施されます。
+    ///
+    /// 【実行タイミング】
+    /// コンストラクタ内で自動実行されます。
+    /// isSet=true の場合のみ呼び出されます。
+    ///
+    /// 【実装ガイド】
+    /// - 派生クラスで override は optional（不要な場合は除外して OK）
+    /// - 副作用のない純粋な値変換のみ
+    /// - null を返すべきではない（isSet=true の場合を想定）
+    ///
+    /// 【実装例】
+    /// RespondentName（氏名）の場合:
+    ///   protected override string Normalize(string input)
+    ///       => input.Trim().Replace("　", " ");
     /// </summary>
-    /// <param name="input">入力値</param>
+    /// <param name="input">入力値（IsSet=true の場合のみ呼び出される）</param>
     /// <returns>正規化済み値</returns>
-    /// <remarks>
-    /// デフォルト実装は入力値をそのまま返す
-    /// 派生クラスはトリムや大文字小文字変換等の変換処理をここで行う
-    /// </remarks>
     protected virtual TValue Normalize(TValue input) => input;
 
     /// <summary>
@@ -90,23 +109,17 @@ public abstract class PrimitiveValueObject<TValue> : ValueObject
     protected virtual string Format(TValue value) => value?.ToString() ?? string.Empty;
 
     /// <summary>
-    /// 等価性判定のためのコンポーネントを返す
+    /// 等価性判定のための値コンポーネントを返す（IsSet を除く）
+    /// IsSet は ValueObject.GetEqualityComponents で自動的に先頭に付加される
     /// </summary>
-    /// <returns>IsSet と ValueField（IsSet = true の場合）を含むコンポーネント列</returns>
-    protected virtual IEnumerable<object?> PrimitiveEqualityComponents()
+    /// <returns>ValueField（IsSet = true の場合）を含むコンポーネント列</returns>
+    protected override IEnumerable<object?> GetValueComponents()
     {
-        yield return IsSet;
         if (IsSet)
         {
             yield return ValueField;
         }
     }
-
-    /// <summary>
-    /// 等価性判定のためのコンポーネントを返す
-    /// </summary>
-    /// <returns>PrimitiveEqualityComponents() の結果</returns>
-    protected override IEnumerable<object?> GetEqualityComponents() => PrimitiveEqualityComponents();
 
     /// <summary>
     /// 保持する値を文字列化する

@@ -9,10 +9,14 @@ public abstract class ValueObject : IEquatable<ValueObject>
 {
     /// <summary>
     /// このValueObjectが設定されているかを示す値
-    /// 既定値はfalse(Unset)
-    /// 派生クラスのコンストラクタで明示的に設定する
+    ///
+    /// 【初期値】false（Unset）
+    ///
+    /// 【設定方法】
+    /// 派生クラスのコンストラクタで protected setter を使用して設定します。
+    /// テストコード（protected スコープ内）でも設定可能です。
     /// </summary>
-    public bool IsSet { get; protected init; }
+    public bool IsSet { get; protected set; }
 
     /// <summary>
     /// 指定されたValueObjectと等価かどうかを判断する
@@ -50,35 +54,53 @@ public abstract class ValueObject : IEquatable<ValueObject>
     public override bool Equals(object? obj) => obj is ValueObject other && Equals(other);
 
     /// <summary>
-    /// 等価性の比較に使用するコンポーネントを取得する
-    /// ValueObjectComponentNormalizer経由で 先頭に自動的に付加される
+    /// 等価性の比較に使用する値コンポーネントを取得する（IsSet を除く）
     /// 派生クラスは自身の値フィールドのみを列挙する
+    /// IsSet は GetEqualityComponents で自動的に先頭に付加される
     /// </summary>
-    /// <returns>等価性の比較に使用するコンポーネントの列挙</returns>
-    protected abstract IEnumerable<object?> GetEqualityComponents();
+    /// <returns>等価性の比較に使用する値コンポーネントの列挙</returns>
+    protected abstract IEnumerable<object?> GetValueComponents();
+
+    /// <summary>
+    /// 等価性の比較に使用するすべてのコンポーネントを取得する
+    /// IsSet を先頭に追加し、GetValueComponents の結果を続ける
+    /// ValueObjectComponentNormalizer で正規化される
+    /// </summary>
+    /// <returns>IsSet を含むすべての等価性コンポーネント</returns>
+    protected IEnumerable<object?> GetEqualityComponents()
+    {
+        yield return IsSet;
+        foreach (var component in GetValueComponents())
+        {
+            yield return component;
+        }
+    }
 
     /// <summary>
     /// このValueObjectのハッシュコードを取得する
+    /// IsSet と値コンポーネントに基づいてハッシュコードを計算します
     /// </summary>
     /// <returns>ハッシュコード</returns>
     public override int GetHashCode()
     {
-        var normalizeComponents = ValueObjectComponentNormalizer.Normalize(this, GetEqualityComponents());
+        var allComponents = GetEqualityComponents();
+        var hash = 17;
 
-        return normalizeComponents
-            .Aggregate(17, (current, component) =>
+        foreach (var component in allComponents)
+        {
+            unchecked
             {
-                unchecked
-                {
-                    return current * 31 + (component?.GetHashCode() ?? 0);
-                }
-            });
+                hash = hash * 31 + (component?.GetHashCode() ?? 0);
+            }
+        }
+
+        return hash;
     }
 
     /// <summary>
     /// このValueObjectの文字列表現を取得する
     /// IsSetがfalse(Unset)の場合は"Unset"を返す
-    /// IsSetがtrueの場合は、GetEqualityComponents()で取得したコンポーネントの文字列表現をカンマ区切りで返す
+    /// IsSetがtrueの場合は、GetEqualityComponents()で取得したコンポーネント（IsSetを除く）の文字列表現をカンマ区切りで返す
     /// </summary>
     /// <returns>文字列表現</returns>
     public override string ToString()
@@ -88,10 +110,11 @@ public abstract class ValueObject : IEquatable<ValueObject>
             return "Unset";
         }
 
-        var normalizeComponents = ValueObjectComponentNormalizer.Normalize(this, GetEqualityComponents());
-
-        var componentsStrings = normalizeComponents
-            .Skip(1)
+        // GetEqualityComponents は IsSet を先頭に yield し、その後に値コンポーネントを yield する
+        // IsSet（最初の要素）をスキップして、値コンポーネントのみを取得
+        var allComponents = GetEqualityComponents();
+        var componentsStrings = allComponents
+            .Skip(1)  // IsSet を先頭から除外
             .Select(c => c?.ToString() ?? "null")
             .ToArray();
 

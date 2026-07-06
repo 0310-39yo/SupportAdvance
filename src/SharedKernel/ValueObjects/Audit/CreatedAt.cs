@@ -102,11 +102,11 @@ public sealed class CreatedAt : PrimitiveValueObject<DateTime>, IEquatable<Creat
     public override int GetHashCode() => ValueField.GetHashCode();
 
     /// <summary>
-    /// 等価性の比較に使用するコンポーネントを取得する
-    /// 【責務】ValueFieldを返すことで、等価性の比較に使用するコンポーネントを提供する
+    /// 等価性判定のための値コンポーネントを返す（IsSet を除く）
+    /// IsSet は ValueObject.GetEqualityComponents で自動的に先頭に付加される
     /// </summary>
-    /// <returns></returns>
-    protected override IEnumerable<object?> GetEqualityComponents()
+    /// <returns>ValueField を含むコンポーネント列</returns>
+    protected override IEnumerable<object?> GetValueComponents()
     {
         yield return ValueField;
     }
