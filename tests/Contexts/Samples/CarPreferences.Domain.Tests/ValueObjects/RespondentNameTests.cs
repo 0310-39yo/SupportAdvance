@@ -230,6 +230,62 @@ public sealed class RespondentNameTests
 
     #endregion
 
+    #endregion
+
+    #region Validate メソッドテスト（値の長さ検証）
+
+    /// <summary>VO-VLR-01: 1～50文字の名前は From で受け入れられる</summary>
+    [Theory]
+    [InlineData("A")]                                                                                          // 1文字
+    [InlineData("太郎")]                                                                                      // 2文字
+    [InlineData("山田太郎")]                                                                                  // 4文字
+    [InlineData("ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXY")]  // 50文字
+    public void VO_VLR_01_From_WithValidLength_CreatesInstance(string name)
+    {
+        // Act
+        var result = RespondentName.From(name);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.True(result.IsSet);
+        Assert.Equal(name, result.Value);
+    }
+
+    /// <summary>VO-VLR-02: 空文字列は ArgumentException をスロー</summary>
+    [Fact]
+    public void VO_VLR_02_From_WithEmptyString_ThrowsArgumentException()
+    {
+        // Act & Assert
+        Assert.Throws<ArgumentException>(() => RespondentName.From(""));
+    }
+
+    /// <summary>VO-VLR-03: 51文字以上の名前は ArgumentException をスロー</summary>
+    [Fact]
+    public void VO_VLR_03_From_WithExcessiveLength_ThrowsArgumentException()
+    {
+        // Arrange
+        var longName = "ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZ";  // 51文字
+
+        // Act & Assert
+        Assert.Throws<ArgumentException>(() => RespondentName.From(longName));
+    }
+
+    /// <summary>VO-VLR-02, VO-VLR-03: TryFrom で検証失敗時は false を返す</summary>
+    [Theory]
+    [InlineData("")]                                                                                           // 空文字列
+    [InlineData("ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZ")]  // 51文字
+    public void VO_VLR_02_03_TryFrom_WithInvalidLength_ReturnsFalse(string name)
+    {
+        // Act
+        var success = RespondentName.TryFrom(name, out var result);
+
+        // Assert
+        Assert.False(success);
+        Assert.False(result.IsSet);
+    }
+
+    #endregion
+
     #region Equals(object?) メソッドテスト
 
     /// <summary>VO-EQ-01: object型で同一値の等価確認</summary>

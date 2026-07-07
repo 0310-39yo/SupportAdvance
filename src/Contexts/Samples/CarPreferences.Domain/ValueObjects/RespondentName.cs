@@ -85,4 +85,27 @@ public sealed class RespondentName : PrimitiveValueObject<string>, IOptionalValu
             return false;
         }
     }
+
+    /// <summary>
+    /// 名前の値を検証します
+    /// 【検証内容】
+    ///   - 空文字列でないこと
+    ///   - 1～50文字の範囲内であること
+    /// </summary>
+    /// <param name="normalized">検証対象の値</param>
+    /// <exception cref="ArgumentException">検証に失敗した場合</exception>
+    public override void Validate(string normalized)
+    {
+        base.Validate(normalized);
+
+        if (string.IsNullOrEmpty(normalized))
+        {
+            throw new ArgumentException("RespondentName cannot be empty.", nameof(normalized));
+        }
+
+        if (normalized.Length > 50)
+        {
+            throw new ArgumentException("RespondentName must be 50 characters or less.", nameof(normalized));
+        }
+    }
 }
