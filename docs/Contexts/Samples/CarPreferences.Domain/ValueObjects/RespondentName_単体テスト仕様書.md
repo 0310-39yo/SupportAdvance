@@ -3,7 +3,7 @@
 **プロジェクト:** SupportAdvance  
 **テスト対象:** ValueObject（値オブジェクト）  
 **テストレベル:** 単体テスト  
-**版:** 2.0 / 2026-07-08（v2.0 IOptionalValueObject対応版）  
+**版:** 1.0 / 2026-07-08  
 **対応観点ID:** VO-IS-01/02 | VO-OPT-01～07 | VO-EQ-01～04 | VO-NE-01～05 | VO-HC-01～04 | VO-OP-01～05 | VO-TS-01～03 | VO-VLR-01～03
 
 ---
