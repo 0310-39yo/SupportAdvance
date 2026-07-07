@@ -73,6 +73,39 @@ private static readonly CarModel UnsetInstance = new();
 **アクセス方法**
 - 外部からは `Unset()` メソッド経由のみ
 
+**【重要】シングルトン化の理由:**
+- EnumValueObject は選択肢が有限で不変
+- Unset 状態は頻繁に使用される（UI 入力処理）
+- メモリ効率化と参照比較の一貫性を実現
+
+---
+
+### 2.3 Value プロパティ
+
+| 項目 | 内容 |
+|------|------|
+| 型 | `public int?` |
+| アクセス修飾子 | `public get` |
+| 実装 | `IsSet ? ValueField : null` |
+| 用途 | Domain ロジック内での車種値取得 |
+
+**実装**
+```csharp
+public int? Value => IsSet ? ValueField : null;
+```
+
+**設計判断:**
+- IsSet=true なら車種内部値（0～6）を返す
+- IsSet=false なら null を返す
+- イミュータビリティのため get のみ
+
+**Value と TryGetValue の役割分担**
+
+| 用途 | メソッド | 利用シーン |
+|------|---------|:----------:|
+| **直接参照** | `Value` プロパティ | Domain ロジック（IsSet 既知） |
+| **安全取得** | `TryGetValue(out int)` | 外部入力・レイヤ境界 |
+
 ---
 
 ## 3. コンストラクタと初期化フロー
@@ -167,55 +200,109 @@ public static CarModel Unset() => UnsetInstance;
 - `IsSet == false`
 - `ToString()` → `"Unset"`
 
-### 4.3 TryFrom メソッド（null 許容版）
+### 4.3 TryFrom メソッド（null 許容版）（IOptionalValueObject 実装）【重要】
 
 ```csharp
 /// <summary>
-/// 指定された内部値から CarModel の生成を試みる
+/// 【重要】IOptionalValueObject の TryFrom 実装
 /// null の場合は Unset() を返して true を返す（正常処理）
-/// 値が無効な場合は Unset() を返して false を返す（エラー処理）
+/// 値が無効な場合は Unset() を返して false を返す（検証失敗）
 /// </summary>
 /// <param name="input">内部値（null許容）</param>
 /// <param name="result">生成された CarModel のインスタンス</param>
-/// <returns>生成に成功した場合またはnullの場合はtrue、失敗した場合はfalse</returns>
+/// <returns>【重要】true = null入力（未選択）または有効値 / false = 無効値のみ</returns>
 public static bool TryFrom(int? input, out CarModel result)
 {
 	if (!input.HasValue)
 	{
 		result = Unset();
-		return true;  // null は正常処理
+		return true;  // ✅ null は成功（未選択は正常）
 	}
 
 	try
 	{
 		result = From(input.Value);
-		return true;
+		return true;  // ✅ 有効値は成功
 	}
 	catch (ArgumentOutOfRangeException)
 	{
 		result = Unset();
-		return false;  // 無効値はエラー
+		return false;  // ❌ 無効値のみ失敗
 	}
 }
 ```
+
+**【重要】IOptionalValueObject の契約**
+
+- **null 入力は正常な未選択状態** → true を返す（エラーではない）
+- **有効な値（0～6）は選択済み状態** → true を返す
+- **無効な値（-1,7以上）は検証失敗** → false を返す
+
+**【重要】戻り値マトリックス**
+
+| 戻り値 | result.IsSet | 入力例 | 意味 |
+|------|:---:|:---:|------|
+| **true** | false | `TryFrom(null, ...)` | null 入力 → 未選択（正常） |
+| **true** | true | `TryFrom(1, ...)` | 有効値（0～6） → 選択済み（正常） |
+| **false** | false | `TryFrom(-1, ...)` または `TryFrom(7, ...)` | 無効値 → 検証失敗 |
 
 **フロー図**
 
 ```
 TryFrom(int? input, out CarModel result)
   │
-  ├─ input == null
+  ├─ input is null（フォーム未選択）
   │   └─ result = Unset()
-  │   └─ return true  ← 正常処理
+  │   └─ return true  ← 正常な未選択状態
   │
-  ├─ input が 0～6
+  ├─ input が 0～6（有効値）
   │   └─ result = From(value)
-  │   └─ return true  ← 正常処理
+  │   └─ return true  ← 正常な選択済み状態
   │
   └─ input が範囲外（-1, 7以上）
 	  └─ result = Unset()
-	  └─ return false  ← エラー処理
+	  └─ return false  ← 検証失敗
 ```
+
+**使用例と戻り値の解釈**
+
+```csharp
+// ケース 1: null 入力（フォーム未選択）
+if (CarModel.TryFrom(null, out var model1))
+{
+    if (model1.IsSet)
+        Console.WriteLine($"選択済み: {model1.Value}");
+    else
+        Console.WriteLine("未選択");  // ← 正常な入力
+}
+
+// ケース 2: 有効な値
+if (CarModel.TryFrom(2, out var model2))
+{
+    if (model2.IsSet)
+        Console.WriteLine($"選択済み: {model2.Value}");  // ← true, IsSet=true
+    else
+        Console.WriteLine("予期しない");
+}
+
+// ケース 3: 無効な値
+if (CarModel.TryFrom(10, out var model3))
+{
+    Console.WriteLine("検証成功（予期しない）");
+}
+else
+{
+    Console.WriteLine("検証失敗（無効な車種）");  // ← false, IsSet=false
+}
+```
+
+**設計判断**
+
+- Try パターンで例外を吸収し、戻り値で成否を示す
+- null 許容の API 入力（UI フォーム）を安全に処理
+- **IOptionalValueObject の要件を満たす**
+  - null は「正常な未選択」として扱う（シングルトン Unset）
+  - 値の範囲外は「例外的な未選択」として扱う
 
 ### 4.4 TryFrom メソッド（整数値版、IOptionalValueObject 実装）
 
@@ -233,7 +320,7 @@ public static bool TryFrom(int input, out CarModel result)
 **用途**
 
 - `IOptionalValueObject<CarModel, int>.TryFrom(int, out CarModel)` の実装
-- `TryFrom(int?, ...)` に委譲
+- `TryFrom(int?, ...)` に委譲して共通ロジックを集約
 
 ### 4.5 等価性メンバー
 

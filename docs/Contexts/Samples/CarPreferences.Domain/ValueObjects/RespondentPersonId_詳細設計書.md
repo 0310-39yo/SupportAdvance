@@ -90,6 +90,34 @@ RespondentPersonId  ──implements──▶  IEquatable<RespondentPersonId>
 
 ---
 
+### 2.3 `Value` プロパティ
+
+| 項目 | 内容 |
+|------|------|
+| 型 | `int?` |
+| アクセス修飾子 | `public get` |
+| 実装 | `IsSet ? ValueField : null` |
+| 用途 | Domain ロジック内での個人ID値取得 |
+
+**実装**
+```csharp
+public int? Value => IsSet ? ValueField : null;
+```
+
+**設計判断:**
+- IsSet=true なら個人ID（1000～9999）を返す
+- IsSet=false なら null を返す
+- イミュータビリティのため get のみ（セッター不可）
+
+**Value と TryGetValue の役割分担**
+
+| 用途 | メソッド | 利用シーン |
+|------|---------|:----------:|
+| **直接参照** | `Value` プロパティ | Domain ロジック（IsSet 既知） |
+| **安全取得** | `TryGetValue(out int)` | 外部入力・レイヤ境界 |
+
+---
+
 ## 3. メソッド設計
 
 ### 3.1 プライベート コンストラクタ （IsSet のみ）
@@ -199,12 +227,12 @@ public static bool TryFrom(int input, out RespondentPersonId result)
 
 ---
 
-### 3.6 `TryFrom(int? input, out RespondentPersonId result)` 静的メソッド
+### 3.6 `TryFrom(int? input, out RespondentPersonId result)` 静的メソッド（IOptionalValueObject 実装）【重要】
 
 ```csharp
 public static bool TryFrom(int? input, out RespondentPersonId result)
 {
-	// null の場合は未設定状態の RespondentPersonId を返す（正常処理）
+	// ✅ null の場合は未設定状態の RespondentPersonId を返す（正常処理）
 	if (!input.HasValue)
 	{
 		result = Unset();
@@ -214,11 +242,11 @@ public static bool TryFrom(int? input, out RespondentPersonId result)
 	try
 	{
 		result = From(input.Value);
-		return true;
+		return true;  // ✅ 検証成功
 	}
 	catch (ArgumentOutOfRangeException)
 	{
-		// 入力値が不正な場合は、未設定状態の RespondentPersonId を返す（異常処理）
+		// ❌ 入力値が不正な場合は、未設定状態の RespondentPersonId を返す（検証失敗）
 		result = Unset();
 		return false;
 	}
@@ -229,21 +257,81 @@ public static bool TryFrom(int? input, out RespondentPersonId result)
 |------|------|
 | シグネチャ | `public static bool TryFrom(int? input, out RespondentPersonId result)` |
 | パラメータ | `input: int?` - Nullable な変換元値 |
-| 戻り値 | true: 成功または null、false: 値が無効 |
-| 処理 | null チェック → From() 呼び出し → 例外キャッチ |
+| 戻り値 | **true** = null 入力（Unset）**または** 有効値 / **false** = 無効値のみ |
+| インターフェース | `IOptionalValueObject<RespondentPersonId, int>` |
 
-**処理フロー詳細**
+**【重要】IOptionalValueObject の契約**
 
-1. input.HasValue が false → Unset() を result に設定、true を返す（null は正常処理）
-2. input.HasValue が true → From(input.Value) を実行
-   - 成功 → result に代入、true を返す
-   - ArgumentOutOfRangeException → Unset() を result に設定、false を返す（値が不正）
+- **null 入力は正常な未設定状態** → true を返す（エラーではない）
+- **有効な値（1000～9999）は設定済み状態** → true を返す
+- **無効な値（999以下, 10000以上）は検証失敗** → false を返す
+
+**【重要】戻り値マトリックス**
+
+| 戻り値 | result.IsSet | 入力例 | 意味 |
+|------|:---:|:---:|------|
+| **true** | false | `TryFrom(null, ...)` | null 入力 → 未設定（正常） |
+| **true** | true | `TryFrom(5000, ...)` | 有効値（1000～9999） → 設定済み（正常） |
+| **false** | false | `TryFrom(999, ...)` または `TryFrom(10000, ...)` | 無効値 → 検証失敗 |
+
+**処理フロー図**
+
+```
+TryFrom(int? input, out RespondentPersonId result)
+  │
+  ├─ input.HasValue == false（null 入力）
+  │   └─ result = Unset()
+  │   └─ return true  ← 正常な未設定状態
+  │
+  └─ input.HasValue == true
+      └─ try From(input.Value)
+          ├─ Success（1000～9999）
+          │   └─ result = 検証済みインスタンス
+          │   └─ return true  ← 正常な設定済み状態
+          └─ Catch ArgumentOutOfRangeException（999以下,10000以上）
+              └─ result = Unset()
+              └─ return false  ← 検証失敗
+```
+
+**使用例と戻り値の解釈**
+
+```csharp
+// ケース 1: null 入力（UI フォーム未入力）
+if (RespondentPersonId.TryFrom(null, out var id1))
+{
+    if (id1.IsSet)
+        Console.WriteLine($"ID: {id1.Value}");
+    else
+        Console.WriteLine("ID未指定");  // ← 正常な入力
+}
+
+// ケース 2: 有効な値
+if (RespondentPersonId.TryFrom(5000, out var id2))
+{
+    if (id2.IsSet)
+        Console.WriteLine($"ID: {id2.Value}");  // ← true, IsSet=true
+    else
+        Console.WriteLine("予期しない");
+}
+
+// ケース 3: 無効な値（範囲外）
+if (RespondentPersonId.TryFrom(999, out var id3))
+{
+    Console.WriteLine("検証成功（予期しない）");
+}
+else
+{
+    Console.WriteLine("検証失敗（無効なID）");  // ← false, IsSet=false
+}
+```
 
 **設計判断**
 
 - Try パターンで例外を吸収し、戻り値で成否を示す
 - null 許容の API 入力を安全に処理
-- IOptionalValueObject の要件を満たす
+- **IOptionalValueObject の要件を満たす**
+  - null は「正常な未設定」として扱う
+  - 値の範囲外は「例外的な未設定」として扱う
 
 ---
 

@@ -73,6 +73,87 @@ PrimitiveValueObject(TValue value, bool isSet) の基本コンストラクタ呼
 
 ---
 
+## 2.5 プロパティ設計
+
+### 2.5.1 IsSet プロパティ（PrimitiveValueObject から継承）
+
+```csharp
+public bool IsSet { get; protected init; }
+```
+
+**役割:** 値が設定されているかを判定
+
+**設計判断:**
+- `protected init` で初期化時のみ設定可能
+- コンストラクタで `IsSet = true` または `IsSet = false` を設定
+- 等価性判定・ハッシュコード計算に含まれる
+
+**使用例:**
+```csharp
+var name = RespondentName.From("山田太郎");
+Assert.True(name.IsSet);  // true
+
+var unset = RespondentName.Unset();
+Assert.False(unset.IsSet);  // false
+```
+
+### 2.5.2 Value プロパティ
+
+```csharp
+public string? Value => IsSet ? ValueField : null;
+```
+
+**役割:** 保持する文字列値への公開アクセス（get のみ）
+
+**実装詳細:**
+- IsSet=true なら ValueField（正規化済み値）を返す
+- IsSet=false なら null を返す
+- イミュータビリティのため get のみ（セッター不可）
+
+**設計判断:**
+- Domain ロジック内での直接アクセスに使用
+- 外部入力処理では TryGetValue() を推奨
+
+**使用例:**
+```csharp
+var name = RespondentName.From("山田太郎");
+string? value = name.Value;  // "山田太郎"
+
+var unset = RespondentName.Unset();
+string? value2 = unset.Value;  // null
+```
+
+### 2.5.3 Value と TryGetValue() の比較表
+
+| 項目 | Value プロパティ | TryGetValue() メソッド |
+|------|:---:|:---:|
+| **用途** | Domain ロジック | 外部入力処理 |
+| **IsSet 既知** | ✅ 既知 | ❌ 不確定 |
+| **返り値型** | T? | bool（out T） |
+| **例外** | なし | なし |
+| **使用場面** | 値確定後のロジック | 入力値検証後の変換 |
+
+**選択基準:**
+```csharp
+// Value プロパティを使用（Domain ロジック）
+if (name.IsSet && name.Value != null)
+{
+    ProcessName(name.Value);
+}
+
+// TryGetValue を使用（外部入力処理）
+if (name.TryGetValue(out var value))
+{
+    ProcessName(value);
+}
+else
+{
+    HandleUnset();
+}
+```
+
+---
+
 ## 3. Factory メソッド設計
 
 ### 3.1 Unset() メソッド
@@ -140,7 +221,7 @@ var name = RespondentName.From("田中太郎");
 RespondentName.From(null);  // ArgumentNullException
 ```
 
-### 3.3 TryFrom() メソッド
+### 3.3 TryFrom() メソッド（IOptionalValueObject 実装）【重要】
 
 ```csharp
 public static bool TryFrom(string? input, out RespondentName result)
@@ -148,39 +229,90 @@ public static bool TryFrom(string? input, out RespondentName result)
 	if (input is null)
 	{
 		result = Unset();
-		return true;  // null は成功（Unset を返す）
+		return true;  // ✅ null は成功（Unset を返す）
 	}
 
 	try
 	{
 		result = From(input);
-		return true;
+		return true;  // ✅ 検証成功
 	}
 	catch (ArgumentException)
 	{
 		result = Unset();
-		return false;  // 例外は失敗（false を返す）
+		return false;  // ❌ 検証失敗のみ失敗
 	}
 }
 ```
 
+**【重要】IOptionalValueObject の契約:**
+- **null 入力は正常な未設定状態** → true を返す（エラーではない）
+- **有効な値は設定済み状態** → true を返す
+- **無効な値は検証失敗** → false を返す
+
+**【重要】戻り値の意味**
+
+| 戻り値 | result.IsSet | 呼び出し例 | 意味 |
+|------|:---:|:---:|------|
+| **true** | false | `TryFrom(null, ...)` | null 入力 → 未設定（正常） |
+| **true** | true | `TryFrom("太郎", ...)` | 有効値 → 設定済み（正常） |
+| **false** | false | `TryFrom("", ...)` | 無効値 → 検証失敗 |
+
 **実装戦略:**
 - null 入力 → `Unset()` を返して **true**（null 安全）
-- 検証失敗時 → `Unset()` を返して **false**（例外を例外として送出しない）
+- 検証成功時 → 検証済みインスタンスを返して **true**
+- 検証失敗時 → `Unset()` を返して **false**（例外をキャッチして bool で表現）
 
-**実行フロー:**
+**実行フロー図:**
 
 ```
 TryFrom(string? input, out RespondentName result)
-  ↓
-if (input is null)
-  ├─ Yes: result = Unset(), return true
-  └─ No: 次へ
+  │
+  ├─ input is null
+  │   └─ result = Unset()
+  │   └─ return true  ← 正常な未設定
+  │
+  └─ input is not null
+      └─ try From(input)
+          ├─ Success
+          │   └─ result = 検証済みインスタンス
+          │   └─ return true  ← 正常な設定済み
+          └─ Catch ArgumentException
+              └─ result = Unset()
+              └─ return false  ← 検証失敗
+```
 
-try
-  ↓ result = From(input)
-  ├─ 成功: return true
-  └─ 失敗（引数例外）
+**使用例と戻り値の解釈:**
+
+```csharp
+// ケース 1: null 入力
+if (RespondentName.TryFrom(null, out var name1))
+{
+    if (name1.IsSet)
+        Console.WriteLine("設定済み");
+    else
+        Console.WriteLine("未設定（null 入力）");  // ← 正常
+}
+
+// ケース 2: 有効な値
+if (RespondentName.TryFrom("太郎", out var name2))
+{
+    if (name2.IsSet)
+        Console.WriteLine($"設定済み: {name2.Value}");  // ← 正常
+    else
+        Console.WriteLine("予期しない");
+}
+
+// ケース 3: 無効な値（空文字列）
+if (RespondentName.TryFrom("", out var name3))
+{
+    Console.WriteLine("検証成功（予期しない）");
+}
+else
+{
+    Console.WriteLine("検証失敗（無効な値）");  // ← これが実行される
+}
+```
 
 catch (ArgumentException)
   ├─ result = Unset()

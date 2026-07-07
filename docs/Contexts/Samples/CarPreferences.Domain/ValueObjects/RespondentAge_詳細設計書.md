@@ -88,6 +88,51 @@ RespondentAge
 
 ---
 
+### 2.2b Value プロパティ
+
+| 項目 | 内容 |
+|------|------|
+| 型 | `public int?` |
+| アクセス | `{ get; }` |
+| 実装 | `IsSet ? ValueField : null` |
+| 用途 | Domain ロジック内での値取得 |
+
+**実装**
+```csharp
+public int? Value => IsSet ? ValueField : null;
+```
+
+**設計判断:**
+- IsSet=true なら年齢値（0～150）を返す
+- IsSet=false なら null を返す
+- イミュータビリティのため get のみ
+
+**Value と TryGetValue の役割分担:**
+
+| 用途 | メソッド | 用いられるシーン |
+|------|---------|:----------:|
+| **直接参照** | `Value` プロパティ | Domain ロジック（IsSet 既知） |
+| **安全取得** | `TryGetValue(out int)` | 外部入力・レイヤ境界 |
+
+**使用例:**
+```csharp
+var age = RespondentAge.From(30);
+
+// Value プロパティ（Domain ロジック内）
+if (age.Value.HasValue && age.Value < 20)
+{
+    Console.WriteLine("未成年");
+}
+
+// TryGetValue（外部入力処理）
+if (age.TryGetValue(out var ageValue))
+{
+    ProcessAge(ageValue);
+}
+```
+
+---
+
 ### 2.3 UnsetInstance 静的フィールド
 
 | 項目 | 内容 |
@@ -227,7 +272,7 @@ public static RespondentAge Unset()
 
 ---
 
-### 4.3 TryFrom(int? input, out RespondentAge result) 静的メソッド
+### 4.3 TryFrom(int? input, out RespondentAge result) 静的メソッド（IOptionalValueObject 実装）【重要】
 
 **シグネチャ**
 
@@ -237,28 +282,95 @@ public static bool TryFrom(int? input, out RespondentAge result)
 	if (!input.HasValue)
 	{
 		result = Unset();
-		return true;
+		return true;  // ✅ null は成功（未設定は正常）
 	}
 
 	try
 	{
 		result = From(input.Value);
-		return true;
+		return true;  // ✅ 検証成功
 	}
 	catch (ArgumentOutOfRangeException)
 	{
 		result = Unset();
-		return false;
+		return false;  // ❌ 検証失敗のみ失敗
 	}
 }
 ```
 
-**責務**
+**【重要】責務（IOptionalValueObject 契約）**
 
-- nullable int から RespondentAge への変換を試みる
-- null および無効値を安全に処理
+- **null 入力は正常な未設定状態** → true + Unset を返す
+- **有効な値は設定済み状態** → true + 検証済みインスタンス
+- **無効な値は検証失敗** → false + Unset を返す
 
-**処理フロー**
+**【重要】戻り値マトリックス**
+
+| 戻り値 | result.IsSet | 入力例 | 意味 |
+|------|:---:|:---:|------|
+| **true** | false | `TryFrom(null, ...)` | null 入力 → 未設定（正常） |
+| **true** | true | `TryFrom(30, ...)` | 有効値（0～150） → 設定済み（正常） |
+| **false** | false | `TryFrom(-1, ...)` または `TryFrom(151, ...)` | 無効値 → 検証失敗 |
+
+**処理フロー図**
+
+```
+TryFrom(int? input, out RespondentAge result)
+  │
+  ├─ input.HasValue == false（null 入力）
+  │   └─ result = Unset()
+  │   └─ return true  ← 正常な未設定状態
+  │
+  └─ input.HasValue == true
+      └─ try From(input.Value)
+          ├─ Success（0～150）
+          │   └─ result = 検証済みインスタンス
+          │   └─ return true  ← 正常な設定済み状態
+          └─ Catch ArgumentOutOfRangeException（-1,151以上）
+              └─ result = Unset()
+              └─ return false  ← 検証失敗
+```
+
+**使用例と戻り値の解釈**
+
+```csharp
+// ケース 1: null 入力（UI フォーム未入力）
+if (RespondentAge.TryFrom(null, out var age1))
+{
+    if (age1.IsSet)
+        Console.WriteLine($"年齢: {age1.Value}");
+    else
+        Console.WriteLine("年齢未指定");  // ← 正常な入力
+}
+
+// ケース 2: 有効な値
+if (RespondentAge.TryFrom(30, out var age2))
+{
+    if (age2.IsSet)
+        Console.WriteLine($"年齢: {age2.Value}");  // ← true, IsSet=true
+    else
+        Console.WriteLine("予期しない");
+}
+
+// ケース 3: 無効な値（範囲外）
+if (RespondentAge.TryFrom(-1, out var age3))
+{
+    Console.WriteLine("検証成功（予期しない）");
+}
+else
+{
+    Console.WriteLine("検証失敗（無効な年齢）");  // ← false, IsSet=false
+}
+```
+
+**設計判断**
+
+- null は「正常な未設定」として扱う（return true）
+  - フォーム送信で年齢未指定は有効な入力パターン
+- 値の範囲外は「例外的な未設定」として扱う（return false）
+  - 入力値は存在するが、ビジネスルール違反
+
+**処理フロー（詳細版）**
 
 1. input.HasValue が false の場合：
    - `result = Unset()` を設定
