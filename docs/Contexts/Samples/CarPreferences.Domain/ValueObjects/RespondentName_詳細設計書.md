@@ -1,7 +1,7 @@
 # RespondentName 詳細設計書
 
 **バージョン:** 1.0  
-**作成日:** 2025年  
+**作成日:** 2026-07-04  
 **対象:** `SupportAdvance.Contexts.Samples.CarPreferences.Domain.ValueObjects.RespondentName`  
 
 ---
@@ -230,15 +230,11 @@ public bool Equals(ValueObject? other)
 }
 ```
 
-**PrimitiveValueObject による GetEqualityComponents() のオーバーライド:**
+**RespondentName による GetValueComponents() のオーバーライド:**
 
 ```csharp
-protected override IEnumerable<object?> GetEqualityComponents()
-	=> PrimitiveEqualityComponents();
-
-protected virtual IEnumerable<object?> PrimitiveEqualityComponents()
+protected override IEnumerable<object?> GetValueComponents()
 {
-	yield return IsSet;
 	if (IsSet)
 	{
 		yield return ValueField;
@@ -252,8 +248,8 @@ protected virtual IEnumerable<object?> PrimitiveEqualityComponents()
 a.Equals(b)
   ↓ RespondentName.Equals(RespondentName? other)
   ↓ base.Equals(other) → ValueObject.Equals(ValueObject? other)
-  ↓ GetEqualityComponents() → PrimitiveEqualityComponents()
-  ↓ セッション値: [IsSet, ValueField] （IsSet = true の場合）
+  ↓ GetEqualityComponents() → [IsSet, GetValueComponents()]
+  ↓ 比較コンポーネント: [IsSet, ValueField] （IsSet = true の場合）
   ↓ SequenceEqual() で比較
 
 例1: 両者とも同じ名前

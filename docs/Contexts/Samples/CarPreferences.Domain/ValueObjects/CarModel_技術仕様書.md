@@ -106,30 +106,60 @@ public static CarModel From(int value) => new(value);
 public static CarModel Unset() => UnsetInstance;
 ```
 
-**設計判断**
+**【重要】設計判断：シングルトン化**
 
-- 同一インスタンス（`UnsetInstance`）を常に返す（シングルトン）
-- `IsSet==false` のため、`TryGetValue()` は `false` を返す
+```csharp
+private static readonly CarModel UnsetInstance = new();  // 唯一のインスタンス
+
+public static CarModel Unset() => UnsetInstance;  // 常に同じインスタンスを返す
+```
+
+**シングルトン化の理由:**
+- ✅ **選択肢が限定** — CarModel は限定された選択肢型（Unknown～Other）
+- ✅ **メモリ効率** — Unset は頻繁に生成されるため、シングルトン化で最適化
+- ✅ **参照の安定性** — 常に同じインスタンスで参照比較の一貫性を保証
+- ✅ **UI 処理での効率** — フォーム入力の未選択状態は常に同じ Unset
+
+**振る舞い:**
+- `TryGetValue()` は `false` を返す（IsSet=false）
 - `ToString()` は `"Unset"` を返す
+- 参照比較 `obj1 == obj2` でも常に true（同一インスタンス）
+
+**対比：PrimitiveValueObject との違い**
+- RespondentName など PrimitiveValueObject の Unset は毎回新規生成
+  - 理由：スカラ値は無限の可能性があり、参照比較は不要
+  - 値等価性で判定されるため、シングルトン化の効果が限定的
 
 ---
 
-### 2.5 TryFrom メソッド（オーバーロード）
+### 2.5 TryFrom メソッド（IOptionalValueObject 実装）【重要】
+
+**【重要】仕様：IOptionalValueObject コントラクト**
+
+null 入力は「未選択」として安全に処理（エラーではなく正常な未設定状態）
 
 **null 許容バージョン**
 
 | 項目 | 内容 |
 |------|------|
 | シグネチャ | `public static bool TryFrom(int? input, out CarModel result)` |
-| 戻り値 | 生成に成功、または `input` が null の場合は `true`。`input` が無効値の場合は `false`。 |
-| 処理 | `input` が null → `Unset()` を返して `true`。`input` が有効（0～6） → `From()` を返して `true`。`input` が無効 → `Unset()` を返して `false`。 |
+| 戻り値 | **true** = null 入力（Unset）**または** 有効値 / **false** = 無効値のみ |
+| 処理 | null → Unset + **true**（正常） / 有効値 → From + **true** / 無効値 → Unset + **false** |
 
-**整数値バージョン**
+**整数値バージョン（IOptionalValueObject 要件）**
 
 | 項目 | 内容 |
 |------|------|
 | シグネチャ | `public static bool TryFrom(int input, out CarModel result)` |
 | 戻り値 | `TryFrom((int?)input, out result)` に委譲 |
+
+**戻り値の解釈:**
+
+| 戻り値 | result | 意味 |
+|------|--------|------|
+| **true** | Unset（IsSet=false） | null 入力 → 未選択（正常） |
+| **true** | 設定済み（IsSet=true） | 有効値（0～6）→ 選択済み（正常） |
+| **false** | Unset（IsSet=false） | 無効値（-1,7以上） → 検証失敗 |
 
 **実装例**
 ```csharp

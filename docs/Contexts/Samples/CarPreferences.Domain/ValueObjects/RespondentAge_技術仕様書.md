@@ -95,6 +95,43 @@ RespondentAge
 - TValue 型は struct 制約により、値型に限定（int, short, DateTime 等）
 - 初期化はコンストラクタの base(value) 呼び出し時に実施
 
+### 2.2b Value プロパティ
+
+年齢値への公開アクセスポイント（get のみ）
+
+| 項目 | 内容 |
+|------|------|
+| 型 | `public int? { get; }` |
+| 戻り値 | IsSet=true なら年齢値、false なら null |
+| 例外 | 例外を投げない |
+| イミュータビリティ | get のみ（セッター不可） |
+
+**実装**
+```csharp
+public int? Value => IsSet ? ValueField : null;
+```
+
+**Value と TryGetValue の使い分け**
+
+| 用途 | メソッド | 利用場面 |
+|------|---------|--------|
+| **直接アクセス** | `Value` プロパティ | Domain ロジック（IsSet 既知） |
+| **安全なアクセス** | `TryGetValue()` | 外部入力・レイヤ境界 |
+
+```csharp
+// Value プロパティ（Domain ロジック）
+if (age.Value.HasValue && age.Value < 18)
+{
+    // 未成年
+}
+
+// TryGetValue（外部入力処理）
+if (age.TryGetValue(out var ageValue))
+{
+    ProcessAge(ageValue);
+}
+```
+
 ---
 
 ### 2.3 From(int value) 静的メソッド
@@ -148,29 +185,57 @@ RespondentAge
 
 ---
 
-### 2.5 TryFrom(int? input, out RespondentAge result) 静的メソッド
+### 2.5 TryFrom(int? input, out RespondentAge result) 静的メソッド（IOptionalValueObject 実装）【重要】
 
 | 項目 | 内容 |
 |------|------|
 | シグネチャ | `public static bool TryFrom(int? input, out RespondentAge result)` |
-| 戻り値 | 生成に成功した場合または null の場合 true、失敗した場合 false |
+| 戻り値 | **true** = null 入力（Unset）**または** 有効値 / **false** = 無効値のみ |
 | パラメータ | `input`: 年齢を表す nullable int（null 許容） |
 | 例外 | 例外を投げない |
-| 用途 | null または無効な値を安全に処理し、結果を out で返す |
+| 用途 | API 入力・UI フォーム：null 許容の年齢値を安全に処理 |
 
-**処理フロー**
+**【重要】処理フロー（IOptionalValueObject 仕様）**
 
-1. `input.HasValue` が false の場合：
-   - `result = Unset()` を設定
-   - `return true`（NULL は正常な未設定状態）
-2. `input.HasValue` が true の場合：
-   - try: `result = From(input.Value)` を呼び出し → 成功時は `return true`
-   - catch (ArgumentOutOfRangeException): `result = Unset()` を設定 → `return false`
+```csharp
+public static bool TryFrom(int? input, out RespondentAge result)
+{
+    // ケース 1: null 入力 → Unset + true（正常な未設定）
+    if (!input.HasValue)
+    {
+        result = Unset();
+        return true;  // ✅ null は成功扱い
+    }
+
+    try
+    {
+        // ケース 2: 有効な値（0～150） → From + true
+        result = From(input.Value);
+        return true;  // ✅ 検証成功
+    }
+    catch (ArgumentOutOfRangeException)
+    {
+        // ケース 3: 無効な値（-1, 151以上） → Unset + false
+        result = Unset();
+        return false;  // ❌ 検証失敗のみ失敗
+    }
+}
+```
+
+**【重要】戻り値の解釈**
+
+| 戻り値 | result.IsSet | 意味 |
+|------|------------|------|
+| **true** | false | null 入力 → 未設定（正常） |
+| **true** | true | 有効値（0～150） → 設定済み（正常） |
+| **false** | false | 無効値（-1,151以上） → 検証失敗 |
 
 **設計判断**
 
-- null は「正常な未設定」として扱う（return true）
-- 値の範囲外は「例外的な未設定」として扱う（return false）
+- ✅ null は「正常な未設定」として扱う（return true）
+  - フォーム未入力は有効な入力パターン
+- ❌ 値の範囲外は「例外的な未設定」として扱う（return false）
+  - 入力値は存在するが、ビジネスルール違反
 - out パラメータは常に値を受け取る（失敗時は Unset()）
 
 ---
@@ -222,20 +287,20 @@ RespondentAge
 
 ## 3. 等価性・ハッシング仕様
 
-### 3.1 GetEqualityComponents() メソッド
+### 3.1 GetValueComponents() メソッド
 
 | 項目 | 内容 |
 |------|------|
-| シグネチャ | `protected override IEnumerable<object?> GetEqualityComponents()` |
-| 用途 | ValueObject 基礎の Equals / GetHashCode で使用するコンポーネントを列挙 |
+| シグネチャ | `protected override IEnumerable<object?> GetValueComponents()` |
+| 用途 | 等価性判定で使用する値コンポーネントを列挙 |
 
 **処理フロー**
 
-1. `yield return IsSet` で IsSet を最初に返す（判定の根拠）
-2. IsSet が true の場合のみ：
+1. IsSet が true の場合のみ：
    - `yield return ValueField` で年齢値を返す
-3. IsSet が false の場合：
-   - valueField は返さない（未設定状態は ValueField に依存しない）
+2. IsSet が false の場合：
+   - ValueField は返さない（未設定状態は ValueField に依存しない）
+3. IsSet フラグは基底クラスで自動的に等価性判定に含まれる
 
 **設計判断**
 

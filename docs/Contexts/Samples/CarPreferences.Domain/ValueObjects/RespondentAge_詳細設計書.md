@@ -410,15 +410,13 @@ protected override void Validate(int normalized)
 
 ## 5. 等価性・ハッシング設計
 
-### 5.1 GetEqualityComponents() メソッド
+### 5.1 GetValueComponents() メソッド
 
 **シグネチャ**
 
 ```csharp
-protected override IEnumerable<object?> GetEqualityComponents()
+protected override IEnumerable<object?> GetValueComponents()
 {
-	yield return IsSet;
-
 	if (IsSet)
 	{
 		yield return ValueField;
@@ -428,7 +426,7 @@ protected override IEnumerable<object?> GetEqualityComponents()
 
 **責務**
 
-- ValueObject 基礎の Equals / GetHashCode で使用するコンポーネントを列挙
+- 等価性判定で使用する値コンポーネントを列挙（IsSet は基底クラスで自動追加）
 
 **処理フロー**
 

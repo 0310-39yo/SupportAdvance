@@ -1,7 +1,7 @@
 # RespondentName 技術仕様書
 
 **バージョン:** 1.0  
-**作成日:** 2025年  
+**作成日:** 2026-07-04  
 **責務:** アンケート回答者の名前を管理する値オブジェクト  
 
 ---
@@ -53,16 +53,43 @@ var unset = RespondentName.Unset();
 Assert.False(unset.IsSet);  // false
 ```
 
-#### `Value : string { get; }` (PrimitiveValueObject から継承)
+#### `Value : string? { get; }`
 
 **役割:** 保持する文字列値を読み取り専用で取得
 
 ```csharp
 var respondentName = RespondentName.From("山田花子");
-string name = respondentName.Value;  // "山田花子"
+string? name = respondentName.Value;  // "山田花子"
+
+var unset = RespondentName.Unset();
+string? value = unset.Value;  // null
 ```
 
-**注意:** `IsSet = false` の場合、`Value` は default(string) です。
+**特性:**
+- IsSet=true なら値、false なら null を返す
+- Domain ロジック内で IsSet が既知の場合に使用
+- イミュータビリティのため get のみ
+
+**Value プロパティと TryGetValue() の使い分け:**
+
+| 用途 | メソッド | 利用場面 |
+|------|---------|--------|
+| **直接アクセス** | `Value` プロパティ | Domain ロジック内（IsSet 既知） |
+| **安全なアクセス** | `TryGetValue()` | 外部入力・レイヤ境界での値取得 |
+
+```csharp
+// Value プロパティ（Domain ロジック）
+if (name.Value != null)
+{
+    ProcessName(name.Value);
+}
+
+// TryGetValue（外部入力処理）
+if (name.TryGetValue(out var value))
+{
+    ProcessName(value);
+}
+```
 
 ### 2.2 ファクトリメソッド
 
@@ -99,25 +126,50 @@ Assert.Equal("佐藤次郎", respondentName.Value);
 3. `isSet = true` を渡す
 4. 基本クラスのコンストラクタで自動的に `Validate()` が実行される
 
-#### `TryFrom(string? input, out RespondentName result) : bool`
+#### `TryFrom(string? input, out RespondentName result) : bool`（IOptionalValueObject 実装）
 
-**役割:** null 安全な生成、失敗時は false を返す
+**責務:** IOptionalValueObject コントラクトに従い、null は「未設定」として安全に処理
+
+**【重要】仕様：**
+- **null 入力 → Unset + true**（エラーではなく正常な未設定状態）
+- **有効な値 → 検証済みインスタンス + true**（正常）
+- **無効な値 → Unset + false**（検証失敗のみ失敗扱い）
 
 ```csharp
-// 成功例
-bool success = RespondentName.TryFrom("鈴木太郎", out var respondentName);
-Assert.True(success);
-Assert.True(respondentName.IsSet);
+// ケース 1: null 入力は正常な未設定状態
+bool success = RespondentName.TryFrom(null, out var result1);
+Assert.True(success);      // ✅ true（エラーではない）
+Assert.False(result1.IsSet);  // IsSet=false（Unset状態）
 
-// null 入力は Unset を返す（失敗ではない）
-bool success2 = RespondentName.TryFrom(null, out var unset);
-Assert.True(success2);
-Assert.False(unset.IsSet);
+// ケース 2: 有効な値
+bool success2 = RespondentName.TryFrom("鈴木太郎", out var result2);
+Assert.True(success2);     // ✅ true
+Assert.True(result2.IsSet);   // IsSet=true（設定済み）
+Assert.Equal("鈴木太郎", result2.Value);
+
+// ケース 3: 無効な値（例：空文字列）
+bool success3 = RespondentName.TryFrom("", out var result3);
+Assert.False(success3);    // ❌ false（検証失敗）
+Assert.False(result3.IsSet);  // result は Unset
 ```
 
+**戻り値の解釈:**
+
+| 戻り値 | result.IsSet | 意味 |
+|------|------------|------|
+| **true** | false | null 入力 → 未設定（正常） |
+| **true** | true | 有効な値 → 設定済み（正常） |
+| **false** | false | 検証失敗（無効な値） |
+
 **実行フロー:**
-1. `input is null` → `Unset()` を生成して true を返す
-2. `From(input)` を試行 → 成功時 true、例外時 false を返す
+1. `input is null` → `Unset()` を返して **true**（正常扱い）
+2. `From(input)` を試行 → 成功時 true + 検証済みインスタンス
+3. 例外発生時 → false + Unset を返す
+
+**使用場面:**
+- API リクエスト入力で null 許容（フォーム送信など）
+- JSON/クエリパラメータの解析（null は「未指定」）
+- UI から未設定状態が発生する可能性がある場合
 
 ---
 

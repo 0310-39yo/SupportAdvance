@@ -50,6 +50,11 @@ public sealed class CarModel : EnumValueObject<int>, IOptionalValueObject<CarMod
     }
 
     /// <summary>
+    /// 保持する内部値を読み取り専用で取得
+    /// </summary>
+    public int? Value => IsSet ? ValueField : null;
+
+    /// <summary>
     /// 指定された内部値からCarModelのインスタンスを生成する
     /// </summary>
     /// <param name="value">内部値</param>

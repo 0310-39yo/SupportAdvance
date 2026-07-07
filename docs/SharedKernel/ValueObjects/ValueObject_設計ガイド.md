@@ -269,28 +269,61 @@ Assert.AreEqual(unset1, unset2);     // true（両方 Unset）
 Assert.AreNotEqual(unset1, value);   // true（状態が異なる）
 ```
 
-### 4.2 Unset の生成方法
+### 4.2 Unset の生成方法と シングルトン化の判断基準
 
-**PrimitiveValueObject:**
+#### PrimitiveValueObject — 毎回新規生成
+
 ```csharp
 // 派生クラスで static メソッドを用意
-public static RespondentName Unset() => new(false);
-
-// または IOptionalValueObject インターフェース
-public static RespondentName Unset() => new(false);
+public static RespondentName Unset() => new(false);  // 毎回新規インスタンス
 ```
 
-**EnumValueObject:**
-```csharp
-// 引数なしコンストラクタで IsSet=false に初期化
-public sealed class Status : EnumValueObject<int>
-{
-    public static readonly Status Unset = new();  // IsSet=false
+**特性:**
+- 呼び出すたびに新しいインスタンスが生成される
+- メモリ負荷は多いが、各インスタンスが独立している
+- 値オブジェクトの等価性によって Unset 同士は等価と見なされる
 
-    private Status() : base(default, false) { }
-    private Status(int value) : base(value) { }
+#### EnumValueObject — シングルトン化（推奨）
+
+```csharp
+// 選択肢が限定される場合、Unset インスタンスをシングルトン化
+public sealed class CarModel : EnumValueObject<int>
+{
+    public static readonly CarModel Unknown = new(0);
+    public static readonly CarModel Sedan = new(1);
+    // ...
+    
+    private static readonly CarModel UnsetInstance = new();  // Unset専用
+    
+    public static CarModel Unset() => UnsetInstance;  // 常に同じインスタンス
 }
 ```
+
+**特性:**
+- 常に同じインスタンスを返す
+- メモリ効率が良い
+- オブジェクト等価性と値等価性が一致する
+
+#### シングルトン化の判断基準
+
+| 判断基準 | PrimitiveValueObject | EnumValueObject |
+|---------|------------------|-----------------|
+| **選択肢の固定性** | 無限（スカラ値） | 有限（選択肢型） |
+| **生成パターン** | 毎回新規生成 | ✅ シングルトン推奨 |
+| **メモリ効率** | 低優先度 | ✅ 高優先度 |
+| **使用頻度** | 低（ビジネスロジック内） | ✅ 高（UI入力処理） |
+| **参照比較** | 不要 | ✅ 最適化可能 |
+
+**ガイドライン:**
+- **EnumValueObject の Unset：シングルトン化（UnsetInstance）**
+  - 選択肢が限定されて不変
+  - UI 入力処理で頻繁に生成される
+  - メモリ最適化が有効
+  
+- **PrimitiveValueObject の Unset：毎回新規生成**
+  - スカラ値として無限の可能性
+  - ビジネスロジック内での参照頻度が低い
+  - 値等価性で判定されるため参照は不要
 
 ### 4.3 Unset 状態での等価性判定
 
@@ -508,16 +541,56 @@ else
 var unset = RespondentName.Unset();
 ```
 
-### 6.3 プロパティ名
+### 6.3 Value プロパティ
 
-**ルール:** 値フィールドへのアクセスは `Value` プロパティで提供。
+**ルール:** 保持する値へのアクセスは `Value` プロパティで提供。イミュータビリティのため get のみ。
+
+#### 実装パターン
 
 ```csharp
 public sealed class RespondentName : PrimitiveValueObject<string>
 {
     protected readonly string ValueField;  // protected readonly
 
-    public string Value => ValueField;  // public property
+    public string? Value => IsSet ? ValueField : null;  // get のみ
+}
+```
+
+#### Value プロパティと TryGetValue() の使い分け
+
+| 用途 | メソッド | 利用場面 |
+|------|---------|--------|
+| **直接アクセス** | `Value` プロパティ | Domain ロジック内で IsSet が既知の場合 |
+| **安全なアクセス** | `TryGetValue()` | 外部入力やレイヤ境界での値取得 |
+
+**Value プロパティの特性:**
+- IsSet=true なら値、false なら null を返す
+- Domain ロジック内でシンプルに値にアクセス可能
+- null チェックで未設定状態を判定
+
+**TryGetValue() メソッドの特性:**
+- bool で成功/失敗を明示的に表現
+- out パラメータで値を返す
+- 例外なしで安全に値取得
+
+**使用例:**
+```csharp
+var name = RespondentName.From("太郎");
+
+// Value プロパティ（Domain ロジック）
+if (name.Value != null)
+{
+    Console.WriteLine(name.Value);
+}
+
+// TryGetValue（外部入力処理）
+if (name.TryGetValue(out var value))
+{
+    ProcessName(value);
+}
+else
+{
+    HandleUnset();
 }
 ```
 
@@ -836,9 +909,9 @@ else
 
 ---
 
-#### パターン B: オプション値オブジェクト（IOptionalValueObject 実装）
+#### パターン B: オプション値オブジェクト（IOptionalValueObject 実装）【重要】
 
-**仕様:** null 入力は正常な未設定状態と見なす。
+**仕様：** null 入力は **正常な未設定状態** と見なす（エラーではない）。
 
 **実装クラス:**
 - `RespondentName`（文字列）
@@ -848,7 +921,8 @@ else
 - その他 IOptionalValueObject 実装クラス
 
 ```csharp
-public sealed class RespondentName : PrimitiveValueObject<string>, IOptionalValueObject<RespondentName, string>
+public sealed class RespondentName : PrimitiveValueObject<string>, 
+    IOptionalValueObject<RespondentName, string>
 {
     private RespondentName(bool isSet) : base(isSet) { }
     private RespondentName(string value, bool isSet) : base(value, isSet) { }
@@ -856,24 +930,28 @@ public sealed class RespondentName : PrimitiveValueObject<string>, IOptionalValu
     public static RespondentName Unset() => new(false);
     public static RespondentName From(string value) => new(value, true);
 
+    /// <summary>
+    /// 【重要】IOptionalValueObject の TryFrom 実装
+    /// null は「未設定」として扱い、例外ではなく Unset() で返す
+    /// </summary>
     public static bool TryFrom(string? input, out RespondentName result)
     {
-        // null の場合は Unset として成功
+        // 【ポイント】null は正常な入力 → Unset + true
         if (input is null)
         {
             result = Unset();
-            return true;  // null → Unset は正常
+            return true;  // ✅ null は成功扱い
         }
 
         try
         {
             result = From(input);
-            return true;  // 成功
+            return true;  // ✅ 有効値は成功
         }
         catch (ArgumentException)
         {
             result = Unset();
-            return false;  // 検証失敗
+            return false;  // ❌ 検証失敗のみ失敗
         }
     }
 }
@@ -881,24 +959,66 @@ public sealed class RespondentName : PrimitiveValueObject<string>, IOptionalValu
 // 使用方法
 if (RespondentName.TryFrom(inputName, out var name))
 {
-    // null 入力の場合：name は Unset（IsSet=false）
-    // 有効な値の場合：name は設定済み（IsSet=true）
+    if (name.IsSet)
+    {
+        Console.WriteLine($"値あり: {name.Value}");  // 有効な値
+    }
+    else
+    {
+        Console.WriteLine("未設定");  // null 入力 → Unset
+    }
 }
 else
 {
-    // 検証失敗のみ（null は失敗ではない）
+    Console.WriteLine("検証失敗");  // 値が無効（例：空文字列）
 }
 ```
 
-**戻り値:**
-- **true** — null 入力（Unset 返却）**または** 検証成功（result に検証済みインスタンス）
-- **false** — 検証失敗のみ（result は Unset）
+**【重要】戻り値の意味:**
+
+| 戻り値 | result.IsSet | 意味 |
+|------|------------|------|
+| **true** | false | null 入力 → 未設定状態（正常） |
+| **true** | true | 有効な値 → 設定済み状態（正常） |
+| **false** | false | 検証失敗（無効な値） |
+
+**パターン A vs パターン B の比較:**
+
+```csharp
+// パターン A: 入力必須（null は失敗）
+if (CreatedAt.TryFrom(dateInput, out var created))
+{
+    // true: 有効な日時のみ
+}
+else
+{
+    // false: null または検証失敗
+}
+
+// パターン B: オプション（null は未設定）
+if (RespondentName.TryFrom(nameInput, out var name))
+{
+    if (name.IsSet)
+    {
+        // 有効な値
+    }
+    else
+    {
+        // null 入力 → 未設定（正常）
+    }
+}
+else
+{
+    // 検証失敗（値が無効）
+}
+```
 
 **いつ使うか:**
-- API リクエスト入力で null 許容の場合（フォーム送信など）
-- JSON/クエリパラメータの解析（null は「未指定」として扱う）
-- UI から未設定状態が発生する可能性がある場合
-- 外部システム連携で null が有効な入力の場合
+- ✅ API リクエスト入力で null 許容の場合（フォーム送信など）
+- ✅ JSON/クエリパラメータの解析（null は「未指定」）
+- ✅ UI から未設定状態が発生する可能性がある場合
+- ✅ 外部システム連携で null が有効な入力の場合
+- ✅ Domain Entity のオプションプロパティ処理
 
 **パターン A との使い分け:**
 | 項目 | パターン A（入力必須） | パターン B（入力オプション） |

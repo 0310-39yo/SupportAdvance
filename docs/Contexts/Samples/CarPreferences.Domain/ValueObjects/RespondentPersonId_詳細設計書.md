@@ -340,13 +340,11 @@ public override int GetHashCode() => HashCode.Combine(IsSet, ValueField);
 
 ---
 
-### 3.11 `GetEqualityComponents()` 保護オーバーライド メソッド
+### 3.11 `GetValueComponents()` 保護オーバーライド メソッド
 
 ```csharp
-protected override IEnumerable<object?> GetEqualityComponents()
+protected override IEnumerable<object?> GetValueComponents()
 {
-	yield return IsSet;
-
 	if (IsSet)
 	{
 		yield return ValueField;
@@ -356,9 +354,9 @@ protected override IEnumerable<object?> GetEqualityComponents()
 
 | 項目 | 内容 |
 |------|------|
-| シグネチャ | `protected override IEnumerable<object?> GetEqualityComponents()` |
-| 戻り値 | IsSet フラグを返し、IsSet=true の場合のみ ValueField も返す |
-| 処理 | IsSet → ValueField（存在する場合） の順で yield return |
+| シグネチャ | `protected override IEnumerable<object?> GetValueComponents()` |
+| 戻り値 | IsSet=true の場合のみ ValueField を返す |
+| 処理 | ValueField（存在する場合）のみを yield return（IsSet は基底で自動追加） |
 
 **設計判断**
 

@@ -29,6 +29,11 @@ public sealed class RespondentAge : PrimitiveValueObject<int>, IOptionalValueObj
     }
 
     /// <summary>
+    /// 保持する整数値を読み取り専用で取得
+    /// </summary>
+    public int? Value => IsSet ? ValueField : null;
+
+    /// <summary>
     /// 指定されたRespondentAgeと等価かどうかを判定する
     /// 【責務】指定されたRespondentAgeと等価かどうかを判定する
     /// </summary>

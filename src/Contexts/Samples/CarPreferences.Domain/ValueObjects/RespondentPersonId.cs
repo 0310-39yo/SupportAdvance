@@ -29,6 +29,11 @@ public sealed class RespondentPersonId : PrimitiveValueObject<int>, IOptionalVal
     }
 
     /// <summary>
+    /// 保持する整数値を読み取り専用で取得
+    /// </summary>
+    public int? Value => IsSet ? ValueField : null;
+
+    /// <summary>
     /// 未設定状態のインスタンスを返す
     /// 【責務】未設定状態を表現する
     /// </summary>

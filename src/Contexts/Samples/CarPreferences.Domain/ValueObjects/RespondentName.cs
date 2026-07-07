@@ -29,6 +29,11 @@ public sealed class RespondentName : PrimitiveValueObject<string>, IOptionalValu
     }
 
     /// <summary>
+    /// 保持する文字列値を読み取り専用で取得
+    /// </summary>
+    public string? Value => IsSet ? ValueField : null;
+
+    /// <summary>
     /// 指定されたRespondentNameと等価かどうかを判定する
     /// </summary>
     /// <param name="other">比較対象のRespondentName</param>

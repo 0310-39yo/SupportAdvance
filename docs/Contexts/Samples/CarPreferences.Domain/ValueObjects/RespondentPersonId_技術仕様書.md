@@ -62,6 +62,31 @@
 
 ---
 
+### 2.2b `Value` プロパティ
+
+個人IDへの公開アクセスポイント（get のみ）
+
+| 項目 | 内容 |
+|------|------|
+| 型 | `public int? { get; }` |
+| 戻り値 | IsSet=true なら個人ID（1000～9999）、false なら null |
+| 例外 | 例外を投げない |
+| イミュータビリティ | get のみ（セッター不可） |
+
+**実装**
+```csharp
+public int? Value => IsSet ? ValueField : null;
+```
+
+**Value と TryGetValue の使い分け**
+
+| 用途 | メソッド | 利用場面 |
+|------|---------|--------|
+| **直接アクセス** | `Value` プロパティ | Domain ロジック（IsSet 既知） |
+| **安全なアクセス** | `TryGetValue()` | 外部入力・レイヤ境界 |
+
+---
+
 ### 2.3 `Unset()` メソッド
 
 未設定状態の RespondentPersonId を生成する静的ファクトリメソッド。
@@ -117,21 +142,58 @@
 
 ---
 
-### 2.6 `TryFrom(int? input, out RespondentPersonId result)` メソッド
+### 2.6 `TryFrom(int? input, out RespondentPersonId result)` メソッド（IOptionalValueObject 実装）【重要】
 
-Nullable な整数値から RespondentPersonId の生成を試みる。
+Nullable な整数値から RespondentPersonId の生成を試みる（IOptionalValueObject 仕様）
 
 | 項目 | 内容 |
 |------|------|
 | シグネチャ | `public static bool TryFrom(int? input, out RespondentPersonId result)` |
-| 戻り値 | true: 生成成功または null（Unset に変換）、false: 値が無効 |
+| 戻り値 | **true** = null 入力（Unset）**または** 有効値 / **false** = 無効値のみ |
 | 例外 | 例外を投げない |
-| 用途 | Nullable な入力（null許容）を処理する場合 |
+| 用途 | API 入力・UI フォーム：null 許容の個人ID値を安全に処理 |
+
+**【重要】処理フロー（IOptionalValueObject 仕様）**
+
+```csharp
+public static bool TryFrom(int? input, out RespondentPersonId result)
+{
+    // ケース 1: null 入力 → Unset + true（正常な未設定）
+    if (!input.HasValue)
+    {
+        result = Unset();
+        return true;  // ✅ null は成功扱い
+    }
+
+    try
+    {
+        // ケース 2: 有効な値（1000～9999） → From + true
+        result = From(input.Value);
+        return true;  // ✅ 検証成功
+    }
+    catch (ArgumentOutOfRangeException)
+    {
+        // ケース 3: 無効な値（999以下,10000以上） → Unset + false
+        result = Unset();
+        return false;  // ❌ 検証失敗のみ失敗
+    }
+}
+```
+
+**【重要】戻り値の解釈**
+
+| 戻り値 | result.IsSet | 意味 |
+|------|------------|------|
+| **true** | false | null 入力 → 未設定（正常） |
+| **true** | true | 有効値（1000～9999） → 設定済み（正常） |
+| **false** | false | 無効値（999以下,10000以上） → 検証失敗 |
 
 **設計判断**
 
-- input が null の場合、true を返し Unset インスタンスを result に設定（正常処理）
-- input に値がある場合、その値が無効なら false を返す（異常処理）
+- ✅ input が null の場合、true を返し Unset インスタンスを result に設定（正常処理）
+  - UI フォームの未入力は有効な入力パターン
+- ❌ input に値がある場合、その値が無効なら false を返す（異常処理）
+  - 入力値は存在するが、ビジネスルール違反
 
 ---
 
@@ -207,20 +269,20 @@ Nullable な整数値から RespondentPersonId の生成を試みる。
 
 ---
 
-### 2.11 `GetEqualityComponents()` メソッド
+### 2.11 `GetValueComponents()` メソッド
 
-等価性の比較に使用するコンポーネントを列挙する。
+等価性の比較に使用する値コンポーネントを列挙する。
 
 | 項目 | 内容 |
 |------|------|
-| シグネチャ | `protected override IEnumerable<object?> GetEqualityComponents()` |
-| 戻り値 | IsSet フラグを返し、IsSet=true の場合のみ ValueField も返す |
+| シグネチャ | `protected override IEnumerable<object?> GetValueComponents()` |
+| 戻り値 | IsSet=true の場合のみ ValueField を返す（IsSet は基底で自動追加） |
 | 例外 | 例外を投げない |
 | 用途 | 基底クラス ValueObject による等価性判定の基盤 |
 
 **設計判断**
 
-- IsSet と ValueField の両者で等価性を決定
+- ValueField のみを返す（IsSet は基底クラスで自動的に等価性判定に含まれる）
 
 ---
 
