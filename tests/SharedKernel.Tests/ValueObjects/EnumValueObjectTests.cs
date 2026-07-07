@@ -640,4 +640,95 @@ public class EnumValueObjectTests
         Assert.True(instance.IsSet);
         Assert.True(instance.TryGetValue(out _));
     }
+
+    // ================================================================================
+    // 追加: null 比較テスト（VO-OP-03, VO-OP-04）
+    // ================================================================================
+
+    /// <summary>
+    /// VO-OP-03: 両辺が null のとき == は true
+    /// </summary>
+    [Fact]
+    public void OperatorEqual_BothNull_ReturnsTrue()
+    {
+        // Arrange
+        OrderStatus? nullLeft = null;
+        OrderStatus? nullRight = null;
+
+        // Act
+        var result = nullLeft == nullRight;
+
+        // Assert
+        Assert.True(result);
+    }
+
+    /// <summary>
+    /// VO-OP-04: 片方のみ null のとき == は false
+    /// </summary>
+    [Fact]
+    public void OperatorEqual_OneNull_ReturnsFalse()
+    {
+        // Arrange
+        OrderStatus? nullValue = null;
+        OrderStatus nonNullValue = OrderStatus.Draft;
+
+        // Act
+        var resultNullLeft = nullValue == nonNullValue;
+        var resultNullRight = nonNullValue == nullValue;
+
+        // Assert
+        Assert.False(resultNullLeft);
+        Assert.False(resultNullRight);
+    }
+
+    /// <summary>
+    /// VO-NE-03: 型が異なる場合は非等価
+    /// </summary>
+    [Fact]
+    public void Equals_DifferentType_NotEqual()
+    {
+        // Arrange
+        var orderStatus = OrderStatus.Draft;
+        object differentType = 1;  // int 型
+
+        // Act
+        var result = orderStatus.Equals(differentType);
+
+        // Assert
+        Assert.False(result);
+    }
+
+    /// <summary>
+    /// null との比較（ValueObject.Equals での null チェック）
+    /// </summary>
+    [Fact]
+    public void Equals_WithNull_ReturnsFalse()
+    {
+        // Arrange
+        var draft = OrderStatus.Draft;
+        OrderStatus? nullValue = null;
+
+        // Act
+        var result = draft.Equals(nullValue);
+
+        // Assert
+        Assert.False(result);
+    }
+
+    /// <summary>
+    /// != 演算子での null 比較
+    /// </summary>
+    [Fact]
+    public void OperatorNotEqual_WithNull_ReturnsTrue()
+    {
+        // Arrange
+        var draft = OrderStatus.Draft;
+        OrderStatus? nullValue = null;
+
+        // Act
+        var result = draft != nullValue;
+
+        // Assert
+        Assert.True(result);
+    }
 }

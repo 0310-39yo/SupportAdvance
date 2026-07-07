@@ -1,286 +1,551 @@
 # 単体テスト仕様書 — EnumValueObject<TValue>
 
-**プロジェクト:** Advance  
-**対象:** Domain 層 / ValueObject 基底クラス  
-**テスト対象:** `EnumValueObject<TValue>` の基本機能  
-**版:** 2.0 / 2026-07-04
+**プロジェクト:** SupportAdvance  
+**テスト対象:** EnumValueObject<TValue>（選択肢型値オブジェクト）  
+**テストレベル:** 単体テスト  
+**版:** 1.0 / 2026-07-07
 
 ---
 
-## 1. テスト対象の位置づけ
+## 1. 本書の位置づけ
 
-### 1.1 テスト対象オブジェクト
+本書は、Domain層の EnumValueObject<TValue> 派生クラスが、技術仕様書および詳細設計書で定義された
+**選択肢の妥当性検証・ビジネス名称管理・等価性比較・ハッシュ・文字列化・IsSet状態管理** を満たすことを確認するテスト仕様書。
 
-`EnumValueObject<TValue>` は、Domain 層における抽象基底クラスである。
+### 📌 設計上の注釈
 
-- **テスト対象範囲**：`EnumValueObject<TValue>` の基本メンバー機能（IsSet、TryGetValue、Validate、GetDisplayName、等価性判定、ToString）
-- **テスト実装方法**：具体的な派生クラス（例：OrderStatus）を通じた機能検証
-- **テスト責務**：仕様書 §2「メンバー仕様」に定義される各メンバーの正確な動作確認
+**IsSet フラグについて**：EnumValueObject は設計上 **常に IsSet=true** です。これは、EnumValueObject が選択肢から必ず 1 つを選択した状態を表現するためです。したがって、以下の観点は実装では「該当しない」ものとして扱われます：
 
-### 1.2 テスト対象外（派生クラス固有）
+- **VO-IS-02**：IsSet=false での動作（EnumValueObject は常に true）
+- **VO-NE-02**：IsSet が異なる場合の非等価性（常に true なため比較対象外）
+- **VO-HC-02**：IsSet が異なるときのハッシュ値差異（該当なし）
+- **VO-TS-01**：IsSet=false での "Unset" 返却（常に true なため発生しない）
 
-以下は、各派生クラスの個別テスト仕様書で検証する：
-
-- From(int value) メソッドの値逆引きロジック
-- Validate メソッドの範囲チェック内容（1～3 など、クラス固有の範囲）
-- GetDisplayName メソッドの値変換ロジック（"下書き"→"承認済" など、表示内容）
-- 派生クラスのコンストラクタ仕様（private 修飾、引数形式）
+これらの観点の実装テストは、EnumValueObject の仕様に基づいて省略されていることをご了承ください。
 
 ---
 
-## 2. テストケース一覧
+## 2. テスト目的
 
-### 2.1 IsSet プロパティのテスト
+EnumValueObject<TValue> の各メンバーが、以下の仕様を満たすことを確認する：
 
-**根拠:** 技術仕様書 §2.1
-
-| テストID | 観点ID | テストケース | 前提条件 | 操作 | 期待結果 | 備考 |
-|---|---|---|---|---|---|---|
-| T-IsSet-001 | IsSet-001 | IsSet は常に true を返す | OrderStatus.Draft インスタンス生成済み | Draft.IsSet を読み取る | true を返す | EnumValueObject は常に値を保持するため |
-| T-IsSet-002 | IsSet-002 | 複数インスタンスで IsSet は常に true | OrderStatus.Draft、Approved、Completed インスタンス生成済み | 全インスタンスで IsSet を読み取る | すべて true を返す | 選択肢すべてで同じ動作 |
-
-**テスト実装例（テストメソッド名形式）:**
-- `IsSet_常に_Trueを返す()`
-- `IsSet_複数インスタンス_すべてTrueを返す()`
+- **値の妥当性検証**：無効な選択肢値は例外をスロー
+- **業務名称の管理**：内部値を業務用の日本語名に変換
+- **等価性比較**：同じ選択肢値を持つ2つのオブジェクトは等価
+- **ハッシュ整合性**：Equals=true のオブジェクトは同一ハッシュ値
+- **文字列化**：ToString が業務名称またはビジネス値を返す
+- **IsSet状態管理**：IsSet フラグが正しく機能する
 
 ---
 
-### 2.2 TryGetValue メソッドのテスト
+## 3. テスト対象クラス
 
-**根拠:** 技術仕様書 §2.3
-
-| テストID | 観点ID | テストケース | 前提条件 | 操作 | 期待結果 | 備考 |
-|---|---|---|---|---|---|---|
-| T-TryGetValue-001 | TryGetValue-001 | TryGetValue は常に true を返す | OrderStatus.Draft インスタンス生成済み | Draft.TryGetValue(out int value) を呼び出す | 戻り値が true、value に内部値（1）が格納される | IsSet=true のため常に成功 |
-| T-TryGetValue-002 | TryGetValue-002 | out パラメータに正しい内部値が格納される | OrderStatus.Approved インスタンス生成済み | Approved.TryGetValue(out int value) を呼び出す | value=2（Approved に対応する値） | 派生クラスの静的フィールド値に対応 |
-| T-TryGetValue-003 | TryGetValue-003 | 複数の選択肢で異なる内部値が取得できる | Draft、Approved、Completed インスタンス生成済み | 各インスタンスで TryGetValue を呼び出す | Draft→1、Approved→2、Completed→3 | 各選択肢の内部値を検証 |
-
-**テスト実装例（テストメソッド名形式）:**
-- `TryGetValue_常に_Trueを返す()`
-- `TryGetValue_outパラメータ_正しい内部値を格納する()`
-- `TryGetValue_複数選択肢_各値に対応した内部値を返す()`
+| 項目 | 内容 |
+|------|------|
+| **クラス名** | [対象EnumValueObject名：例 QuestionType, RespondentStatus] |
+| **名前空間** | SupportAdvance.SharedKernel.ValueObjects |
+| **依拠仕様** | EnumValueObject<TValue>技術仕様書 v1.0 |
+| **前提** | ValueObjectComponentNormalizer のテストが完了していること |
 
 ---
 
-### 2.3 Validate メソッドのテスト（派生クラス経由）
+## 4. テスト観点一覧
 
-**根拠:** 技術仕様書 §2.4
+### 観点グループ IS：`IsSet` プロパティ
 
-> **注記：** Validate は protected abstract メソッドであり、派生クラスが実装する。
-> 以下は「無効な値が指定された場合に例外がスローされる」という基本原則を検証する。
-> 具体的な範囲チェック（1～3 など）は派生クラスのテスト仕様書に委譲する。
+| 観点ID | 観点（説明） | 分類 | テスト用実装 |
+|--------|------|------|------------|
+| VO-IS-01 | IsSet=true で構築したオブジェクトは IsSet が true を返す | 正常系 | Test Constructor |
+| VO-IS-02 | IsSet=false で構築したオブジェクトは IsSet が false を返す | 正常系 | Test Constructor |
 
-| テストID | 観点ID | テストケース | 前提条件 | 操作 | 期待結果 | 備考 |
-|---|---|---|---|---|---|---|
-| T-Validate-001 | Validate-001 | 無効な値で ArgumentOutOfRangeException がスローされる | OrderStatus.From(99) を呼び出す | From メソッド内で Validate が自動実行される | ArgumentOutOfRangeException がスローされる | 派生クラスで範囲チェック (1～3) |
-| T-Validate-002 | Validate-002 | 有効な値では例外がスローされない | OrderStatus.From(1) を呼び出す | From メソッド内で Validate が自動実行される | インスタンスが正常に生成される | Draft に対応する有効値 |
-| T-Validate-003 | Validate-003 | 境界値で Validate が正確に動作する | OrderStatus.From(3) と OrderStatus.From(4) を呼び出す | 各値で Validate が実行される | From(3) は成功、From(4) は ArgumentOutOfRangeException | 範囲の上限を検証 |
+### 観点グループ VAL：`Validate` — 選択肢値の妥当性検証
 
-**テスト実装例（テストメソッド名形式）:**
-- `Validate_無効な値_ArgumentOutOfRangeExceptionを投げる()`
-- `Validate_有効な値_インスタンス生成に成功する()`
-- `Validate_境界値_上限超過時に例外を投げる()`
+| 観点ID | 観点（説明） | 分類 | テスト用実装 |
+|--------|------|------|------------|
+| VO-VAL-01 | 有効な選択肢値でコンストラクタを呼び出すと成功 | 正常系 | Test Constructor |
+| VO-VAL-02 | 無効な選択肢値でコンストラクタを呼び出すと ArgumentOutOfRangeException | 異常系 | Test Constructor |
+| VO-VAL-03 | Validate メソッドが無効値を検出して例外をスロー | 異常系 | Test Validate |
 
----
+### 観点グループ DN：`GetDisplayName` — ビジネス名称の取得
 
-### 2.4 GetDisplayName メソッドのテスト（派生クラス経由）
+| 観点ID | 観点（説明） | 分類 | テスト用実装 |
+|--------|------|------|------------|
+| VO-DN-01 | 各選択肢値に対応する正しい日本語名を返す | 正常系 | Test DisplayName |
+| VO-DN-02 | 異なる選択肢値で異なる日本語名を返す | 正常系 | Test DisplayName |
+| VO-DN-03 | 全選択肢に対応する日本語名が定義されている | 正常系 | Test DisplayName |
 
-**根拠:** 技術仕様書 §2.5
+### 観点グループ EQ：`Equals` — 等価と判定されるケース
 
-> **注記：** GetDisplayName は protected abstract メソッドであり、派生クラスが実装する。
-> 以下は「メソッドが呼び出され、文字列が返される」という基本原則を検証する。
-> 具体的な表示名（"下書き"、"承認済" など）は派生クラスのテスト仕様書に委譲する。
+| 観点ID | 観点（説明） | 分類 | テスト用実装 |
+|--------|------|------|------------|
+| VO-EQ-01 | 同じ選択肢値・同じ IsSet を持つ 2 つのオブジェクトは等価 | 正常系 | Test Constructor, Equals |
+| VO-EQ-02 | 同一参照のオブジェクトは等価 | 正常系（自己参照） | Test Constructor, Equals |
 
-| テストID | 観点ID | テストケース | 前提条件 | 操作 | 期待結果 | 備考 |
-|---|---|---|---|---|---|---|
-| T-GetDisplayName-001 | GetDisplayName-001 | ToString() が GetDisplayName() の結果を返す | OrderStatus.Draft インスタンス生成済み | Draft.ToString() を呼び出す | "下書き"（日本語表示名）が返される | ToString から GetDisplayName を経由 |
-| T-GetDisplayName-002 | GetDisplayName-002 | 各選択肢で異なる表示名が返される | Draft、Approved、Completed インスタンス生成済み | 各インスタンスで ToString() を呼び出す | Draft→"下書き"、Approved→"承認済"、Completed→"完了" | 選択肢ごとの表示内容 |
-| T-GetDisplayName-003 | GetDisplayName-003 | 表示名は空文字列でない | 任意の OrderStatus インスタンス | ToString() を呼び出す | 空でない文字列が返される | 表示のための名称が存在 |
+### 観点グループ NE：`Equals` — 非等価と判定されるケース
 
-**テスト実装例（テストメソッド名形式）:**
-- `ToString_GetDisplayName経由_表示名を返す()`
-- `ToString_複数選択肢_各値に対応した表示名を返す()`
-- `ToString_表示名_空文字列でない()`
+| 観点ID | 観点（説明） | 分類 | テスト用実装 |
+|--------|------|------|------------|
+| VO-NE-01 | 選択肢値が異なる場合は非等価 | 異常系 | Test Constructor, Equals |
+| VO-NE-02 | IsSet が異なる場合は非等価 | 境界値テスト | Test Constructor, Equals |
+| VO-NE-03 | 型が異なる場合は非等価 | 異常系 | Test Constructor, Equals |
+| VO-NE-04 | null との比較は非等価 | 例外/異常系 | Test Constructor, Equals |
 
----
+### 観点グループ HC：`GetHashCode`
 
-### 2.5 GetEqualityComponents メソッドのテスト
+| 観点ID | 観点（説明） | 分類 | テスト用実装 |
+|--------|------|------|------------|
+| VO-HC-01 | Equals=true の 2 つのオブジェクトは同一ハッシュ値 | 正常系 | Equals, GetHashCode |
+| VO-HC-02 | IsSet が異なるとハッシュ値が異なる | 境界値テスト | Equals, GetHashCode |
+| VO-HC-03 | 選択肢値が異なるとハッシュ値が異なる | 境界値テスト | Equals, GetHashCode |
 
-**根拠:** 技術仕様書 §2.6
+### 観点グループ OP：`==` / `!=` 演算子
 
-| テストID | 観点ID | テストケース | 前提条件 | 操作 | 期待結果 | 備考 |
-|---|---|---|---|---|---|---|
-| T-EqualityComp-001 | EqualityComp-001 | 同じ値の 2 つのインスタンスは等価 | OrderStatus.Draft のインスタンス 2 つ | instance1.Equals(instance2) を実行 | true を返す | 静的フィールド経由なら同じオブジェクト参照 |
-| T-EqualityComp-002 | EqualityComp-002 | 異なる値の 2 つのインスタンスは非等価 | OrderStatus.Draft と Approved | Draft.Equals(Approved) を実行 | false を返す | 異なる選択肢 |
-| T-EqualityComp-003 | EqualityComp-003 | 等価なインスタンスは同じハッシュコードを持つ | OrderStatus.Draft の参照 2 つ | GetHashCode() の結果を比較 | ハッシュコードが等しい | 等価性が成立 |
-| T-EqualityComp-004 | EqualityComp-004 | 非等価なインスタンスは異なるハッシュコードを持つ（通常） | Draft と Approved | 各々の GetHashCode() を実行 | ハッシュコードが異なる（通常）| 異なる値オブジェクト |
+| 観点ID | 観点（説明） | 分類 | テスト用実装 |
+|--------|------|------|------------|
+| VO-OP-01 | 等価なオブジェクトに == を適用すると true | 正常系 | Equals |
+| VO-OP-02 | 非等価なオブジェクトに == を適用すると false | 異常系 | Equals |
+| VO-OP-03 | 両辺が null のとき == は true | 準正常系（null チェック） | Equals |
+| VO-OP-04 | 片方のみ null のとき == は false | 異常系 | Equals |
+| VO-OP-05 | != は == の否定と一致 | 正常系 | Equals |
 
-**テスト実装例（テストメソッド名形式）:**
-- `Equals_同じ値_Trueを返す()`
-- `Equals_異なる値_Falseを返す()`
-- `GetHashCode_等価_同じハッシュコードを返す()`
-- `GetHashCode_非等価_異なるハッシュコードを返す()`
+### 観点グループ TS：`ToString`
 
----
-
-### 2.6 ToString メソッドのテスト
-
-**根拠:** 技術仕様書 §2.7
-
-| テストID | 観点ID | テストケース | 前提条件 | 操作 | 期待結果 | 備考 |
-|---|---|---|---|---|---|---|
-| T-ToString-001 | ToString-001 | ToString() は GetDisplayName() を呼び出す | OrderStatus インスタンス生成済み | ToString() を呼び出す | GetDisplayName() の返し値と同じ文字列が返される | IsSet=true のため "Unset" にはならない |
-| T-ToString-002 | ToString-002 | ログ出力時に ToString() が使用できる | OrderStatus.Approved インスタンス | Console.WriteLine(status.ToString()) 相当を実行 | "承認済"（日本語表示名）がログに出力される | UI 層での直接利用を想定 |
-| T-ToString-003 | ToString-003 | MessageBox に ToString() が直接渡せる | OrderStatus インスタンス | MessageBox.Show(status.ToString()) 相当を実行 | 日本語表示名がダイアログに表示される | WPF UI での利用想定 |
-
-**テスト実装例（テストメソッド名形式）:**
-- `ToString_GetDisplayName経由_表示名を返す()`
-- `ToString_ログ出力_表示名が出力される()`
-- `ToString_UI表示_日本語が表示される()`
+| 観点ID | 観点（説明） | 分類 | テスト用実装 |
+|--------|------|------|------------|
+| VO-TS-01 | IsSet=false のとき "Unset" を返す | 正常系 | Test Constructor |
+| VO-TS-02 | IsSet=true のとき、GetDisplayName の結果を返す | 正常系 | Test ToString |
+| VO-TS-03 | ToString 出力に IsSet の値そのものが含まれない | 正常系 | Test ToString |
 
 ---
 
-### 2.7 静的メンバーのテスト（派生クラス経由）
+## 5. テスト観点別の検証シナリオ
 
-**根拠:** 技術仕様書 §3「設計制約・禁止事項」
+### 観点 VO-VAL-01：有効な選択肢値でコンストラクタを呼び出すと成功
 
-| テストID | 観点ID | テストケース | 前提条件 | 操作 | 期待結果 | 備考 |
-|---|---|---|---|---|---|---|
-| T-Static-001 | Static-001 | 静的フィールドが正しく初期化されている | OrderStatus クラス定義済み | OrderStatus.Draft、.Approved、.Completed を参照 | 各々が正しい EnumValueObject インスタンス | static readonly フィールド定義 |
-| T-Static-002 | Static-002 | From メソッドが値から逆引きできる | OrderStatus.From(1) を呼び出す | From メソッド内で switch 式が実行される | OrderStatus.Draft が返される | 値 1 → Draft |
-| T-Static-003 | Static-003 | From メソッドが無効な値で例外をスロー | OrderStatus.From(99) を呼び出す | Validate が From 内で実行 | ArgumentOutOfRangeException がスローされる | 無効な値のハンドリング |
-| T-Static-004 | Static-004 | From メソッドが複数の値に対応 | OrderStatus.From(1, 2, 3) を各々呼び出す | 各値が対応する選択肢に逆引きされる | Draft、Approved、Completed がそれぞれ返される | 全選択肢の逆引き |
+#### 5.1.1 テスト観点
 
-**テスト実装例（テストメソッド名形式）:**
-- `StaticField_定義済み_正しくInitializeされている()`
-- `From_有効な値_対応する選択肢を返す()`
-- `From_無効な値_例外を投げる()`
-- `From_複数値_各値に対応した選択肢を返す()`
+有効な選択肢値を使用してコンストラクタを呼び出した場合、インスタンスが正常に生成される。
 
----
+#### 5.1.2 テストパターン
 
-### 2.8 派生クラスの制約チェック
+| パターン | 分類 | 説明 |
+|---------|------|------|
+| 5.1.2.1 | 正常系 | 有効な選択肢値でインスタンス生成 |
+| 5.1.2.2 | 正常系 | 複数の異なる有効値でそれぞれ生成 |
 
-**根拠:** 技術仕様書 §3「設計制約・禁止事項」
+#### 5.1.3 前提条件
 
-| テストID | 観点ID | テストケース | 前提条件 | 操作 | 期待結果 | 備考 |
-|---|---|---|---|---|---|---|
-| T-Constraint-001 | Constraint-001 | sealed クラスはさらに継承できない | OrderStatus クラス生成 | OrderStatus を親にして派生クラスを定義しようとする | コンパイルエラー（またはリフレクション検証で確認） | sealed 修飾子の強制 |
-| T-Constraint-002 | Constraint-002 | コンストラクタは private である | OrderStatus インスタンス | new OrderStatus(1) を直接呼び出す | コンパイルエラー（アクセス不可） | 静的フィールド経由のみ |
-| T-Constraint-003 | Constraint-003 | TryFrom は実装されない | OrderStatus クラス定義 | TryFrom メソッドを探す | メソッドが存在しない（IOptionalValueObject 非実装） | null許容不対応 |
+- EnumValueObject 派生クラスが定義されている
+- 有効な選択肢値が明確に定義されている
 
-**テスト実装例（テストメソッド名形式）:**
-- `Sealed_派生禁止_コンパイルエラーになる()`
-- `Constructor_Private_外部からインスタンス化不可()`
-- `TryFrom_未実装_存在しない()`
+#### 5.1.4 テストデータ
 
----
+| パターン | 入力値 | 説明 |
+|---------|--------|------|
+| 5.1.2.1 | QuestionType(1) — SingleChoice | 有効な選択肢値 |
+| 5.1.2.2 | QuestionType(2), QuestionType(3) | 複数の有効値 |
 
-## 3. テスト実装の責務区分
+#### 5.1.5 期待結果
 
-### 3.1 本テスト仕様書で検証する範囲（EnumValueObject 基底）
+| パターン | 期待値 | 検証項目 |
+|---------|--------|---------|
+| 5.1.2.1 | インスタンス生成成功 | 例外なし |
+| 5.1.2.2 | 各値でインスタンス生成成功 | 例外なし |
 
-- IsSet プロパティの常時 true 返却
-- TryGetValue の try パターン実装と out パラメータの正確性
-- Validate の自動実行と例外スロー基本動作
-- GetDisplayName の被呼び出し機構（ToString 経由）
-- GetEqualityComponents による等価性判定の基礎
-- ToString の IsSet チェック形式（形式上の "Unset" 対応）
-- 派生クラス制約の設計制約（sealed、private コンストラクタ）
+#### 5.1.6 判定基準
 
-### 3.2 派生クラス個別テスト仕様書に委譲する範囲
-
-各派生クラス（OrderStatus、WorkDivision など）の個別テスト仕様書では、以下を検証：
-
-- **Validate メソッドの具体範囲**: OrderStatus では 1～3、他のクラスでは適切な範囲
-- **GetDisplayName の具体的な値変換**: OrderStatus では 1→"下書き"、2→"承認済"、3→"完了"
-- **From メソッドの逆引きロジック**: 各値から対応する静的フィールドへの正確な割り当て
-- **コンストラクタの具体シグネチャ**: private OrderStatus(int value) など
+- [ ] 有効な選択肢値でコンストラクタが成功する
+- [ ] IsSet=true のインスタンスが返される
+- [ ] 複数の有効値すべてで生成可能
 
 ---
 
-## 4. テスト実装のガイドライン
+### 観点 VO-VAL-02：無効な選択肢値でコンストラクタを呼び出すと ArgumentOutOfRangeException
 
-### 4.1 テストメソッド命名規則
+#### 5.2.1 テスト観点
 
-本テスト仕様書のテストメソッドは、以下の形式で実装される：
+無効な選択肢値を使用してコンストラクタを呼び出した場合、ArgumentOutOfRangeException が発生する。
+
+#### 5.2.2 テストパターン
+
+| パターン | 分類 | 説明 |
+|---------|------|------|
+| 5.2.2.1 | 異常系 | 範囲外の値（低） |
+| 5.2.2.2 | 異常系 | 範囲外の値（高） |
+| 5.2.2.3 | 異常系 | ビジネスルール違反 |
+
+#### 5.2.3 前提条件
+
+- Validate メソッドが無効値を検出する
+
+#### 5.2.4 テストデータ
+
+| パターン | 入力値 | 説明 |
+|---------|--------|------|
+| 5.2.2.1 | QuestionType(0) | 範囲外（0 は無効） |
+| 5.2.2.2 | QuestionType(999) | 範囲外（999 は無効） |
+| 5.2.2.3 | QuestionType(-1) | 負数 |
+
+#### 5.2.5 期待結果
+
+| パターン | 期待値 | 検証項目 |
+|---------|--------|---------|
+| 5.2.2.1 | ArgumentOutOfRangeException | 例外発生 |
+| 5.2.2.2 | ArgumentOutOfRangeException | 例外発生 |
+| 5.2.2.3 | ArgumentOutOfRangeException | 例外発生 |
+
+#### 5.2.6 判定基準
+
+- [ ] 無効値でコンストラクタが ArgumentOutOfRangeException をスロー
+- [ ] 例外メッセージが明確
+- [ ] 全ての無効値パターンで例外をスロー
+
+---
+
+### 観点 VO-DN-01：各選択肢値に対応する正しい日本語名を返す
+
+#### 5.3.1 テスト観点
+
+各選択肢値に対応する正しい日本語名（ビジネス名称）が GetDisplayName または ToString で返される。
+
+#### 5.3.2 テストパターン
+
+| パターン | 分類 | 説明 |
+|---------|------|------|
+| 5.3.2.1 | 正常系 | 値1 → 日本語名1 |
+| 5.3.2.2 | 正常系 | 値2 → 日本語名2 |
+
+#### 5.3.3 前提条件
+
+- GetDisplayName が実装されている
+- 各選択肢に対応する日本語名が定義されている
+
+#### 5.3.4 テストデータ
+
+| パターン | 入力値 | 期待する日本語名 |
+|---------|--------|------------|
+| 5.3.2.1 | QuestionType(1) | "単一選択" |
+| 5.3.2.2 | QuestionType(2) | "複数選択" |
+
+#### 5.3.5 期待結果
+
+| パターン | 期待値 | 検証項目 |
+|---------|--------|---------|
+| 5.3.2.1 | "単一選択" | ToString が正確な日本語名 |
+| 5.3.2.2 | "複数選択" | ToString が正確な日本語名 |
+
+#### 5.3.6 判定基準
+
+- [ ] 各選択肢値が正確な日本語名を返す
+- [ ] 日本語名は仕様書と一致する
+- [ ] 複数の選択肢で異なる名称を返す
+
+---
+
+### 観点 VO-EQ-01：同じ選択肢値・同じ IsSet を持つ 2 つのオブジェクトは等価
+
+#### 5.4.1 テスト観点
+
+同一の選択肢値と IsSet 状態を持つ 2 つの EnumValueObject インスタンスは等価と判定される。
+
+#### 5.4.2 テストパターン
+
+| パターン | 分類 | 説明 |
+|---------|------|------|
+| 5.4.2.1 | 正常系 | 同じ値、同じ IsSet=true |
+| 5.4.2.2 | 正常系 | 同じ値、同じ IsSet=false |
+
+#### 5.4.3 前提条件
+
+- 2 つの異なるインスタンスを生成
+- 選択肢値と IsSet が完全に一致
+
+#### 5.4.4 テストデータ
+
+| パターン | 入力値 | 説明 |
+|---------|--------|------|
+| 5.4.2.1 | obj1 = QuestionType(1)<br/>obj2 = QuestionType(1) | 同じ選択肢値 |
+| 5.4.2.2 | obj1 = QuestionType.Unset()<br/>obj2 = QuestionType.Unset() | Unset 状態 |
+
+#### 5.4.5 期待結果
+
+| パターン | 期待値 | 検証項目 |
+|---------|--------|---------|
+| 5.4.2.1 | obj1.Equals(obj2) == true | Equals が true |
+| 5.4.2.2 | obj1.Equals(obj2) == true | Unset 同士でも等価 |
+
+#### 5.4.6 判定基準
+
+- [ ] 同じ選択肢値の EnumValueObject は Equals で true を返す
+- [ ] == 演算子でも true を返す
+- [ ] 複数回の Equals 呼び出しで一貫性がある
+
+---
+
+### 観点 VO-NE-01：選択肢値が異なる場合は非等価
+
+#### 5.5.1 テスト観点
+
+異なる選択肢値を持つ 2 つの EnumValueObject は非等価と判定される。
+
+#### 5.5.2 テストパターン
+
+| パターン | 分類 | 説明 |
+|---------|------|------|
+| 5.5.2.1 | 異常系 | 値1 vs 値2 |
+| 5.5.2.2 | 異常系 | 値2 vs 値1 |
+
+#### 5.5.3 前提条件
+
+- 2 つ以上の異なる有効な選択肢値が存在
+
+#### 5.5.4 テストデータ
+
+| パターン | 入力値 | 説明 |
+|---------|--------|------|
+| 5.5.2.1 | obj1 = QuestionType(1)<br/>obj2 = QuestionType(2) | 異なる値 |
+| 5.5.2.2 | obj1 = QuestionType(2)<br/>obj2 = QuestionType(1) | 異なる値（逆順） |
+
+#### 5.5.5 期待結果
+
+| パターン | 期待値 | 検証項目 |
+|---------|--------|---------|
+| 5.5.2.1 | obj1.Equals(obj2) == false | 非等価 |
+| 5.5.2.2 | obj1.Equals(obj2) == false | 非等価 |
+
+#### 5.5.6 判定基準
+
+- [ ] 異なる選択肢値は非等価と判定される
+- [ ] GetHashCode も異なる値を返す
+- [ ] != 演算子で true を返す
+
+---
+
+### 観点 VO-NE-02：IsSet が異なる場合は非等価
+
+#### 5.6.1 テスト観点
+
+IsSet フラグが異なる場合、選択肢値が同じでも非等価と判定される。
+
+#### 5.6.2 テストパターン
+
+| パターン | 分類 | 説明 |
+|---------|------|------|
+| 5.6.2.1 | 境界値 | IsSet=true vs IsSet=false |
+
+#### 5.6.3 前提条件
+
+- Unset() メソッドが実装されている
+- IsSet が比較に含まれる
+
+#### 5.6.4 テストデータ
+
+| パターン | 入力値 | 説明 |
+|---------|--------|------|
+| 5.6.2.1 | obj1 = QuestionType(1)<br/>obj2 = QuestionType.Unset() | IsSet のみ異なる |
+
+#### 5.6.5 期待結果
+
+| パターン | 期待値 | 検証項目 |
+|---------|--------|---------|
+| 5.6.2.1 | obj1.Equals(obj2) == false | 非等価 |
+
+#### 5.6.6 判定基準
+
+- [ ] IsSet フラグが異なると非等価と判定される
+- [ ] 値が同じでも IsSet により区別される
+- [ ] GetHashCode も異なる値を返す
+
+---
+
+### 観点 VO-HC-01：Equals=true の 2 つのオブジェクトは同一ハッシュ値
+
+#### 5.7.1 テスト観点
+
+Equals で true を返す 2 つの EnumValueObject は同一のハッシュ値を返す。
+
+#### 5.7.2 テストパターン
+
+| パターン | 分類 | 説明 |
+|---------|------|------|
+| 5.7.2.1 | 正常系 | 同値ペアのハッシュ比較 |
+
+#### 5.7.3 前提条件
+
+- 複数の同値インスタンスを生成
+
+#### 5.7.4 テストデータ
+
+| パターン | 入力値 | 説明 |
+|---------|--------|------|
+| 5.7.2.1 | obj1 = QuestionType(1)<br/>obj2 = QuestionType(1) | 同値ペア |
+
+#### 5.7.5 期待結果
+
+| パターン | 期待値 | 検証項目 |
+|---------|--------|---------|
+| 5.7.2.1 | obj1.GetHashCode() == obj2.GetHashCode() | ハッシュ値が同一 |
+
+#### 5.7.6 判定基準
+
+- [ ] Equals=true のオブジェクトペアは同一ハッシュ値を返す
+- [ ] ハッシュ値は複数呼び出しで一貫している
+- [ ] HashSet / Dictionary で正しく機能する
+
+---
+
+### 観点 VO-TS-01：IsSet=false のとき "Unset" を返す
+
+#### 5.8.1 テスト観点
+
+IsSet=false の EnumValueObject に対して ToString を呼び出した場合、"Unset" という文字列を返す。
+
+#### 5.8.2 テストパターン
+
+| パターン | 分類 | 説明 |
+|---------|------|------|
+| 5.8.2.1 | 正常系 | IsSet=false での "Unset" 返却 |
+
+#### 5.8.3 前提条件
+
+- Unset() メソッドが実装されている
+
+#### 5.8.4 テストデータ
+
+| パターン | 入力値 | 説明 |
+|---------|--------|------|
+| 5.8.2.1 | QuestionType.Unset().ToString() | Unset 状態のToString |
+
+#### 5.8.5 期待結果
+
+| パターン | 期待値 | 検証項目 |
+|---------|--------|---------|
+| 5.8.2.1 | "Unset" | 文字列が "Unset" |
+
+#### 5.8.6 判定基準
+
+- [ ] ToString() が正確に "Unset" を返す
+- [ ] 大文字小文字が正確に一致
+
+---
+
+### 観点 VO-TS-02：IsSet=true のとき、GetDisplayName の結果を返す
+
+#### 5.9.1 テスト観点
+
+IsSet=true の EnumValueObject に対して ToString を呼び出した場合、GetDisplayName で返される日本語名（ビジネス名称）を返す。
+
+#### 5.9.2 テストパターン
+
+| パターン | 分類 | 説明 |
+|---------|------|------|
+| 5.9.2.1 | 正常系 | 設定済みでの日本語名返却 |
+| 5.9.2.2 | 正常系 | 複数の異なる値で異なる名称 |
+
+#### 5.9.3 前提条件
+
+- GetDisplayName が正確に実装されている
+
+#### 5.9.4 テストデータ
+
+| パターン | 入力値 | 期待する ToString 結果 |
+|---------|--------|------------------------|
+| 5.9.2.1 | QuestionType(1).ToString() | "単一選択" |
+| 5.9.2.2 | QuestionType(2).ToString() | "複数選択" |
+
+#### 5.9.5 期待結果
+
+| パターン | 期待値 | 検証項目 |
+|---------|--------|---------|
+| 5.9.2.1 | "単一選択" | 日本語名 |
+| 5.9.2.2 | "複数選択" | 異なる日本語名 |
+
+#### 5.9.6 判定基準
+
+- [ ] ToString() が GetDisplayName の結果と一致
+- [ ] 各選択肢値で正確な日本語名を返す
+- [ ] "Unset" との使い分けが正確
+
+---
+
+## 6. 判定基準
+
+### 6.1 全般的な判定基準
+
+| 項目 | 基準 |
+|------|------|
+| **値の妥当性** | 有効な値のみを受け入れ、無効な値では例外をスロー |
+| **業務名称管理** | 各選択肢値が正確な日本語名を返す |
+| **等価性** | Equals の結果が論理的に一貫していること |
+| **ハッシュ整合性** | Equals=true のペアが同一ハッシュ値を返す |
+| **文字列化** | ToString が仕様通りの形式を返す |
+| **IsSet管理** | IsSet フラグが正しく機能する |
+
+### 6.2 検証方法
 
 ```csharp
-[Fact]
-public void [操作]_[条件]_[期待結果]()
-{
-    // Arrange（前提条件の準備）
-    
-    // Act（操作の実行）
-    
-    // Assert（期待結果の検証）
-}
+【VO-VAL-01 観点の検証 - 有効な値】
+  var qt = new QuestionType(1);
+  Assert.True(qt.IsSet);
+
+【VO-VAL-02 観点の検証 - 無効な値】
+  Assert.Throws<ArgumentOutOfRangeException>(() => new QuestionType(999));
+
+【VO-DN-01 観点の検証 - 日本語名】
+  var qt1 = new QuestionType(1);
+  Assert.Equal("単一選択", qt1.ToString());
+  
+  var qt2 = new QuestionType(2);
+  Assert.Equal("複数選択", qt2.ToString());
+
+【VO-EQ-01 観点の検証】
+  var qt1 = new QuestionType(1);
+  var qt2 = new QuestionType(1);
+  Assert.True(qt1.Equals(qt2));
+  Assert.True(qt1 == qt2);
+
+【VO-NE-01 観点の検証】
+  var qt1 = new QuestionType(1);
+  var qt2 = new QuestionType(2);
+  Assert.False(qt1.Equals(qt2));
+  Assert.True(qt1 != qt2);
+
+【VO-HC-01 観点の検証】
+  var qt1 = new QuestionType(1);
+  var qt2 = new QuestionType(1);
+  Assert.Equal(qt1.GetHashCode(), qt2.GetHashCode());
+
+【VO-TS-01 観点の検証】
+  var qt = QuestionType.Unset();
+  Assert.Equal("Unset", qt.ToString());
+
+【VO-TS-02 観点の検証】
+  var qt1 = new QuestionType(1);
+  Assert.Equal("単一選択", qt1.ToString());
 ```
 
-**例：**
-```csharp
-[Fact]
-public void IsSet_常に_Trueを返す()
-{
-    // Arrange: OrderStatus.Draft の静的フィールド参照
-    var draft = OrderStatus.Draft;
-    
-    // Act: IsSet プロパティを読み取る
-    var result = draft.IsSet;
-    
-    // Assert: true を検証
-    Assert.True(result);
-}
+---
+
+## 7. テスト用実装の設定
+
+### 7.1 前提環境
+
+| 項目 | 内容 |
+|------|------|
+| **テスティングフレームワーク** | xUnit / NUnit |
+| **Assertion** | Assert.True / Assert.Equal / Assert.Throws |
+| **Mock/Stub** | 不要（EnumValueObject は依存性なし） |
+
+### 7.2 テストクラス構成
+
 ```
-
-### 4.2 前提条件の確認（Arrange）
-
-各テストケースは、派生クラス（OrderStatus など）の実装が完了している前提で設計されている。
-
-- OrderStatus が sealed クラスか確認
-- OrderStatus.Draft、Approved、Completed が static readonly フィールドとして定義されているか確認
-- OrderStatus.From(int value) メソッドが存在するか確認
-
-### 4.3 派生クラス固有テストの実装時期
-
-本テスト仕様書は EnumValueObject 基底クラスの汎用性を検証するが、以下の具体テストは派生クラスの個別テスト仕様書内で実装：
-
-- OrderStatus の具体的な Validate 範囲（1～3）チェック
-- OrderStatus の具体的な GetDisplayName ロジック（"下書き" など）検証
-- OrderStatus.From(1) → Draft の逆引き確認
-
----
-
-## 5. テストケースの実装順序
-
-以下の順序で実装することを推奨：
-
-1. **基本プロパティのテスト** (IsSet、TryGetValue)
-2. **メソッド実装テスト** (Validate、GetDisplayName、ToString)
-3. **等価性・ハッシュのテスト** (Equals、GetHashCode)
-4. **静的メンバーのテスト** (From、静的フィールド)
-5. **設計制約チェック** (sealed、private コンストラクタ)
-
----
-
-## 6. テストカバレッジ目標
-
-| 項目 | 目標 | 根拠 |
-|---|---|---|
-| **メソッドカバレッジ** | 100%（IsSet、TryGetValue、ToString、Equals、GetHashCode、GetEqualityComponents） | 基底クラスの全メンバーを検証 |
-| **ブランチカバレッジ** | 100%（if / switch 文など） | 条件分岐の全パターンをテスト |
-| **マテリアルカバレッジ** | 全テストケース実装 | 本仕様書に列挙された全観点を網羅 |
-
----
-
-## 7. テスト環境・依存関係
-
-| 項目 | 仕様 |
-|---|---|
-| **テストフレームワーク** | xUnit |
-| **アサーション ライブラリ** | Xunit.Assert または FluentAssertions |
-| **モック フレームワーク** | 不要（値オブジェクトのため副作用なし） |
-| **テスト対象のコンパイル** | EnumValueObject<TValue> が正常にコンパイルされていること |
+tests/Unit.Tests/
+└── ValueObjects/
+    ├── QuestionTypeTests.cs
+    ├── RespondentStatusTests.cs
+    ├── PriorityTests.cs
+    └── [その他 EnumValueObject 派生テスト]
+```
 
 ---
 
@@ -288,54 +553,5 @@ public void IsSet_常に_Trueを返す()
 
 | 版 | 日付 | 作成者 | 変更内容 |
 |----|------|--------|---------|
-| 2.0 | 2026-07-04 | 加藤 正人 | 技術仕様書 v2.0 に対応。IOptionalValueObject は基底クラスで実装しない。派生クラスで実装可能に変更（テスト対象範囲の更新） |
-| 1.0 | 2026-07-04 | Claude Code | 初版作成 / テクニカル仕様書 1.0 から自動生成 |
-
----
-
-## 付録 A：テストデータ（OrderStatus 例）
-
-以下は、テスト実装時に使用する具体的なテストデータ例である：
-
-### A.1 有効な選択肢
-
-```csharp
-OrderStatus.Draft       // 内部値: 1, 表示名: "下書き"
-OrderStatus.Approved    // 内部値: 2, 表示名: "承認済"
-OrderStatus.Completed   // 内部値: 3, 表示名: "完了"
-```
-
-### A.2 無効な値
-
-```csharp
-OrderStatus.From(0)     // → ArgumentOutOfRangeException
-OrderStatus.From(4)     // → ArgumentOutOfRangeException
-OrderStatus.From(-1)    // → ArgumentOutOfRangeException
-OrderStatus.From(99)    // → ArgumentOutOfRangeException
-```
-
-### A.3 From メソッドの逆引き
-
-```csharp
-OrderStatus.From(1)  // → OrderStatus.Draft
-OrderStatus.From(2)  // → OrderStatus.Approved
-OrderStatus.From(3)  // → OrderStatus.Completed
-```
-
----
-
-## 付録 B：テスト実装チェックリスト
-
-テスト実装完了時に、以下をチェックしてください：
-
-- ✅ IsSet プロパティが常に true を返す（T-IsSet-001, 002）
-- ✅ TryGetValue が常に true を返す（T-TryGetValue-001, 002, 003）
-- ✅ Validate が無効値で例外をスロー（T-Validate-001, 002, 003）
-- ✅ GetDisplayName が ToString 経由で呼ばれる（T-GetDisplayName-001, 002, 003）
-- ✅ Equals / GetHashCode で等価性判定が正確（T-EqualityComp-001～004）
-- ✅ ToString が GetDisplayName の結果を返す（T-ToString-001, 002, 003）
-- ✅ 静的フィールドが正しく初期化（T-Static-001, 002, 003, 004）
-- ✅ sealed 修飾子が強制される（T-Constraint-001）
-- ✅ コンストラクタが private（T-Constraint-002）
-- ✅ TryFrom が実装されない（T-Constraint-003）
-- ✅ テストカバレッジ 100%（メソッド・ブランチ）
+| 1.0 | 2026-07-07 | Claude Code | 初版作成 — EnumValueObject 用テスト仕様書 |
+| 1.1 | 2026-07-07 | Claude Code | テスト実装完了：null 比較テスト（VO-OP-03, VO-OP-04）、型差異テスト（VO-NE-03）を追加。IsSet 設計注釈を追加。 |
