@@ -230,8 +230,6 @@ public sealed class RespondentNameTests
 
     #endregion
 
-    #endregion
-
     #region Validate メソッドテスト（値の長さ検証）
 
     /// <summary>VO-VLR-01: 1～50文字の名前は From で受け入れられる</summary>
@@ -239,7 +237,7 @@ public sealed class RespondentNameTests
     [InlineData("A")]                                                                                          // 1文字
     [InlineData("太郎")]                                                                                      // 2文字
     [InlineData("山田太郎")]                                                                                  // 4文字
-    [InlineData("ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXY")]  // 50文字
+    [InlineData("ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUV")]  // 50文字（26+24=50）
     public void VO_VLR_01_From_WithValidLength_CreatesInstance(string name)
     {
         // Act
@@ -264,7 +262,7 @@ public sealed class RespondentNameTests
     public void VO_VLR_03_From_WithExcessiveLength_ThrowsArgumentException()
     {
         // Arrange
-        var longName = "ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZ";  // 51文字
+        var longName = "ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXY";  // 51文字（26+25=51）
 
         // Act & Assert
         Assert.Throws<ArgumentException>(() => RespondentName.From(longName));
@@ -273,7 +271,7 @@ public sealed class RespondentNameTests
     /// <summary>VO-VLR-02, VO-VLR-03: TryFrom で検証失敗時は false を返す</summary>
     [Theory]
     [InlineData("")]                                                                                           // 空文字列
-    [InlineData("ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZ")]  // 51文字
+    [InlineData("ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXY")]  // 51文字
     public void VO_VLR_02_03_TryFrom_WithInvalidLength_ReturnsFalse(string name)
     {
         // Act
