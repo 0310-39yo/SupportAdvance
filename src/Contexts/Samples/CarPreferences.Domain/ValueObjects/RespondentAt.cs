@@ -23,7 +23,7 @@ public sealed class RespondentAt : PrimitiveValueObject<DateTime>,
     /// </summary>
     /// <param name="value">日時の値</param>
     /// <param name="isSet">未設定状態かどうかを示すフラグ</param>
-    private RespondentAt(DateTime value,bool isSet) : base(value, true)
+    private RespondentAt(DateTime value, bool isSet) : base(value, isSet)
     {
     }
 
@@ -101,9 +101,10 @@ public sealed class RespondentAt : PrimitiveValueObject<DateTime>,
             throw new ArgumentException("RespondentAt cannot be in the future.", nameof(value));
         }
     }
-
-
-
+    /// <summary>
+    /// 保持する DateTime 値への公開アクセス
+    /// IsSet=false の場合は DateTime.MinValue を返す（注意：null ではない）
+    /// </summary>
     public DateTime Value => ValueField;
 
     public override bool Equals(object? obj) => Equals(obj as RespondentAt);
