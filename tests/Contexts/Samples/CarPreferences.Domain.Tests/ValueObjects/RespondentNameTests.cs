@@ -29,9 +29,9 @@ public sealed class RespondentNameTests
         Assert.Equal(name, result.ToString());
     }
 
-    /// <summary>VO-IS-02: From(null) で ArgumentNullException スロー確認</summary>
+    /// <summary>VO-FF-04: From(null) を呼び出した場合、ArgumentNullException をスロー</summary>
     [Fact]
-    public void VO_IS_02_From_WithNullInput_ThrowsArgumentNullException()
+    public void VO_FF_04_From_WithNullInput_ThrowsArgumentNullException()
     {
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() => RespondentName.From(null!));
@@ -226,6 +226,61 @@ public sealed class RespondentNameTests
         // Assert
         Assert.True(a.Equals(b));
         Assert.True(b.Equals(a));
+    }
+
+    #endregion
+
+    #region GetValueComponents テスト
+
+    /// <summary>VO-GVC-01: IsSet=true の場合、GetEqualityComponents に IsSet と ValueField が含まれる</summary>
+    [Theory]
+    [InlineData("太郎")]
+    [InlineData("花子")]
+    [InlineData("A")]
+    public void VO_GVC_01_GetEqualityComponents_WithIsSetTrue_ContainsValueField(string name)
+    {
+        // Arrange
+        var instance = RespondentName.From(name);
+
+        // Act
+        var components = instance.GetEqualityComponents().ToList();
+
+        // Assert
+        Assert.NotEmpty(components);
+        Assert.True(components[0] is bool && (bool)components[0] == true); // IsSet が先頭
+        Assert.Contains(name, components); // ValueField が含まれる
+    }
+
+    /// <summary>VO-GVC-02: IsSet=false の場合、GetEqualityComponents に IsSet=false のみが含まれる</summary>
+    [Fact]
+    public void VO_GVC_02_GetEqualityComponents_WithIsSetFalse_ContainsOnlyIsSet()
+    {
+        // Arrange
+        var unset = RespondentName.Unset();
+
+        // Act
+        var components = unset.GetEqualityComponents().ToList();
+
+        // Assert
+        Assert.Single(components);
+        Assert.True(components[0] is bool && (bool)components[0] == false); // IsSet=false のみ
+    }
+
+    /// <summary>VO-GVC-03: GetEqualityComponents で IsSet フラグが先頭に付加されることを確認</summary>
+    [Fact]
+    public void VO_GVC_03_GetEqualityComponents_StartsWithIsSet()
+    {
+        // Arrange
+        var name1 = RespondentName.From("太郎");
+        var name2 = RespondentName.From("太郎");
+
+        // Act & Assert - GetEqualityComponents は protected なので、Equals で確認
+        Assert.Equal(name1, name2);
+        Assert.Equal(name1.GetHashCode(), name2.GetHashCode());
+
+        // IsSet が異なると非等価を確認
+        var unset = RespondentName.Unset();
+        Assert.NotEqual(name1, unset);
     }
 
     #endregion

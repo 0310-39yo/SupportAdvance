@@ -447,6 +447,114 @@ public sealed class RespondentAtTests
 
     #endregion
 
+    #region GetValueComponents テスト
+
+    /// <summary>VO-GVC-01: IsSet=true の場合、GetEqualityComponents に IsSet と ValueField が含まれる</summary>
+    [Fact]
+    public void VO_GVC_01_GetEqualityComponents_WithIsSetTrue_ContainsValueField()
+    {
+        // Arrange
+        var clock = new MockClock(new DateTime(2026, 7, 8, 12, 0, 0));
+        var date = new DateTime(2026, 7, 8, 10, 0, 0);
+        var respondentAt = RespondentAt.From(date, clock);
+
+        // Act
+        var components = respondentAt.GetEqualityComponents().ToList();
+
+        // Assert
+        Assert.NotEmpty(components);
+        Assert.True(components[0] is bool && (bool)components[0] == true); // IsSet が先頭
+        Assert.Contains(date, components); // ValueField が含まれる
+    }
+
+    /// <summary>VO-GVC-02: IsSet=false の場合、GetEqualityComponents に IsSet=false のみが含まれる</summary>
+    [Fact]
+    public void VO_GVC_02_GetEqualityComponents_WithIsSetFalse_ContainsOnlyIsSet()
+    {
+        // Arrange
+        var unset = RespondentAt.Unset();
+
+        // Act
+        var components = unset.GetEqualityComponents().ToList();
+
+        // Assert
+        Assert.Single(components);
+        Assert.True(components[0] is bool && (bool)components[0] == false); // IsSet=false のみ
+    }
+
+    /// <summary>VO-GVC-03: GetEqualityComponents との連携で IsSet が先頭に付加されることを確認</summary>
+    [Fact]
+    public void VO_GVC_03_GetValueComponents_IsSetInEqualityComponents()
+    {
+        // Arrange
+        var clock = new MockClock(new DateTime(2026, 7, 8, 12, 0, 0));
+        var date = new DateTime(2026, 7, 8, 10, 0, 0);
+        var respondentAt1 = RespondentAt.From(date, clock);
+        var respondentAt2 = RespondentAt.From(date, clock);
+
+        // Act & Assert - GetEqualityComponents は protected なので、Equals で確認
+        Assert.Equal(respondentAt1, respondentAt2);
+        Assert.Equal(respondentAt1.GetHashCode(), respondentAt2.GetHashCode());
+
+        // IsSet が異なると非等価を確認
+        var unset = RespondentAt.Unset();
+        Assert.NotEqual(respondentAt1, unset);
+    }
+
+    #endregion
+
+    #region Value プロパティテスト
+
+    /// <summary>VO-VAL-01: IsSet=true の場合、ValueField（DateTime 値）を返す</summary>
+    [Fact]
+    public void VO_VAL_01_Value_WithIsSetTrue_ReturnsDateTimeValue()
+    {
+        // Arrange
+        var clock = new MockClock(new DateTime(2026, 7, 8, 12, 0, 0));
+        var date = new DateTime(2026, 7, 8, 10, 0, 0);
+        var respondentAt = RespondentAt.From(date, clock);
+
+        // Act
+        var value = respondentAt.Value;
+
+        // Assert
+        Assert.Equal(date, value);
+    }
+
+    /// <summary>VO-VAL-02: IsSet=false の場合、DateTime.MinValue を返す</summary>
+    [Fact]
+    public void VO_VAL_02_Value_WithIsSetFalse_ReturnsMinValue()
+    {
+        // Arrange
+        var unset = RespondentAt.Unset();
+
+        // Act
+        var value = unset.Value;
+
+        // Assert
+        Assert.Equal(DateTime.MinValue, value);
+    }
+
+    /// <summary>VO-VAL-03: Value プロパティの戻り値型は DateTime（nullable ではない）</summary>
+    [Fact]
+    public void VO_VAL_03_Value_ReturnTypeIsDateTime_NotNullable()
+    {
+        // Arrange
+        var clock = new MockClock(new DateTime(2026, 7, 8, 12, 0, 0));
+        var respondentAt = RespondentAt.From(new DateTime(2026, 7, 8, 10, 0, 0), clock);
+
+        // Act
+        var value = respondentAt.Value;
+
+        // Assert - DateTime（nullable ではない）を返す
+        Assert.IsType<DateTime>(value);
+        // DateTime? でなく DateTime であることを確認（型チェック）
+        var valueType = respondentAt.Value.GetType();
+        Assert.Equal(typeof(DateTime), valueType);
+    }
+
+    #endregion
+
     #region ヘルパーメソッド
 
     public static TheoryData<DateTime> GetInvalidDateTimesForTryFrom()

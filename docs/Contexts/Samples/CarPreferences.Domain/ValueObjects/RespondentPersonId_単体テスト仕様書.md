@@ -70,8 +70,8 @@ RespondentPersonId の各メンバーが以下を満たすことを確認：
 | VO-OPT-03 | TryFrom(null) は true を返し、Unset インスタンスを返す | 正常系（null吸収） | 技術仕様書 § 2.6 |
 | VO-OPT-04 | TryFrom(valid) は true を返し、設定済みインスタンスを返す | 正常系 | 技術仕様書 § 2.6 |
 | VO-OPT-05 | TryFrom(invalid) は false を返し、Unset インスタンスを返す | 異常系（検証失敗） | 技術仕様書 § 2.6 |
-| VO-OPT-06 | TryGetValue(out value) は IsSet=true で true を返す | 正常系 | 技術仕様書 § 2.7 |
-| VO-OPT-07 | TryGetValue(out value) は IsSet=false で false を返す | 正常系 | 技術仕様書 § 2.7 |
+| VO-OPT-06 | TryGetValue(out value) は IsSet=true で true を返す（新規実装） | 正常系 | 技術仕様書 § 2.7 |
+| VO-OPT-07 | TryGetValue(out value) は IsSet=false で false を返す（新規実装） | 正常系 | 技術仕様書 § 2.7 |
 
 ### グループ EQ：`Equals` — 等価と判定されるケース
 
@@ -118,6 +118,14 @@ RespondentPersonId の各メンバーが以下を満たすことを確認：
 | VO-TS-01 | IsSet=false のとき "Unset" を返す | 正常系 | 詳細設計書 § 3.12 |
 | VO-TS-02 | IsSet=true のとき、コンポーネントを文字列連結で返す | 正常系 | 詳細設計書 § 3.12 |
 | VO-TS-03 | ToString 出力に IsSet の値そのものが含まれない | 正常系 | 詳細設計書 § 3.12 |
+
+### グループ GVC：`GetValueComponents()` メソッド
+
+| 観点ID | 観点（説明） | 分類 | 依拠仕様 |
+|--------|------|------|---------|
+| VO-GVC-01 | IsSet=true の場合、ValueField を yield return する | 正常系 | 詳細設計書 § 3.13 |
+| VO-GVC-02 | IsSet=false の場合、何も yield return しない（空列挙） | 正常系 | 詳細設計書 § 3.13 |
+| VO-GVC-03 | GetEqualityComponents との連携で IsSet が先頭に付加されることを確認 | 正常系 | 詳細設計書 § 3.13 |
 
 ---
 

@@ -67,7 +67,7 @@ public abstract class ValueObject : IEquatable<ValueObject>
     /// ValueObjectComponentNormalizer で正規化される
     /// </summary>
     /// <returns>IsSet を含むすべての等価性コンポーネント</returns>
-    protected IEnumerable<object?> GetEqualityComponents()
+    public IEnumerable<object?> GetEqualityComponents()
     {
         yield return IsSet;
         foreach (var component in GetValueComponents())

@@ -487,6 +487,61 @@ public sealed class RespondentAgeTests
 
     #endregion
 
+    #region GetValueComponents テスト
+
+    /// <summary>VO-GVC-01: IsSet=true の場合、GetEqualityComponents に IsSet と ValueField が含まれる</summary>
+    [Theory]
+    [InlineData(0)]
+    [InlineData(25)]
+    [InlineData(150)]
+    public void VO_GVC_01_GetEqualityComponents_WithIsSetTrue_ContainsValueField(int age)
+    {
+        // Arrange
+        var instance = RespondentAge.From(age);
+
+        // Act
+        var components = instance.GetEqualityComponents().ToList();
+
+        // Assert
+        Assert.NotEmpty(components);
+        Assert.True(components[0] is bool && (bool)components[0] == true); // IsSet が先頭
+        Assert.Contains(age, components); // ValueField が含まれる
+    }
+
+    /// <summary>VO-GVC-02: IsSet=false の場合、GetEqualityComponents に IsSet=false のみが含まれる</summary>
+    [Fact]
+    public void VO_GVC_02_GetEqualityComponents_WithIsSetFalse_ContainsOnlyIsSet()
+    {
+        // Arrange
+        var unset = RespondentAge.Unset();
+
+        // Act
+        var components = unset.GetEqualityComponents().ToList();
+
+        // Assert
+        Assert.Single(components);
+        Assert.True(components[0] is bool && (bool)components[0] == false); // IsSet=false のみ
+    }
+
+    /// <summary>VO-GVC-03: GetEqualityComponents で IsSet フラグが先頭に付加されることを確認</summary>
+    [Fact]
+    public void VO_GVC_03_GetEqualityComponents_StartsWithIsSet()
+    {
+        // Arrange
+        var age1 = RespondentAge.From(25);
+        var age2 = RespondentAge.From(25);
+
+        // Act & Assert - GetEqualityComponents は protected なので、Equals で確認
+        Assert.Equal(age1, age2);
+        Assert.Equal(age1.GetHashCode(), age2.GetHashCode());
+
+        // IsSet が異なると非等価を確認
+        var unset = RespondentAge.Unset();
+        Assert.NotEqual(age1, unset);
+    }
+
+    #endregion
+
     #region IOptionalValueObject 対応テスト
 
     [Fact]

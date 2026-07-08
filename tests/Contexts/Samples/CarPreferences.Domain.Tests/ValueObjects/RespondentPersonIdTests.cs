@@ -168,6 +168,61 @@ public sealed class RespondentPersonIdTests
 
     #endregion
 
+    #region GetValueComponents テスト
+
+    /// <summary>VO-GVC-01: IsSet=true の場合、GetEqualityComponents に IsSet と ValueField が含まれる</summary>
+    [Theory]
+    [InlineData(1000)]
+    [InlineData(1500)]
+    [InlineData(9999)]
+    public void VO_GVC_01_GetEqualityComponents_WithIsSetTrue_ContainsValueField(int value)
+    {
+        // Arrange
+        var instance = RespondentPersonId.From(value);
+
+        // Act
+        var components = instance.GetEqualityComponents().ToList();
+
+        // Assert
+        Assert.NotEmpty(components);
+        Assert.True(components[0] is bool && (bool)components[0] == true); // IsSet が先頭
+        Assert.Contains(value, components); // ValueField が含まれる
+    }
+
+    /// <summary>VO-GVC-02: IsSet=false の場合、GetEqualityComponents に IsSet=false のみが含まれる</summary>
+    [Fact]
+    public void VO_GVC_02_GetEqualityComponents_WithIsSetFalse_ContainsOnlyIsSet()
+    {
+        // Arrange
+        var unset = RespondentPersonId.Unset();
+
+        // Act
+        var components = unset.GetEqualityComponents().ToList();
+
+        // Assert
+        Assert.Single(components);
+        Assert.True(components[0] is bool && (bool)components[0] == false); // IsSet=false のみ
+    }
+
+    /// <summary>VO-GVC-03: GetEqualityComponents で IsSet フラグが先頭に付加されることを確認</summary>
+    [Fact]
+    public void VO_GVC_03_GetEqualityComponents_StartsWithIsSet()
+    {
+        // Arrange
+        var id1 = RespondentPersonId.From(1500);
+        var id2 = RespondentPersonId.From(1500);
+
+        // Act & Assert - GetEqualityComponents は protected なので、Equals で確認
+        Assert.Equal(id1, id2);
+        Assert.Equal(id1.GetHashCode(), id2.GetHashCode());
+
+        // IsSet が異なると非等価を確認
+        var unset = RespondentPersonId.Unset();
+        Assert.NotEqual(id1, unset);
+    }
+
+    #endregion
+
     #region 等価性テスト（Equals = true）
 
     /// <summary>

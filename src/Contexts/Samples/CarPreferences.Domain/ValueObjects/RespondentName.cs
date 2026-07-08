@@ -9,50 +9,69 @@ public sealed class RespondentName : PrimitiveValueObject<string>, IOptionalValu
     IEquatable<RespondentName>
 {
     /// <summary>
-    /// 未設定状態のRespondentNameのインスタンスを生成する
-    /// 【責務】未設定状態のRespondentNameを表現する
+    /// 未設定状態のインスタンスを生成するコンストラクタ
     /// </summary>
-    /// <param name="isSet">未設定状態かどうかを示すフラグ </param>
+    /// <remarks>
+    /// 【責務】未設定状態を表現するインスタンスを構築する
+    /// </remarks>
+    /// <param name="isSet">未設定状態かどうかを示すフラグ</param>
     private RespondentName(bool isSet) : base(isSet)
     {
     }
 
     /// <summary>
-    /// 指定された文字列値からRespondentNameのインスタンスを生成する
-    /// 【責務】指定された文字列値を持つRespondentNameを表現する
+    /// 指定された文字列値からインスタンスを生成するコンストラクタ
     /// </summary>
-    /// <param name="value">RespondentNameの文字列値</param>
-    /// <param name="isSet">未設定状態かどうかを示すフラグ </param>
+    /// <remarks>
+    /// 【責務1】指定された文字列値を正規化・検証してインスタンスを構築する
+    /// 【責務2】Validate メソッドは基底クラスのコンストラクタで自動実行される
+    /// </remarks>
+    /// <param name="value">文字列値</param>
+    /// <param name="isSet">未設定状態かどうかを示すフラグ</param>
     private RespondentName(string value, bool isSet) : base(value, isSet)
     {
     }
 
     /// <summary>
-    /// 保持する文字列値を読み取り専用で取得
+    /// 保持する文字列値を取得する
     /// </summary>
+    /// <remarks>
+    /// IsSet=true の場合は文字列値を返し、IsSet=false の場合は null を返す
+    /// </remarks>
     public string? Value => IsSet ? ValueField : null;
 
     /// <summary>
-    /// 指定されたRespondentNameと等価かどうかを判定する
+    /// 指定された RespondentName インスタンスと等価かどうかを判定する
     /// </summary>
-    /// <param name="other">比較対象のRespondentName</param>
-    /// <returns>等価である場合はtrue、そうでない場合はfalse</returns>
-    public bool Equals(RespondentName? other) => base.Equals(other);
+    /// <param name="other">比較対象の RespondentName</param>
+    /// <returns>等価である場合は true、そうでない場合は false</returns>
+    public bool Equals(RespondentName? other)
+    {
+        if (other is null) return false;
+        if (ReferenceEquals(this, other)) return true;
+        return IsSet == other.IsSet && ValueField == other.ValueField;
+    }
 
     /// <summary>
-    /// RespondentNameのインスタンスを生成する
-    /// 【責務】未設定状態のRespondentNameを表現する
+    /// 未設定状態のインスタンスを生成する
     /// </summary>
-    /// <returns>未設定状態のRespondentNameのインスタンス</returns>
+    /// <remarks>
+    /// 【責務】未設定状態を表現するインスタンスを返す
+    /// </remarks>
+    /// <returns>未設定状態のインスタンス</returns>
     public static RespondentName Unset() => new(false);
 
     /// <summary>
-    /// RespondentNameのインスタンスを生成する
-    /// 【責務】指定された文字列値を持つRespondentNameを表現する
+    /// 指定された文字列値からインスタンスを生成する
     /// </summary>
-    /// <param name="value">RespondentNameの文字列値</param>
-    /// <returns>指定された文字列値を持つRespondentNameのインスタンス</returns>
-    /// <remarks>Validate は,基底クラスのコンストラクタで自動実行される</remarks>
+    /// <remarks>
+    /// 【責務1】null チェックを実施する
+    /// 【責務2】指定された文字列値を検証してインスタンスを生成する（Validate は基底クラスのコンストラクタで自動実行）
+    /// </remarks>
+    /// <param name="value">文字列値</param>
+    /// <returns>検証済みで設定状態のインスタンス</returns>
+    /// <exception cref="ArgumentNullException">値が null の場合</exception>
+    /// <exception cref="ArgumentException">検証に失敗した場合</exception>
     public static RespondentName From(string value)
     {
         ArgumentNullException.ThrowIfNull(value);
@@ -60,11 +79,14 @@ public sealed class RespondentName : PrimitiveValueObject<string>, IOptionalValu
     }
 
     /// <summary>
-    /// 指定された文字列値からRespondentNameのインスタンスを生成する
+    /// 指定された文字列値からインスタンスの生成を試みる（nullable 版）
     /// </summary>
-    /// <param name="input">RespondentNameの文字列値</param>
-    /// <param name="result">生成されたRespondentNameのインスタンス</param>
-    /// <returns>生成に成功した場合はtrue、失敗した場合はfalse</returns>
+    /// <remarks>
+    /// 【責務】外部入力を安全に処理する（null は未設定状態に、検証失敗時も未設定状態に変換）
+    /// </remarks>
+    /// <param name="input">文字列値（null 許容）</param>
+    /// <param name="result">生成結果を受け取る out パラメータ</param>
+    /// <returns>生成に成功した場合、または null 入力を Unset に変換した場合は true；検証失敗時は false</returns>
     public static bool TryFrom(string? input, out RespondentName result)
     {
         if (input is null)
@@ -86,11 +108,12 @@ public sealed class RespondentName : PrimitiveValueObject<string>, IOptionalValu
     }
 
     /// <summary>
-    /// 名前の値を検証します
-    /// 【検証内容】
-    ///   - 空文字列でないこと
-    ///   - 1～50文字の範囲内であること
+    /// 値の妥当性を検証する
     /// </summary>
+    /// <remarks>
+    /// 【責務1】空文字列でないかをチェックする
+    /// 【責務2】文字列が 1～50 文字の範囲内かをチェックする
+    /// </remarks>
     /// <param name="normalized">検証対象の値</param>
     /// <exception cref="ArgumentException">検証に失敗した場合</exception>
     public override void Validate(string normalized)
@@ -107,4 +130,35 @@ public sealed class RespondentName : PrimitiveValueObject<string>, IOptionalValu
             throw new ArgumentException("RespondentName must be 50 characters or less.", nameof(normalized));
         }
     }
+
+    /// <summary>
+    /// 等価性判定のための値コンポーネントを返す（IsSet を除く）
+    /// </summary>
+    /// <remarks>
+    /// IsSet は ValueObject.GetEqualityComponents で自動的に先頭に付加される
+    /// </remarks>
+    /// <returns>ValueField（IsSet = true の場合）を含むコンポーネント列</returns>
+    protected override IEnumerable<object?> GetValueComponents()
+    {
+        if (IsSet)
+        {
+            yield return ValueField;
+        }
+    }
+
+    /// <summary>
+    /// ハッシュコードを取得する
+    /// </summary>
+    /// <remarks>
+    /// 【責務】IsSet と ValueField に基づくハッシュコードを計算する
+    /// </remarks>
+    /// <returns>オブジェクトのハッシュコード</returns>
+    public override int GetHashCode() => HashCode.Combine(IsSet, ValueField);
+
+    /// <summary>
+    /// 指定されたオブジェクトと等価かどうかを判定する
+    /// </summary>
+    /// <param name="obj">比較対象のオブジェクト</param>
+    /// <returns>等価である場合は true、そうでない場合は false</returns>
+    public override bool Equals(object? obj) => Equals(obj as RespondentName);
 }

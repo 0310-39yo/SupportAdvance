@@ -589,4 +589,102 @@ public class CarModelTests
     Assert.False(success);
     Assert.False(carModel.IsSet);
   }
+
+  // ================== GVC: GetValueComponents テスト ==================
+
+  /// <summary>VO-GVC-01: IsSet=true の場合、GetEqualityComponents に IsSet と ValueField が含まれる</summary>
+  [Theory]
+  [InlineData(0)]
+  [InlineData(1)]
+  [InlineData(6)]
+  public void VO_GVC_01_GetEqualityComponents_WithIsSetTrue_ContainsValueField(int value)
+  {
+    // Arrange
+    var carModel = CarModel.From(value);
+
+    // Act
+    var components = carModel.GetEqualityComponents().ToList();
+
+    // Assert
+    Assert.NotEmpty(components);
+    Assert.True(components[0] is bool && (bool)components[0] == true); // IsSet が先頭
+    Assert.Contains(value, components); // ValueField が含まれる
+  }
+
+  /// <summary>VO-GVC-02: IsSet=false の場合、GetEqualityComponents に IsSet=false のみが含まれる</summary>
+  [Fact]
+  public void VO_GVC_02_GetEqualityComponents_WithIsSetFalse_ContainsOnlyIsSet()
+  {
+    // Arrange
+    var unset = CarModel.Unset();
+
+    // Act
+    var components = unset.GetEqualityComponents().ToList();
+
+    // Assert
+    Assert.Single(components);
+    Assert.True(components[0] is bool && (bool)components[0] == false); // IsSet=false のみ
+  }
+
+  /// <summary>VO-GVC-03: GetEqualityComponents で IsSet フラグが先頭に付加されることを確認</summary>
+  [Fact]
+  public void VO_GVC_03_GetEqualityComponents_StartsWithIsSet()
+  {
+    // Arrange
+    var carModel1 = CarModel.From(1);
+    var carModel2 = CarModel.From(1);
+
+    // Act & Assert - GetEqualityComponents は protected なので、Equals で確認
+    Assert.Equal(carModel1, carModel2);
+    Assert.Equal(carModel1.GetHashCode(), carModel2.GetHashCode());
+
+    // IsSet が異なると非等価を確認
+    var unset = CarModel.Unset();
+    Assert.NotEqual(carModel1, unset);
+  }
+
+  // ================== DN: GetDisplayName テスト ==================
+
+  /// <summary>VO-DN-01: ValueField = 0 の場合「不明」を返す</summary>
+  [Fact]
+  public void VO_DN_01_GetDisplayName_WithValueZero_ReturnsUnknown()
+  {
+    // Arrange
+    var carModel = CarModel.From(0);
+
+    // Act
+    var displayName = carModel.ToString();
+
+    // Assert
+    Assert.Equal("不明", displayName);
+  }
+
+  /// <summary>VO-DN-02: ValueField = 1～6 の場合、対応する業務名称を返す</summary>
+  [Theory]
+  [MemberData(nameof(DisplayNameMappings))]
+  public void VO_DN_02_GetDisplayName_WithValidValue_ReturnsCorrectName(int value, string expectedName)
+  {
+    // Arrange
+    var carModel = CarModel.From(value);
+
+    // Act
+    var displayName = carModel.ToString();
+
+    // Assert
+    Assert.Equal(expectedName, displayName);
+  }
+
+  /// <summary>VO-DN-03: ValueField が範囲外（7 以上、-1 以下）の場合、ArgumentOutOfRangeException をスロー</summary>
+  [Theory]
+  [InlineData(7)]
+  [InlineData(8)]
+  [InlineData(99)]
+  [InlineData(-1)]
+  [InlineData(-100)]
+  public void VO_DN_03_From_WithOutOfRangeValue_ThrowsArgumentOutOfRangeException(int invalidValue)
+  {
+    // Act & Assert
+    var ex = Assert.Throws<ArgumentOutOfRangeException>(() => CarModel.From(invalidValue));
+    Assert.NotNull(ex);
+  }
 }

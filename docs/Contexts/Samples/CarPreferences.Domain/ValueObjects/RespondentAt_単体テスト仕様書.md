@@ -81,8 +81,8 @@ RespondentAt の各メンバーが以下を満たすことを確認：
 | VO-OPT-03 | TryFrom(null, clock) は true を返し、Unset インスタンスを返す | 正常系（null 吸収） | 技術仕様書 § 2.3 |
 | VO-OPT-04 | TryFrom(valid, clock) は true を返し、設定済みインスタンスを返す | 正常系 | 技術仕様書 § 2.3 |
 | VO-OPT-05 | TryFrom(invalid, clock) は false を返し、Unset インスタンスを返す | 異常系（検証失敗） | 技術仕様書 § 2.3 |
-| VO-OPT-06 | TryGetValue(out value) は IsSet=true で true を返す | 正常系 | 技術仕様書 § 2.4 |
-| VO-OPT-07 | TryGetValue(out value) は IsSet=false で false を返す | 正常系 | 技術仕様書 § 2.4 |
+| VO-OPT-06 | TryGetValue(out value) は IsSet=true で true を返す（基底クラスから継承） | 正常系 | 技術仕様書 § 2.4 |
+| VO-OPT-07 | TryGetValue(out value) は IsSet=false で false を返す（基底クラスから継承） | 正常系 | 技術仕様書 § 2.4 |
 
 ### グループ EQ：`Equals` — 等価と判定されるケース
 
@@ -122,6 +122,14 @@ RespondentAt の各メンバーが以下を満たすことを確認：
 | VO-OP-04 | 片方のみ null のとき == は false | 異常系 | 詳細設計書 § 3.6 |
 | VO-OP-05 | != は == の否定と一致 | 正常系 | 詳細設計書 § 3.6 |
 
+### グループ GVC：`GetValueComponents()` メソッド
+
+| 観点ID | 観点（説明） | 分類 | 依拠仕様 |
+|--------|------|------|---------|
+| VO-GVC-01 | IsSet=true の場合、ValueField を yield return する | 正常系 | 詳細設計書 § 3.11 |
+| VO-GVC-02 | IsSet=false の場合、何も yield return しない（空列挙） | 正常系 | 詳細設計書 § 3.11 |
+| VO-GVC-03 | GetEqualityComponents との連携で IsSet が先頭に付加されることを確認 | 正常系 | 詳細設計書 § 3.11 |
+
 ### グループ TS：`ToString` 文字列化
 
 | 観点ID | 観点（説明） | 分類 | 依拠仕様 |
@@ -129,6 +137,14 @@ RespondentAt の各メンバーが以下を満たすことを確認：
 | VO-TS-01 | IsSet=false のとき "Unset" を返す | 正常系 | 詳細設計書 § 3.7 |
 | VO-TS-02 | IsSet=true のとき、DateTime を文字列で返す | 正常系 | 詳細設計書 § 3.7 |
 | VO-TS-03 | ToString 出力に "IsSet" が含まれない | 正常系 | 詳細設計書 § 3.7 |
+
+### グループ VAL：`Value` プロパティ
+
+| 観点ID | 観点（説明） | 分類 | 依拠仕様 |
+|--------|------|------|---------|
+| VO-VAL-01 | IsSet=true の場合、ValueField（DateTime 値）を返す | 正常系 | 詳細設計書 § 3.7 |
+| VO-VAL-02 | IsSet=false の場合、DateTime.MinValue を返す | 正常系 | 詳細設計書 § 3.7 |
+| VO-VAL-03 | Value プロパティの戻り値型は DateTime（nullable ではない） | 正常系 | 詳細設計書 § 3.7 |
 
 ---
 

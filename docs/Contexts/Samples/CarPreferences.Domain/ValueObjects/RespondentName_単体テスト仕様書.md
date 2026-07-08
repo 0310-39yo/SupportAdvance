@@ -70,8 +70,25 @@ RespondentName の各メンバーが、以下の仕様を満たすことを確�
 | VO-OPT-03 | TryFrom(null) は true を返し、Unset インスタンスを返す | 正常系（null吸収） | IOptionalValueObject v1.3 § 3.3 | Test Constructor |
 | VO-OPT-04 | TryFrom(valid) は true を返し、設定済みインスタンスを返す | 正常系 | IOptionalValueObject v1.3 § 3.3 | Test Constructor |
 | VO-OPT-05 | TryFrom(invalid) は false を返し、Unset インスタンスを返す | 異常系（検証失敗） | IOptionalValueObject v1.3 § 3.3 | Test Constructor |
-| VO-OPT-06 | TryGetValue(out value) は IsSet=true で true を返す | 正常系 | IOptionalValueObject v1.3 § 3.4 | Test Constructor |
-| VO-OPT-07 | TryGetValue(out value) は IsSet=false で false を返す | 正常系 | IOptionalValueObject v1.3 § 3.4 | Test Constructor |
+| VO-OPT-06 | TryGetValue(out value) は IsSet=true で true を返す（基底クラスから継承） | 正常系 | IOptionalValueObject v1.3 § 3.4 | Test Constructor |
+| VO-OPT-07 | TryGetValue(out value) は IsSet=false で false を返す（基底クラスから継承） | 正常系 | IOptionalValueObject v1.3 § 3.4 | Test Constructor |
+
+### 観点グループ FF：`From()` メソッド例外処理
+
+| 観点ID | 観点（説明） | 分類 | 依存仕様 | テスト用実装 |
+|--------|------|------|---------|------------|
+| VO-FF-01 | From(有効値) は IsSet=true のインスタンスを返す | 正常系 | IOptionalValueObject v1.3 § 3.2 | Test Constructor |
+| VO-FF-02 | From(空文字列) は ArgumentException をスロー | 異常系 | § 2.2 | Test Constructor |
+| VO-FF-03 | From(51文字以上) は ArgumentException をスロー | 異常系 | § 2.2 | Test Constructor |
+| VO-FF-04 | From(null) は ArgumentNullException をスロー | 異常系 | § 2.2 | Test Constructor |
+
+### 観点グループ GVC：`GetValueComponents()` メソッド
+
+| 観点ID | 観点（説明） | 分類 | 依存仕様 | テスト用実装 |
+|--------|------|------|---------|------------|
+| VO-GVC-01 | IsSet=true の場合、ValueField を yield return する | 正常系 | § 2.3 | Test Constructor |
+| VO-GVC-02 | IsSet=false の場合、何も yield return しない（空列挙） | 正常系 | § 2.3 | Test Constructor |
+| VO-GVC-03 | GetEqualityComponents との連携で IsSet が先頭に付加されることを確認 | 正常系 | § 2.3 | Test Constructor |
 
 ### 観点グループ EQ：`Equals` — 等価と判定されるケース
 

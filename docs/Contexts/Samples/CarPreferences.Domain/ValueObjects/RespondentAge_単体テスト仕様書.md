@@ -70,8 +70,8 @@ ValueObject の各メンバーが、以下の仕様を満たすことを確認�
 | VO-OPT-03 | TryFrom(null) は true を返し、Unset インスタンスを返す | 正常系（null吸収） | IOptionalValueObject v1.3 § 3.3 | Test Constructor |
 | VO-OPT-04 | TryFrom(valid) は true を返し、設定済みインスタンスを返す | 正常系 | IOptionalValueObject v1.3 § 3.3 | Test Constructor |
 | VO-OPT-05 | TryFrom(invalid) は false を返し、Unset インスタンスを返す | 異常系（検証失敗） | IOptionalValueObject v1.3 § 3.3 | Test Constructor |
-| VO-OPT-06 | TryGetValue(out value) は IsSet=true で true を返す | 正常系 | IOptionalValueObject v1.3 § 3.4 | Test Constructor |
-| VO-OPT-07 | TryGetValue(out value) は IsSet=false で false を返す | 正常系 | IOptionalValueObject v1.3 § 3.4 | Test Constructor |
+| VO-OPT-06 | TryGetValue(out value) は IsSet=true で true を返す（新規実装） | 正常系 | IOptionalValueObject v1.3 § 3.4 | Test Constructor |
+| VO-OPT-07 | TryGetValue(out value) は IsSet=false で false を返す（新規実装） | 正常系 | IOptionalValueObject v1.3 § 3.4 | Test Constructor |
 
 ### 観点グループ EQ：`Equals` — 等価と判定されるケース
 
@@ -126,6 +126,14 @@ ValueObject の各メンバーが、以下の仕様を満たすことを確認�
 | VO-VR-01 | 値 0～150 は有効（Validate パス） | 正常系 | § 4.0 | Test Constructor |
 | VO-VR-02 | 値が負数（-1 等）は ArgumentOutOfRangeException | 異常系 | § 4.0 | Test Constructor |
 | VO-VR-03 | 値が 151 以上は ArgumentOutOfRangeException | 異常系 | § 4.0 | Test Constructor |
+
+### 観点グループ GVC：`GetValueComponents()` メソッド
+
+| 観点ID | 観点（説明） | 分類 | 依存仕様 | テスト用実装 |
+|--------|------|------|---------|------------|
+| VO-GVC-01 | IsSet=true の場合、ValueField を yield return する | 正常系 | § 4.0 | Test Constructor |
+| VO-GVC-02 | IsSet=false の場合、何も yield return しない（空列挙） | 正常系 | § 4.0 | Test Constructor |
+| VO-GVC-03 | GetEqualityComponents との連携で IsSet が先頭に付加されることを確認 | 正常系 | § 4.0 | Test Constructor |
 
 ---
 
