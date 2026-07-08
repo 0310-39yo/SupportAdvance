@@ -1,0 +1,240 @@
+# SupportAdvance - Claude Code ガイドライン
+
+プロジェクト固有の実装ガイドライン、アーキテクチャ原則、および開発ワークフロー
+
+---
+
+## 📐 アーキテクチャ原則
+
+このプロジェクトは **クリーンアーキテクチャ** の原則に従っています。
+
+### 基本ルール
+
+**依存の法則（Dependency Rule）**: 依存関係は外側から内側にのみ向かう。
+
+```
+Presentation → Application → Domain ← Infrastructure
+                                ↑
+                         SharedKernel
+```
+
+### 層間の許可される依存関係
+
+| From | To | 許可 | 備考 |
+|---|---|---|---|
+| Domain | anything | ✗ | 最も内側、依存なし |
+| Application | Domain, SharedKernel, Common, Crosscutting | ✓ | Infrastructure は DI で注入 |
+| Infrastructure | Domain, SharedKernel, Common, Crosscutting | ✓ | ✗ Application は禁止 |
+| Presentation | Application, Crosscutting, SharedKernel | ✓ | Program.cs のみ Infrastructure 可 |
+
+### 違反してはいけない依存関係
+
+❌ **禁止:**
+- Domain → Application / Infrastructure / Presentation
+- Application → Infrastructure / Presentation
+- Infrastructure → Application / Presentation
+- Presentation → Domain / Infrastructure（Program.cs を除く）
+
+---
+
+## 📁 ディレクトリ構造と責務
+
+```
+src/
+├── SharedKernel/          # 基盤型（ValueObject, Entity 基底など）
+├── Common/                # 汎用ユーティリティ（Clock, Settings など）
+├── Crosscutting/          # ロギング、監査、横断的関心事
+├── Application/           # Use Cases / Application Services
+├── Infrastructure/        # DB, ORM, 外部サービス実装
+├── Contexts/
+│   └── Samples/
+│       └── CarPreferences/
+│           ├── Domain/     # ドメインロジック
+│           ├── Application/ # Use Cases
+│           └── Infrastructure/ # DB実装
+└── Presentation/
+    ├── Shared/           # 共有 UI コンポーネント
+    ├── WinTrial/         # Windows Forms UI
+    └── WpfTrial/         # WPF UI
+```
+
+各層の詳細は [docs/CLEAN_ARCHITECTURE_GUIDELINES.md](../docs/CLEAN_ARCHITECTURE_GUIDELINES.md) を参照
+
+---
+
+## ✅ 新規プロジェクト追加時のチェックリスト
+
+### 1. レイヤーの決定
+- [ ] プロジェクトが属するレイヤーを明確に決定
+- [ ] Bounded Context 内での責務を定義
+
+### 2. .csproj 参照の検証
+- [ ] ProjectReference が依存関係ルールに準拠
+- [ ] 不要な参照を削除
+- [ ] 循環参照がないこと
+
+**確認コマンド:**
+```bash
+# .csproj ファイルを直接確認
+cat src/YourProject/YourProject.csproj
+```
+
+### 3. using 宣言の確認
+- [ ] using 宣言が依存ルールに準拠
+- [ ] 逆方向依存がないこと
+
+**確認コマンド:**
+```bash
+# Application namespace への依存を検索
+grep -r "using SupportAdvance.Application" src/Infrastructure/
+# マッチがなければ OK
+```
+
+### 4. ビルド検証
+```bash
+dotnet build --no-incremental
+# エラーがないこと
+```
+
+### 5. コードレビューポイント
+- Domain層のコード: 他層への依存がないか
+- Application層: Infrastructure は注入されているか
+- 依存注入: Program.cs で正しく構成されているか
+
+---
+
+## 🔍 アーキテクチャ違反の修正例
+
+### ❌ 違反: Infrastructure → Application
+
+**原因:**
+```xml
+<!-- Infrastructure.csproj -->
+<ProjectReference Include="..\Application\Application.csproj" />
+```
+
+**修正:**
+```xml
+<!-- 削除 -->
+```
+
+**確認:**
+```bash
+# Application 型が使用されていないことを確認
+grep -r "using.*Application" src/Infrastructure/
+# マッチなし = OK
+```
+
+### ❌ 違反: Domain が Application を参照
+
+**原因:**
+```csharp
+using SupportAdvance.Application.Dtos;
+
+public class Order
+{
+    public OrderStatusDto Status { get; set; } // ✗ Domain が Application 型を使用
+}
+```
+
+**修正:**
+```csharp
+public class Order
+{
+    public OrderStatus Status { get; set; } // ✓ Domain 独立の型
+}
+
+// Application層で変換
+public class UpdateOrderService
+{
+    public async Task Execute(UpdateOrderDto dto)
+    {
+        var status = MapToOrderStatus(dto); // 変換
+        var order = await _repository.GetAsync(dto.OrderId);
+        order.UpdateStatus(status);
+    }
+}
+```
+
+---
+
+## 🧪 テスト戦略
+
+### Domain層のテスト
+- Unit tests のみ（外界への依存なし）
+- Mock / Stub 不要（ビジネスロジックのみ）
+
+### Application層のテスト
+- Unit tests with mocked repositories
+- Infrastructure への依存は DI でモック化
+
+### Infrastructure層のテスト
+- Integration tests（実DB接続）
+- または、テスト用 in-memory DB
+
+---
+
+## 🔧 開発時の注意点
+
+### 新しい機能を実装する際
+
+1. **Domain層から始める**
+   ```csharp
+   // Domain/Entities に Entity を定義
+   public class Car : Entity { }
+   ```
+
+2. **Application層で Use Case を定義**
+   ```csharp
+   // Application/UseCases に Use Case を実装
+   public class UpdateCarUseCase { }
+   ```
+
+3. **Infrastructure層で実装**
+   ```csharp
+   // Infrastructure で Repository を実装
+   public class CarRepository : ICarRepository { }
+   ```
+
+4. **Presentation層で UI を構築**
+   ```csharp
+   // Presentation/ViewModels で ViewModel を実装
+   public class CarViewModel { }
+   ```
+
+### インターフェース vs 実装
+
+- Domain / Application: **インターフェースのみ定義**
+- Infrastructure: **インターフェースを実装**
+- Presentation: Application のインターフェースを使用
+
+---
+
+## 📚 参考資料
+
+- **CLEAN_ARCHITECTURE_GUIDELINES.md**: 詳細なガイドライン
+- **各 README.md**: 層別の責務と依存関係
+- Clean Architecture（Robert C. Martin）
+
+---
+
+## 🚀 CI/CD での自動検証
+
+### 将来の自動検証ツール導入
+
+```bash
+# SlnArch を使用した依存性検証（予定）
+slnarch analyze --config architecture.json
+
+# ビルド前に実行
+dotnet build
+```
+
+---
+
+## 📝 更新履歴
+
+| 日付 | 更新内容 |
+|---|---|
+| 2026-07-09 | 初版作成。クリーンアーキテクチャ原則と新規プロジェクトチェックリスト |
+
