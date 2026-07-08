@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dotnet build *)",
+      "Bash(dotnet test *)",
+      "Bash(dotnet clean *)",
+      "Bash(timeout 300 bash -c 'while tail -5 \"C:\\\\Users\\\\tyokk\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\F--SupportAdvance\\\\516a5cde-05d4-480e-bc92-c140b9c3b377\\\\tasks\\\\bbcgas4ed.output\" 2>/dev/null | grep -q \"成功\\\\|失敗\"; do sleep 2; done; tail -30 \"C:\\\\Users\\\\tyokk\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\F--SupportAdvance\\\\516a5cde-05d4-480e-bc92-c140b9c3b377\\\\tasks\\\\bbcgas4ed.output\"')"
+    ]
+  }
+}
