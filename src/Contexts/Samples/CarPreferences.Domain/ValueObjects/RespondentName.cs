@@ -1,4 +1,3 @@
-using SupportAdvance.SharedKernel.ValueObjects;
 using SupportAdvance.SharedKernel.ValueObjects.Abstractions;
 
 namespace SupportAdvance.Contexts.Samples.CarPreferences.Domain.ValueObjects;

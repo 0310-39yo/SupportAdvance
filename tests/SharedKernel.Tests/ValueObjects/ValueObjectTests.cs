@@ -1,6 +1,6 @@
-namespace SupportAdvance.SharedKernel.Tests.ValueObjects;
+using SupportAdvance.Tests.SharedKernel.Tests.ValueObjects.Fixtures;
 
-using SupportAdvance.SharedKernel.Tests.ValueObjects.Fixtures;
+namespace SupportAdvance.SharedKernel.Tests.ValueObjects;
 
 /// <summary>
 /// ValueObject の単体テスト仕様書に基づく統合テストクラス

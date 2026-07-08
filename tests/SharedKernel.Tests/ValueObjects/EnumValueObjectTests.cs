@@ -1,6 +1,7 @@
+using SupportAdvance.Tests.SharedKernel.Tests.ValueObjects.Fixtures;
+
 namespace SupportAdvance.SharedKernel.Tests.ValueObjects;
 
-using SupportAdvance.SharedKernel.Tests.ValueObjects.Fixtures;
 using Xunit;
 
 /// <summary>

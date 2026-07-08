@@ -1,4 +1,4 @@
-namespace SupportAdvance.SharedKernel.ValueObjects;
+namespace SupportAdvance.SharedKernel.ValueObjects.Abstractions;
 
 /// <summary>
 /// スカラ値を保持する値オブジェクトの抽象基底クラス

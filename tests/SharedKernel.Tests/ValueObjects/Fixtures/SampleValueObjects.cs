@@ -1,6 +1,7 @@
 using SupportAdvance.SharedKernel.ValueObjects;
+using SupportAdvance.SharedKernel.ValueObjects.Abstractions;
 
-namespace SupportAdvance.SharedKernel.Tests.ValueObjects.Fixtures;
+namespace SupportAdvance.Tests.SharedKernel.Tests.ValueObjects.Fixtures;
 
 /// <summary>
 /// 単一コンポーネントを持つサンプルValueObject
