@@ -39,4 +39,4 @@ services.AddApplicationServices();
 
 ---
 
-詳細は [CLEAN_ARCHITECTURE_GUIDELINES.md](../../docs/CLEAN_ARCHITECTURE_GUIDELINES.md) を参照
+詳細は [CLEAN_ARCHITECTURE_GUIDELINES.md](../../docs/Assistance/Guides/CLEAN_ARCHITECTURE_GUIDELINES.md) を参照

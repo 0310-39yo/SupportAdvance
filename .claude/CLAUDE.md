@@ -58,7 +58,7 @@ src/
     └── WpfTrial/         # WPF UI
 ```
 
-各層の詳細は [docs/CLEAN_ARCHITECTURE_GUIDELINES.md](../docs/CLEAN_ARCHITECTURE_GUIDELINES.md) を参照
+各層の詳細は [docs/Assistance/Guides/CLEAN_ARCHITECTURE_GUIDELINES.md](../docs/Assistance/Guides/CLEAN_ARCHITECTURE_GUIDELINES.md) を参照
 
 ---
 
