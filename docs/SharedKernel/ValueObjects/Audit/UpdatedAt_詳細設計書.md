@@ -51,10 +51,10 @@ public sealed class UpdatedAt : PrimitiveValueObject<DateTime>, IEquatable<Updat
 
 ## 2. ファクトリメソッドの処理フロー
 
-### 2.1 From メソッド
+### 2.1 From メソッド（推奨）
 
 ```csharp
-public static UpdatedAt From(DateTime value) => new(value);
+public static UpdatedAt From(LocalDateTime value) => new(value.Value);
 ```
 
 **処理フロー:**
@@ -80,10 +80,10 @@ From(DateTime value)
 **例外処理:**
 - `ArgumentException` : DateTime.MinValue または DateTime.MaxValue の場合
 
-### 2.2 TryFrom メソッド（nullable対応）
+### 2.2 TryFrom メソッド（推奨・nullable対応）
 
 ```csharp
-public static bool TryFrom(DateTime? input, out UpdatedAt result)
+public static bool TryFrom(LocalDateTime? input, out UpdatedAt result)
 {
 	if (!input.HasValue)
 	{
@@ -112,8 +112,8 @@ public static bool TryFrom(DateTime? input, out UpdatedAt result)
 ### 2.3 TryFrom メソッド（non-nullable オーバーロード）
 
 ```csharp
-public static bool TryFrom(DateTime input, out UpdatedAt result) 
-	=> TryFrom((DateTime?)input, out result);
+public static bool TryFrom(LocalDateTime input, out UpdatedAt result) 
+	=> TryFrom((LocalDateTime?)input, out result);
 ```
 
 **設計意図:**

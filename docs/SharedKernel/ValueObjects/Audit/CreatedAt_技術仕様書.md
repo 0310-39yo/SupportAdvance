@@ -52,26 +52,40 @@ Assert.True(createdAt.IsSet);  // 常に true
 
 ### 2.2 ファクトリメソッド
 
-#### `From(DateTime value) : CreatedAt`
+#### `From(LocalDateTime value) : CreatedAt`
 
-**役割:** 指定された DateTime から CreatedAt を生成
+**役割:** IClock から取得した LocalDateTime から CreatedAt を生成
 
 ```csharp
-var createdAt = CreatedAt.From(new DateTime(2025, 1, 1, 10, 30, 0));
+IClock clock = /* DI から注入 */;
+var createdAt = CreatedAt.From(clock.JstNow);
 ```
 
 **例外:**
 - `ArgumentException` : 値が DateTime.MinValue または DateTime.MaxValue の場合
 
-#### `TryFrom(DateTime? input, out CreatedAt result) : bool`
+#### `From(DateTime value) : CreatedAt` （過去互換性用）
 
-**役割:** null安全な生成、失敗時は false を返す
+**役割:** DateTime から CreatedAt を生成（非推奨）
 
 ```csharp
-bool success = CreatedAt.TryFrom(new DateTime(2025, 1, 1), out var createdAt);
+// 非推奨: 直接 DateTime を使用しない
+var createdAt = CreatedAt.From(new DateTime(2025, 1, 1, 10, 30, 0));
+```
+
+**注記:** 本来は IClock 経由の LocalDateTime を使用すること
+
+#### `TryFrom(LocalDateTime? input, out CreatedAt result) : bool`
+
+**役割:** IClock 経由で取得した null安全な生成
+
+```csharp
+IClock clock = /* DI から注入 */;
+var localDateTime = clock.JstNow as LocalDateTime?;
+bool success = CreatedAt.TryFrom(localDateTime, out var createdAt);
 if (!success)
 {
-	// 生成失敗（null入力など）
+	// 生成失敗
 }
 ```
 
@@ -79,13 +93,13 @@ if (!success)
 1. `input.HasValue` が false → false を返す
 2. `From(input.Value)` 呼び出し → 成功時 true、例外時 false
 
-#### `TryFrom(DateTime input, out CreatedAt result) : bool`
+#### `TryFrom(DateTime input, out CreatedAt result) : bool` （非推奨）
 
-**役割:** non-nullable DateTime の信号用オーバーロード
+**役割:** DateTime の信号用オーバーロード（非推奨）
 
 ```csharp
-DateTime now = DateTime.UtcNow;
-bool success = CreatedAt.TryFrom(now, out var createdAt);
+// 非推奨: 直接 DateTime を使用しない
+bool success = CreatedAt.TryFrom(new DateTime(2025, 1, 1), out var createdAt);
 ```
 
 ### 2.3 等価性メソッド
@@ -95,9 +109,10 @@ bool success = CreatedAt.TryFrom(now, out var createdAt);
 **役割:** オブジェクト等価性の判定
 
 ```csharp
-var a = CreatedAt.From(new DateTime(2025, 1, 1));
-var b = CreatedAt.From(new DateTime(2025, 1, 1));
-Assert.Equal(a, b);  // true
+IClock clock = /* DI から注入 */;
+var a = CreatedAt.From(clock.JstNow);
+var b = CreatedAt.From(clock.JstNow);
+Assert.Equal(a, b);  // true（同じ時刻なら等価）
 ```
 
 #### `Equals(CreatedAt? other) : bool`
@@ -145,17 +160,22 @@ string str = createdAt.ToString();  // "2025-01-01T10:30:00"
 **例:**
 
 ```csharp
-// OK: 通常の日時
-var ok1 = CreatedAt.From(new DateTime(2025, 1, 1));
+IClock clock = /* DI から注入 */;
+
+// OK: 通常の日時（IClock 経由）
+var ok1 = CreatedAt.From(clock.JstNow);
 
 // OK: 過去の日時
-var ok2 = CreatedAt.From(new DateTime(2000, 1, 1));
+var clock2 = new MockClock(new DateTime(2000, 1, 1, 0, 0, 0, DateTimeKind.Unspecified));
+var ok2 = CreatedAt.From(clock2.JstNow);
 
 // NG: DateTime.MinValue
-var ng1 = CreatedAt.From(DateTime.MinValue);  // ArgumentException
+var exception1 = Assert.Throws<ArgumentException>(() =>
+    CreatedAt.From(new LocalDateTime(DateTime.MinValue)));  // ArgumentException
 
 // NG: DateTime.MaxValue
-var ng2 = CreatedAt.From(DateTime.MaxValue);  // ArgumentException
+var exception2 = Assert.Throws<ArgumentException>(() =>
+    CreatedAt.From(new LocalDateTime(DateTime.MaxValue)));  // ArgumentException
 ```
 
 ---
@@ -196,21 +216,42 @@ private CreatedAt(DateTime value) : base(value, true)
 
 ## 6. 使用例
 
-### 6.1 基本的な使用
+### 6.1 基本的な使用（推奨）
 
 ```csharp
-// 現在の日時でCreatedAtを生成
-var createdAt = CreatedAt.From(DateTime.UtcNow);
+// IClock から現在のJST日時でCreatedAtを生成
+private readonly IClock _clock;  // DI で注入
+
+var createdAt = CreatedAt.From(_clock.JstNow);
 
 // 日時値の参照
-DateTime dt = createdAt.Value;
-Console.WriteLine(createdAt);  // ISO 8601 形式で出力
+DateTime dt = createdAt.Value;  // LocalDateTime の Value は DateTime（Kind = Unspecified）
+Console.WriteLine(createdAt);   // ISO 8601 形式で出力
 ```
 
-### 6.2 安全な生成（null安全性）
+### 6.2 Entity での初期化パターン
 
 ```csharp
-DateTime? input = GetUserInput();
+public class Entity
+{
+    private readonly IClock _clock;
+    public CreatedAt CreatedAt { get; }
+    
+    // Entity 生成時に IClock を注入
+    public Entity(IClock clock)
+    {
+        _clock = clock;
+        CreatedAt = CreatedAt.From(_clock.JstNow);  // ← ここで生成
+    }
+}
+```
+
+### 6.3 安全な生成（null安全性）
+
+```csharp
+private readonly IClock _clock;
+
+LocalDateTime? input = GetUserInputAsLocalDateTime();
 
 if (CreatedAt.TryFrom(input, out var createdAt))
 {

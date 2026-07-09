@@ -22,8 +22,9 @@
 **役割:** 保持する日時値を読み取り専用で取得
 
 ```csharp
-var updatedAt = UpdatedAt.From(new DateTime(2025, 1, 1, 10, 30, 0));
-DateTime dt = updatedAt.Value;  // 2025-01-01T10:30:00 を取得
+IClock clock = /* DI から注入 */;
+var updatedAt = UpdatedAt.From(clock.JstNow);
+DateTime dt = updatedAt.Value;  // LocalDateTime の Value を取得
 ```
 
 #### `IsSet : bool { get; }` (PrimitiveValueObject から継承)
@@ -31,22 +32,35 @@ DateTime dt = updatedAt.Value;  // 2025-01-01T10:30:00 を取得
 **役割:** 値が設定されているかを判定（UpdatedAt は常に true）
 
 ```csharp
-var updatedAt = UpdatedAt.From(new DateTime(2025, 1, 1));
+IClock clock = /* DI から注入 */;
+var updatedAt = UpdatedAt.From(clock.JstNow);
 Assert.True(updatedAt.IsSet);  // 常に true
 ```
 
 ### 2.2 ファクトリメソッド
 
-#### `From(DateTime value) : UpdatedAt`
+#### `From(LocalDateTime value) : UpdatedAt`
 
-**役割:** 指定された DateTime から UpdatedAt を生成
+**役割:** IClock から取得した LocalDateTime から UpdatedAt を生成
 
 ```csharp
-var updatedAt = UpdatedAt.From(new DateTime(2025, 1, 1, 10, 30, 0));
+IClock clock = /* DI から注入 */;
+var updatedAt = UpdatedAt.From(clock.JstNow);
 ```
 
 **例外:**
 - `ArgumentException` : 値が DateTime.MinValue または DateTime.MaxValue の場合
+
+#### `From(DateTime value) : UpdatedAt` （過去互換性用）
+
+**役割:** DateTime から UpdatedAt を生成（非推奨）
+
+```csharp
+// 非推奨: 直接 DateTime を使用しない
+var updatedAt = UpdatedAt.From(new DateTime(2025, 1, 1, 10, 30, 0));
+```
+
+**注記:** 本来は IClock 経由の LocalDateTime を使用すること
 
 #### `TryFrom(DateTime? input, out UpdatedAt result) : bool`
 
@@ -77,9 +91,10 @@ if (!success)
 **役割:** 汎用オブジェクト比較
 
 ```csharp
-var updated1 = UpdatedAt.From(new DateTime(2025, 1, 1));
-var updated2 = UpdatedAt.From(new DateTime(2025, 1, 1));
-Assert.True(updated1.Equals((object)updated2));  // 値で比較
+IClock clock = /* DI から注入 */;
+object updated1 = UpdatedAt.From(clock.JstNow);
+var updated2 = UpdatedAt.From(clock.JstNow);
+Assert.True(updated1.Equals(updated2));  // 値で比較
 ```
 
 ### 3.2 Equals(UpdatedAt? other) メソッド
@@ -87,9 +102,10 @@ Assert.True(updated1.Equals((object)updated2));  // 値で比較
 **役割:** 型安全な UpdatedAt 比較
 
 ```csharp
-var updated1 = UpdatedAt.From(new DateTime(2025, 1, 1));
-var updated2 = UpdatedAt.From(new DateTime(2025, 1, 1));
-Assert.True(updated1.Equals(updated2));  // true
+IClock clock = /* DI から注入 */;
+var updated1 = UpdatedAt.From(clock.JstNow);
+var updated2 = UpdatedAt.From(clock.JstNow);
+Assert.True(updated1.Equals(updated2));  // true（同じ時刻なら等価）
 ```
 
 **比較ロジック:**
@@ -149,33 +165,48 @@ private UpdatedAt(DateTime value) : base(value, true)
 
 ## 6. 使用例
 
-### 6.1 基本的な使用
+### 6.1 基本的な使用（推奨）
 
 ```csharp
-// 現在の日時でUpdatedAtを生成
-var updatedAt = UpdatedAt.From(DateTime.UtcNow);
+// IClock から現在のJST日時でUpdatedAtを生成
+private readonly IClock _clock;  // DI で注入
+
+var updatedAt = UpdatedAt.From(_clock.JstNow);
 
 // 日時値の参照
 DateTime dt = updatedAt.Value;
 Console.WriteLine(updatedAt);  // ISO 8601 形式で出力
 ```
 
-### 6.2 安全な生成（null安全性）
+### 6.2 Entity での更新パターン
 
 ```csharp
-DateTime? input = GetUserInput();
-
-if (UpdatedAt.TryFrom(input, out var updatedAt))
+public class Entity
 {
-	Console.WriteLine($"更新日時: {updatedAt.Value}");
+    private readonly IClock _clock;
+    public UpdatedAt UpdatedAt { get; private set; }
+    
+    public Entity(IClock clock)
+    {
+        _clock = clock;
+        UpdatedAt = UpdatedAt.From(_clock.JstNow);
+    }
+    
+    public void Update(string newName)
+    {
+        Name = newName;
+        UpdatedAt = UpdatedAt.From(_clock.JstNow);  // ← 更新時に新しい日時に更新
+    }
 }
 ```
 
 ### 6.3 等価性比較
 
 ```csharp
-var updated1 = UpdatedAt.From(new DateTime(2025, 1, 1));
-var updated2 = UpdatedAt.From(new DateTime(2025, 1, 1));
+private readonly IClock _clock;
+
+var updated1 = UpdatedAt.From(_clock.JstNow);
+var updated2 = UpdatedAt.From(_clock.JstNow);
 
 if (updated1 == updated2)
 {

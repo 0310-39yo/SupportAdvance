@@ -3,253 +3,435 @@
 **バージョン:** 1.0  
 **作成日:** 2025年  
 
-## 1. テスト対象範囲
+---
 
-### 1.1 テスト対象
+## 1. テスト戦略
 
-- `CreatedAt.From(DateTime value)` メソッド
-- `CreatedAt.TryFrom(DateTime? input, out CreatedAt result)` メソッド
-- `CreatedAt.TryFrom(DateTime input, out CreatedAt result)` メソッド
-- `CreatedAt.Equals(object? obj)` メソッド
-- `CreatedAt.Equals(CreatedAt? other)` メソッド
-- `CreatedAt.GetHashCode()` メソッド
-- `CreatedAt.ToString()` メソッド
-- `CreatedAt.Value` プロパティ
-
-### 1.2 テスト設計方針
-
-- **AAA パターン** (Arrange-Act-Assert) に従う
-- **xUnit** フレームワークを使用
-- **Theory テスト** で複数入力値をテスト
-- **境界値テスト** で極端な値を検証
-
-## 2. テストケース仕様
-
-### 2.1 From メソッドテスト
-
-#### 2.1.1 正常系: 有効な日時入力
-
-| テスト項目 | 入力値 | 期待結果 |
-|---------|-------|--------|
-| From_WithValidDateTime_CreatesInstance | DateTime(2025,1,1) | CreatedAtインスタンス生成成功 |
-| From_WithPastDate_CreatesInstance | DateTime(2000,1,1) | CreatedAtインスタンス生成成功 |
-| From_WithUtcNow_CreatesInstance | DateTime.UtcNow | CreatedAtインスタンス生成成功 |
-| From_WithLocalNow_CreatesInstance | DateTime.Now | CreatedAtインスタンス生成成功 |
-| From_WithTodayMidnight_CreatesInstance | DateTime(2025,1,1,0,0,0) | CreatedAtインスタンス生成成功 |
-| From_WithTodayLastSecond_CreatesInstance | DateTime(2025,1,1,23,59,59) | CreatedAtインスタンス生成成功 |
-
-#### 2.1.2 異常系: 無効な日時入力
-
-| テスト項目 | 入力値 | 期待結果 |
-|---------|-------|--------|
-| From_WithMinValue_ThrowsArgumentException | DateTime.MinValue | ArgumentException |
-| From_WithMaxValue_ThrowsArgumentException | DateTime.MaxValue | ArgumentException |
-
-#### 2.1.3 Value プロパティテスト
-
-| テスト項目 | 入力値 | 期待結果 |
-|---------|-------|--------|
-| Value_WhenCreated_ReturnsOriginalDateTime | DateTime(2025,1,1,10,30,0) | 元のDateTime値を返す |
-
-### 2.2 TryFrom メソッドテスト（nullable対応）
-
-#### 2.2.1 正常系: 有効な値
-
-| テスト項目 | 入力値 | 期待結果 |
-|---------|-------|--------|
-| TryFrom_WithValidDateTime_ReturnsTrue | DateTime(2025,1,1) | true, validなCreatedAt |
-| TryFrom_WithUtcNow_ReturnsTrue | DateTime.UtcNow | true, validなCreatedAt |
-| TryFrom_WithMultipleDates_ReturnsTrue | 複数の有効日時 | すべてtrue |
-
-#### 2.2.2 null入力テスト
-
-| テスト項目 | 入力値 | 期待結果 |
-|---------|-------|--------|
-| TryFrom_WithNullInput_ReturnsFalse | null | false, result=null |
-
-#### 2.2.3 異常系: 無効な値
-
-| テスト項目 | 入力値 | 期待結果 |
-|---------|-------|--------|
-| TryFrom_WithMinValue_ReturnsFalse | DateTime.MinValue | false, result=null |
-| TryFrom_WithMaxValue_ReturnsFalse | DateTime.MaxValue | false, result=null |
-
-### 2.3 TryFrom メソッドテスト（non-nullable オーバーロード）
-
-| テスト項目 | 入力値 | 期待結果 |
-|---------|-------|--------|
-| TryFrom_NonNullable_WithValidValue_ReturnsTrue | DateTime(2025,1,1) | true |
-| TryFrom_NonNullable_WithUtcNow_ReturnsTrue | DateTime.UtcNow | true |
-
-### 2.4 等価性テスト
-
-#### 2.4.1 Equals(object?) テスト
-
-| テスト項目 | 比較対象 | 期待結果 |
-|---------|--------|--------|
-| Equals_Object_WithSameDateTime_ReturnsTrue | 同じDateTime値 | true |
-| Equals_Object_WithDifferentDateTime_ReturnsFalse | 異なるDateTime値 | false |
-| Equals_Object_WithNull_ReturnsFalse | null | false |
-| Equals_Object_WithDifferentType_ReturnsFalse | 別の型 | false |
-
-#### 2.4.2 Equals(CreatedAt?) テスト
-
-| テスト項目 | 比較対象 | 期待結果 |
-|---------|--------|--------|
-| Equals_WithSameDateTime_ReturnsTrue | 同じDateTime値 | true |
-| Equals_WithDifferentDateTime_ReturnsFalse | 異なるDateTime値 | false |
-| Equals_WithNull_ReturnsFalse | null | false |
-| Equals_SameInstance_ReturnsTrue | 同じインスタンス参照 | true |
-
-#### 2.4.3 参照同一性テスト
-
-| テスト項目 | 操作 | 期待結果 |
-|---------|-----|--------|
-| Equals_SameReference_ReturnsTrue | a = From(日時), b = a | true |
-
-### 2.5 GetHashCode テスト
-
-| テスト項目 | 操作 | 期待結果 |
-|---------|-----|--------|
-| GetHashCode_WithSameDateTime_ReturnsSameHash | 同じDateTime値 | ハッシュコード一致 |
-| GetHashCode_CanBeUsedInDictionary | Dictionary.Add | 正常に格納 |
-| GetHashCode_CanBeUsedInHashSet | HashSet.Add | 正常に格納、重複排除 |
-| GetHashCode_WithMultipleDates_DifferentHashes | 異なるDateTime値 | 異なるハッシュ（通常） |
-
-### 2.6 ToString テスト
-
-| テスト項目 | 入力値 | 期待結果 |
-|---------|-------|--------|
-| ToString_WithDateTime_ReturnsIso8601Format | DateTime(2025,1,1,10,30,0) | ISO 8601文字列 |
-| ToString_WithUtcNow_ReturnsValidFormat | DateTime.UtcNow | ISO 8601文字列 |
-
-## 3. テストデータ仕様
-
-### 3.1 有効な日時値
+### 1.1 テスト分類
 
 ```
-- DateTime(2025, 1, 1)  // 標準的な日時
-- DateTime(2000, 1, 1)  // 過去の日時
-- DateTime.UtcNow       // 現在のUTC日時
-- DateTime.Now          // 現在のLocal日時
-- DateTime(9999, 12, 31, 23, 59, 59)  // MaxValueより前の最後の秒
-- DateTime(0001, 1, 1, 0, 0, 1)       // MinValueより後の最初の秒
+CreatedAt の単体テスト
+  ├── ファクトリメソッドテスト
+  │   ├── From(LocalDateTime) メソッド
+  │   └── TryFrom(LocalDateTime?) メソッド
+  ├── プロパティテスト
+  │   ├── Value プロパティ
+  │   └── IsSet プロパティ
+  ├── 等価性テスト
+  │   ├── Equals(object?)
+  │   ├── Equals(CreatedAt?)
+  │   └── GetHashCode()
+  ├── 検証テスト
+  │   ├── MinValue/MaxValue 除外
+  │   └── 有効な LocalDateTime
+  └── 不変性テスト
+      ├── 再代入不可
+      └── 副作用なし
 ```
 
-### 3.2 無効な日時値
+### 1.2 テスト手法
 
+- **ホワイトボックステスト**: 内部実装を意識したテスト
+- **境界値テスト**: MinValue, MaxValue など極値
+- **等価性テスト**: 値同一性、ハッシング、参照比較
+- **不変性テスト**: 生成後の状態変化がないこと
+- **MockClock 使用**: IClock 統合テスト
+
+---
+
+## 2. ファクトリメソッドテスト
+
+### 2.1 From(LocalDateTime) メソッドテスト
+
+#### TC-From-001: 有効な LocalDateTime で生成できる
+
+**前提条件:**
+- テスト対象: `CreatedAt.From(LocalDateTime)`
+- 入力: `new MockClock(new DateTime(2025, 1, 15, 10, 30, 0, DateTimeKind.Unspecified))`
+
+**テスト手順:**
+1. MockClock を生成
+2. `CreatedAt.From(clock.JstNow)` を呼び出す
+3. 戻り値が CreatedAt インスタンスであることを確認
+4. `Value` プロパティが入力値と一致することを確認
+5. `IsSet` が true であることを確認
+
+**期待結果:**
+```csharp
+var clock = new MockClock(new DateTime(2025, 1, 15, 10, 30, 0, DateTimeKind.Unspecified));
+var createdAt = CreatedAt.From(clock.JstNow);
+Assert.NotNull(createdAt);
+Assert.Equal(new DateTime(2025, 1, 15, 10, 30, 0), createdAt.Value);
+Assert.True(createdAt.IsSet);
 ```
-- DateTime.MinValue  // 0001-01-01T00:00:00
-- DateTime.MaxValue  // 9999-12-31T23:59:59.9999999
+
+#### TC-From-002: DateTime.MinValue で ArgumentException がスローされる
+
+**前提条件:**
+- テスト対象: `CreatedAt.From(LocalDateTime)`
+- 入力: LocalDateTime(DateTime.MinValue)
+
+**テスト手順:**
+1. `DateTime.MinValue` を含む LocalDateTime を作成
+2. `CreatedAt.From(localDateTime)` を呼び出す
+3. ArgumentException がスローされることを確認
+4. 例外メッセージに "MinValue" を含む
+
+**期待結果:**
+```csharp
+var exception = Assert.Throws<ArgumentException>(() =>
+    CreatedAt.From(new LocalDateTime(DateTime.MinValue)));
+Assert.Contains("MinValue", exception.Message);
 ```
 
-### 3.3 特殊な日時値
+#### TC-From-003: DateTime.MaxValue で ArgumentException がスローされる
 
+**前提条件:**
+- テスト対象: `CreatedAt.From(LocalDateTime)`
+- 入力: LocalDateTime(DateTime.MaxValue)
+
+**テスト手順:**
+1. `DateTime.MaxValue` を含む LocalDateTime を作成
+2. `CreatedAt.From(localDateTime)` を呼び出す
+3. ArgumentException がスローされることを確認
+
+**期待結果:**
+```csharp
+var exception = Assert.Throws<ArgumentException>(() =>
+    CreatedAt.From(new LocalDateTime(DateTime.MaxValue)));
+Assert.Contains("MaxValue", exception.Message);
 ```
-- DateTimeKind.Unspecified
-- DateTimeKind.Utc
-- DateTimeKind.Local
+
+#### TC-From-004: 過去の LocalDateTime で生成できる
+
+**期待結果:**
+```csharp
+var clock = new MockClock(new DateTime(2000, 1, 1, 0, 0, 0, DateTimeKind.Unspecified));
+var createdAt = CreatedAt.From(clock.JstNow);
+Assert.Equal(new DateTime(2000, 1, 1), createdAt.Value);
 ```
 
-## 4. テストカバレッジ
+#### TC-From-005: 未来の LocalDateTime で生成できる
 
-### 4.1 ブランチカバレッジ
+**期待結果:**
+```csharp
+var clock = new MockClock(new DateTime(2099, 12, 31, 23, 59, 59, DateTimeKind.Unspecified));
+var createdAt = CreatedAt.From(clock.JstNow);
+Assert.Equal(new DateTime(2099, 12, 31, 23, 59, 59), createdAt.Value);
+```
 
-- From メソッド: 2分岐（成功/例外）
-- TryFrom (nullable): 3分岐（null/成功/例外）
-- Equals(object?): 2分岐（null/型チェック）
-- Equals(CreatedAt?): 3分岐（null/参照同一/値比較）
+#### TC-From-006: 現在の JST 日時で生成できる
 
-### 4.2 行カバレッジ
+**期待結果:**
+```csharp
+var clock = new MockClock(new DateTime(2024, 1, 1, 10, 30, 0, DateTimeKind.Unspecified));
+var createdAt = CreatedAt.From(clock.JstNow);
+Assert.Equal(new DateTime(2024, 1, 1, 10, 30, 0), createdAt.Value);
+```
 
-**目標:** 100%
+### 2.2 TryFrom(LocalDateTime?) メソッドテスト
 
-- すべてのコード行を少なくとも1回は実行
-- すべての分岐を少なくとも1回は実行
+#### TC-TryFrom-001: 有効な LocalDateTime で生成できる
 
-## 5. 実装テスト数
+**期待結果:**
+```csharp
+var clock = new MockClock(new DateTime(2025, 1, 15, 10, 30, 0, DateTimeKind.Unspecified));
+bool success = CreatedAt.TryFrom(clock.JstNow, out var result);
+Assert.True(success);
+Assert.Equal(new DateTime(2025, 1, 15, 10, 30, 0), result.Value);
+```
 
-**目標:** 41 テストケース
+#### TC-TryFrom-002: MinValue で失敗する
 
-| テストグループ | テスト数 | 備考 |
-|-------------|--------|------|
-| From テスト | 8 | 正常6 + 異常2 |
-| TryFrom (nullable) テスト | 8 | 正常3 + null1 + 異常2 |
-| TryFrom (non-nullable) テスト | 3 | 正常2 + 異常1 |
-| Equals テスト | 9 | object?:4, CreatedAt?:4, 参照:1 |
-| GetHashCode テスト | 5 | 同値:1, Dictionary:1, HashSet:1, 異値:1, 複数値:1 |
-| ToString テスト | 2 | ISO形式:2 |
-| 値の不変性テスト | 2 | Valueプロパティ:2 |
-| ValueObject 不変性確認テスト | 1 | イミュータブル確認 |
-| 複数呼び出しテスト | 1 | インスタンス作成テスト |
-| 境界値テスト | 2 | MinValue直後:1, MaxValue直前:1 |
-| DateTimeKind テスト | 3 | UTC/Local/Unspecified |
-| **合計** | **41** | |
+**期待結果:**
+```csharp
+bool success = CreatedAt.TryFrom(new LocalDateTime(DateTime.MinValue), out var result);
+Assert.False(success);
+```
 
-## 6. テスト実行環境
+#### TC-TryFrom-003: MaxValue で失敗する
 
-- **フレームワーク:** xUnit
-- **プロジェクト:** tests/SharedKernel.Tests/
-- **ターゲット:** .NET 10
-- **コマンド:** dotnet test
+**期待結果:**
+```csharp
+bool success = CreatedAt.TryFrom(new LocalDateTime(DateTime.MaxValue), out var result);
+Assert.False(success);
+```
 
-## 7. テスト成功基準
+#### TC-TryFrom-004: nullable LocalDateTime で null を渡すと失敗する
 
-- すべてのテストが PASS
-- コードカバレッジ 100%
-- ビルド成功（警告なし）
+**期待結果:**
+```csharp
+bool success = CreatedAt.TryFrom(null as LocalDateTime?, out var result);
+Assert.False(success);
+```
 
-## 8. テスト実行結果
+---
 
-### 実施日: 2025年
-- **実行テスト数**: 41個
-- **成功**: 41個 ✅
-- **失敗**: 0個
-- **スキップ**: 0個
-- **実行時間**: 186ミリ秒
+## 3. プロパティテスト
 
-## 9. テストの特徴
+### 3.1 Value プロパティテスト
 
-### 9.1 Theory テストの使用
+#### TC-Value-001: 生成後、Value を取得できる
 
-複数の入力値を効率的にテスト：
+**期待結果:**
+```csharp
+var clock = new MockClock(new DateTime(2025, 1, 15, 10, 30, 0, DateTimeKind.Unspecified));
+var createdAt = CreatedAt.From(clock.JstNow);
+Assert.Equal(new DateTime(2025, 1, 15, 10, 30, 0), createdAt.Value);
+```
+
+#### TC-Value-002: Value プロパティは読み取り専用
+
+**期待結果:**
+```csharp
+var clock = new MockClock(new DateTime(2025, 1, 15, 10, 30, 0, DateTimeKind.Unspecified));
+var createdAt = CreatedAt.From(clock.JstNow);
+// createdAt.Value = new DateTime(2025, 2, 1);  // ← コンパイルエラー
+```
+
+### 3.2 IsSet プロパティテスト
+
+#### TC-IsSet-001: 常に true を返す
+
+**期待結果:**
+```csharp
+var clock = new MockClock(new DateTime(2025, 1, 15, 10, 30, 0, DateTimeKind.Unspecified));
+var createdAt = CreatedAt.From(clock.JstNow);
+Assert.True(createdAt.IsSet);
+```
+
+---
+
+## 4. 等価性テスト
+
+### 4.1 Equals(CreatedAt?) テスト
+
+#### TC-Equals-001: 同一の作成日時なら等価
+
+**期待結果:**
+```csharp
+var clock = new MockClock(new DateTime(2025, 1, 15, 10, 30, 0, DateTimeKind.Unspecified));
+var createdAt1 = CreatedAt.From(clock.JstNow);
+var createdAt2 = CreatedAt.From(clock.JstNow);
+Assert.True(createdAt1.Equals(createdAt2));
+```
+
+#### TC-Equals-002: 異なる作成日時なら非等価
+
+**期待結果:**
+```csharp
+var clock1 = new MockClock(new DateTime(2025, 1, 15, 10, 30, 0, DateTimeKind.Unspecified));
+var clock2 = new MockClock(new DateTime(2025, 1, 16, 10, 30, 0, DateTimeKind.Unspecified));
+var createdAt1 = CreatedAt.From(clock1.JstNow);
+var createdAt2 = CreatedAt.From(clock2.JstNow);
+Assert.False(createdAt1.Equals(createdAt2));
+```
+
+#### TC-Equals-003: null との比較は false を返す
+
+**期待結果:**
+```csharp
+var clock = new MockClock(new DateTime(2025, 1, 15, 10, 30, 0, DateTimeKind.Unspecified));
+var createdAt = CreatedAt.From(clock.JstNow);
+Assert.False(createdAt.Equals(null));
+```
+
+#### TC-Equals-004: 参照同一なら true を返す
+
+**期待結果:**
+```csharp
+var clock = new MockClock(new DateTime(2025, 1, 15, 10, 30, 0, DateTimeKind.Unspecified));
+var createdAt = CreatedAt.From(clock.JstNow);
+Assert.True(createdAt.Equals(createdAt));
+```
+
+### 4.2 Equals(object?) テスト
+
+#### TC-EqualsObject-001: 同じ型のインスタンスと比較できる
+
+**期待結果:**
+```csharp
+var clock = new MockClock(new DateTime(2025, 1, 15, 10, 30, 0, DateTimeKind.Unspecified));
+object createdAt1 = CreatedAt.From(clock.JstNow);
+var createdAt2 = CreatedAt.From(clock.JstNow);
+Assert.True(createdAt1.Equals(createdAt2));
+```
+
+#### TC-EqualsObject-002: 異なる型と比較すると false を返す
+
+**期待結果:**
+```csharp
+var clock = new MockClock(new DateTime(2025, 1, 15, 10, 30, 0, DateTimeKind.Unspecified));
+var createdAt = CreatedAt.From(clock.JstNow);
+var dt = new DateTime(2025, 1, 15, 10, 30, 0);
+Assert.False(createdAt.Equals((object)dt));
+```
+
+### 4.3 GetHashCode テスト
+
+#### TC-GetHashCode-001: 同一の作成日時のハッシュコードは同じ
+
+**期待結果:**
+```csharp
+var clock = new MockClock(new DateTime(2025, 1, 15, 10, 30, 0, DateTimeKind.Unspecified));
+var createdAt1 = CreatedAt.From(clock.JstNow);
+var createdAt2 = CreatedAt.From(clock.JstNow);
+Assert.Equal(createdAt1.GetHashCode(), createdAt2.GetHashCode());
+```
+
+#### TC-GetHashCode-002: HashSet に追加できる
+
+**期待結果:**
+```csharp
+var clock1 = new MockClock(new DateTime(2025, 1, 15, 10, 30, 0, DateTimeKind.Unspecified));
+var clock2 = new MockClock(new DateTime(2025, 1, 16, 10, 30, 0, DateTimeKind.Unspecified));
+var set = new HashSet<CreatedAt>
+{
+    CreatedAt.From(clock1.JstNow),
+    CreatedAt.From(clock1.JstNow),  // 重複
+    CreatedAt.From(clock2.JstNow)
+};
+Assert.Equal(2, set.Count);  // 2 つのユニークな値
+```
+
+#### TC-GetHashCode-003: Dictionary のキーとして使用できる
+
+**期待結果:**
+```csharp
+var clock1 = new MockClock(new DateTime(2025, 1, 15, 10, 30, 0, DateTimeKind.Unspecified));
+var clock2 = new MockClock(new DateTime(2025, 1, 16, 10, 30, 0, DateTimeKind.Unspecified));
+var dict = new Dictionary<CreatedAt, string>
+{
+    { CreatedAt.From(clock1.JstNow), "first" },
+    { CreatedAt.From(clock2.JstNow), "second" }
+};
+
+var key = CreatedAt.From(clock1.JstNow);
+Assert.True(dict.ContainsKey(key));
+Assert.Equal("first", dict[key]);
+```
+
+---
+
+## 5. 検証テスト
+
+#### TC-Validate-MinValue-001: DateTime.MinValue は除外される
 
 ```csharp
-[Theory]
-[InlineData(2025, 1, 1)]
-[InlineData(2000, 1, 1)]
-[InlineData(2024, 12, 31)]
-public void From_WithValidDateTime_CreatesInstance(int year, int month, int day)
-{
-	// 複数の入力値で同一のテストロジックを実行
-}
+var ex = Assert.Throws<ArgumentException>(() =>
+    CreatedAt.From(new LocalDateTime(DateTime.MinValue)));
+Assert.Contains("MinValue", ex.Message);
 ```
 
-### 9.2 Fact テストの使用
-
-単一の値で特定の挙動をテスト：
+#### TC-Validate-MaxValue-001: DateTime.MaxValue は除外される
 
 ```csharp
-[Fact]
-public void From_WithMinValue_ThrowsArgumentException()
-{
-	// MinValue の特定の挙動をテスト
-}
+var ex = Assert.Throws<ArgumentException>(() =>
+    CreatedAt.From(new LocalDateTime(DateTime.MaxValue)));
+Assert.Contains("MaxValue", ex.Message);
 ```
 
-### 9.3 Collection テスト
+#### TC-Validate-ValidRange-001: 最小有効値で生成できる
 
-Dictionary と HashSet での動作検証
+```csharp
+var minValid = DateTime.MinValue.AddTicks(1);
+var clock = new MockClock(minValid);
+var createdAt = CreatedAt.From(clock.JstNow);
+Assert.Equal(minValid, createdAt.Value);
+```
 
-## まとめ
+#### TC-Validate-ValidRange-002: 最大有効値で生成できる
 
-CreatedAtの単体テストは以下を検証します：
+```csharp
+var maxValid = DateTime.MaxValue.AddTicks(-1);
+var clock = new MockClock(maxValid);
+var createdAt = CreatedAt.From(clock.JstNow);
+Assert.Equal(maxValid, createdAt.Value);
+```
 
-✅ **From メソッド**: 有効値の受け入れ、無効値の拒否  
-✅ **TryFrom メソッド**: null安全性、エラーハンドリング  
-✅ **等価性**: 値同一性の正確性  
-✅ **ハッシング**: Collection対応  
-✅ **文字列化**: ISO 8601形式  
-✅ **不変性**: ValueプロパティのImmutable性  
-✅ **DateTimeKind**: 異なるKindの対応  
-✅ **境界値**: MinValue/MaxValue 近傍の値  
+---
+
+## 6. 不変性テスト
+
+#### TC-Immutability-001: Value プロパティへの再代入でコンパイルエラー
+
+```csharp
+var clock = new MockClock(new DateTime(2025, 1, 15, 10, 30, 0, DateTimeKind.Unspecified));
+var createdAt = CreatedAt.From(clock.JstNow);
+// createdAt.Value = new DateTime(2025, 2, 1);  // ← コンパイルエラー
+```
+
+#### TC-Immutability-002: 複数回のプロパティアクセスで結果が変わらない
+
+```csharp
+var clock = new MockClock(new DateTime(2025, 1, 15, 10, 30, 0, DateTimeKind.Unspecified));
+var createdAt = CreatedAt.From(clock.JstNow);
+var value1 = createdAt.Value;
+var value2 = createdAt.Value;
+Assert.Equal(value1, value2);
+```
+
+---
+
+## 7. 統合シナリオテスト
+
+### 7.1 Entity のライフサイクルテスト
+
+#### TC-Integration-001: Entity 生成時に CreatedAt が設定される
+
+```csharp
+var clock = new MockClock(new DateTime(2025, 1, 15, 10, 30, 0, DateTimeKind.Unspecified));
+
+// Entity 生成
+var entity = new Entity(clock);
+var originalCreatedAt = entity.CreatedAt;
+
+Assert.NotNull(entity.CreatedAt);
+Assert.Equal(new DateTime(2025, 1, 15, 10, 30, 0), entity.CreatedAt.Value);
+
+// 時刻を進める
+clock.Advance(TimeSpan.FromDays(10));
+
+// Entity を再度アクセス
+var createdAtAfter = entity.CreatedAt;
+
+// CreatedAt は変わらない（不変）
+Assert.Equal(originalCreatedAt, createdAtAfter);
+Assert.Equal(new DateTime(2025, 1, 15, 10, 30, 0), createdAtAfter.Value);
+```
+
+---
+
+## 8. テスト実装上の注意点
+
+| 項目 | 説明 |
+|---|---|
+| **MockClock 使用** | 常に MockClock を使用、DateTime.UtcNow 直接使用は禁止 |
+| **LocalDateTime** | DateTime ではなく LocalDateTime を入力値に使用 |
+| **Kind 指定** | MockClock 生成時に DateTimeKind.Unspecified を明示 |
+| **テスト命名** | TC-[Category]-[Number]: [Description] 形式 |
+| **AAA パターン** | Arrange-Act-Assert を厳密に守る |
+
+---
+
+## 9. カバレッジ目標
+
+| 対象 | 目標 | 備考 |
+|---|---|---|
+| **コード行カバレッジ** | 95% 以上 | private コンストラクタ以外 |
+| **ブランチカバレッジ** | 90% 以上 | if/else 分岐 |
+| **例外パスカバレッジ** | 100% | ArgumentException など |
+
+---
+
+## 10. まとめ
+
+CreatedAt の単体テスト仕様は以下を網羅します：
+
+✅ **ファクトリメソッド**: From, TryFrom の正常/異常系  
+✅ **プロパティ**: Value, IsSet の値確認  
+✅ **等価性**: Equals, GetHashCode の実装確認  
+✅ **検証**: MinValue/MaxValue 除外確認  
+✅ **不変性**: 再代入不可、副作用なし  
+✅ **統合**: Entity のライフサイクル、不変性確認  
+✅ **MockClock**: テスト環境での IClock 統合確認
