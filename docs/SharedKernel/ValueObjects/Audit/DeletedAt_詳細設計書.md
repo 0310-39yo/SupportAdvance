@@ -21,9 +21,13 @@
 public sealed class DeletedAt : PrimitiveValueObject<DateTime?>, IEquatable<DeletedAt>
 ```
 
+**IsSet で状態管理:**
+- `IsSet = true`: 削除済み
+- `IsSet = false`: 未削除（`Unset()` で生成）
+
 **null許容型の選択理由:**
-- 削除フラグの代わりに、null の有無で状態を表現
-- ドメイン的に自然（日時がない = まだ削除されていない）
+- 削除フラグの代わりに、IsSet の有無で状態を表現
+- ドメイン的に自然（値がない = まだ削除されていない）
 - ディスク容量節約（boolean フラグ不要）
 
 **不変性の実装方法:**
@@ -61,15 +65,15 @@ public sealed class DeletedAt : PrimitiveValueObject<DateTime?>, IEquatable<Dele
 ### 2.1 From メソッド（削除状態作成）
 
 ```csharp
-public static DeletedAt From(DateTime value) => new(value, true);
+public static DeletedAt From(LocalDateTime value) => new(value.Value, true);
 ```
 
 **処理フロー:**
 
 ```
-From(DateTime value)
+From(LocalDateTime value)  ← IClock.JstNow から取得
   ↓
-  new DeletedAt(value, true)  [コンストラクタ呼び出し]
+  new DeletedAt(value.Value, true)  [コンストラクタ呼び出し]
   ↓
   PrimitiveValueObject<DateTime?> コンストラクタ
     ↓
@@ -94,13 +98,13 @@ From(DateTime value)
 ### 2.2 NotDeleted メソッド（未削除状態作成）
 
 ```csharp
-public static DeletedAt NotDeleted() => new(null, false);
+public static DeletedAt Unset() => new(null, false);
 ```
 
 **処理フロー:**
 
 ```
-NotDeleted()
+Unset()
   ↓
   new DeletedAt(null, false)  [コンストラクタ呼び出し]
   ↓
@@ -115,8 +119,8 @@ NotDeleted()
 - IsDeleted は false （削除されていない）
 
 **使用シーン:**
-- Entity 初期化時: `entity.DeletedAt = DeletedAt.NotDeleted()`
-- 削除取消（再生成）: `entity.DeletedAt = DeletedAt.NotDeleted()`
+- Entity 初期化時: `entity.DeletedAt = DeletedAt.Unset()`
+- 削除取消（再生成）: `entity.DeletedAt = DeletedAt.Unset()`
 
 ### 2.3 TryFrom メソッド（nullable対応）
 
@@ -125,7 +129,7 @@ public static bool TryFrom(DateTime? input, out DeletedAt result)
 {
     if (input == null)
     {
-        result = NotDeleted();
+        result = Unset();
         return true;
     }
 
@@ -143,7 +147,7 @@ public static bool TryFrom(DateTime? input, out DeletedAt result)
 ```
 
 **処理:**
-- input == null → `NotDeleted()` 返却、true を返す
+- input == null → `Unset()` 返却、true を返す
 - input.HasValue → `From(input.Value)` 呼び出し
 - 成功時 true、例外時 false
 
@@ -247,7 +251,7 @@ public bool Equals(DeletedAt? other)
 **ValueObject の等価性:**
 - インスタンスの参照は異なるが、値が同じなら等価
 - 例: `new DeletedAt(Date1) == new DeletedAt(Date1)` → true
-- 例: `DeletedAt.NotDeleted() == DeletedAt.NotDeleted()` → true
+- 例: `DeletedAt.Unset() == DeletedAt.Unset()` → true
 
 ### 4.3 GetHashCode() メソッド
 
@@ -385,7 +389,7 @@ public class Entity : IAggregateRoot
     public Entity(IClock clock)
     {
         _clock = clock;
-        DeletedAt = DeletedAt.NotDeleted();
+        DeletedAt = DeletedAt.Unset();
     }
     
     // 論理削除操作
@@ -524,7 +528,7 @@ public class NewEntity
 | **DateTime Kind** | UTC/Local 区別なし。UTC 推奨 |
 | **自動生成** | From(DateTime.UtcNow)で現在UTC日時を使用推奨 |
 | **等価性演算子** | == / != は自動的に Equals に委譲される（.NET仕様） |
-| **削除取消** | 一度削除後の取消は新規 NotDeleted() 生成により実現 |
+| **削除取消** | 一度削除後の取消は新規 Unset() 生成により実現 |
 | **削除権限** | 削除操作の権限チェックは Entity/Use Case 層で実施 |
 
 ---
@@ -539,7 +543,7 @@ public void RestoreEntity(Entity entity)
     if (entity.IsDeleted)
     {
         // 削除日時をクリア（未削除状態に戻す）
-        entity.DeletedAt = DeletedAt.NotDeleted();
+        entity.DeletedAt = DeletedAt.Unset();
     }
 }
 ```
@@ -547,7 +551,7 @@ public void RestoreEntity(Entity entity)
 **設計上の考慮:**
 - DeletedAt の値を直接変更することはできない（不変性）
 - 取消を操作として明示的に行うことで、意図を明確化
-- 復旧のため、DeletedAt を再度 NotDeleted() で生成
+- 復旧のため、DeletedAt を再度 Unset() で生成
 
 ---
 

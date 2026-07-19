@@ -22,9 +22,9 @@
 ```
 削除状態の判定
 
-IsDeleted = DeletedAt != null
-  ├─ true → 削除済み
-  └─ false → 未削除
+IsDeleted = IsSet
+  ├─ true → 削除済み（IsSet = true）
+  └─ false → 未削除（IsSet = false）
 ```
 
 **利点:**
@@ -53,11 +53,12 @@ IsDeleted = DeletedAt != null
 **役割:** 保持する削除日時を読み取り専用で取得（null 許容）
 
 ```csharp
-var deletedAt = DeletedAt.From(new DateTime(2025, 1, 15, 10, 30, 0));
-DateTime? dt = deletedAt.Value;  // 2025-01-15T10:30:00 を取得
+IClock clock = /* DI から注入 */;
+var deletedAt = DeletedAt.From(clock.JstNow);
+DateTime? dt = deletedAt.Value;  // 削除日時を取得
 
-var notDeleted = DeletedAt.NotDeleted();
-DateTime? dt2 = notDeleted.Value;  // null を取得
+var unset = DeletedAt.Unset();
+DateTime? dt2 = unset.Value;  // null を取得
 ```
 
 #### `IsSet : bool { get; }` (PrimitiveValueObject から継承)
@@ -65,23 +66,25 @@ DateTime? dt2 = notDeleted.Value;  // null を取得
 **役割:** 値が設定されているかを判定
 
 ```csharp
-var deleted = DeletedAt.From(new DateTime(2025, 1, 15));
+IClock clock = /* DI から注入 */;
+var deleted = DeletedAt.From(clock.JstNow);
 Assert.True(deleted.IsSet);  // true
 
-var notDeleted = DeletedAt.NotDeleted();
-Assert.False(notDeleted.IsSet);  // false
+var unset = DeletedAt.Unset();
+Assert.False(unset.IsSet);  // false
 ```
 
 #### `IsDeleted : bool { get; }`
 
-**役割:** 論理削除状態を判定（Value != null と等価）
+**役割:** 論理削除状態を判定（**IsSet の別名**）
 
 ```csharp
-var deleted = DeletedAt.From(new DateTime(2025, 1, 15));
-Assert.True(deleted.IsDeleted);  // true
+IClock clock = /* DI から注入 */;
+var deleted = DeletedAt.From(clock.JstNow);
+Assert.True(deleted.IsDeleted);  // true (IsSet = true)
 
-var notDeleted = DeletedAt.NotDeleted();
-Assert.False(notDeleted.IsDeleted);  // false
+var unset = DeletedAt.Unset();
+Assert.False(unset.IsDeleted);  // false (IsSet = false)
 ```
 
 ### 2.2 ファクトリメソッド
@@ -95,28 +98,17 @@ IClock clock = /* DI から注入 */;
 var deletedAt = DeletedAt.From(clock.JstNow);
 ```
 
-#### `From(DateTime value) : DeletedAt` （過去互換性用）
-
-**役割:** DateTime から DeletedAt を生成（非推奨、Entity.SoftDelete では使用しない）
-
-```csharp
-// 非推奨: IClock 経由の From(LocalDateTime) を使用
-// Entity.SoftDelete() 内では _clock.JstNow を必ず使用すること
-var clock = new MockClock(new DateTime(2025, 1, 15, 10, 30, 0, DateTimeKind.Unspecified));
-var deletedAt = DeletedAt.From(clock.JstNow);
-```
-
 **例外:**
 - `ArgumentException` : 値が DateTime.MinValue または DateTime.MaxValue の場合
 
-#### `NotDeleted() : DeletedAt`
+#### `Unset() : DeletedAt`
 
-**役割:** 未削除状態の DeletedAt を生成（Value は null）
+**役割:** 未削除状態の DeletedAt を生成（Unset）
 
 ```csharp
-var notDeleted = DeletedAt.NotDeleted();
-Assert.False(notDeleted.IsDeleted);
-Assert.Null(notDeleted.Value);
+var unset = DeletedAt.Unset();
+Assert.False(unset.IsDeleted);
+Assert.Null(unset.Value);
 ```
 
 #### `TryFrom(LocalDateTime? input, out DeletedAt result) : bool`
@@ -133,17 +125,8 @@ if (!success)
 ```
 
 **実行フロー:**
-1. `input == null` → `result = NotDeleted()` 返却、true を返す
+1. `input == null || !input.HasValue` → `result = Unset()` 返却、**true** を返す
 2. `From(input.Value)` 呼び出し → 成功時 true、例外時 false
-
-#### `TryFrom(LocalDateTime input, out DeletedAt result) : bool`
-
-**役割:** non-nullable LocalDateTime の信号用オーバーロード
-
-```csharp
-IClock clock = /* DI から注入 */;
-bool success = DeletedAt.TryFrom(clock.JstNow, out var deletedAt);
-```
 
 ### 2.3 等価性メソッド
 
@@ -157,9 +140,9 @@ var a = DeletedAt.From(clock.JstNow);
 var b = DeletedAt.From(clock.JstNow);
 Assert.Equal(a, b);  // true（同じ削除日時なら等価）
 
-var c = DeletedAt.NotDeleted();
-var d = DeletedAt.NotDeleted();
-Assert.Equal(c, d);  // true （両方 null なら等価）
+var c = DeletedAt.Unset();
+var d = DeletedAt.Unset();
+Assert.Equal(c, d);  // true （両方 Unset なら等価）
 ```
 
 #### `Equals(DeletedAt? other) : bool`
@@ -184,7 +167,7 @@ if (deletedAt1.Equals(deletedAt2))
 IClock clock = /* DI から注入 */;
 var set = new HashSet<DeletedAt>();
 set.Add(DeletedAt.From(clock.JstNow));
-set.Add(DeletedAt.NotDeleted());
+set.Add(DeletedAt.Unset());
 ```
 
 ### 2.4 文字列化
@@ -198,8 +181,8 @@ IClock clock = /* DI から注入 */;
 var deleted = DeletedAt.From(clock.JstNow);
 string str = deleted.ToString();  // "2025-01-15T10:30:00"
 
-var notDeleted = DeletedAt.NotDeleted();
-string str2 = notDeleted.ToString();  // "(not deleted)"
+var unset = DeletedAt.Unset();
+string str2 = unset.ToString();  // "(not deleted)"
 ```
 
 ---
@@ -227,7 +210,7 @@ var clock2 = new MockClock(new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Unspec
 var ok2 = DeletedAt.From(clock2.JstNow);
 
 // OK: 未削除状態
-var ok3 = DeletedAt.NotDeleted();
+var ok3 = DeletedAt.Unset();
 
 // NG: DateTime.MinValue
 var ng1 = Assert.Throws<ArgumentException>(() =>
@@ -269,7 +252,7 @@ private DeletedAt(DateTime? value, bool isSet) : base(value, isSet)
 ```
 
 **設計意図:**
-- ファクトリメソッド（From, NotDeleted, TryFrom）のみで生成を許可
+- ファクトリメソッド（From, Unset, TryFrom）のみで生成を許可
 - 不正な値の混入を防止
 
 ---
@@ -289,7 +272,7 @@ public class Entity
     public Entity(IClock clock)
     {
         _clock = clock;
-        DeletedAt = DeletedAt.NotDeleted();
+        DeletedAt = DeletedAt.Unset();
     }
     
     // 論理削除メソッド
@@ -349,7 +332,7 @@ Console.WriteLine(entity.DeletedAt);  // "2025-01-15T10:30:00"
 ### 7.2 null安全な生成
 
 ```csharp
-DateTime? input = GetDeletedAtFromDatabase();
+LocalDateTime? input = GetDeletedAtFromDatabase();
 
 if (DeletedAt.TryFrom(input, out var deletedAt))
 {
@@ -357,24 +340,29 @@ if (DeletedAt.TryFrom(input, out var deletedAt))
     {
         Console.WriteLine($"削除日時: {deletedAt.Value}");
     }
+    else
+    {
+        Console.WriteLine("未削除");
+    }
 }
 ```
 
 ### 7.3 等価性の判定
 
 ```csharp
-var date1 = DeletedAt.From(new DateTime(2025, 1, 15));
-var date2 = DeletedAt.From(new DateTime(2025, 1, 15));
+IClock clock = /* DI から注入 */;
+var date1 = DeletedAt.From(clock.JstNow);
+var date2 = DeletedAt.From(clock.JstNow);
 
 if (date1 == date2)  // true
 {
     Console.WriteLine("同一の削除日時");
 }
 
-var notDeleted1 = DeletedAt.NotDeleted();
-var notDeleted2 = DeletedAt.NotDeleted();
+var unset1 = DeletedAt.Unset();
+var unset2 = DeletedAt.Unset();
 
-if (notDeleted1 == notDeleted2)  // true
+if (unset1 == unset2)  // true
 {
     Console.WriteLine("両方未削除");
 }
@@ -397,22 +385,24 @@ if (notDeleted1 == notDeleted2)  // true
 
 ## 9. CreatedAt/UpdatedAt との関係
 
-| ValueObject | 役割 | null許容 | 不変性 |
-|---|---|---|---|
-| **CreatedAt** | 作成日時 | × | 完全不変 |
-| **UpdatedAt** | 更新日時 | × | 可変（Entity が更新） |
-| **DeletedAt** | 削除日時 | ✓ | 実質不変（一度削除後は変更なし） |
+| ValueObject | 役割 | 型 | IsSet管理 | Unset状態 |
+|---|---|---|---|---|
+| **CreatedAt** | 作成日時 | `DateTime` | 常に true | なし |
+| **UpdatedAt** | 更新日時 | `DateTime?` | あり | `Unset()` |
+| **DeletedAt** | 削除日時 | `DateTime?` | あり | `Unset()` |
 
 ---
 
 ## 10. まとめ
 
-`DeletedAt` は DateTime 値オブジェクトとして、以下を達成します：
+`DeletedAt` は DateTime? 値オブジェクトとして、以下を達成します：
 
 ✅ **安全性**: DateTime を直接扱わずカプセル化  
-✅ **論理削除**: null 許容で削除/未削除を表現  
+✅ **状態管理**: IsSet で「削除済み/未削除」を管理  
+✅ **Unset対応**: 未削除状態を `Unset()` で表現  
+✅ **論理削除**: IsSet で削除/未削除を表現  
 ✅ **検証**: MinValue/MaxValue 排除  
 ✅ **不変性**: 一度生成後、削除状態は変更不可  
-✅ **等価性**: DateTime の値同一性に基づく  
+✅ **等価性**: DateTime? と IsSet で値同一性を判定  
 ✅ **ハッシング**: HashMap/HashSet 対応  
 ✅ **監査**: 削除日時を記録して履歴管理

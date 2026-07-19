@@ -83,15 +83,7 @@ From(LocalDateTime value)  ← IClock.JstNow から取得
 
 **使用シーン:**
 - Entity 生成時に IClock から取得した現在時刻を記録: `CreatedAt.From(_clock.JstNow)`
-- データベースから読み込んだ値を復元: `CreatedAt.From(LocalDateTime.FromUtc(dbValue))`
-
-### 2.1b From メソッド（非推奨・過去互換性）
-
-```csharp
-public static CreatedAt From(DateTime value) => new(value);
-```
-
-**注記:** DateTime を直接使用することは非推奨。常に IClock 経由の LocalDateTime を使用
+- データベースから読み込んだ値を復元: `CreatedAt.From(new LocalDateTime(dbValue))`
 
 ### 2.2 TryFrom メソッド（推奨・nullable対応）
 
@@ -126,21 +118,6 @@ public static bool TryFrom(LocalDateTime? input, out CreatedAt result)
 - ユーザー入力の安全な処理（LocalDateTime として変換後）
 - 外部 API から受け取る値の検証（LocalDateTime に変換後）
 - null 許容の API との連携
-
-### 2.3 TryFrom メソッド（non-nullable オーバーロード）
-
-```csharp
-public static bool TryFrom(LocalDateTime input, out CreatedAt result) 
-    => TryFrom((LocalDateTime?)input, out result);
-```
-
-**設計意図:**
-- LocalDateTime（non-nullable）も受け入れ可能にする
-- 内部的には nullable 版へ委譲（DRY 原則）
-
-**使用シーン:**
-- IClock.JstNow は常に値があるため、通常はこのオーバーロードを使用
-- 型安全性を維持しつつ検証可能
 
 ---
 
@@ -368,9 +345,9 @@ Entity ライフサイクル中
 ```
 データベース保存
   ↓
-  CreatedAt.Value を ReadValue として保存
+  CreatedAt.Value を DateTime として保存
   ↓
-  読み込み時に CreatedAt.From(dbValue) で復元
+  読み込み時に CreatedAt.From(new LocalDateTime(dbValue)) で復元
 ```
 
 ---
@@ -483,14 +460,16 @@ SharedKernel
 
 ---
 
-## 13. UpdatedAt との違い
+## 13. UpdatedAt / DeletedAt との違い
 
-| 特性 | CreatedAt | UpdatedAt |
-|---|---|---|
-| **生成タイミング** | Entity 生成時のみ | Entity 生成・更新時 |
-| **可変性** | 不変（変更不可） | 可変（更新可能） |
-| **更新頻度** | なし | 変更のたびに更新 |
-| **ビジネスロジック** | 監査情報 | 監査情報・版管理 |
+| 特性 | CreatedAt | UpdatedAt | DeletedAt |
+|---|---|---|---|
+| **型** | `DateTime` | `DateTime?` | `DateTime?` |
+| **生成タイミング** | Entity 生成時のみ | Entity 生成・更新時 | 削除時のみ |
+| **可変性** | 不変（変更不可） | 可変（更新可能） | 実質不変（削除後変更なし） |
+| **IsSet管理** | 常に true | IsSet で管理 | IsSet で管理 |
+| **Unset状態** | なし | `Unset()` で表現 | `Unset()` で表現 |
+| **ビジネスロジック** | 監査情報 | 監査情報・版管理 | 論理削除 |
 
 ---
 

@@ -37,7 +37,8 @@
 **役割:** 保持する日時値を読み取り専用で取得
 
 ```csharp
-var createdAt = CreatedAt.From(new DateTime(2025, 1, 1, 10, 30, 0));
+IClock clock = /* DI から注入 */;
+var createdAt = CreatedAt.From(clock.JstNow);
 DateTime dt = createdAt.Value;  // 2025-01-01T10:30:00 を取得
 ```
 
@@ -46,7 +47,8 @@ DateTime dt = createdAt.Value;  // 2025-01-01T10:30:00 を取得
 **役割:** 値が設定されているかを判定（CreatedAt は常に true）
 
 ```csharp
-var createdAt = CreatedAt.From(new DateTime(2025, 1, 1));
+IClock clock = /* DI から注入 */;
+var createdAt = CreatedAt.From(clock.JstNow);
 Assert.True(createdAt.IsSet);  // 常に true
 ```
 
@@ -63,17 +65,6 @@ var createdAt = CreatedAt.From(clock.JstNow);
 
 **例外:**
 - `ArgumentException` : 値が DateTime.MinValue または DateTime.MaxValue の場合
-
-#### `From(DateTime value) : CreatedAt` （過去互換性用）
-
-**役割:** DateTime から CreatedAt を生成（非推奨）
-
-```csharp
-// 非推奨: 直接 DateTime を使用しない
-var createdAt = CreatedAt.From(new DateTime(2025, 1, 1, 10, 30, 0));
-```
-
-**注記:** 本来は IClock 経由の LocalDateTime を使用すること
 
 #### `TryFrom(LocalDateTime? input, out CreatedAt result) : bool`
 
@@ -92,15 +83,6 @@ if (!success)
 **実行フロー:**
 1. `input.HasValue` が false → false を返す
 2. `From(input.Value)` 呼び出し → 成功時 true、例外時 false
-
-#### `TryFrom(DateTime input, out CreatedAt result) : bool` （非推奨）
-
-**役割:** DateTime の信号用オーバーロード（非推奨）
-
-```csharp
-// 非推奨: 直接 DateTime を使用しない
-bool success = CreatedAt.TryFrom(new DateTime(2025, 1, 1), out var createdAt);
-```
 
 ### 2.3 等価性メソッド
 
@@ -131,8 +113,9 @@ if (createdAt1.Equals(createdAt2))
 **役割:** ハッシュコード提供、HashMap/HashSet 互換
 
 ```csharp
+IClock clock = /* DI から注入 */;
 var set = new HashSet<CreatedAt>();
-set.Add(CreatedAt.From(new DateTime(2025, 1, 1)));
+set.Add(CreatedAt.From(clock.JstNow));
 ```
 
 ### 2.4 文字列化
@@ -142,7 +125,8 @@ set.Add(CreatedAt.From(new DateTime(2025, 1, 1)));
 **役割:** 日時の ISO 8601 形式文字列を返す
 
 ```csharp
-var createdAt = CreatedAt.From(new DateTime(2025, 1, 1, 10, 30, 0));
+IClock clock = /* DI から注入 */;
+var createdAt = CreatedAt.From(clock.JstNow);
 string str = createdAt.ToString();  // "2025-01-01T10:30:00"
 ```
 
@@ -266,8 +250,9 @@ else
 ### 6.3 等価性の判定
 
 ```csharp
-var date1 = CreatedAt.From(new DateTime(2025, 1, 1));
-var date2 = CreatedAt.From(new DateTime(2025, 1, 1));
+IClock clock = /* DI から注入 */;
+var date1 = CreatedAt.From(clock.JstNow);
+var date2 = CreatedAt.From(clock.JstNow);
 
 if (date1 == date2)  // Equals メソッド経由
 {

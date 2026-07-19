@@ -9,6 +9,10 @@
 
 `UpdatedAt` は、エンティティが最後に更新された日時を表す**値オブジェクト**です。ValueObject の本質である不変性により、スレッドセーフな設計を実現しています。
 
+- **継承**: `PrimitiveValueObject<DateTime?>`
+- **IsSet で状態管理**: `IsSet = true` なら更新済み、`IsSet = false` なら未更新
+- **シール**: `sealed class` （拡張不可）
+
 **特性:** ValueObject の不変性 → 値による等価性、依存性の低い設計、テスト容易性の向上
 
 ---
@@ -17,24 +21,39 @@
 
 ### 2.1 プロパティ
 
-#### `Value : DateTime { get; }`
+#### `Value : DateTime? { get; }`
 
-**役割:** 保持する日時値を読み取り専用で取得
+**役割:** 保持する日時値を読み取り専用で取得（IsSet = true のときのみ有効）
 
 ```csharp
 IClock clock = /* DI から注入 */;
 var updatedAt = UpdatedAt.From(clock.JstNow);
-DateTime dt = updatedAt.Value;  // LocalDateTime の Value を取得
+DateTime? dt = updatedAt.Value;  // DateTime? を取得
 ```
 
 #### `IsSet : bool { get; }` (PrimitiveValueObject から継承)
 
-**役割:** 値が設定されているかを判定（UpdatedAt は常に true）
+**役割:** 更新済み/未更新を判定
 
 ```csharp
 IClock clock = /* DI から注入 */;
-var updatedAt = UpdatedAt.From(clock.JstNow);
-Assert.True(updatedAt.IsSet);  // 常に true
+var updated = UpdatedAt.From(clock.JstNow);
+Assert.True(updated.IsSet);  // true = 更新済み
+
+var unset = UpdatedAt.Unset();
+Assert.False(unset.IsSet);  // false = 未更新
+```
+
+#### `HasUpdated : bool { get; }`
+
+**役割:** 更新済み状態を判定（IsSet の別名）
+
+```csharp
+var updated = UpdatedAt.From(clock.JstNow);
+Assert.True(updated.HasUpdated);  // true
+
+var unset = UpdatedAt.Unset();
+Assert.False(unset.HasUpdated);  // false
 ```
 
 ### 2.2 ファクトリメソッド
@@ -51,36 +70,34 @@ var updatedAt = UpdatedAt.From(clock.JstNow);
 **例外:**
 - `ArgumentException` : 値が DateTime.MinValue または DateTime.MaxValue の場合
 
-#### `From(DateTime value) : UpdatedAt` （過去互換性用）
+#### `Unset() : UpdatedAt`
 
-**役割:** DateTime から UpdatedAt を生成（非推奨）
+**役割:** 未更新状態の UpdatedAt を生成（Unset）
 
 ```csharp
-// 非推奨: 直接 DateTime を使用しない
-var updatedAt = UpdatedAt.From(new DateTime(2025, 1, 1, 10, 30, 0));
+var unset = UpdatedAt.Unset();
+Assert.False(unset.IsSet);
+Assert.Null(unset.Value);
 ```
 
-**注記:** 本来は IClock 経由の LocalDateTime を使用すること
+#### `TryFrom(LocalDateTime? input, out UpdatedAt result) : bool`
 
-#### `TryFrom(DateTime? input, out UpdatedAt result) : bool`
-
-**役割:** null安全な生成、失敗時は false を返す
+**役割:** null安全な生成
 
 ```csharp
-bool success = UpdatedAt.TryFrom(new DateTime(2025, 1, 1), out var updatedAt);
-if (!success)
+IClock clock = /* DI から注入 */;
+LocalDateTime? input = null;  // null が来た場合
+
+bool success = UpdatedAt.TryFrom(input, out var result);
+if (success && !result.IsSet)
 {
-	// 生成失敗（null入力など）
+	// null → Unset() で成功
 }
 ```
 
 **実行フロー:**
-1. `input.HasValue` が false → false を返す
+1. `input == null || !input.HasValue` → `result = Unset()` 返却、**true** を返す
 2. `From(input.Value)` 呼び出し → 成功時 true、例外時 false
-
-#### `TryFrom(DateTime input, out UpdatedAt result) : bool`
-
-**役割:** Non-nullable DateTime の TryFrom（nullable 版への委譲）
 
 ---
 
@@ -118,8 +135,9 @@ Assert.True(updated1.Equals(updated2));  // true（同じ時刻なら等価）
 **役割:** HashMap/HashSet 互換のハッシュコード生成
 
 ```csharp
-var updated1 = UpdatedAt.From(new DateTime(2025, 1, 1));
-var updated2 = UpdatedAt.From(new DateTime(2025, 1, 1));
+IClock clock = /* DI から注入 */;
+var updated1 = UpdatedAt.From(clock.JstNow);
+var updated2 = UpdatedAt.From(clock.JstNow);
 Assert.Equal(updated1.GetHashCode(), updated2.GetHashCode());
 ```
 
@@ -152,7 +170,7 @@ ValueObject の本質である不変性は以下により確保される：
 ### 5.1 private コンストラクタ
 
 ```csharp
-private UpdatedAt(DateTime value) : base(value, true)
+private UpdatedAt(DateTime? value, bool isSet) : base(value, isSet)
 {
 }
 ```
@@ -189,7 +207,7 @@ public class Entity
     public Entity(IClock clock)
     {
         _clock = clock;
-        UpdatedAt = UpdatedAt.From(_clock.JstNow);
+        UpdatedAt = UpdatedAt.Unset();  // ← 初期状態: 未更新
     }
     
     public void Update(string newName)
@@ -217,11 +235,13 @@ if (updated1 == updated2)
 ### 6.4 HashMap/HashSet での使用
 
 ```csharp
+IClock clock = /* DI から注入 */;
 var updateDict = new Dictionary<UpdatedAt, string>();
-updateDict.Add(UpdatedAt.From(DateTime.UtcNow), "entity1");
+updateDict.Add(UpdatedAt.From(clock.JstNow), "entity1");
 
 var updateSet = new HashSet<UpdatedAt>();
-updateSet.Add(UpdatedAt.From(DateTime.UtcNow));
+updateSet.Add(UpdatedAt.From(clock.JstNow));
+updateSet.Add(UpdatedAt.Unset());  // Unset も格納可能
 ```
 
 ---
@@ -242,18 +262,21 @@ updateSet.Add(UpdatedAt.From(DateTime.UtcNow));
 UpdatedAt は `IEquatable<UpdatedAt>` を実装し、以下の等価性ルールに従います：
 
 - **同一インスタンス**: `ReferenceEquals` で true
-- **値同一**: `ValueField`（DateTime）の同一性で判定
+- **IsSet 判定**: IsSet が異なれば異なる
+- **値同一**: `ValueField`（DateTime?）の同一性で判定
 - **null との比較**: false を返す
 
 ---
 
 ## まとめ
 
-`UpdatedAt` は DateTime 値オブジェクトとして、以下を達成します：
+`UpdatedAt` は DateTime? 値オブジェクトとして、以下を達成します：
 
 ✅ **安全性**: DateTime を直接扱わずカプセル化  
+✅ **状態管理**: IsSet で「更新済み/未更新」を管理  
+✅ **Unset対応**: 未更新状態を `Unset()` で表現  
 ✅ **検証**: MinValue/MaxValue 排除  
 ✅ **不変性**: 作成後変更不可  
-✅ **等価性**: DateTime の値同一性に基づく  
+✅ **等価性**: DateTime? の値同一性と IsSet で判定  
 ✅ **ハッシング**: HashMap/HashSet 対応  
 ✅ **スレッドセーフ**: 不変性により同期化不要

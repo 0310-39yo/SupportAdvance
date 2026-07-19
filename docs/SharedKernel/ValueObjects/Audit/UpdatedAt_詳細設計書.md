@@ -17,8 +17,12 @@
 ### 1.2 クラス定義と不変性実装
 
 ```csharp
-public sealed class UpdatedAt : PrimitiveValueObject<DateTime>, IEquatable<UpdatedAt>
+public sealed class UpdatedAt : PrimitiveValueObject<DateTime?>, IEquatable<UpdatedAt>
 ```
+
+**IsSet で状態管理:**
+- `IsSet = true`: 更新済み
+- `IsSet = false`: 未更新（`Unset()` で生成）
 
 **不変性の実装方法:**
 
@@ -60,11 +64,11 @@ public static UpdatedAt From(LocalDateTime value) => new(value.Value);
 **処理フロー:**
 
 ```
-From(DateTime value)
+From(LocalDateTime value)  ← IClock.JstNow から取得
   ↓
-  new UpdatedAt(value, true)  [コンストラクタ呼び出し]
+  new UpdatedAt(value.Value, true)  [コンストラクタ呼び出し]
   ↓
-  PrimitiveValueObject<DateTime> コンストラクタ
+  PrimitiveValueObject<DateTime?> コンストラクタ
 	↓
 	Normalize(value)  [自動実行]
 	↓
@@ -80,15 +84,24 @@ From(DateTime value)
 **例外処理:**
 - `ArgumentException` : DateTime.MinValue または DateTime.MaxValue の場合
 
-### 2.2 TryFrom メソッド（推奨・nullable対応）
+### 2.2 Unset メソッド（未更新状態）
+
+```csharp
+public static UpdatedAt Unset() => new(null, isSet: false);
+```
+
+**役割:** 未更新状態の UpdatedAt を生成
+
+### 2.3 TryFrom メソッド（推奨・nullable対応）
 
 ```csharp
 public static bool TryFrom(LocalDateTime? input, out UpdatedAt result)
 {
-	if (!input.HasValue)
+	// null が来たら Unset を返す（成功）
+	if (input == null || !input.HasValue)
 	{
-		result = null!;
-		return false;
+		result = Unset();
+		return true;
 	}
 
 	try

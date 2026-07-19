@@ -13,7 +13,7 @@
 DeletedAt の単体テスト
   ├── ファクトリメソッドテスト
   │   ├── From(LocalDateTime) メソッド
-  │   ├── NotDeleted() メソッド
+  │   ├── Unset() メソッド
   │   └── TryFrom(LocalDateTime?) メソッド
   ├── プロパティテスト
   │   ├── Value プロパティ
@@ -106,15 +106,15 @@ Assert.Equal(new DateTime(2099, 12, 31, 23, 59, 59), deletedAt.Value);
 Assert.True(deletedAt.IsDeleted);
 ```
 
-### 2.2 NotDeleted() メソッドテスト
+### 2.2 Unset() メソッドテスト
 
 #### TC-NotDeleted-001: 未削除状態を生成できる
 
 **前提条件:**
-- テスト対象: `DeletedAt.NotDeleted()`
+- テスト対象: `DeletedAt.Unset()`
 
 **テスト手順:**
-1. `DeletedAt.NotDeleted()` を呼び出す
+1. `DeletedAt.Unset()` を呼び出す
 2. 戻り値が DeletedAt インスタンスであることを確認
 3. `Value` が null であることを確認
 4. `IsDeleted` が false であることを確認
@@ -122,7 +122,7 @@ Assert.True(deletedAt.IsDeleted);
 
 **期待結果:**
 ```csharp
-var notDeleted = DeletedAt.NotDeleted();
+var notDeleted = DeletedAt.Unset();
 Assert.NotNull(notDeleted);
 Assert.Null(notDeleted.Value);
 Assert.False(notDeleted.IsDeleted);
@@ -133,8 +133,8 @@ Assert.False(notDeleted.IsSet);
 
 **期待結果:**
 ```csharp
-var notDeleted1 = DeletedAt.NotDeleted();
-var notDeleted2 = DeletedAt.NotDeleted();
+var notDeleted1 = DeletedAt.Unset();
+var notDeleted2 = DeletedAt.Unset();
 Assert.NotSame(notDeleted1, notDeleted2);  // 参照は異なる
 Assert.Equal(notDeleted1, notDeleted2);     // 等価性は true
 ```
@@ -209,7 +209,7 @@ Assert.Equal(new DateTime(2025, 1, 15), deletedAt.Value);
 
 **期待結果:**
 ```csharp
-var notDeleted = DeletedAt.NotDeleted();
+var notDeleted = DeletedAt.Unset();
 Assert.Null(notDeleted.Value);
 ```
 
@@ -228,7 +228,7 @@ Assert.True(deletedAt.IsDeleted);
 
 **期待結果:**
 ```csharp
-var notDeleted = DeletedAt.NotDeleted();
+var notDeleted = DeletedAt.Unset();
 Assert.False(notDeleted.IsDeleted);
 ```
 
@@ -247,7 +247,7 @@ Assert.True(deletedAt.IsSet);
 
 **期待結果:**
 ```csharp
-var notDeleted = DeletedAt.NotDeleted();
+var notDeleted = DeletedAt.Unset();
 Assert.False(notDeleted.IsSet);
 ```
 
@@ -282,8 +282,8 @@ Assert.False(deletedAt1.Equals(deletedAt2));
 
 **期待結果:**
 ```csharp
-var notDeleted1 = DeletedAt.NotDeleted();
-var notDeleted2 = DeletedAt.NotDeleted();
+var notDeleted1 = DeletedAt.Unset();
+var notDeleted2 = DeletedAt.Unset();
 Assert.True(notDeleted1.Equals(notDeleted2));
 ```
 
@@ -293,7 +293,7 @@ Assert.True(notDeleted1.Equals(notDeleted2));
 ```csharp
 var clock = new MockClock(new DateTime(2025, 1, 15, 0, 0, 0, DateTimeKind.Unspecified));
 var deleted = DeletedAt.From(clock.JstNow);
-var notDeleted = DeletedAt.NotDeleted();
+var notDeleted = DeletedAt.Unset();
 Assert.False(deleted.Equals(notDeleted));
 ```
 
@@ -350,8 +350,8 @@ var set = new HashSet<DeletedAt>
     DeletedAt.From(clock1.JstNow),
     DeletedAt.From(clock1.JstNow),  // 重複
     DeletedAt.From(clock2.JstNow),
-    DeletedAt.NotDeleted(),
-    DeletedAt.NotDeleted()  // 重複
+    DeletedAt.Unset(),
+    DeletedAt.Unset()  // 重複
 };
 Assert.Equal(3, set.Count);  // 3 つのユニークな値
 ```
@@ -411,7 +411,7 @@ var clock = new MockClock(new DateTime(2025, 1, 15, 0, 0, 0, DateTimeKind.Unspec
 
 // 1. Entity 初期化（未削除）
 var entity = new Entity(clock);
-entity.DeletedAt = DeletedAt.NotDeleted();
+entity.DeletedAt = DeletedAt.Unset();
 Assert.False(entity.IsDeleted);
 
 // 2. Entity 削除
@@ -435,9 +435,9 @@ var clock = new MockClock(new DateTime(2025, 1, 15, 0, 0, 0, DateTimeKind.Unspec
 
 var entities = new List<Entity>
 {
-    new Entity(clock) { Id = 1, DeletedAt = DeletedAt.NotDeleted() },
+    new Entity(clock) { Id = 1, DeletedAt = DeletedAt.Unset() },
     new Entity(clock) { Id = 2, DeletedAt = DeletedAt.From(clock.JstNow) },
-    new Entity(clock) { Id = 3, DeletedAt = DeletedAt.NotDeleted() }
+    new Entity(clock) { Id = 3, DeletedAt = DeletedAt.Unset() }
 };
 
 var activeEntities = entities.Where(e => !e.DeletedAt.IsDeleted).ToList();

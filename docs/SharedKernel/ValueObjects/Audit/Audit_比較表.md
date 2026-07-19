@@ -10,10 +10,12 @@
 | 特性 | CreatedAt | UpdatedAt | DeletedAt |
 |---|---|---|---|
 | **役割** | 作成日時 | 最終更新日時 | 論理削除日時 |
-| **型** | `PrimitiveValueObject<DateTime>` | `PrimitiveValueObject<DateTime>` | `PrimitiveValueObject<DateTime?>` |
-| **null許容** | ✗ | ✗ | ✓ |
+| **型** | `PrimitiveValueObject<DateTime>` | `PrimitiveValueObject<DateTime?>` | `PrimitiveValueObject<DateTime?>` |
+| **IsSet管理** | 常にtrue | あり（true=更新済み） | あり（true=削除済み） |
+| **Unset状態** | なし | `Unset()` で表現 | `Unset()` で表現 |
+| **null許容** | ✗（必須） | ✓（Unset状態） | ✓（Unset状態） |
 | **クラス定義** | `sealed class` | `sealed class` | `sealed class` |
-| **基底クラス** | PrimitiveValueObject<DateTime> | PrimitiveValueObject<DateTime> | PrimitiveValueObject<DateTime?> |
+| **基底クラス** | PrimitiveValueObject<DateTime> | PrimitiveValueObject<DateTime?> | PrimitiveValueObject<DateTime?> |
 
 ---
 
@@ -21,12 +23,12 @@
 
 | 段階 | CreatedAt | UpdatedAt | DeletedAt |
 |---|---|---|---|
-| **初期化** | Entity生成時に一度だけ設定 | Entity生成時に初期化 | Entity生成時に未削除状態に設定 |
+| **初期化** | Entity生成時に一度だけ設定 | Entity生成時にUnset()で初期化 | Entity生成時にUnset()で未削除状態に設定 |
 | **値の由来** | `_clock.JstNow` (IClock) | `_clock.JstNow` (IClock) | 削除操作時に `_clock.JstNow` (IClock) |
 | **クロック** | 🕐 システム唯一クロック使用 | 🕐 システム唯一クロック使用 | 🕐 システム唯一クロック使用 |
 | **更新頻度** | なし（完全不変） | 変更のたびに更新 | 最大1回（削除時のみ） |
 | **変更可能性** | 不可 | 可能 | 実質不可（一度削除後は変更なし） |
-| **取消** | 不可 | 不可（上書きのみ） | 可能（NotDeleted()で復旧） |
+| **取消** | 不可 | 不可（上書きのみ） | 可能（Unset()で復旧） |
 
 ---
 
@@ -54,15 +56,13 @@
 | メソッド | CreatedAt | UpdatedAt | DeletedAt |
 |---|---|---|---|
 | **From(LocalDateTime)** | ✓ | ✓ | ✓ |
-| **From(DateTime)** | ✓ (非推奨) | ✓ (非推奨) | ✓ (非推奨) |
-| **NotDeleted()** | — | — | ✓ |
+| **Unset()** | — | ✓ | ✓ |
 | **TryFrom(LocalDateTime?)** | ✓ | ✓ | ✓ |
-| **TryFrom(LocalDateTime)** | ✓ | ✓ | ✓ |
 
 **説明:**
 - ✅ 推奨: LocalDateTime（IClock.JstNow から取得）
-- ⚠️ 非推奨: DateTime 直接使用
-- DeletedAt: From（削除済み）or NotDeleted（未削除）で生成
+- CreatedAt: From のみ使用
+- UpdatedAt/DeletedAt: From（値あり）or Unset()（未設定）で生成
 
 ---
 
@@ -131,7 +131,7 @@ public class Entity
 
 | 段階 | CreatedAt | UpdatedAt | DeletedAt |
 |---|---|---|---|
-| **Entity生成** | `CreatedAt.From(_clock.JstNow)` | `UpdatedAt.From(_clock.JstNow)` | `DeletedAt.NotDeleted()` |
+| **Entity生成** | `CreatedAt.From(_clock.JstNow)` | `UpdatedAt.Unset()` | `DeletedAt.Unset()` |
 | **Entityコピー復元** | 元の値を保持 | 復元日時に更新 | 元の値を保持 |
 | **Entity更新** | 変更なし | `UpdatedAt.From(_clock.JstNow)` | 変更なし |
 | **Entity削除** | 変更なし | 変更なし | `DeletedAt.From(_clock.JstNow)` |
@@ -281,7 +281,7 @@ public class EntityRepository : IEntityRepository
 
 | テスト観点 | CreatedAt | UpdatedAt | DeletedAt |
 |---|---|---|---|
-| **生成テスト** | From のみ | From のみ | From / NotDeleted |
+| **生成テスト** | From のみ | From / Unset | From / Unset |
 | **更新テスト** | 更新不可テスト | 更新可能テスト | 削除状態トグル不可テスト |
 | **等価性テスト** | DateTime の値で比較 | DateTime の値で比較 | DateTime? の値で比較（null含む） |
 | **不変性テスト** | 完全不変を確認 | 部分的可変を確認 | 実質不変を確認 |
@@ -409,7 +409,7 @@ public async Task RestoreEntityAsync(Entity entity, User user)
         throw new UnauthorizedAccessException("管理者のみ復旧可能");
     
     var originalDeletedAt = entity.DeletedAt;
-    entity.DeletedAt = DeletedAt.NotDeleted();
+    entity.DeletedAt = DeletedAt.Unset();  // ← Unset() で未削除状態に復旧
     
     // 削除復旧を監査ログに記録
     await _auditLog.LogRestoration(entity.Id, originalDeletedAt, user);
@@ -471,7 +471,7 @@ Entity に日時情報を追加する
 ### 18.2 UpdatedAt チェックリスト
 
 - [ ] Entity コンストラクタで IClock を DI 受け取り
-- [ ] `UpdatedAt.From(_clock.JstNow)` で初期化
+- [ ] `UpdatedAt.Unset()` で初期化（未更新状態）
 - [ ] Entity 更新時に `UpdatedAt = UpdatedAt.From(_clock.JstNow)` で更新
 - [ ] Repository でソート時に UpdatedAt.Value を使用
 - [ ] テストで MockClock を使用し、更新可能性を確認
@@ -479,7 +479,7 @@ Entity に日時情報を追加する
 ### 18.3 DeletedAt チェックリスト
 
 - [ ] Entity コンストラクタで IClock を DI 受け取り
-- [ ] `DeletedAt.NotDeleted()` で初期化
+- [ ] `DeletedAt.Unset()` で初期化（未削除状態）
 - [ ] Entity 削除メソッドで `DeletedAt = DeletedAt.From(_clock.JstNow)` で設定
 - [ ] Repository の GetActiveAsync() で `!e.DeletedAt.IsDeleted` でフィルタリング
 - [ ] マイグレーションで DeletedAtUtc DATETIME NULL を追加

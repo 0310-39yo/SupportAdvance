@@ -84,6 +84,40 @@ var exception = Assert.Throws<ArgumentException>(() =>
 Assert.Contains("MinValue", exception.Message);
 ```
 
+#### TC-Unset-001: Unset() で未更新状態を生成できる
+
+**前提条件:**
+- テスト対象: `UpdatedAt.Unset()`
+
+**テスト手順:**
+1. `UpdatedAt.Unset()` を呼び出す
+2. 戻り値が UpdatedAt インスタンスであることを確認
+3. `IsSet` が false であることを確認
+4. `Value` が null であることを確認
+
+**期待結果:**
+```csharp
+var unset = UpdatedAt.Unset();
+Assert.False(unset.IsSet);
+Assert.Null(unset.Value);
+```
+
+### 2.2 TryFrom(LocalDateTime?) メソッドテスト
+
+#### TC-TryFrom-001: null 入力で Unset を返す（成功）
+
+**前提条件:**
+- テスト対象: `UpdatedAt.TryFrom(LocalDateTime?)`
+- 入力: null
+
+**期待結果:**
+```csharp
+LocalDateTime? input = null;
+var success = UpdatedAt.TryFrom(input, out var result);
+Assert.True(success);  // ← 成功（null → Unset）
+Assert.False(result.IsSet);
+```
+
 #### TC-From-003: DateTime.MaxValue で ArgumentException がスローされる
 
 **前提条件:**
@@ -152,7 +186,36 @@ Assert.False(success);
 
 ## 3. プロパティテスト
 
-### 3.1 Value プロパティテスト
+### 3.1 HasUpdated プロパティテスト
+
+#### TC-HasUpdated-001: HasUpdated = true（更新済み）
+
+**前提条件:**
+- テスト対象: `UpdatedAt.HasUpdated`
+- 入力: `UpdatedAt.From(clock.JstNow)`
+
+**期待結果:**
+```csharp
+var clock = new MockClock(new DateTime(2025, 1, 15, 10, 30, 0));
+var updated = UpdatedAt.From(clock.JstNow);
+Assert.True(updated.HasUpdated);
+Assert.True(updated.IsSet);
+```
+
+#### TC-HasUpdated-002: HasUpdated = false（未更新）
+
+**前提条件:**
+- テスト対象: `UpdatedAt.HasUpdated`
+- 入力: `UpdatedAt.Unset()`
+
+**期待結果:**
+```csharp
+var unset = UpdatedAt.Unset();
+Assert.False(unset.HasUpdated);
+Assert.False(unset.IsSet);
+```
+
+### 3.2 Value プロパティテスト
 
 #### TC-Value-001: 生成後、Value を取得できる
 
