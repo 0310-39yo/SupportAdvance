@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using SupportAdvance.Common.Clocks;
 using SupportAdvance.SharedKernel.ValueObjects;
 using SupportAdvance.SharedKernel.ValueObjects.Abstractions;
 
@@ -22,24 +23,23 @@ public sealed class CreatedAt : PrimitiveValueObject<DateTime>, IEquatable<Creat
     }
 
     /// <summary>
-    /// 指定された日時からCreatedAtのインスタンスを生成する
+    /// 指定された日時からCreatedAtのインスタンスを生成する（推奨: LocalDateTime で取得）
     /// 【責務】指定された日時を持つCreatedAtを表現する
     /// </summary>
-    /// <param name="value">日時値</param>
+    /// <param name="value">LocalDateTime値（IClock.JstNow から取得）</param>
     /// <returns>指定された日時を持つCreatedAtのインスタンス</returns>
-    public static CreatedAt From(DateTime value) => new(value);
+    public static CreatedAt From(LocalDateTime value) => new(value.Value);
 
     /// <summary>
-    /// 指定された日時からCreatedAtのインスタンスを生成する
-    /// 【責務】指定された日時を持つCreatedAtを表現する
+    /// 指定された日時からCreatedAtのインスタンスを生成する（層間の型変換用）
+    /// 【責務】null安全に CreatedAt を生成する
     /// </summary>
-    /// <param name="input">日時値</param>
+    /// <param name="input">LocalDateTime? 値</param>
     /// <param name="result">生成されたCreatedAtのインスタンス</param>
     /// <returns>生成に成功した場合はtrue、失敗した場合はfalse</returns>
-    public static bool TryFrom(DateTime? input, out CreatedAt result)
+    public static bool TryFrom(LocalDateTime? input, out CreatedAt result)
     {
-        // null の場合は失敗
-        if (!input.HasValue)
+        if (input == null || !input.HasValue)
         {
             result = null!;
             return false;
@@ -52,20 +52,10 @@ public sealed class CreatedAt : PrimitiveValueObject<DateTime>, IEquatable<Creat
         }
         catch (ArgumentException)
         {
-            // 入力値が不正な場合は失敗
             result = null!;
             return false;
         }
     }
-
-    /// <summary>
-    /// 指定された日時からCreatedAtのインスタンスを生成する
-    /// 【責務】指定された日時を持つCreatedAtを表現する
-    /// </summary>
-    /// <param name="input">日時値</param>
-    /// <param name="result">生成されたCreatedAtのインスタンス</param>
-    /// <returns>生成に成功した場合はtrue、失敗した場合はfalse</returns>
-    public static bool TryFrom(DateTime input, out CreatedAt result) => TryFrom((DateTime?)input, out result);
 
     /// <summary>
     /// 保持する値を取得する
@@ -90,8 +80,16 @@ public sealed class CreatedAt : PrimitiveValueObject<DateTime>, IEquatable<Creat
     /// <returns>等価である場合はtrue、そうでない場合はfalse</returns>
     public bool Equals(CreatedAt? other)
     {
-        if (other is null) return false;
-        if (ReferenceEquals(this, other)) return true;
+        if (other is null)
+        {
+            return false;
+        }
+
+        if (ReferenceEquals(this, other))
+        {
+            return true;
+        }
+
         return ValueField == other.ValueField;
     }
 
@@ -125,7 +123,8 @@ public sealed class CreatedAt : PrimitiveValueObject<DateTime>, IEquatable<Creat
         // DateTime.MinValue や DateTime.MaxValue は除外
         if (normalized == DateTime.MinValue || normalized == DateTime.MaxValue)
         {
-            throw new ArgumentException($"CreatedAt must be a valid system timestamp, not {nameof(DateTime.MinValue)} or {nameof(DateTime.MaxValue)}.");
+            throw new ArgumentException(
+                $"CreatedAt must be a valid system timestamp, not {nameof(DateTime.MinValue)} or {nameof(DateTime.MaxValue)}.");
         }
     }
 }

@@ -7,46 +7,46 @@ using SupportAdvance.SharedKernel.ValueObjects.Abstractions;
 namespace SupportAdvance.SharedKernel.ValueObjects.Audit;
 
 /// <summary>
-/// エンティティの最後の更新日時を表すValueObject（null許容、IsSet で未更新状態を表現）
+/// エンティティの論理削除日時を表すValueObject（null許容、IsSet で削除/未削除状態を表現）
 /// </summary>
-public sealed class UpdatedAt : PrimitiveValueObject<DateTime?>, IEquatable<UpdatedAt>
+public sealed class DeletedAt : PrimitiveValueObject<DateTime?>, IEquatable<DeletedAt>
 {
     /// <summary>
-    /// 指定された日時からUpdatedAtのインスタンスを生成する
-    /// 【責務】指定された日時を持つUpdatedAtを表現する
+    /// 指定された日時からDeletedAtのインスタンスを生成する
+    /// 【責務】指定された日時を持つDeletedAtを表現する
     /// </summary>
     /// <param name="value">日時値</param>
     /// <param name="isSet">IsSet フラグ（デフォルト: true）</param>
-    /// <returns>指定された日時を持つUpdatedAtのインスタンス</returns>
+    /// <returns>指定された日時を持つDeletedAtのインスタンス</returns>
     /// <remarks>Validate は、基礎クラスのコンストラクタで自動実行される</remarks>
-    private UpdatedAt(DateTime? value, bool isSet = true) : base(value, isSet)
+    private DeletedAt(DateTime? value, bool isSet = true) : base(value, isSet)
     {
     }
 
     /// <summary>
-    /// 指定された日時からUpdatedAtのインスタンスを生成する（推奨: LocalDateTime で取得）
-    /// 【責務】指定された日時を持つUpdatedAtを表現する
+    /// 指定された日時からDeletedAtのインスタンスを生成する（推奨: LocalDateTime で取得）
+    /// 【責務】指定された日時を持つDeletedAtを表現する
     /// </summary>
     /// <param name="value">LocalDateTime値（IClock.JstNow から取得）</param>
-    /// <returns>指定された日時を持つUpdatedAtのインスタンス</returns>
-    public static UpdatedAt From(LocalDateTime value) => new(value.Value, true);
+    /// <returns>指定された日時を持つDeletedAtのインスタンス</returns>
+    public static DeletedAt From(LocalDateTime value) => new(value.Value, true);
 
     /// <summary>
-    /// 未更新状態のUpdatedAtのインスタンスを生成する
-    /// 【責務】未更新状態を表現する
+    /// 未削除状態のDeletedAtのインスタンスを生成する
+    /// 【責務】未削除状態を表現する
     /// </summary>
-    /// <returns>未更新状態のUpdatedAtのインスタンス</returns>
-    public static UpdatedAt Unset() => new(null, isSet: false);
+    /// <returns>未削除状態のDeletedAtのインスタンス</returns>
+    public static DeletedAt Unset() => new(null, isSet: false);
 
     /// <summary>
-    /// 指定された日時からUpdatedAtのインスタンスを生成する（層間の型変換用）
+    /// 指定された日時からDeletedAtのインスタンスを生成する（層間の型変換用）
     /// null が来た場合は Unset() で変換（成功）
-    /// 【責務】null安全に UpdatedAt を生成する
+    /// 【責務】null安全に DeletedAt を生成する
     /// </summary>
     /// <param name="input">LocalDateTime? 値（DB からの読み込み値）</param>
-    /// <param name="result">生成されたUpdatedAtのインスタンス</param>
+    /// <param name="result">生成されたDeletedAtのインスタンス</param>
     /// <returns>生成に成功した場合はtrue、失敗した場合はfalse</returns>
-    public static bool TryFrom(LocalDateTime? input, out UpdatedAt result)
+    public static bool TryFrom(LocalDateTime? input, out DeletedAt result)
     {
         if (input == null || !input.HasValue)
         {
@@ -74,11 +74,11 @@ public sealed class UpdatedAt : PrimitiveValueObject<DateTime?>, IEquatable<Upda
     public DateTime? Value => ValueField;
 
     /// <summary>
-    /// 更新済み状態を判定する（IsSet の別名）
-    /// 【責務】更新済みか未更新かを判定する
+    /// 削除済み状態を判定する（IsSet の別名）
+    /// 【責務】削除済みか未削除かを判定する
     /// </summary>
-    /// <returns>更新済みの場合は true、未更新の場合は false</returns>
-    public bool HasUpdated => IsSet;
+    /// <returns>削除済みの場合は true、未削除の場合は false</returns>
+    public bool IsDeleted => IsSet;
 
     /// <summary>
     /// 指定されたオブジェクトと等価かどうかを判定する
@@ -86,15 +86,15 @@ public sealed class UpdatedAt : PrimitiveValueObject<DateTime?>, IEquatable<Upda
     /// </summary>
     /// <param name="obj">比較対象のオブジェクト</param>
     /// <returns>等価である場合はtrue、そうでない場合はfalse</returns>
-    public override bool Equals(object? obj) => Equals(obj as UpdatedAt);
+    public override bool Equals(object? obj) => Equals(obj as DeletedAt);
 
     /// <summary>
-    /// 指定されたUpdatedAtと等価かどうかを判定する
-    /// 【責務】指定されたUpdatedAtと等価かどうかを判定する
+    /// 指定されたDeletedAtと等価かどうかを判定する
+    /// 【責務】指定されたDeletedAtと等価かどうかを判定する
     /// </summary>
-    /// <param name="other">比較対象のUpdatedAt</param>
+    /// <param name="other">比較対象のDeletedAt</param>
     /// <returns>等価である場合はtrue、そうでない場合はfalse</returns>
-    public bool Equals(UpdatedAt? other)
+    public bool Equals(DeletedAt? other)
     {
         if (other is null)
         {
@@ -106,7 +106,7 @@ public sealed class UpdatedAt : PrimitiveValueObject<DateTime?>, IEquatable<Upda
             return true;
         }
 
-        return ValueField == other.ValueField;
+        return ValueField == other.ValueField && IsSet == other.IsSet;
     }
 
     /// <summary>
@@ -114,7 +114,7 @@ public sealed class UpdatedAt : PrimitiveValueObject<DateTime?>, IEquatable<Upda
     /// 【責務】オブジェクトのハッシュコードを取得する
     /// </summary>
     /// <returns>オブジェクトのハッシュコード</returns>
-    public override int GetHashCode() => ValueField.GetHashCode();
+    public override int GetHashCode() => HashCode.Combine(ValueField, IsSet);
 
     /// <summary>
     /// 等価性判定のための値コンポーネントを返す（IsSet を除く）
@@ -136,7 +136,7 @@ public sealed class UpdatedAt : PrimitiveValueObject<DateTime?>, IEquatable<Upda
     {
         base.Validate(normalized);
 
-        // null は許容（未更新状態を表現）
+        // null は許容（未削除状態を表現）
         if (normalized == null)
             return;
 
@@ -144,7 +144,7 @@ public sealed class UpdatedAt : PrimitiveValueObject<DateTime?>, IEquatable<Upda
         if (normalized == DateTime.MinValue || normalized == DateTime.MaxValue)
         {
             throw new ArgumentException(
-                $"UpdatedAt must be a valid system timestamp, not {nameof(DateTime.MinValue)} or {nameof(DateTime.MaxValue)}.");
+                $"DeletedAt must be a valid system timestamp, not {nameof(DateTime.MinValue)} or {nameof(DateTime.MaxValue)}.");
         }
     }
 }

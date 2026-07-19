@@ -38,7 +38,7 @@ public static class DependencyInjection
                             ?? throw new InvalidOperationException("ClockSettings が見つかりません。");
 
         var clockInstance = ClockFactory.CreateClock(clockSettings);
-        services.AddSingleton(clockInstance);
+        services.AddSingleton<IClock>(clockInstance);  // ← インターフェース型で登録
 
         return services;
     }
