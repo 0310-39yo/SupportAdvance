@@ -10,10 +10,10 @@
 ## 依存関係
 
 **許可:**
-- SharedKernel
+- なし（依存ゼロの最内層）
 
 **禁止:**
-- Domain, Application, Infrastructure, Presentation
+- SharedKernel, Domain, Application, Infrastructure, Presentation, Crosscutting
 
 ## 実装ガイドライン
 

@@ -17,7 +17,7 @@
 - Domain（Entity/Value Object のマッピング用）
 
 **禁止:**
-- ✓ Application（修正済み）
+- Application
 - Presentation
 
 ## 実装ガイドライン

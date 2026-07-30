@@ -13,18 +13,18 @@
 **許可:**
 - SharedKernel
 - Common
-- Infrastructure（ロギングプロバイダーの実装依存）
 
 **禁止:**
 - Domain（原則として直接参照しない）
 - Application（原則として直接参照しない）
+- Infrastructure（循環参照になるため禁止）
 - Presentation
 
 ## 実装ガイドライン
 
-- Domain への依存は最小限に
-- Application への依存は避ける
-- インターフェース定義は Common / SharedKernel に配置
+- Domain / Application への依存は避ける
+- ロギング等の実装（NLog など）は NuGet パッケージとして直接参照。Infrastructure を経由しない
+- インターフェース と実装の両方をこの層で自己完結させる（例：`IAppLogging<T>` と `FrameworkLoggingAdapter`）
 
 ---
 

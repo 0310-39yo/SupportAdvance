@@ -10,44 +10,45 @@
 
 ## アーキテクチャレイヤー構成
 
+依存は常に「外側 → 内側」に向かう。最も内側（依存ゼロ）は `Common`、その上に `SharedKernel` が乗る。`Infrastructure` と `Presentation` は互いに独立した外側の層で、`Application`/`Domain` を挟んで対称に位置する（Infrastructure は Presentation より内側ではない）。
+
 ```
-┌─────────────────────────────────────────┐
-│   Presentation Layer                    │
-│   (UI / Views / Controllers)            │
-└────────────┬────────────────────────────┘
-             │ 依存 ↓
-┌────────────▼────────────────────────────┐
-│   Composition Root (Program.cs)         │
-│   (DI コンテナ構築のみ)                   │
-└────────────┬────────────────────────────┘
-             │ 依存 ↓
-┌────────────▼────────────────────────────┐
-│   Application Layer                     │
-│   (Use Cases / Application Services)    │
-└────────────┬────────────────────────────┘
-             │ 依存 ↓
-┌────────────▼────────────────────────────┐
-│   Domain Layer                          │
-│   (Entities / Value Objects / Aggregates)
-└────────────┬────────────────────────────┘
-             │ 依存 ↓
-┌────────────▼────────────────────────────┐
-│   Cross-Cutting Concerns                │
-│   (Logging / Configuration / Validation)│
-└────────────┬────────────────────────────┘
-             │ 依存 ↓
-┌────────────▼────────────────────────────┐
-│   Shared Kernel                         │
-│   (Common Types / Abstractions)         │
-└────────────┬────────────────────────────┘
-             │ 依存 ↓
-┌────────────▼────────────────────────────┐
-│   Infrastructure Layer                  │
-│   (DB / External Services / ORM)        │
-│   ※ Domain を参照できるが、         │
-│      Application には依存しない     │
-└─────────────────────────────────────────┘
+                     ┌───────────────────────────┐
+                     │        Common             │  ← 依存ゼロ（最内層）
+                     │ (IClock, LocalDateTime,    │
+                     │  IApplicationSettings 等)  │
+                     └─────────────▲─────────────┘
+                                    │ 依存
+                     ┌──────────────┴─────────────┐
+                     │       SharedKernel          │
+                     │ (ValueObject, Entity基底,   │
+                     │  監査ValueObject 等)        │
+                     └──────────────▲─────────────┘
+                                    │ 依存
+                     ┌──────────────┴─────────────┐
+                     │           Domain             │
+                     │  (Entities / Aggregates)      │
+                     └──────────────▲─────────────┘
+                                    │ 依存
+                     ┌──────────────┴─────────────┐
+                     │        Application           │
+                     │  (Use Cases)                  │
+                     └──▲───────────────────────▲──┘
+              実装を注入 │                       │ 呼び出し
+     ┌────────────────┴───┐               ┌───┴────────────────┐
+     │   Infrastructure     │               │    Presentation      │
+     │ (DB / ORM / 外部API) │               │ (UI / ViewModel)     │
+     └───────────▲───────────┘               └──────────▲───────────┘
+                 │ 実装                                  │ Program.cs（Composition Root）でのみ
+                 └──────────────── 参照 ──────────────────┘
+                Crosscutting はロギング等のインターフェース＋実装を自己完結で持つ横断的関心事
+                （実装に必要な外部ライブラリはNuGetで直接取得。Infrastructureには依存しない）
 ```
+
+**ポイント:**
+- `Infrastructure` は最も内側ではなく、`Presentation` と対称な**最も外側の層**（実装の詳細）
+- `Crosscutting` はロギング等のインターフェースと実装の両方を持つ（例：`IAppLogging<T>` とその NLog 実装 `FrameworkLoggingAdapter`）。実装に必要な NLog 等は NuGet パッケージとして Crosscutting が直接参照し、`Infrastructure` プロジェクトには依存しない。したがって参照方向は **Infrastructure → Crosscutting** の一方向のみ
+- `Presentation` から `Infrastructure` への参照は、DIコンテナを組み立てる **Composition Root（`Program.cs`）に限定**される（詳細は後述の「自動検証の導入」参照）
 
 ---
 
@@ -63,15 +64,15 @@
 - プロジェクト全体で使用される列挙型・定数
 
 **特徴:**
-- 最も内側のレイヤー
-- 他層への依存はない
+- `Common` の上に構築される、ドメインに近い基盤層
 - 外側のすべての層から参照可能
+- 監査 ValueObject（`CreatedAt` / `UpdatedAt` / `DeletedAt` など）が `Common` の `LocalDateTime` / `IClock` を利用するため、`Common` への依存を持つ
 
 **許可される参照:**
-- `using` なし（外部プロジェクトなし）
+- Common
 
 **禁止される参照:**
-- Application, Infrastructure, Presentation
+- Application, Infrastructure, Presentation, Crosscutting
 
 **例:**
 ```csharp
@@ -85,6 +86,15 @@ public abstract class ValueObject : IEquatable<ValueObject>
 public record PersonId(Guid Value) : ValueObject;
 ```
 
+```csharp
+// SharedKernel/ValueObjects/Audit/CreatedAt.cs
+using SupportAdvance.Common.Clocks; // Common の LocalDateTime を利用
+
+namespace SupportAdvance.SharedKernel.ValueObjects.Audit;
+
+public sealed record CreatedAt(LocalDateTime Value) : ValueObject;
+```
+
 ---
 
 ### 2. **Common** (`src/Common`)
@@ -96,15 +106,16 @@ public record PersonId(Guid Value) : ValueObject;
 - 共通ヘルパー・エクステンション
 
 **特徴:**
-- SharedKernel と同等の層
+- プロジェクト全体で**最も内側**のレイヤー（依存ゼロ）
 - インフラストラクチャに依存しない汎用ライブラリ
 - Business Logic を含まない
+- `SharedKernel` はこの層に依存するが、逆方向（Common → SharedKernel）は循環参照になるため禁止
 
 **許可される参照:**
-- SharedKernel のみ
+- なし（他プロジェクトへの参照を持たない）
 
 **禁止される参照:**
-- Domain, Application, Infrastructure, Presentation
+- SharedKernel, Domain, Application, Infrastructure, Presentation, Crosscutting
 
 **例:**
 ```csharp
@@ -128,27 +139,31 @@ public interface IClock
 - 例外変換
 
 **特徴:**
-- Infrastructure への依存は許可される
-- ただし Domain への依存は避ける
-- アスペクト指向的な責務
+- ロギング・監査などの**インターフェースと実装の両方**をこの層だけで完結させる（例：`IAppLogging<T>` と NLog 実装 `FrameworkLoggingAdapter`）
+- 実装に必要な技術要素（NLog など）は **NuGet パッケージとして直接参照**し、Infrastructure プロジェクトには依存しない
+- そのため参照方向は **Infrastructure → Crosscutting** の一方向のみ。Crosscutting → Infrastructure は禁止（循環参照になるため）
+- Domain への依存も避ける
 
 **許可される参照:**
 - SharedKernel
 - Common
-- Infrastructure（ロギングプロバイダーの実装依存）
 
 **禁止される参照:**
-- Domain, Application（**原則として**）
+- Domain, Application（**原則として**）, Infrastructure
 
-**例:**
+**例（`src/Crosscutting/Logging/IAppLogging.cs`）:**
 ```csharp
 namespace SupportAdvance.Crosscutting.Logging;
 
-public interface IDomainEventLogger
+public interface IAppLogging<T>
 {
-    void LogDomainEvent(IDomainEvent @event);
+    void LogInformation(string message);
+    void LogWarning(string message);
+    void LogError(string message, Exception? exception = null);
 }
 ```
+
+この `IAppLogging<T>` の実装（`FrameworkLoggingAdapter`、NLog 連携）も同じ `Crosscutting` プロジェクト内に存在する。`Crosscutting.csproj` が `NLog.Extensions.Logging` を NuGet パッケージとして直接参照しているため、`Infrastructure` を経由する必要がない。
 
 ---
 
@@ -282,7 +297,7 @@ public class UpdateCarPreferenceUseCase
 - Domain（Entity/Value Object のマッピング用）
 
 **禁止される参照:**
-- Application ✓ **修正済み**
+- Application
 - Presentation
 
 **例:**
@@ -365,21 +380,21 @@ services.AddApplicationServices();
 
 ## 依存関係マトリックス
 
-| From \ To | SharedKernel | Common | Crosscutting | Domain | Application | Infrastructure | Presentation |
+| From \ To | Common | SharedKernel | Crosscutting | Domain | Application | Infrastructure | Presentation |
 |---|---|---|---|---|---|---|---|
-| **SharedKernel** | - | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ |
-| **Common** | ✓ | - | ✗ | ✗ | ✗ | ✗ | ✗ |
-| **Crosscutting** | ✓ | ✓ | - | ✗ | ✗ | ✓* | ✗ |
-| **Domain** | ✓ | ✓ | ✓** | - | ✗ | ✗ | ✗ |
+| **Common** | - | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ |
+| **SharedKernel** | ✓ | - | ✗ | ✗ | ✗ | ✗ | ✗ |
+| **Crosscutting** | ✓ | ✓ | - | ✗ | ✗ | ✗ | ✗ |
+| **Domain** | ✓ | ✓ | ✓* | - | ✗ | ✗ | ✗ |
 | **Application** | ✓ | ✓ | ✓ | ✓ | - | ✗ | ✗ |
 | **Infrastructure** | ✓ | ✓ | ✓ | ✓ | ✗ | - | ✗ |
-| **Presentation** | ✓ | ✓ | ✓ | ✗ | ✓ | ✓*** | - |
+| **Presentation** | ✓ | ✓ | ✓ | ✗ | ✓ | ✓** | - |
 
 - `✓` = 許可
 - `✗` = 禁止
-- `*` = Crosscutting → Infrastructure：ロギングプロバイダー実装のため許可
-- `**` = Domain → Crosscutting：ドメインイベント発行のみ許可
-- `***` = Presentation → Infrastructure：Program.cs（Composition Root）のみ許可
+- `*` = Domain → Crosscutting：ドメインイベント発行のみ許可
+- `**` = Presentation → Infrastructure：Program.cs（Composition Root）のみ許可。プロジェクト参照上は Infrastructure に到達可能な構成だが、`Program` 型を除く全ての型が Infrastructure 名前空間に依存しないことを [自動検証](#自動検証の導入) で担保する
+- `Common` は依存ゼロの最内層。`Crosscutting → Infrastructure` は禁止（実装は Infrastructure が Crosscutting のインターフェースを実装する一方向のみ）
 
 ---
 
@@ -584,54 +599,88 @@ public class UserViewModel
 
 ## 自動検証の導入
 
-### 方法1: EditorConfig ルール
+現状、依存関係の遵守は**コードレビューによる目視確認のみ**に依存している。特に以下の点は `.csproj` の `ProjectReference` だけでは強制できないため、型レベルの検証が必要：
 
-`.editorconfig` に以下のルールを追加予定：
+- `Presentation` → `Infrastructure` は `Program.cs`（Composition Root）のみ許可（例：`WinTrial.csproj` は DI 配線のため `CarPreferences.Infrastructure` を参照せざるを得ないが、`Program` 型以外がそれを使ってはならない）
+- `Crosscutting` → `Infrastructure` は禁止（循環参照防止）
 
-```ini
-[**/*.cs]
-# Forbidden reference check
-# Infrastructure -> Application: 禁止
-# Domain -> Application: 禁止
-# Domain -> Infrastructure: 禁止
-```
+### NetArchTest.Rules による検証（推奨）
 
-### 方法2: SlnArch（推奨）
+`NetArchTest.Rules`（NuGet）を使い、テストプロジェクトとして `dotnet test` / CI に組み込む。
 
 ```bash
-# インストール
-dotnet tool install -g slnarch
-
-# 設定ファイル作成：architecture.json
-{
-  "layers": [
-    {
-      "name": "SharedKernel",
-      "namespaces": ["SupportAdvance.SharedKernel"]
-    },
-    {
-      "name": "Domain",
-      "namespaces": ["SupportAdvance.Contexts.*.Domain", "SupportAdvance.Domain"]
-    },
-    {
-      "name": "Application",
-      "namespaces": ["SupportAdvance.Application", "SupportAdvance.Contexts.*.Application"]
-    },
-    {
-      "name": "Infrastructure",
-      "namespaces": ["SupportAdvance.Infrastructure"]
-    }
-  ],
-  "rules": [
-    { "from": "Infrastructure", "to": "Application", "allow": false },
-    { "from": "Domain", "to": "Application", "allow": false },
-    { "from": "Domain", "to": "Infrastructure", "allow": false }
-  ]
-}
-
-# 実行
-slnarch analyze
+dotnet add package NetArchTest.Rules
 ```
+
+```csharp
+// tests/Architecture.Tests/DependencyRuleTests.cs
+using NetArchTest.Rules;
+using Xunit;
+
+public class DependencyRuleTests
+{
+    [Fact]
+    public void Domain_Should_Not_DependOn_ApplicationOrInfrastructure()
+    {
+        var result = Types.InAssembly(typeof(CarPreferences.Domain.ValueObjects.CarModel).Assembly)
+            .ShouldNot()
+            .HaveDependencyOnAny(
+                "SupportAdvance.Application",
+                "SupportAdvance.Contexts.Samples.CarPreferences.Application",
+                "SupportAdvance.Infrastructure")
+            .GetResult();
+
+        Assert.True(result.IsSuccessful, string.Join(", ", result.FailingTypeNames ?? []));
+    }
+
+    [Fact]
+    public void Common_Should_Have_No_Dependencies()
+    {
+        var result = Types.InAssembly(typeof(SupportAdvance.Common.Clocks.IClock).Assembly)
+            .ShouldNot()
+            .HaveDependencyOnAny(
+                "SupportAdvance.SharedKernel",
+                "SupportAdvance.Domain",
+                "SupportAdvance.Application",
+                "SupportAdvance.Infrastructure",
+                "SupportAdvance.Crosscutting")
+            .GetResult();
+
+        Assert.True(result.IsSuccessful, string.Join(", ", result.FailingTypeNames ?? []));
+    }
+
+    [Fact]
+    public void Crosscutting_Should_Not_DependOn_Infrastructure()
+    {
+        var result = Types.InAssembly(typeof(SupportAdvance.Crosscutting.Logging.IAppLogging<>).Assembly)
+            .ShouldNot()
+            .HaveDependencyOn("SupportAdvance.Infrastructure")
+            .GetResult();
+
+        Assert.True(result.IsSuccessful, string.Join(", ", result.FailingTypeNames ?? []));
+    }
+
+    // 「Program.cs のみ Infrastructure 参照可」を型レベルで検証。
+    // WinTrial.csproj 自体は Infrastructure への参照を持つが、
+    // Program 型以外がそれを使っていなければ合格する。
+    [Fact]
+    public void WinTrial_Only_Program_May_DependOn_Infrastructure()
+    {
+        var result = Types.InAssembly(typeof(SupportAdvance.Presentation.WinTrial.Program).Assembly)
+            .That()
+            .DoNotHaveName("Program")
+            .ShouldNot()
+            .HaveDependencyOnAny(
+                "SupportAdvance.Infrastructure",
+                "SupportAdvance.Contexts.Samples.CarPreferences.Infrastructure")
+            .GetResult();
+
+        Assert.True(result.IsSuccessful, string.Join(", ", result.FailingTypeNames ?? []));
+    }
+}
+```
+
+上記4テストで参照している型（`IClock` / `CarModel` / `IAppLogging<T>` / `Program`）は 2026-07-31 時点で実在する型であり、現行の `ProjectReference` 構成・`using` 状況から見て合格する見込みだが、実装時は必ず `dotnet test` で実行結果を確認すること。CI に組み込むことで、将来のコード追加時にも依存方向の逸脱を機械的に検出できる。
 
 ---
 
@@ -648,5 +697,6 @@ slnarch analyze
 
 | 日付 | 更新内容 |
 |---|---|
+| 2026-07-31 | 実コード（各 `.csproj` の `ProjectReference` / `using` 宣言）との不一致を修正。①Common⇔SharedKernelの依存方向を実装に合わせて反転（Common起点に修正）②Crosscutting→Infrastructureの循環参照定義を削除しInfrastructure→Crosscuttingの一方向に統一③冒頭図をInfrastructureが最内層に見える誤った表現から同心円型に修正④編集し忘れの記述（「✓ 修正済み」）を削除⑤自動検証をSlnArch（未検証）からNetArchTest.Rulesの具体的なテストコード例に置き換え |
 | 2026-07-09 | 初版作成。各層の責務と依存関係を定義 |
 

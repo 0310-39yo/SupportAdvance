@@ -18,21 +18,26 @@ Presentation → Application → Domain ← Infrastructure
                          SharedKernel
 ```
 
-### 層間の許可される依存関係
+### 層間の許可される依存関係（要約）
+
+`Common` が依存ゼロの最内層、その上に `SharedKernel` が構築される。詳細な依存関係マトリックス・図は [CLEAN_ARCHITECTURE_GUIDELINES.md](docs/Assistance/Guides/CLEAN_ARCHITECTURE_GUIDELINES.md#依存関係マトリックス) を正とする。
 
 | From | To | 許可 | 備考 |
 |---|---|---|---|
-| Domain | anything | ✗ | 最も内側、依存なし |
+| SharedKernel | Common | ✓ | Common は依存ゼロ、SharedKernel はその上に構築 |
+| Domain | SharedKernel, Common, Crosscutting | ✓ | Crosscutting はドメインイベント発行のみ |
 | Application | Domain, SharedKernel, Common, Crosscutting | ✓ | Infrastructure は DI で注入 |
-| Infrastructure | Domain, SharedKernel, Common, Crosscutting | ✓ | ✗ Application は禁止 |
-| Presentation | Application, Crosscutting, SharedKernel | ✓ | Program.cs のみ Infrastructure 可 |
+| Infrastructure | Domain, SharedKernel, Common, Crosscutting | ✓ | ✗ Application は禁止。Crosscutting → Infrastructure は逆方向で禁止（循環参照になるため） |
+| Presentation | Application, Crosscutting, SharedKernel, Common | ✓ | Program.cs のみ Infrastructure 可（型レベルでNetArchTestにより検証） |
 
 ### 違反してはいけない依存関係
 
 ❌ **禁止:**
+- Common → SharedKernel（循環参照になるため）
 - Domain → Application / Infrastructure / Presentation
 - Application → Infrastructure / Presentation
 - Infrastructure → Application / Presentation
+- Crosscutting → Infrastructure（循環参照になるため）
 - Presentation → Domain / Infrastructure（Program.cs を除く）
 
 ---
@@ -245,15 +250,7 @@ public class UpdateOrderService
 
 ## 🚀 CI/CD での自動検証
 
-### 将来の自動検証ツール導入
-
-```bash
-# SlnArch を使用した依存性検証（予定）
-slnarch analyze --config architecture.json
-
-# ビルド前に実行
-dotnet build
-```
+依存関係の遵守は現状コードレビューに依存している。`NetArchTest.Rules` を使った型レベルの検証テスト例は [CLEAN_ARCHITECTURE_GUIDELINES.md の「自動検証の導入」](docs/Assistance/Guides/CLEAN_ARCHITECTURE_GUIDELINES.md#自動検証の導入) を参照。特に「Presentation → Infrastructure は Program.cs のみ」は `.csproj` の `ProjectReference` だけでは強制できないため、このテストでの担保が必須。
 
 ---
 
@@ -261,6 +258,7 @@ dotnet build
 
 | 日付 | 更新内容 |
 |---|---|
+| 2026-07-31 | CLEAN_ARCHITECTURE_GUIDELINES.md の実コードとの不一致修正に合わせて本ファイルも修正。Domain/Common/SharedKernel の依存関係表を実装に合わせて訂正、Crosscutting→Infrastructure禁止を明記、SlnArch（未検証）の記述をNetArchTest.Rulesへの参照に置き換え |
 | 2026-07-30 | LocalDateTime 使用規則を追加。全層で IClock 経由の LocalDateTime 使用を明確化 |
 | 2026-07-09 | 初版作成。クリーンアーキテクチャ原則と新規プロジェクトチェックリスト |
 

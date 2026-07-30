@@ -10,10 +10,10 @@
 ## 依存関係
 
 **許可:**
-- なし（最も内側のレイヤー）
+- Common
 
 **禁止:**
-- Application, Infrastructure, Presentation
+- Application, Infrastructure, Presentation, Crosscutting
 
 ## 実装ガイドライン
 
