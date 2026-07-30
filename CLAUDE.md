@@ -174,6 +174,31 @@ public class UpdateOrderService
 
 ---
 
+## ⏰ LocalDateTime 使用規則
+
+### 基本原則
+- 全層で LocalDateTime を使用（DateTimeの直接使用は禁止）
+- IClock 経由でのみ日時を取得
+
+### DateTime の使用禁止の例外
+- **Clock の実装内部**：DateTime.Now, DateTime.UtcNow などは使用してもよい
+  - Clock はシステム時刻を LocalDateTime に変換する責務を持つ
+
+### Clock の取得と使用
+- 全層で DI を通じて IClock を注入
+- `var now = _clock.JstNow;` で LocalDateTime を取得
+
+### 例外ケースと対応
+1. **外部システム/DB/3rd party からの DateTime**
+   - 受け取った層で早期に LocalDateTime に変換
+   - 変換処理の責務は受け取った層
+
+2. **Clock の実装**
+   - 本番環境：SystemClock のみ使用
+   - テスト環境：FixedClock, OffsetClock など使用
+
+---
+
 ## 🔧 開発時の注意点
 
 ### 新しい機能を実装する際
@@ -236,5 +261,6 @@ dotnet build
 
 | 日付 | 更新内容 |
 |---|---|
+| 2026-07-30 | LocalDateTime 使用規則を追加。全層で IClock 経由の LocalDateTime 使用を明確化 |
 | 2026-07-09 | 初版作成。クリーンアーキテクチャ原則と新規プロジェクトチェックリスト |
 

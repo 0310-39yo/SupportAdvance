@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
 using SupportAdvance.Common.Clocks;
-using SupportAdvance.SharedKernel.ValueObjects;
 using SupportAdvance.SharedKernel.ValueObjects.Abstractions;
 
 namespace SupportAdvance.SharedKernel.ValueObjects.Audit;
@@ -36,7 +33,7 @@ public sealed class DeletedAt : PrimitiveValueObject<DateTime?>, IEquatable<Dele
     /// 【責務】未削除状態を表現する
     /// </summary>
     /// <returns>未削除状態のDeletedAtのインスタンス</returns>
-    public static DeletedAt Unset() => new(null, isSet: false);
+    public static DeletedAt Unset() => new(null, false);
 
     /// <summary>
     /// 指定された日時からDeletedAtのインスタンスを生成する（層間の型変換用）
@@ -50,7 +47,7 @@ public sealed class DeletedAt : PrimitiveValueObject<DateTime?>, IEquatable<Dele
     {
         if (input == null || !input.HasValue)
         {
-            result = Unset();  // ← null → Unset() で成功
+            result = Unset(); // ← null → Unset() で成功
             return true;
         }
 
@@ -123,7 +120,7 @@ public sealed class DeletedAt : PrimitiveValueObject<DateTime?>, IEquatable<Dele
     /// <returns>ValueField を含むコンポーネント列</returns>
     protected override IEnumerable<object?> GetValueComponents()
     {
-        yield return ValueField;  // DateTime? を返す
+        yield return ValueField; // DateTime? を返す
     }
 
     /// <summary>
@@ -138,7 +135,9 @@ public sealed class DeletedAt : PrimitiveValueObject<DateTime?>, IEquatable<Dele
 
         // null は許容（未削除状態を表現）
         if (normalized == null)
+        {
             return;
+        }
 
         // DateTime.MinValue や DateTime.MaxValue は除外
         if (normalized == DateTime.MinValue || normalized == DateTime.MaxValue)
