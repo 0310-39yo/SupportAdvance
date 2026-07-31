@@ -361,5 +361,5 @@ public class UserViewModel
 
 - [CLEAN_ARCHITECTURE_GUIDELINES.md](./CLEAN_ARCHITECTURE_GUIDELINES.md)
 - [.claude/CLAUDE.md](../.claude/CLAUDE.md)
-- 各レイヤーの README.md
+- 各レイヤーの `src/*/CLAUDE.md`
 

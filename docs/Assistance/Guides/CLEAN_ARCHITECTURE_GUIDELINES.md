@@ -220,8 +220,24 @@ public class Car : Entity
 ### 5. **Application Layer** - Use Cases / Application Services
 
 **プロジェクト:**
-- `src/Application` - 汎用アプリケーションサービス
-- `src/Contexts/Samples/CarPreferences.Application` - Use Cases（サンプル）
+- `src/Application` - 汎用アプリケーションサービス（基盤インターフェース）
+- `src/Contexts/Samples/CarPreferences.Application` - Use Cases（Bounded Context実装）
+
+**汎用 Application層 vs Bounded Context別 Application層:**
+
+Application層は2つの役割に分かれている：
+
+1. **`src/Application`（汎用層）** — インターフェースのみ定義
+   - `IUseCase`、`IRequest`、`IResponse` などの基盤抽象化
+   - すべての Bounded Context から参照される
+   - 具体的な Use Case 実装は持たない
+
+2. **`src/Contexts/*/Application`（Context別層）** — 実装
+   - 汎用層の IUseCase / IRequest / IResponse を実装
+   - ドメインロジック（Domain層）と Infrastructure の仲介役
+   - Context固有の Use Case を実装
+
+**Bounded Context別 Application が汎用 Application に依存することは許可される**（インターフェース実装パターン）
 
 **責務:**
 - Use Cases（ユースケース）の実装
@@ -240,10 +256,13 @@ public class Car : Entity
 - Common
 - Domain（各Bounded Context）
 - Crosscutting（ロギング等）
+- Application（汎用層）* ← Bounded Context別層のみ。汎用層は他を参照しない
 
 **禁止される参照:**
 - Infrastructure（直接参照は禁止、DI により注入）
 - Presentation
+
+*注：Bounded Context別 Application（例：CarPreferences.Application）が汎用 Application（IUseCase 等）に依存することはインターフェース実装パターンとして許可される。逆に、汎用 Application が Context別層を参照することは禁止。
 
 **例:**
 ```csharp
@@ -395,6 +414,7 @@ services.AddApplicationServices();
 - `*` = Domain → Crosscutting：ドメインイベント発行のみ許可
 - `**` = Presentation → Infrastructure：Program.cs（Composition Root）のみ許可。プロジェクト参照上は Infrastructure に到達可能な構成だが、`Program` 型を除く全ての型が Infrastructure 名前空間に依存しないことを [自動検証](#自動検証の導入) で担保する
 - `Common` は依存ゼロの最内層。`Crosscutting → Infrastructure` は禁止（実装は Infrastructure が Crosscutting のインターフェースを実装する一方向のみ）
+- **Application → Application** = 汎用 Application層（`src/Application`）と Bounded Context別層（`src/Contexts/*/Application`）の関係。汎用層はインターフェース定義のみ、Context別層がそれを実装。Context別層が汎用層に依存することは許可。逆に汎用層が Context別層を参照することは禁止
 
 ---
 
@@ -697,6 +717,7 @@ public class DependencyRuleTests
 
 | 日付 | 更新内容 |
 |---|---|
+| 2026-07-31（後）| Application層の説明に「汎用Application vs Bounded Context別Application」の区別を明記。マトリックスで「Application → Application」がインターフェース実装パターン（汎用層→Context別層）として許可されることを明確化。実装検査時に見つかった CarPreferences.Application が Application.UseCases に依存する件について、正当な設計パターンであることをドキュメントで担保 |
 | 2026-07-31 | 実コード（各 `.csproj` の `ProjectReference` / `using` 宣言）との不一致を修正。①Common⇔SharedKernelの依存方向を実装に合わせて反転（Common起点に修正）②Crosscutting→Infrastructureの循環参照定義を削除しInfrastructure→Crosscuttingの一方向に統一③冒頭図をInfrastructureが最内層に見える誤った表現から同心円型に修正④編集し忘れの記述（「✓ 修正済み」）を削除⑤自動検証をSlnArch（未検証）からNetArchTest.Rulesの具体的なテストコード例に置き換え |
 | 2026-07-09 | 初版作成。各層の責務と依存関係を定義 |
 

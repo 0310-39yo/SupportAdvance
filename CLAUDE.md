@@ -26,7 +26,7 @@ Presentation → Application → Domain ← Infrastructure
 |---|---|---|---|
 | SharedKernel | Common | ✓ | Common は依存ゼロ、SharedKernel はその上に構築 |
 | Domain | SharedKernel, Common, Crosscutting | ✓ | Crosscutting はドメインイベント発行のみ |
-| Application | Domain, SharedKernel, Common, Crosscutting | ✓ | Infrastructure は DI で注入 |
+| Application（Context別）| Domain, SharedKernel, Common, Crosscutting, Application（汎用層） | ✓ | 汎用層の IUseCase 等インターフェースを実装。Infrastructure は DI で注入 |
 | Infrastructure | Domain, SharedKernel, Common, Crosscutting | ✓ | ✗ Application は禁止。Crosscutting → Infrastructure は逆方向で禁止（循環参照になるため） |
 | Presentation | Application, Crosscutting, SharedKernel, Common | ✓ | Program.cs のみ Infrastructure 可（型レベルでNetArchTestにより検証） |
 
@@ -243,7 +243,7 @@ public class UpdateOrderService
 ## 📚 参考資料
 
 - **CLEAN_ARCHITECTURE_GUIDELINES.md**: 詳細なガイドライン
-- **各 README.md**: 層別の責務と依存関係
+- **各層の `src/*/CLAUDE.md`**: 層別の作業ルール（Common, SharedKernel, Crosscutting, Application, Infrastructure, Presentation, Contexts）
 - Clean Architecture（Robert C. Martin）
 
 ---
@@ -258,6 +258,7 @@ public class UpdateOrderService
 
 | 日付 | 更新内容 |
 |---|---|
+| 2026-07-31（後）| Application層の依存関係表を修正。汎用Application層と Bounded Context別Application層の区別を明記。「Application（Context別）→ Application（汎用層）」が IUseCase 実装パターンとして許可されることを追記 |
 | 2026-07-31 | CLEAN_ARCHITECTURE_GUIDELINES.md の実コードとの不一致修正に合わせて本ファイルも修正。Domain/Common/SharedKernel の依存関係表を実装に合わせて訂正、Crosscutting→Infrastructure禁止を明記、SlnArch（未検証）の記述をNetArchTest.Rulesへの参照に置き換え |
 | 2026-07-30 | LocalDateTime 使用規則を追加。全層で IClock 経由の LocalDateTime 使用を明確化 |
 | 2026-07-09 | 初版作成。クリーンアーキテクチャ原則と新規プロジェクトチェックリスト |
