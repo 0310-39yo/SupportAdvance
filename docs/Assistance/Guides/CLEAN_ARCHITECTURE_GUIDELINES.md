@@ -485,6 +485,97 @@ dotnet format --verify-no-changes --verbosity diagnostic
 
 ---
 
+## ⏰ LocalDateTime 使用規則
+
+プロジェクト全体で一貫した日時処理を行うため、以下のルールを厳守してください。
+
+### 基本原則
+
+- **全層で `LocalDateTime` を使用** — `DateTime` の直接使用は禁止
+- **`IClock` 経由でのみ日時を取得** — System.DateTime.Now 等への直接アクセスは禁止
+- **ローカライズされた時刻を一貫して使用** — JST（日本標準時）に統一
+
+### DateTime の使用許可例外
+
+**Clock 実装内部のみ許可:**
+- `src/Common/Clocks/SystemClock.cs`
+- `src/Common/Clocks/OffsetClock.cs`
+- `src/Common/Clocks/TickingClock.cs`
+
+これらの Clock 実装内では `DateTime.Now`、`DateTime.UtcNow` などの使用を許可。Clock はシステム時刻を `LocalDateTime` に変換する責務を持つ。
+
+### Clock の取得と使用
+
+**推奨パターン:**
+```csharp
+// ✅ OK: 全層で DI を通じて IClock を注入
+public class MyUseCase
+{
+    private readonly IClock _clock;
+    
+    public MyUseCase(IClock clock)
+    {
+        _clock = clock;
+    }
+    
+    public async Task Execute()
+    {
+        var now = _clock.JstNow;  // LocalDateTime を取得
+        // ...
+    }
+}
+```
+
+### 外部システム/DB からの DateTime 変換
+
+**原則:** 受け取った層で早期に `LocalDateTime` に変換し、以降は `LocalDateTime` のみを使用。
+
+**実装パターン:**
+```csharp
+// ✅ OK: DB から取得した DateTime を早期に LocalDateTime に変換
+public class CarPreferenceRepository
+{
+    public async Task<CarPreference> GetByIdAsync(int id)
+    {
+        var dto = await _connection.QueryFirstOrDefaultAsync<CarPreferenceDto>(
+            "SELECT * FROM CarPreferences WHERE Id = @Id",
+            new { Id = id });
+        
+        // 受け取った層で変換
+        var createdAt = CreatedAt.TryFrom(LocalDateTime.From(dto.CreatedAtUtc));
+        
+        return new CarPreference(id, ..., createdAt);
+    }
+}
+```
+
+### Clock の環境別実装
+
+**本番環境:**
+```csharp
+// SystemClock のみ使用（実システム時刻）
+services.AddSingleton<IClock>(new SystemClock());
+```
+
+**テスト環境:**
+```csharp
+// FixedClock: 固定時刻を返す
+// OffsetClock: テスト開始時刻からのオフセット
+// TickingClock: シミュレーション用に時刻を進める
+services.AddSingleton<IClock>(new FixedClock(new LocalDateTime(2026, 1, 1, 10, 0, 0)));
+```
+
+### 多層での使用例
+
+| 層 | 使用パターン | 備考 |
+|---|---|---|
+| Domain | `IClock` をパラメータで受け取り検証 | ビジネスロジック検証用 |
+| Application | `_clock.JstNow` で現在時刻取得 | DI注入 |
+| Infrastructure | DB保存時に `LocalDateTime.Value` を使用 | 型変換 |
+| Presentation | `IClock` をDIで参照 | ViewModel で表示用に変換 |
+
+---
+
 ## よくある違反パターンと対策
 
 ### ❌ パターン1: Application が Infrastructure に直接依存
