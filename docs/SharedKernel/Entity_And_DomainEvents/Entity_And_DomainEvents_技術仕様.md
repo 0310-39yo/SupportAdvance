@@ -44,21 +44,25 @@ public interface IDomainEvent
 
 **使用例**:
 ```csharp
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
+
 public class PreferencesUpdatedEvent : IDomainEvent
 {
-    public long RowId { get; }                      // AggregateRoot の rowId
+    public RowId RowId { get; }                      // AggregateRoot の識別子（RowId ValueObject）
     public PreferenceChangeType ChangeType { get; }
     public string OldValue { get; }
     public string NewValue { get; }
     public LocalDateTime OccurredAt { get; }  // 必須
 
     public PreferencesUpdatedEvent(
-        long rowId,
+        RowId rowId,
         PreferenceChangeType changeType,
         string oldValue,
         string newValue,
         LocalDateTime occurredAt)
     {
+        ArgumentNullException.ThrowIfNull(rowId);
+
         RowId = rowId;
         ChangeType = changeType;
         OldValue = oldValue;
@@ -126,17 +130,20 @@ public abstract class Entity<TId> : IEquatable<Entity<TId>>
 
 **使用例**:
 ```csharp
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
+using SupportAdvance.Common.Clocks;
+
 // Domain層
-public class UserPreferences : AggregateRoot<long>  // RowId ベース
+public class UserPreferences : AggregateRoot<RowId>  // RowId ValueObject ベース
 {
-    private RespondentPersonId _userId;             // ビジネス識別子
+    private RespondentPersonId _userId;             // ビジネス識別子（別ID）
     private CarModel? _preferredModel;
     private LocalDateTime _updatedAt;
 
     // コンストラクタ
-    public UserPreferences(RespondentPersonId userId, IClock clock, long rowId = 0)
+    public UserPreferences(RespondentPersonId userId, IClock clock, RowId? rowId = null)
     {
-        Id = rowId;
+        Id = rowId ?? RowId.New();  // 未採番の場合は RowId.New()（value=0）
         _userId = userId;
         _updatedAt = clock.JstNow;
     }
@@ -150,7 +157,7 @@ public class UserPreferences : AggregateRoot<long>  // RowId ベース
 
         // Domain層内でイベント発行
         this.RaiseDomainEvent(new PreferencesUpdatedEvent(
-            this.Id,  // RowId
+            this.Id,  // RowId ValueObject（型安全）
             PreferenceChangeType.ModelUpdated,
             oldModel?.ToString() ?? "未設定",
             model.ToString(),
@@ -186,11 +193,19 @@ public abstract class AggregateRoot<TId> : Entity<TId>
 
 **使用例**:
 ```csharp
-// 集約ルートは AggregateRoot<long> を継承（RowId ベース）
-public class UserPreferences : AggregateRoot<long>
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
+
+// 集約ルートは AggregateRoot<RowId> を継承（RowId ValueObject ベース）
+public class UserPreferences : AggregateRoot<RowId>
 {
     private RespondentPersonId _userId;  // ビジネス識別子は別プロパティ
-    // ...
+    
+    public UserPreferences(RespondentPersonId userId, IClock clock, RowId? rowId = null)
+    {
+        Id = rowId ?? RowId.New();  // DB採番前は RowId.New()（value=0）
+        _userId = userId;
+        // ...
+    }
 }
 ```
 

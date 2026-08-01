@@ -106,10 +106,11 @@ grep -r "YourContext.Domain" src/Application/ src/Infrastructure/
 
 using SupportAdvance.Common.Clocks;
 using SupportAdvance.SharedKernel.Entities;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 namespace SupportAdvance.Contexts.YourGroup.YourContext.Domain.Entities;
 
-public class YourEntity : AggregateRoot<long>
+public class YourEntity : AggregateRoot<RowId>
 {
     private YourBusinessId _yourBusinessId = null!;
     private string _name = null!;
@@ -117,12 +118,12 @@ public class YourEntity : AggregateRoot<long>
     public YourBusinessId YourBusinessId => _yourBusinessId;
     public string Name => _name;
 
-    public YourEntity(long rowId, YourBusinessId yourBusinessId, string name, IClock clock)
+    public YourEntity(YourBusinessId yourBusinessId, string name, IClock clock, RowId? rowId = null)
     {
         ArgumentNullException.ThrowIfNull(yourBusinessId);
         ArgumentNullException.ThrowIfNull(name);
 
-        Id = rowId;
+        Id = rowId ?? RowId.New();  // 未採番の場合は RowId.New()
         _yourBusinessId = yourBusinessId;
         _name = name;
         // クロック設定など
@@ -131,8 +132,9 @@ public class YourEntity : AggregateRoot<long>
 ```
 
 **チェック項目：**
-- [ ] Entity<long> で RowId ベースの識別子
+- [ ] Entity<RowId> で RowId ValueObject ベースの識別子
 - [ ] ビジネス識別子は別プロパティ（YourBusinessId）
+- [ ] RowId.From(long) または RowId.New() で生成
 - [ ] Domain イベント発行能力
 - [ ] LocalDateTime 使用
 

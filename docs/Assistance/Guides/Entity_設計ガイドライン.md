@@ -6,26 +6,35 @@ Domain Driven Design（DDD）における Entity と AggregateRoot の実装原�
 
 ## 📋 設計原則
 
-### Entity<long> パターン
+### Entity<RowId> パターン
 
-SupportAdvance プロジェクトではすべての Entity が `Entity<long>` を継承します。ここで `long` は **row_id** を表します。
+SupportAdvance プロジェクトではすべての Entity が `Entity<RowId>` を継承します。ここで `RowId` は **row_id** を表す ValueObject です。
 
 ```csharp
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
+
 public abstract class Entity<TId>
+    where TId : notnull
 {
-    public TId Id { get; set; }
+    public TId Id { get; protected set; }
     public byte[] RowVersion { get; set; } = null!;
     
     // ドメインイベント
-    protected List<IDomainEvent> _domainEvents = new();
+    private protected List<IDomainEvent> _domainEvents = new();
     public IReadOnlyList<IDomainEvent> DomainEvents => _domainEvents.AsReadOnly();
     
-    public void RaiseDomainEvent(IDomainEvent @event)
+    protected void RaiseDomainEvent(IDomainEvent @event)
     {
+        ArgumentNullException.ThrowIfNull(@event);
         _domainEvents.Add(@event);
     }
 }
 ```
+
+**RowId ValueObject:**
+- `RowId.From(long)` - 値が指定された RowId を生成
+- `RowId.New()` - 未採番状態（value=0）を生成
+- DB 採番後に実際の rowId に更新
 
 ### row_id とビジネス識別子の分離
 
@@ -33,10 +42,10 @@ Entity には **2つの識別子概念**があります：
 
 | 種類 | row_id | ビジネス識別子 |
 |---|---|---|
-| **型** | long（Entity.Id） | ValueObject（UserId など） |
+| **型** | RowId ValueObject | ValueObject（UserId など） |
 | **用途** | システム技術的なPK | ドメイン上の識別子 |
 | **参照** | DB での参照、Repository で使用 | ビジネスロジックで使用 |
-| **例** | 1, 2, 3, ... | UserId(12345), ProductCode("PROD-001") |
+| **例** | RowId.From(1), RowId.New() | UserId(12345), ProductCode("PROD-001") |
 
 ---
 
@@ -83,10 +92,11 @@ public class YourBusinessId : ValueObject
 
 using SupportAdvance.Common.Clocks;
 using SupportAdvance.SharedKernel.Entities;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 namespace SupportAdvance.Contexts.YourGroup.YourContext.Domain.Entities;
 
-public class YourEntity : Entity<long>
+public class YourEntity : Entity<RowId>
 {
     private YourBusinessId _yourBusinessId = null!;
     private string _name = null!;
@@ -98,14 +108,14 @@ public class YourEntity : Entity<long>
     public LocalDateTime CreatedAt => _createdAt;
 
     // コンストラクタ（主にDB復元用）
-    public YourEntity(long rowId, YourBusinessId yourBusinessId, string name, IClock clock)
+    public YourEntity(YourBusinessId yourBusinessId, string name, IClock clock, RowId? rowId = null)
     {
         ArgumentNullException.ThrowIfNull(yourBusinessId);
         ArgumentNullException.ThrowIfNull(name);
         ArgumentNullException.ThrowIfNull(clock);
 
-        // row_id を Entity.Id に設定
-        Id = rowId;
+        // row_id (RowId ValueObject) を Entity.Id に設定
+        Id = rowId ?? RowId.New();  // 未採番の場合は RowId.New()
         _yourBusinessId = yourBusinessId;
         _name = name;
         _createdAt = clock.JstNow;
@@ -129,10 +139,11 @@ public class YourEntity : Entity<long>
 
 using SupportAdvance.Common.Clocks;
 using SupportAdvance.SharedKernel.Entities;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 namespace SupportAdvance.Contexts.YourGroup.YourContext.Domain.Entities;
 
-public class YourAggregate : AggregateRoot<long>
+public class YourAggregate : AggregateRoot<RowId>
 {
     private YourBusinessId _aggregateId = null!;
     private List<YourEntity> _children = new();
@@ -140,12 +151,12 @@ public class YourAggregate : AggregateRoot<long>
     public YourBusinessId AggregateId => _aggregateId;
     public IReadOnlyList<YourEntity> Children => _children.AsReadOnly();
 
-    public YourAggregate(long rowId, YourBusinessId aggregateId, IClock clock)
+    public YourAggregate(YourBusinessId aggregateId, IClock clock, RowId? rowId = null)
     {
         ArgumentNullException.ThrowIfNull(aggregateId);
         ArgumentNullException.ThrowIfNull(clock);
 
-        Id = rowId;
+        Id = rowId ?? RowId.New();  // 未採番の場合は RowId.New()
         _aggregateId = aggregateId;
     }
 
@@ -175,17 +186,20 @@ Entity がドメイン内の重要な変更を発行します。
 ```csharp
 // src/Contexts/YourGroup/YourContext/YourContext.Domain/DomainEvents/YourEntityCreatedEvent.cs
 
-using SupportAdvance.SharedKernel.DomainEvents;
+using SupportAdvance.Common.Clocks;
+using SupportAdvance.SharedKernel.Entities;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 namespace SupportAdvance.Contexts.YourGroup.YourContext.Domain.DomainEvents;
 
 public class YourEntityCreatedEvent : IDomainEvent
 {
-    public long AggregateRootId { get; }
-    public DateTime OccurredOn { get; }
+    public RowId AggregateRootId { get; }
+    public LocalDateTime OccurredAt { get; }
 
-    public YourEntityCreatedEvent(long rowId)
+    public YourEntityCreatedEvent(RowId rowId, LocalDateTime occurredAt)
     {
+        ArgumentNullException.ThrowIfNull(rowId);
         AggregateRootId = rowId;
         OccurredOn = DateTime.UtcNow;
     }
