@@ -60,10 +60,9 @@ public class LayerDependencyTests
             .That()
             .ResideInNamespace("*.Application")
             .ShouldNot()
-            .HaveDependencyOn("SupportAdvance.Infrastructure.Repositories")
-            .And()
-            .ShouldNot()
-            .HaveDependencyOn("SupportAdvance.Infrastructure.Mappers");
+            .HaveDependencyOnAny(
+                "SupportAdvance.Infrastructure.Repositories",
+                "SupportAdvance.Infrastructure.Mappers");
 
         Assert.True(rule.GetResult().IsSuccessful,
             $"Application should not depend on Infrastructure implementations: {string.Join(", ", rule.GetResult().FailingTypes?.Select(t => t.Name) ?? Array.Empty<string>())}");
@@ -112,10 +111,9 @@ public class LayerDependencyTests
             .That()
             .DoNotHaveName("Program")
             .ShouldNot()
-            .HaveDependencyOn("SupportAdvance.Infrastructure.Repositories")
-            .And()
-            .ShouldNot()
-            .HaveDependencyOn("SupportAdvance.Infrastructure.Mappers");
+            .HaveDependencyOnAny(
+                "SupportAdvance.Infrastructure.Repositories",
+                "SupportAdvance.Infrastructure.Mappers");
 
         Assert.True(rule.GetResult().IsSuccessful,
             $"Presentation (except Program) should not depend on Infrastructure implementations: {string.Join(", ", rule.GetResult().FailingTypes?.Select(t => t.Name) ?? Array.Empty<string>())}");

@@ -1,4 +1,6 @@
-﻿namespace Architecture.Tests;
+﻿using Xunit;
+
+namespace Architecture.Tests;
 
 public class UnitTest1
 {

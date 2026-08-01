@@ -1,8 +1,6 @@
 using SupportAdvance.Tests.SharedKernel.Tests.ValueObjects.Fixtures;
 
-namespace SupportAdvance.SharedKernel.Tests.ValueObjects;
-
-using Xunit;
+namespace SupportAdvance.Tests.SharedKernel.Tests.ValueObjects;
 
 /// <summary>
 /// PrimitiveValueObject<TValue> の単体テスト

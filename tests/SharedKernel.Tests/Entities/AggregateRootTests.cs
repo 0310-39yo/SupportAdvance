@@ -1,7 +1,6 @@
 using SupportAdvance.SharedKernel.Tests.Entities.Fixtures;
-using Xunit;
 
-namespace SupportAdvance.SharedKernel.Tests.Entities;
+namespace SupportAdvance.Tests.SharedKernel.Tests.Entities;
 
 /// <summary>
 /// AggregateRoot<TId> 基底クラスのテスト

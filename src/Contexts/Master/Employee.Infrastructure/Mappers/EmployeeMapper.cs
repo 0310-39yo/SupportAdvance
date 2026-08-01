@@ -23,7 +23,7 @@ public class EmployeeMapper : IEntityMapper<EmployeeEntity, EmployeeDbModel, Row
             DepartmentId = entity.DepartmentId.Value,
             JobTitle = entity.JobTitle,
             IsActive = entity.IsActive,
-            HireDate = entity.HireDate?.ToDateTime(),
+            HireDate = entity.HireDate?.Value,
         };
     }
 
@@ -33,10 +33,10 @@ public class EmployeeMapper : IEntityMapper<EmployeeEntity, EmployeeDbModel, Row
         ArgumentNullException.ThrowIfNull(clock);
 
         var hireDate = dbModel.HireDate.HasValue
-            ? LocalDateTime.From(dbModel.HireDate.Value)
-            : null;
+            ? new LocalDateTime(dbModel.HireDate.Value)
+            : (LocalDateTime?)null;
 
-        return new Employee(
+        return new EmployeeEntity(
             employeeNumber: dbModel.EmployeeNumber,
             firstName: dbModel.FirstName,
             lastName: dbModel.LastName,

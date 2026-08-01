@@ -1,9 +1,8 @@
 using SupportAdvance.Common.Clocks;
 using SupportAdvance.SharedKernel.Entities;
 using SupportAdvance.SharedKernel.Tests.Entities.Fixtures;
-using Xunit;
 
-namespace SupportAdvance.SharedKernel.Tests.Entities;
+namespace SupportAdvance.Tests.SharedKernel.Tests.Entities;
 
 /// <summary>
 /// Entity<TId> 基底クラスのテスト
