@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\Application\Application.csproj" />
+    <ProjectReference Include="..\..\..\Crosscutting\Crosscutting.csproj" />
     <ProjectReference Include="..\CarPreferences.Domain\CarPreferences.Domain.csproj" />
   </ItemGroup>
 
