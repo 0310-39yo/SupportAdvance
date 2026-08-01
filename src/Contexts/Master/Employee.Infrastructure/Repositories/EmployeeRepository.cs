@@ -6,10 +6,11 @@ using SupportAdvance.Contexts.Master.Employee.Infrastructure.Mappers;
 using SupportAdvance.Infrastructure.Repositories;
 using SupportAdvance.Infrastructure.Services;
 using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
+using EmployeeEntity = SupportAdvance.Contexts.Master.Employee.Domain.Entities.Employee;
 
 namespace SupportAdvance.Contexts.Master.Employee.Infrastructure.Repositories;
 
-public class EmployeeRepository : RepositoryBase<Employee, EmployeeDbModel, RowId>, IEmployeeRepository
+public class EmployeeRepository : RepositoryBase<EmployeeEntity, EmployeeDbModel, RowId>, IEmployeeRepository
 {
     public EmployeeRepository(
         EmployeeMapper mapper,

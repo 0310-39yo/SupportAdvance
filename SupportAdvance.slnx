@@ -17,6 +17,16 @@
     <Project Path="src/SharedKernel/SharedKernel.csproj" Id="bf2067f5-628a-4063-9d7b-cd4caf033931" />
   </Folder>
   <Folder Name="/src/Contexts/" />
+  <Folder Name="/src/Contexts/Auth/">
+    <Project Path="src/Contexts/Auth/Identity.Application/Identity.Application.csproj" Id="3f407ec4-bf92-4f5e-c55d-ef51f89b4bcd" />
+    <Project Path="src/Contexts/Auth/Identity.Domain/Identity.Domain.csproj" Id="fc6f633c-c61f-5597-b18e-g8ggd16a2d87" />
+    <Project Path="src/Contexts/Auth/Identity.Infrastructure/Identity.Infrastructure.csproj" Id="f85dfb4d-c62g-5598-c19f-h9hhe17a3e98" />
+  </Folder>
+  <Folder Name="/src/Contexts/Master/">
+    <Project Path="src/Contexts/Master/Employee.Application/Employee.Application.csproj" Id="4g518fd5-cg03-5g6f-d66e-fh62g90a5cde" />
+    <Project Path="src/Contexts/Master/Employee.Domain/Employee.Domain.csproj" Id="gd7g744d-d73g-6g08-c20g-i0iii18b4f09" />
+    <Project Path="src/Contexts/Master/Employee.Infrastructure/Employee.Infrastructure.csproj" Id="g96eec5e-dh14-6h09-d31h-j1jjj29c5g10" />
+  </Folder>
   <Folder Name="/src/Contexts/Samples/">
     <Project Path="src/Contexts/Samples/CarPreferences.Application/CarPreferences.Application.csproj" Id="2f307dc3-ae81-4f4d-b44c-de4e33d1aecc" />
     <Project Path="src/Contexts/Samples/CarPreferences.Domain/CarPreferences.Domain.csproj" Id="eb5f522b-1a50-4496-a07e-f7ffc1b1a476" />
@@ -29,6 +39,14 @@
   </Folder>
   <Folder Name="/tests/">
     <Folder Name="/tests/Contexts/">
+      <Folder Name="/tests/Contexts/Auth/">
+        <Project Path="tests/Contexts/Auth/Identity.Domain.Tests/Identity.Domain.Tests.csproj" Id="h2i3j4k5-l6m7-48d9-9a0b-7c8d9e0f1a2b" />
+        <Project Path="tests/Contexts/Auth/Identity.Application.Tests/Identity.Application.Tests.csproj" Id="i3j4k5l6-m7n8-48e9-9a0b-8d9e0f1a2b3c" />
+      </Folder>
+      <Folder Name="/tests/Contexts/Master/">
+        <Project Path="tests/Contexts/Master/Employee.Domain.Tests/Employee.Domain.Tests.csproj" Id="j4k5l6m7-n8o9-48f9-9a0b-9e0f1a2b3c4d" />
+        <Project Path="tests/Contexts/Master/Employee.Application.Tests/Employee.Application.Tests.csproj" Id="k5l6m7n8-o9p0-48g9-9a0b-0f1a2b3c4d5e" />
+      </Folder>
       <Folder Name="/tests/Contexts/Samples/">
         <Project Path="tests/Contexts/Samples/CarPreferences.Domain.Tests/CarPreferences.Domain.Tests.csproj" Id="c1d2e3f4-a5b6-47c8-9d0e-4f5a6b7c8d9e" />
         <Project Path="tests/Contexts/Samples/CarPreferences.Application.Tests/CarPreferences.Application.Tests.csproj" Id="d1e2f3a4-b5c6-47d8-9e0f-5a6b7c8d9e0f" />

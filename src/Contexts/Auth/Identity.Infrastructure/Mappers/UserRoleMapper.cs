@@ -17,7 +17,7 @@ public class UserRoleMapper : IEntityMapper<UserRole, UserRoleDbModel, RowId>
             RowId = entity.Id.Value,
             UserId = entity.UserId.Value,
             RoleId = entity.RoleId.Value,
-            AssignedAt = entity.AssignedAt.ToDateTime(),
+            AssignedAt = entity.AssignedAt.Value,
         };
     }
 
@@ -26,7 +26,7 @@ public class UserRoleMapper : IEntityMapper<UserRole, UserRoleDbModel, RowId>
         ArgumentNullException.ThrowIfNull(dbModel);
         ArgumentNullException.ThrowIfNull(clock);
 
-        var assignedAt = LocalDateTime.From(dbModel.AssignedAt);
+        var assignedAt = new LocalDateTime(dbModel.AssignedAt);
 
         return new UserRole(
             userId: RowId.From(dbModel.UserId),
