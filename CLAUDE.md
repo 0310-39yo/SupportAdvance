@@ -25,7 +25,7 @@ Presentation → Application → Domain ← Infrastructure
 | From | To | 許可 | 備考 |
 |---|---|---|---|
 | SharedKernel | Common | ✓ | Common は依存ゼロ、SharedKernel はその上に構築 |
-| Domain | SharedKernel, Common, Crosscutting | ✓ | Crosscutting はドメインイベント発行のみ |
+| Domain | SharedKernel, Common | ✓ | ドメインロジック完全独立。ドメインイベント発行は Entity.RaiseDomainEvent()で内部完結 |
 | Application（Context別）| Domain, SharedKernel, Common, Crosscutting, Application（汎用層） | ✓ | 汎用層の IUseCase 等インターフェースを実装。Infrastructure は DI で注入 |
 | Infrastructure | Domain, SharedKernel, Common, Crosscutting | ✓ | ✗ Application は禁止。Crosscutting → Infrastructure は逆方向で禁止（循環参照になるため） |
 | Presentation | Application, Crosscutting, SharedKernel, Common | ✓ | Program.cs のみ Infrastructure 可（型レベルでNetArchTestにより検証） |

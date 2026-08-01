@@ -190,9 +190,9 @@ public interface IAppLogging<T>
 **許可される参照:**
 - SharedKernel
 - Common
-- Crosscutting（**ドメインイベント発行のみ**）
 
 **禁止される参照:**
+- Crosscutting（ドメインロジックは完全独立。ドメインイベント発行は Entity.RaiseDomainEvent() で内部完結）
 - Application
 - Infrastructure
 - Presentation
@@ -404,14 +404,13 @@ services.AddApplicationServices();
 | **Common** | - | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ |
 | **SharedKernel** | ✓ | - | ✗ | ✗ | ✗ | ✗ | ✗ |
 | **Crosscutting** | ✓ | ✓ | - | ✗ | ✗ | ✗ | ✗ |
-| **Domain** | ✓ | ✓ | ✓* | - | ✗ | ✗ | ✗ |
+| **Domain** | ✓ | ✓ | ✗ | - | ✗ | ✗ | ✗ |
 | **Application** | ✓ | ✓ | ✓ | ✓ | - | ✗ | ✗ |
 | **Infrastructure** | ✓ | ✓ | ✓ | ✓ | ✓*** | - | ✗ |
 | **Presentation** | ✓ | ✓ | ✓ | ✗ | ✓ | ✓** | - |
 
 - `✓` = 許可
 - `✗` = 禁止
-- `*` = Domain → Crosscutting：ドメインイベント発行のみ許可
 - `**` = Presentation → Infrastructure：Program.cs（Composition Root）のみ許可。プロジェクト参照上は Infrastructure に到達可能な構成だが、`Program` 型を除く全ての型が Infrastructure 名前空間に依存しないことを [自動検証](#自動検証の導入) で担保する
 - `***` = Infrastructure → Application：**インターフェース実装パターンのみ許可**。Application層で定義されたインターフェース（例：IRepository）を Infrastructure層が実装する場合、Application プロジェクトへの参照が必須。直接型を参照することは禁止（DI により逆転）
 - `Common` は依存ゼロの最内層。`Crosscutting → Infrastructure` は禁止（実装は Infrastructure が Crosscutting のインターフェースを実装する一方向のみ）
