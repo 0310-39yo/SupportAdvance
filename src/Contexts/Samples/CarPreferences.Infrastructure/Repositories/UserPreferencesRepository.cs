@@ -8,6 +8,7 @@ using SupportAdvance.Contexts.Samples.CarPreferences.Infrastructure.DataAccess.M
 using SupportAdvance.Contexts.Samples.CarPreferences.Infrastructure.Mappers;
 using SupportAdvance.Infrastructure.Repositories;
 using SupportAdvance.Infrastructure.Services;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 namespace SupportAdvance.Contexts.Samples.CarPreferences.Infrastructure.Repositories;
 
@@ -16,12 +17,12 @@ namespace SupportAdvance.Contexts.Samples.CarPreferences.Infrastructure.Reposito
 ///
 /// 【責務】
 /// - Domain層の IUserPreferencesRepository インターフェースを実装
-/// - DbModel ↔ Domain Entity 相互変換
+/// - DbModel ↔ Domain Entity 相互変換（RowId ValueObject対応）
 /// - 論理削除対応
-/// 【汎用基底】RepositoryBase を継承して監査情報を自動管理
+/// 【汎用基底】RepositoryBase<TEntity, TDbModel, TId> を継承して監査情報を自動管理
 /// </summary>
 public class UserPreferencesRepository
-    : RepositoryBase<UserPreferences, UserPreferencesDbModel>,
+    : RepositoryBase<UserPreferences, UserPreferencesDbModel, RowId>,
       IUserPreferencesRepository
 {
     private readonly IUserPreferencesDataAccess _dataAccess;

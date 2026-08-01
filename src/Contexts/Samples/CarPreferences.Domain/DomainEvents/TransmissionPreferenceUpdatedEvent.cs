@@ -1,5 +1,6 @@
 using SupportAdvance.Common.Clocks;
 using SupportAdvance.SharedKernel.Entities;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 namespace SupportAdvance.Contexts.Samples.CarPreferences.Domain.DomainEvents;
 
@@ -12,8 +13,8 @@ namespace SupportAdvance.Contexts.Samples.CarPreferences.Domain.DomainEvents;
 /// </summary>
 public sealed class TransmissionPreferenceUpdatedEvent : IDomainEvent
 {
-    /// <summary>row_id（システム基本ID）</summary>
-    public long RowId { get; }
+    /// <summary>row_id（システム基本ID）ValueObject</summary>
+    public RowId RowId { get; }
 
     /// <summary>変更前の値（true: オートマ, false: マニュアル）</summary>
     public bool OldPreference { get; }
@@ -25,11 +26,13 @@ public sealed class TransmissionPreferenceUpdatedEvent : IDomainEvent
     public LocalDateTime OccurredAt { get; }
 
     public TransmissionPreferenceUpdatedEvent(
-        long rowId,
+        RowId rowId,
         bool oldPreference,
         bool newPreference,
         LocalDateTime occurredAt)
     {
+        ArgumentNullException.ThrowIfNull(rowId);
+
         RowId = rowId;
         OldPreference = oldPreference;
         NewPreference = newPreference;

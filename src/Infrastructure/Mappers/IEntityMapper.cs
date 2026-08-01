@@ -11,10 +11,16 @@ namespace SupportAdvance.Infrastructure.Mappers;
 /// - DbModel → Domain Entity（読み取り時）
 /// 【原則】純粋なマッピングのみ（ビジネスコンテキスト不問）
 /// 【監査情報】createdBy, updatedBy は Repository 層で設定
+///
+/// 【型パラメータ】
+/// - TEntity: Entity<TId>（ID型をサポート）
+/// - TDbModel: データベースモデル
+/// - TId: Entity の ID 型（ValueObject など）
 /// </summary>
-public interface IEntityMapper<TEntity, TDbModel>
-    where TEntity : Entity<long>
+public interface IEntityMapper<TEntity, TDbModel, TId>
+    where TEntity : Entity<TId>
     where TDbModel : class
+    where TId : notnull
 {
     /// <summary>
     /// Domain Entity → DbModel（保存用）

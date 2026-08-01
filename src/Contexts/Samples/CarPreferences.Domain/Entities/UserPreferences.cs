@@ -2,6 +2,7 @@ using SupportAdvance.Common.Clocks;
 using SupportAdvance.Contexts.Samples.CarPreferences.Domain.DomainEvents;
 using SupportAdvance.Contexts.Samples.CarPreferences.Domain.ValueObjects;
 using SupportAdvance.SharedKernel.Entities;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 namespace SupportAdvance.Contexts.Samples.CarPreferences.Domain.Entities;
 
@@ -16,10 +17,10 @@ namespace SupportAdvance.Contexts.Samples.CarPreferences.Domain.Entities;
 /// 【ライフサイクル】ユーザー登録～退会まで
 ///
 /// 【識別子設計】
-/// - Entity.Id: row_id（DB主キー、SQL Serverシーケンス）
+/// - Entity.Id: RowId（row_id ValueObject、DB主キー、SQL Serverシーケンス）
 /// - UserId: ユーザーID（ビジネス識別子、1000～9999）
 /// </summary>
-public class UserPreferences : AggregateRoot<long>
+public class UserPreferences : AggregateRoot<RowId>
 {
     /// <summary>ユーザーID（ビジネス識別子、1000～9999）</summary>
     private RespondentPersonId _userId = null!;
@@ -81,24 +82,24 @@ public class UserPreferences : AggregateRoot<long>
     /// UserPreferences を生成
     ///
     /// 【責務】Entity の初期化
-    /// 【新規作成】rowId = 0（DB挿入後に採番される）
+    /// 【新規作成】rowId = RowId.New()（value=0、DB挿入後に採番される）
     /// 【既存読み込み】rowId を指定
     /// </summary>
     /// <param name="userId">ユーザーID（ビジネス識別子）</param>
     /// <param name="respondedAt">回答日時</param>
     /// <param name="clock">現在時刻取得用</param>
-    /// <param name="rowId">row_id（DB主キー、デフォルト=0）</param>
+    /// <param name="rowId">row_id ValueObject（DB主キー、デフォルト=RowId.New()）</param>
     public UserPreferences(
         RespondentPersonId userId,
         RespondentAt respondedAt,
         IClock clock,
-        long rowId = 0)
+        RowId? rowId = null)
     {
         ArgumentNullException.ThrowIfNull(userId);
         ArgumentNullException.ThrowIfNull(respondedAt);
         ArgumentNullException.ThrowIfNull(clock);
 
-        Id = rowId;
+        Id = rowId ?? RowId.New();
         _userId = userId;
         _respondedAt = respondedAt;
         _createdAt = clock.JstNow;

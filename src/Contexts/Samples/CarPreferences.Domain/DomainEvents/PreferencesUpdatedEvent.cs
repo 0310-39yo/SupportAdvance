@@ -1,5 +1,6 @@
 using SupportAdvance.Common.Clocks;
 using SupportAdvance.SharedKernel.Entities;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 namespace SupportAdvance.Contexts.Samples.CarPreferences.Domain.DomainEvents;
 
@@ -12,8 +13,8 @@ namespace SupportAdvance.Contexts.Samples.CarPreferences.Domain.DomainEvents;
 /// </summary>
 public sealed class PreferencesUpdatedEvent : IDomainEvent
 {
-    /// <summary>row_id（システム基本ID）</summary>
-    public long RowId { get; }
+    /// <summary>row_id（システム基本ID）ValueObject</summary>
+    public RowId RowId { get; }
 
     /// <summary>変更タイプ</summary>
     public PreferenceChangeType ChangeType { get; }
@@ -28,12 +29,13 @@ public sealed class PreferencesUpdatedEvent : IDomainEvent
     public LocalDateTime OccurredAt { get; }
 
     public PreferencesUpdatedEvent(
-        long rowId,
+        RowId rowId,
         PreferenceChangeType changeType,
         string oldValue,
         string newValue,
         LocalDateTime occurredAt)
     {
+        ArgumentNullException.ThrowIfNull(rowId);
         ArgumentNullException.ThrowIfNull(changeType);
         ArgumentNullException.ThrowIfNull(oldValue);
         ArgumentNullException.ThrowIfNull(newValue);

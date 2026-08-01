@@ -14,17 +14,23 @@ namespace SupportAdvance.Infrastructure.Repositories;
 /// - 認証コンテキストからユーザー情報を取得
 ///
 /// 【使用方法】BC固有の Repository が継承して、DB操作を実装
+///
+/// 【型パラメータ】
+/// - TEntity: Entity<TId>（ID型をサポート）
+/// - TDbModel: データベースモデル
+/// - TId: Entity の ID 型（ValueObject など）
 /// </summary>
-public abstract class RepositoryBase<TEntity, TDbModel>
-    where TEntity : Entity<long>
+public abstract class RepositoryBase<TEntity, TDbModel, TId>
+    where TEntity : Entity<TId>
     where TDbModel : class
+    where TId : notnull
 {
-    protected IEntityMapper<TEntity, TDbModel> Mapper { get; }
+    protected IEntityMapper<TEntity, TDbModel, TId> Mapper { get; }
     protected ICurrentUserService CurrentUser { get; }
     protected IClock Clock { get; }
 
     protected RepositoryBase(
-        IEntityMapper<TEntity, TDbModel> mapper,
+        IEntityMapper<TEntity, TDbModel, TId> mapper,
         ICurrentUserService currentUser,
         IClock clock)
     {

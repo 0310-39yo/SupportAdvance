@@ -1,6 +1,7 @@
 using SupportAdvance.Common.Clocks;
 using SupportAdvance.Contexts.Samples.CarPreferences.Domain.ValueObjects;
 using SupportAdvance.SharedKernel.Entities;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 namespace SupportAdvance.Contexts.Samples.CarPreferences.Domain.DomainEvents;
 
@@ -13,8 +14,8 @@ namespace SupportAdvance.Contexts.Samples.CarPreferences.Domain.DomainEvents;
 /// </summary>
 public sealed class BudgetUpdatedEvent : IDomainEvent
 {
-    /// <summary>row_id（システム基本ID）</summary>
-    public long RowId { get; }
+    /// <summary>row_id（システム基本ID）ValueObject</summary>
+    public RowId RowId { get; }
 
     /// <summary>変更前の予算下限</summary>
     public Money? OldBudgetFrom { get; }
@@ -32,13 +33,15 @@ public sealed class BudgetUpdatedEvent : IDomainEvent
     public LocalDateTime OccurredAt { get; }
 
     public BudgetUpdatedEvent(
-        long rowId,
+        RowId rowId,
         Money? oldFrom,
         Money? oldTo,
         Money? newFrom,
         Money? newTo,
         LocalDateTime occurredAt)
     {
+        ArgumentNullException.ThrowIfNull(rowId);
+
         RowId = rowId;
         OldBudgetFrom = oldFrom;
         OldBudgetTo = oldTo;

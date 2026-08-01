@@ -1,6 +1,7 @@
 using SupportAdvance.Common.Clocks;
 using SupportAdvance.Contexts.Samples.CarPreferences.Domain.ValueObjects;
 using SupportAdvance.SharedKernel.Entities;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 namespace SupportAdvance.Contexts.Samples.CarPreferences.Domain.DomainEvents;
 
@@ -13,8 +14,8 @@ namespace SupportAdvance.Contexts.Samples.CarPreferences.Domain.DomainEvents;
 /// </summary>
 public sealed class BodyTypeUpdatedEvent : IDomainEvent
 {
-    /// <summary>row_id（システム基本ID）</summary>
-    public long RowId { get; }
+    /// <summary>row_id（システム基本ID）ValueObject</summary>
+    public RowId RowId { get; }
 
     /// <summary>変更前のボディタイプ</summary>
     public BodyType? OldBodyType { get; }
@@ -26,11 +27,12 @@ public sealed class BodyTypeUpdatedEvent : IDomainEvent
     public LocalDateTime OccurredAt { get; }
 
     public BodyTypeUpdatedEvent(
-        long rowId,
+        RowId rowId,
         BodyType? oldBodyType,
         BodyType newBodyType,
         LocalDateTime occurredAt)
     {
+        ArgumentNullException.ThrowIfNull(rowId);
         ArgumentNullException.ThrowIfNull(newBodyType);
 
         RowId = rowId;
