@@ -8,9 +8,9 @@
 
 | ドキュメント | 対象者 | 目的 |
 |---|---|---|
-| **[Technical_Specification.md](Technical_Specification.md)** | 開発者（使用者） | Entity と IDomainEvent の使用方法、インターフェース仕様 |
-| **[Detailed_Design.md](Detailed_Design.md)** | AI実装者 | 実装指示書、クラス構成、メソッド詳細、検証ルール |
-| **[Unit_Test_Specification.md](Unit_Test_Specification.md)** | テスト実装者 | テストケース仕様、テストシナリオ、期待動作 |
+| **[Entity_And_DomainEvents_技術仕様.md](Entity_And_DomainEvents_技術仕様.md)** | 開発者（使用者） | Entity と IDomainEvent の使用方法、インターフェース仕様 |
+| **[Entity_And_DomainEvents_詳細設計.md](Entity_And_DomainEvents_詳細設計.md)** | AI実装者 | 実装指示書、クラス構成、メソッド詳細、検証ルール |
+| **[Entity_And_DomainEvents_単体テスト仕様.md](Entity_And_DomainEvents_単体テスト仕様.md)** | テスト実装者 | テストケース仕様、テストシナリオ、期待動作 |
 
 ---
 
@@ -124,8 +124,8 @@ src/SharedKernel/
 │            │ 継承                    │
 │  ┌──────────────────────────────┐   │
 │  │  UserPreferences :           │   │
-│  │  AggregateRoot<UserId>       │   │
-│  │                              │   │
+│  │  AggregateRoot<long>         │   │
+│  │  （RowId ベース識別子）        │   │
 │  │  public void UpdateXxx()     │   │
 │  │  {                           │   │
 │  │    // ビジネスロジック        │   │
@@ -145,37 +145,47 @@ src/SharedKernel/
 
 ```csharp
 // Domain層
-public class UserPreferences : AggregateRoot<UserId>
+public class UserPreferences : AggregateRoot<long>  // RowId ベース
 {
-    private CarModel _preferredModel;
+    private RespondentPersonId _userId;             // ビジネス識別子
+    private CarModel? _preferredModel;
 
-    public void UpdatePreferences(CarModel model, IClock clock)
+    public void UpdatePreferredModel(CarModel model, IClock clock)
     {
+        var oldModel = _preferredModel;
         _preferredModel = model;
 
         // イベント発行（ログなし）
         this.RaiseDomainEvent(new PreferencesUpdatedEvent(
-            this.Id,
-            model,
+            this.Id,  // RowId（システム基本ID）
+            PreferenceChangeType.ModelUpdated,
+            oldModel?.ToString() ?? "未設定",
+            model.ToString(),
             clock.JstNow  // LocalDateTime
         ));
     }
-
-    public IReadOnlyList<IDomainEvent> GetDomainEvents() 
-        => _domainEvents.AsReadOnly();
 }
 
 // Domain層：イベント定義
 public class PreferencesUpdatedEvent : IDomainEvent
 {
-    public UserId UserId { get; }
-    public CarModel Model { get; }
+    public long RowId { get; }
+    public PreferenceChangeType ChangeType { get; }
+    public string OldValue { get; }
+    public string NewValue { get; }
     public LocalDateTime OccurredAt { get; }
 
-    public PreferencesUpdatedEvent(UserId userId, CarModel model, LocalDateTime occurredAt)
+    public PreferencesUpdatedEvent(
+        long rowId,
+        PreferenceChangeType changeType,
+        string oldValue,
+        string newValue,
+        LocalDateTime occurredAt)
     {
-        UserId = userId;
-        Model = model;
+        RowId = rowId;
+        ChangeType = changeType;
+        OldValue = oldValue;
+        NewValue = newValue;
         OccurredAt = occurredAt;
     }
 }

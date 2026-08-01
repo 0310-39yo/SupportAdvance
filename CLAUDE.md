@@ -240,10 +240,69 @@ public class UpdateOrderService
 
 ---
 
+## 🗄️ データベース テーブル設計規則
+
+### 監査用カラムの必須化
+
+**すべてのテーブルは以下の8つの監査カラムを必須とします。**
+
+| # | カラム名 | 型 | 制約 | 用途 |
+|---|---|---|---|---|
+| 1 | `row_id` | `bigint` | PK, Sequence自動採番 | 主キー（システム基本ID） |
+| 2 | `row_version` | `timestamp` | NOT NULL | 楽観ロック用タイムスタンプ |
+| 3 | `created_at` | `datetime2(7)` | NOT NULL | 作成日時（LocalDateTime/JST） |
+| 4 | `created_by` | `bigint` | NOT NULL, FK → m_persons | 作成者の従業員rowId |
+| 5 | `updated_at` | `datetime2(7)` | NULL | 更新日時（LocalDateTime/JST） |
+| 6 | `updated_by` | `bigint` | NULL, FK → m_persons | 更新者の従業員rowId |
+| 7 | `deleted_at` | `datetime2(7)` | NULL | 削除日時（論理削除用） |
+| 8 | `deleted_by` | `bigint` | NULL, FK → m_persons | 削除者の従業員rowId |
+
+### テーブル設計チェックリスト
+
+新規テーブルを設計する際、以下を確認してください：
+
+- [ ] **row_id**: Sequence `s_row_id_sequence` でPKを自動採番
+- [ ] **row_version**: `timestamp` で楽観ロック対応
+- [ ] **created_at/created_by**: NOT NULL、作成時に自動設定
+- [ ] **updated_at/updated_by**: NULL許可、更新時に設定
+- [ ] **deleted_at/deleted_by**: NULL許可、論理削除用（IS NULLで有効行フィルタ）
+- [ ] **foreign keys**: created_by, updated_by, deleted_by → m_persons(row_id)
+- [ ] **default values**: created_by=SYSTEM_USER_ID など適切なデフォルト値
+
+### SQL テンプレート
+
+```sql
+CREATE TABLE [dbo].[t_YourTable] (
+    -- 監査カラム（必須）
+    [row_id] [bigint] NOT NULL PRIMARY KEY DEFAULT (NEXT VALUE FOR [dbo].[s_row_id_sequence]),
+    [row_version] [timestamp] NOT NULL,
+    [created_at] [datetime2](7) NOT NULL,
+    [created_by] [bigint] NOT NULL,
+    [updated_at] [datetime2](7) NULL,
+    [updated_by] [bigint] NULL,
+    [deleted_at] [datetime2](7) NULL,
+    [deleted_by] [bigint] NULL,
+    
+    -- ビジネスカラム
+    [your_column] [nvarchar](100) NOT NULL,
+    
+    -- 制約
+    CONSTRAINT [CK_tYourTable_YourCheck] CHECK (...)
+)
+```
+
+### 実装例
+
+- **CarPreferences.Infrastructure**: `t_UserPreferences` テーブル
+  - 参考: `src/Contexts/Samples/CarPreferences.Infrastructure/Migrations/002_CreateUserPreferencesTable.sql`
+
+---
+
 ## 📚 参考資料
 
 - **CLEAN_ARCHITECTURE_GUIDELINES.md**: 詳細なガイドライン
 - **各層の `src/*/CLAUDE.md`**: 層別の作業ルール（Common, SharedKernel, Crosscutting, Application, Infrastructure, Presentation, Contexts）
+- **TABLE_DESIGN_STANDARDS.md**: データベース設計の詳細仕様（docs/Assistance/Guides/）
 - Clean Architecture（Robert C. Martin）
 
 ---

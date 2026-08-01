@@ -1,5 +1,9 @@
 # Domain層 null厳格性の実装戦略
 
+> **📚 関連ドキュメント**: より詳細な技術設計については、[監査ValueObject_null処理詳細設計.md](../../../docs/SharedKernel/ValueObjects/Audit/監査ValueObject_null処理詳細設計.md) を参照してください。
+
+---
+
 ## 📋 問題設定
 
 | 層 | 特性 | 設計原則 |
@@ -63,17 +67,18 @@ public static bool TryFrom(LocalDateTime? input, out CreatedAt result)
 
 ---
 
-### 2. UpdatedAt（永続化層では NULL OK）
+### 2. UpdatedAt（永続化層では NULL OK、未更新状態を Unset で管理）
 
 ```csharp
-// TryFrom - 【失敗条件】
-public static bool TryFrom(DateTime? input, out UpdatedAt result)
+// TryFrom - 【null 対応】
+public static bool TryFrom(LocalDateTime? input, out UpdatedAt result)
 {
-    result = default!;
-    
-    // ✗ null が来たら失敗（Domain層は値が必須）
-    if (!input.HasValue)
-        return false;  // ← null はDomain層へ通さない
+    // ✓ null が来たら Unset()で成功（未更新状態を表現）
+    if (input == null || !input.HasValue)
+    {
+        result = Unset();  // IsSet = false
+        return true;       // ← 成功（null は「未更新」として処理）
+    }
     
     // ✓ 値があれば From() で生成
     try
@@ -81,16 +86,19 @@ public static bool TryFrom(DateTime? input, out UpdatedAt result)
         result = From(input.Value);  // MinValue/MaxValue チェック
         return true;
     }
-    catch
+    catch (ArgumentException)
     {
+        result = null!;
         return false;
     }
 }
 ```
 
 **Domain層での保証:**
-- UpdatedAt が存在するなら、必ず有効な DateTime を持つ
-- Domain層の Code: `if (entity.UpdatedAt.Equals(createdAt))` は安全
+- UpdatedAt が Unset（IsSet=false）なら、未更新状態
+- UpdatedAt が Set（IsSet=true）なら、有効な DateTime を持つ
+- Domain層には null が存在しない、`IsSet` で「更新済み/未更新」を管理
+- Domain層の Code: `if (entity.UpdatedAt.HasUpdated)` で更新状態を判定
 
 ---
 
@@ -153,18 +161,17 @@ public class CarRepository : ICarRepository
                 $"Car {carId}: CreatedAt が無効な日時です");
         }
         
-        // updatedAt: DB では NULL OK だが、null なら TryFrom は失敗
-        UpdatedAt? updatedAt = null;
-        if (dto.UpdatedAtDb.HasValue)
+        // updatedAt: DB では NULL OK、TryFrom は常に成功（null → Unset で成功）
+        if (!UpdatedAt.TryFrom(
+                dto.UpdatedAtDb.HasValue 
+                    ? new LocalDateTime(dto.UpdatedAtDb.Value) 
+                    : null,
+                out var updatedAt))
         {
-            if (!UpdatedAt.TryFrom(dto.UpdatedAtDb.Value, out var updated))
-            {
-                throw new InvalidOperationException(
-                    $"Car {carId}: UpdatedAt が無効な日時です");
-            }
-            updatedAt = updated;
+            throw new InvalidOperationException(
+                $"Car {carId}: UpdatedAt が無効な日時です");
         }
-        // null の場合、updatedAt を Domain層へ渡さない
+        // updatedAt は必ず Set or Unset のいずれか（null は存在しない）
         
         // deletedAt: DB では NULL OK、null=未削除として処理
         if (!DeletedAt.TryFrom(
@@ -191,20 +198,21 @@ public class CarRepository : ICarRepository
 
 ### TryFrom の責務分離
 
-- [ ] **CreatedAt.TryFrom**: `input == null` → `false`
-- [ ] **UpdatedAt.TryFrom**: `input == null` → `false`
-- [ ] **DeletedAt.TryFrom**: `input == null` → `NotDeleted()`（成功）
+- [ ] **CreatedAt.TryFrom**: `input == null` → `false`（DB NOT NULL違反）
+- [ ] **UpdatedAt.TryFrom**: `input == null` → `Unset()`（成功、未更新状態を表現）
+- [ ] **DeletedAt.TryFrom**: `input == null` → `Unset()`（成功、未削除状態を表現）
 
 ### Repository で
 
 - [ ] CreatedAt が null → 例外を投げる（DB制約違反）
-- [ ] UpdatedAt が null → Domain層に Unset を渡さない（または省略）
-- [ ] DeletedAt が null → Domain層に `NotDeleted()` を渡す
+- [ ] UpdatedAt が null → `Unset()` を Domain層に渡す（未更新を表現）
+- [ ] DeletedAt が null → `Unset()` を Domain層に渡す（未削除を表現）
 
 ### Domain層では
 
 - [ ] `createdAt.Value` を安全に呼べる
-- [ ] `updatedAt?.Value` で null安全にアクセス
+- [ ] `updatedAt.HasUpdated` で更新済み判定（IsSet で状態管理）
+- [ ] `updatedAt.Value` は `HasUpdated` が true のときのみ有効
 - [ ] `deletedAt.IsDeleted` で論理削除判定（null を見ない）
 
 ---
@@ -218,11 +226,12 @@ public class Car : Entity
 {
     public CarId CarId { get; }
     public CreatedAt CreatedAt { get; }
-    public UpdatedAt? UpdatedAt { get; private set; }
-    public DeletedAt DeletedAt { get; private set; }
+    public UpdatedAt UpdatedAt { get; private set; }  // null ではなく Unset 状態で管理
+    public DeletedAt DeletedAt { get; private set; }  // null ではなく Unset 状態で管理
     
     // ドメインメソッド
-    public bool IsDeleted => DeletedAt.IsDeleted;  // null を見ない
+    public bool IsDeleted => DeletedAt.IsDeleted;    // null を見ない
+    public bool HasUpdated => UpdatedAt.HasUpdated;  // IsSet で判定
     
     public void Update(string name)
     {
@@ -234,15 +243,15 @@ public class Car : Entity
     public static Car Reconstruct(
         CarId carId,
         CreatedAt createdAt,
-        UpdatedAt? updatedAt,  // null OK
+        UpdatedAt updatedAt,   // null ではなく Unset 状態で管理
         DeletedAt deletedAt)   // IsSet で管理
     {
         return new Car
         {
             CarId = carId,
             CreatedAt = createdAt,
-            UpdatedAt = updatedAt,
-            DeletedAt = deletedAt
+            UpdatedAt = updatedAt,     // Unset() または Set状態
+            DeletedAt = deletedAt      // Unset() または Set状態
         };
     }
 }
@@ -255,9 +264,15 @@ public class Car : Entity
 | 層 | 責務 | 例 |
 |---|---|---|
 | **Infrastructure** | null チェック + TryFrom 呼び出し | Repository |
-| **TryFrom** | null/invalid を吸収 | Layer Boundary |
+| **TryFrom** | null → Unset/値 に変換（層間フィルター） | Layer Boundary |
 | **Domain** | null を見ない、IsSet で状態管理 | Entity ロジック |
 
 **原則:** 
 > Domain層が null を目にすることは決してない。  
-> TryFrom がその前で null を「処理」し、Domain層へ渡す値に変換する。
+> TryFrom がその前で null を「Unset状態に変換」し、Domain層へ渡す。  
+> Unset は ValueObject の有効な状態（null ではない）で、IsSet フラグで管理される。
+
+**各ValueObjectの変換:**
+- **CreatedAt.TryFrom(null)** → false（失敗・例外処理）
+- **UpdatedAt.TryFrom(null)** → Unset()で成功（未更新状態）
+- **DeletedAt.TryFrom(null)** → Unset()で成功（未削除状態）

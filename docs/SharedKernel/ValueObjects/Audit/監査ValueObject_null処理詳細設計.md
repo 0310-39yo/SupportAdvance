@@ -3,6 +3,8 @@
 **バージョン:** 1.0  
 **作成日:** 2025年07月  
 
+> **🚀 クイックガイド**: 実装時の簡潔なガイドについては、[監査ValueObject_null処理戦略.md](../../../docs/Assistance/Guides/監査ValueObject_null処理戦略.md) を参照してください。
+
 ---
 
 ## 1. 概要

@@ -492,8 +492,8 @@ grep -r "using SupportAdvance" src/SharedKernel/
 
 ## 🔗 関連ドキュメント
 
-- [Technical_Specification.md](Technical_Specification.md) - 使用方法（開発者向け）
-- [Unit_Test_Specification.md](Unit_Test_Specification.md) - テスト仕様
+- [Entity_And_DomainEvents_技術仕様.md](Entity_And_DomainEvents_技術仕様.md) - 使用方法（開発者向け）
+- [Entity_And_DomainEvents_単体テスト仕様.md](Entity_And_DomainEvents_単体テスト仕様.md) - テスト仕様
 - [CLAUDE.md - 依存関係ルール](../../../CLAUDE.md)
 
 ---

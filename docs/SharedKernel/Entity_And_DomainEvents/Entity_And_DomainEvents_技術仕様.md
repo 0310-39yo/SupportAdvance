@@ -46,14 +46,23 @@ public interface IDomainEvent
 ```csharp
 public class PreferencesUpdatedEvent : IDomainEvent
 {
-    public UserId UserId { get; }
-    public CarModel Model { get; }
+    public long RowId { get; }                      // AggregateRoot の rowId
+    public PreferenceChangeType ChangeType { get; }
+    public string OldValue { get; }
+    public string NewValue { get; }
     public LocalDateTime OccurredAt { get; }  // 必須
 
-    public PreferencesUpdatedEvent(UserId userId, CarModel model, LocalDateTime occurredAt)
+    public PreferencesUpdatedEvent(
+        long rowId,
+        PreferenceChangeType changeType,
+        string oldValue,
+        string newValue,
+        LocalDateTime occurredAt)
     {
-        UserId = userId;
-        Model = model;
+        RowId = rowId;
+        ChangeType = changeType;
+        OldValue = oldValue;
+        NewValue = newValue;
         OccurredAt = occurredAt;
     }
 }
@@ -118,33 +127,36 @@ public abstract class Entity<TId> : IEquatable<Entity<TId>>
 **使用例**:
 ```csharp
 // Domain層
-public class UserPreferences : AggregateRoot<UserId>
+public class UserPreferences : AggregateRoot<long>  // RowId ベース
 {
-    private CarModel _preferredModel;
+    private RespondentPersonId _userId;             // ビジネス識別子
+    private CarModel? _preferredModel;
     private LocalDateTime _updatedAt;
 
     // コンストラクタ
-    public UserPreferences(UserId id)
+    public UserPreferences(RespondentPersonId userId, IClock clock, long rowId = 0)
     {
-        Id = id;
+        Id = rowId;
+        _userId = userId;
+        _updatedAt = clock.JstNow;
     }
 
     // ビジネスメソッド
-    public void UpdatePreferences(CarModel model, IClock clock)
+    public void UpdatePreferredModel(CarModel model, IClock clock)
     {
+        var oldModel = _preferredModel;
         _preferredModel = model;
         _updatedAt = clock.JstNow;
 
         // Domain層内でイベント発行
         this.RaiseDomainEvent(new PreferencesUpdatedEvent(
-            this.Id,
-            model,
+            this.Id,  // RowId
+            PreferenceChangeType.ModelUpdated,
+            oldModel?.ToString() ?? "未設定",
+            model.ToString(),
             _updatedAt
         ));
     }
-
-    // イベント取得
-    public IReadOnlyList<IDomainEvent> GetDomainEvents() => this.DomainEvents;
 }
 ```
 
@@ -174,9 +186,10 @@ public abstract class AggregateRoot<TId> : Entity<TId>
 
 **使用例**:
 ```csharp
-// 集約ルートは AggregateRoot<TId> を継承
-public class UserPreferences : AggregateRoot<UserId>
+// 集約ルートは AggregateRoot<long> を継承（RowId ベース）
+public class UserPreferences : AggregateRoot<long>
 {
+    private RespondentPersonId _userId;  // ビジネス識別子は別プロパティ
     // ...
 }
 ```
@@ -216,27 +229,29 @@ public interface IDomainEventHandler<TEvent>
 // Application層
 public class PreferencesUpdatedEventHandler : IDomainEventHandler<PreferencesUpdatedEvent>
 {
-    private readonly IAppLogging<PreferencesUpdatedEventHandler> _logger;
-    private readonly IPreferencesNotificationService _notificationService;
+    private readonly ILogger<PreferencesUpdatedEventHandler> _logger;
 
-    public PreferencesUpdatedEventHandler(
-        IAppLogging<PreferencesUpdatedEventHandler> logger,
-        IPreferencesNotificationService notificationService)
+    public PreferencesUpdatedEventHandler(ILogger<PreferencesUpdatedEventHandler> logger)
     {
         _logger = logger;
-        _notificationService = notificationService;
     }
 
     public async Task HandleAsync(PreferencesUpdatedEvent @event)
     {
         // ログ出力
         _logger.LogInformation(
-            $"Preferences updated - UserId: {@event.UserId}, " +
-            $"Model: {@event.Model.Name}, " +
-            $"At: {@event.OccurredAt}");
+            "Preferences updated - RowId: {RowId}, " +
+            "ChangeType: {ChangeType}, " +
+            "OldValue: {OldValue}, " +
+            "NewValue: {NewValue}, " +
+            "At: {OccurredAt}",
+            @event.RowId,
+            @event.ChangeType,
+            @event.OldValue,
+            @event.NewValue,
+            @event.OccurredAt);
 
-        // 他の処理（例：通知）
-        await _notificationService.NotifyUserAsync(@event.UserId);
+        await Task.CompletedTask;
     }
 }
 ```
@@ -383,8 +398,8 @@ public class UpdatePreferencesUseCase : IUseCase<UpdatePreferencesRequest, Updat
 
 ## 🔗 関連ドキュメント
 
-- [Detailed_Design.md](Detailed_Design.md) - 実装詳細（AI向け）
-- [Unit_Test_Specification.md](Unit_Test_Specification.md) - テスト仕様
+- [Entity_And_DomainEvents_詳細設計.md](Entity_And_DomainEvents_詳細設計.md) - 実装詳細（AI向け）
+- [Entity_And_DomainEvents_単体テスト仕様.md](Entity_And_DomainEvents_単体テスト仕様.md) - テスト仕様
 - [Domain_Logging_Architecture.md](../Guides/Domain_Logging_Architecture.md) - ドメイン層ログ設計
 
 ---

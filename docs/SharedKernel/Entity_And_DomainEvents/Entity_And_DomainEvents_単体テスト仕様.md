@@ -597,8 +597,8 @@ Total tests: 16
 
 ## 🔗 関連ドキュメント
 
-- [Detailed_Design.md](Detailed_Design.md) - 実装仕様
-- [Technical_Specification.md](Technical_Specification.md) - 使用方法
+- [Entity_And_DomainEvents_詳細設計.md](Entity_And_DomainEvents_詳細設計.md) - 実装仕様
+- [Entity_And_DomainEvents_技術仕様.md](Entity_And_DomainEvents_技術仕様.md) - 使用方法
 
 ---
 
