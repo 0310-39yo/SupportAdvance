@@ -83,10 +83,10 @@ var carPreference = new CarPreference();  // Domain参照
 ✅ Application → Domain
 ✅ Application → SharedKernel
 ✅ Application → Common
+✅ Application → Crosscutting (ロギング等、DI経由のインターフェース参照)
 
 ❌ Application → Presentation
-❌ Application → Infrastructure (実装に依存)
-❌ Application → Crosscutting (直接)
+❌ Application → Infrastructure (実装に依存。インターフェースはOK)
 ```
 
 **具体例**:
@@ -94,8 +94,19 @@ var carPreference = new CarPreference();  // Domain参照
 // ✅ OK: Domain参照
 var carPreference = await repository.GetById(id);
 
-// ❌ NG: Infrastructure依存
+// ✅ OK: Crosscutting（ロギング）をDI経由で参照
 public class GetCarPreferenceUseCase
+{
+    private readonly ILogger<GetCarPreferenceUseCase> _logger;  // ✅ インターフェース参照
+    
+    public GetCarPreferenceUseCase(ILogger<GetCarPreferenceUseCase> logger)
+    {
+        _logger = logger;
+    }
+}
+
+// ❌ NG: Infrastructure実装に直接依存
+public class BadGetCarPreferenceUseCase
 {
     private readonly SqlConnection _conn;  // ❌
 }
