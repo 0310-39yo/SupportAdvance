@@ -240,6 +240,98 @@ Application層は2つの役割に分かれている：
 
 **Bounded Context別 Application が汎用 Application に依存することは許可される**（インターフェース実装パターン）
 
+#### ファイル構造例
+
+**汎用層:**
+```
+src/Application/
+├── Application.csproj
+├── IUseCase.cs              # インターフェースのみ定義
+├── IRequest.cs
+├── IResponse.cs
+└── Abstractions/
+    └── 共有抽象化のみ（具体実装は持たない）
+```
+
+**Context別層:**
+```
+src/Contexts/Samples/CarPreferences.Application/
+├── CarPreferences.Application.csproj
+├── UseCases/
+│   ├── UpdateCarPreferenceUseCase.cs  # IUseCase を実装
+│   └── GetCarPreferenceUseCase.cs
+├── Commands/
+│   ├── UpdateCarPreferenceCommand.cs  # IRequest を実装
+│   └── GetCarPreferenceCommand.cs
+└── DTOs/
+    ├── UpdateCarPreferenceDto.cs      # IResponse を実装
+    └── GetCarPreferenceDto.cs
+```
+
+#### 参照フロー図
+
+```
+汎用Application層:
+├── IUseCase（インターフェース定義）
+├── IRequest（インターフェース定義）
+└── IResponse（インターフェース定義）
+        ▲
+        │ implements（実装）
+        │
+Context別Application層（CarPreferences.Application）:
+├── UpdateCarPreferenceUseCase implements IUseCase ✓
+├── UpdateCarPreferenceCommand implements IRequest ✓
+└── UpdateCarPreferenceDto implements IResponse ✓
+        │
+        ├─ depends on ──→ Domain: Car（ビジネスロジック呼び出し）
+        ├─ depends on ──→ Crosscutting: IAppLogging（ロギング機能）
+        └─ depends on ──→ Infrastructure（DI で注入）※直接参照なし
+```
+
+#### 実装パターンの選択
+
+Repository インターフェースの定義位置には、2つの主要パターンがある：
+
+**パターンA: Repository インターフェースを汎用Application に定義（推奨な場合も）**
+```csharp
+// src/Application/Repositories/ICarPreferenceRepository.cs
+namespace SupportAdvance.Application.Repositories;
+public interface ICarPreferenceRepository
+{
+    Task<Car> GetByIdAsync(CarId id);
+}
+
+// Context別Infrastructure が実装
+// src/Contexts/Samples/CarPreferences.Infrastructure/Repositories/CarPreferenceRepository.cs
+namespace SupportAdvance.Contexts.Samples.CarPreferences.Infrastructure.Repositories;
+public class CarPreferenceRepository : ICarPreferenceRepository
+{
+    // 実装
+}
+```
+
+**パターンB: Repository インターフェースを Context別Application に定義（現在の実装）**
+```csharp
+// src/Contexts/Samples/CarPreferences.Application/Repositories/ICarPreferenceRepository.cs
+namespace SupportAdvance.Contexts.Samples.CarPreferences.Application.Repositories;
+public interface ICarPreferenceRepository
+{
+    Task<Car> GetByIdAsync(CarId id);
+}
+
+// Context別Infrastructure が実装
+// src/Contexts/Samples/CarPreferences.Infrastructure/Repositories/CarPreferenceRepository.cs
+namespace SupportAdvance.Contexts.Samples.CarPreferences.Infrastructure.Repositories;
+public class CarPreferenceRepository : ICarPreferenceRepository
+{
+    // 実装
+}
+```
+
+**現在の SupportAdvance 実装:** **パターンB**（Context別層で Repository インターフェースを定義）
+- 利点：各 Context がインターフェースを独立管理。Context間の結合度が低い
+- 汎用Application は本当に共通部分のインターフェースのみ定義
+
 **責務:**
 - Use Cases（ユースケース）の実装
 - Application Services（アプリケーションサービス）
@@ -316,13 +408,19 @@ public class UpdateCarPreferenceUseCase
 - Crosscutting（ロギング）
 - Domain（Entity/Value Object のマッピング用）
 - Application***（インターフェース実装パターンのみ）
+  - 注意：汎用 `src/Infrastructure` プロジェクト自体は稀にのみ Application を参照
+  - 通常は **Bounded Context別 Infrastructure**（例：`src/Contexts/Samples/CarPreferences.Infrastructure`）が、Context固有のインターフェース実装を担当する設計
+  - 参考：実装例では CarPreferences.Infrastructure が `src/Application` を参照しており、汎用 Infrastructure は参照していない
 
 **禁止される参照:**
 - Presentation
 
 **例:**
 ```csharp
-namespace SupportAdvance.Infrastructure.Data.Repositories;
+// ✓ OK：Bounded Context別 Infrastructure での実装例
+// ファイル: src/Contexts/Samples/CarPreferences.Infrastructure/Repositories/CarPreferenceRepository.cs
+// 注：汎用 Infrastructure（src/Infrastructure）ではなく、Bounded Context別 Infrastructure で実装
+namespace SupportAdvance.Contexts.Samples.CarPreferences.Infrastructure.Repositories;
 
 public class CarPreferenceRepository : ICarPreferenceRepository
 {
@@ -414,6 +512,7 @@ services.AddApplicationServices();
 - `✗` = 禁止
 - `**` = Presentation → Infrastructure：Program.cs（Composition Root）のみ許可。プロジェクト参照上は Infrastructure に到達可能な構成だが、`Program` 型を除く全ての型が Infrastructure 名前空間に依存しないことを [自動検証](#自動検証の導入) で担保する
 - `***` = Infrastructure → Application：**インターフェース実装パターンのみ許可**。Application層で定義されたインターフェース（例：IRepository）を Infrastructure層が実装する場合、Application プロジェクトへの参照が必須。直接型を参照することは禁止（DI により逆転）
+  - 設計パターン：汎用 Infrastructure（`src/Infrastructure`）は稀にのみ参照。通常は **Bounded Context別 Infrastructure**（例：`CarPreferences.Infrastructure`）が汎用 Application を参照し、Context固有のインターフェースを実装する
 - `Common` は依存ゼロの最内層
 - `Crosscutting → Infrastructure` は禁止 — Crosscutting は NLog などの NuGet パッケージを直接参照し、技術詳細（Infrastructure）に依存しない設計。Infrastructure が Crosscutting のインターフェースを実装する一方向のみ許可
 - **Application → Application** = 汎用 Application層（`src/Application`）と Bounded Context別層（`src/Contexts/*/Application`）の関係。汎用層はインターフェース定義のみ、Context別層がそれを実装。Context別層が汎用層に依存することは許可。逆に汎用層が Context別層を参照することは禁止

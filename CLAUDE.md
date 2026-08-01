@@ -27,7 +27,7 @@ Presentation → Application → Domain ← Infrastructure
 | SharedKernel | Common | ✓ | Common は依存ゼロ、SharedKernel はその上に構築 |
 | Domain | SharedKernel, Common | ✓ | ドメインロジック完全独立。ドメインイベント発行は Entity.RaiseDomainEvent()で内部完結 |
 | Application（Context別）| Domain, SharedKernel, Common, Crosscutting, Application（汎用層） | ✓ | 汎用層の IUseCase 等インターフェースを実装。Infrastructure は DI で注入 |
-| Infrastructure | Domain, SharedKernel, Common, Crosscutting | ✓ | ✗ Application は禁止。Crosscutting → Infrastructure は逆方向で禁止（循環参照になるため） |
+| Infrastructure | Domain, SharedKernel, Common, Crosscutting, Application（インターフェースのみ） | ✓ | ✓ Repository等のインターフェース実装のため。✗ Use Case 等の実装には依存禁止。Crosscutting → Infrastructure は逆方向で禁止（循環参照） |
 | Presentation | Application, Crosscutting, SharedKernel, Common | ✓ | Program.cs のみ Infrastructure 可（型レベルでNetArchTestにより検証） |
 
 ### 違反してはいけない依存関係
@@ -36,9 +36,13 @@ Presentation → Application → Domain ← Infrastructure
 - Common → SharedKernel（循環参照になるため）
 - Domain → Application / Infrastructure / Presentation
 - Application → Infrastructure / Presentation
-- Infrastructure → Application / Presentation
+- **Infrastructure → Application の実装**（Use Case等）/ Presentation（インターフェースのみの参照はOK）
 - Crosscutting → Infrastructure（循環参照になるため）
 - Presentation → Domain / Infrastructure（Program.cs を除く）
+
+**✓ 許可される例:**
+- Infrastructure → Application.Repositories（IRepository等のインターフェース実装）
+- Infrastructure は DI で注入された Repository を使用
 
 ---
 
