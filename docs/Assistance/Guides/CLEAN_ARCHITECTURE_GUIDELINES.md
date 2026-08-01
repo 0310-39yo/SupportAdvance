@@ -314,9 +314,9 @@ public class UpdateCarPreferenceUseCase
 - Common
 - Crosscutting（ロギング）
 - Domain（Entity/Value Object のマッピング用）
+- Application***（インターフェース実装パターンのみ）
 
 **禁止される参照:**
-- Application
 - Presentation
 
 **例:**
@@ -406,13 +406,14 @@ services.AddApplicationServices();
 | **Crosscutting** | ✓ | ✓ | - | ✗ | ✗ | ✗ | ✗ |
 | **Domain** | ✓ | ✓ | ✓* | - | ✗ | ✗ | ✗ |
 | **Application** | ✓ | ✓ | ✓ | ✓ | - | ✗ | ✗ |
-| **Infrastructure** | ✓ | ✓ | ✓ | ✓ | ✗ | - | ✗ |
+| **Infrastructure** | ✓ | ✓ | ✓ | ✓ | ✓*** | - | ✗ |
 | **Presentation** | ✓ | ✓ | ✓ | ✗ | ✓ | ✓** | - |
 
 - `✓` = 許可
 - `✗` = 禁止
 - `*` = Domain → Crosscutting：ドメインイベント発行のみ許可
 - `**` = Presentation → Infrastructure：Program.cs（Composition Root）のみ許可。プロジェクト参照上は Infrastructure に到達可能な構成だが、`Program` 型を除く全ての型が Infrastructure 名前空間に依存しないことを [自動検証](#自動検証の導入) で担保する
+- `***` = Infrastructure → Application：**インターフェース実装パターンのみ許可**。Application層で定義されたインターフェース（例：IRepository）を Infrastructure層が実装する場合、Application プロジェクトへの参照が必須。直接型を参照することは禁止（DI により逆転）
 - `Common` は依存ゼロの最内層。`Crosscutting → Infrastructure` は禁止（実装は Infrastructure が Crosscutting のインターフェースを実装する一方向のみ）
 - **Application → Application** = 汎用 Application層（`src/Application`）と Bounded Context別層（`src/Contexts/*/Application`）の関係。汎用層はインターフェース定義のみ、Context別層がそれを実装。Context別層が汎用層に依存することは許可。逆に汎用層が Context別層を参照することは禁止
 
