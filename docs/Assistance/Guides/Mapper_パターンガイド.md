@@ -34,10 +34,22 @@ Domain Entity ←→ DbModel（SQL Server）
 // src/Infrastructure/Mappers/IEntityMapper.cs
 
 using SupportAdvance.Common.Clocks;
+using SupportAdvance.SharedKernel.Entities;
 
 namespace SupportAdvance.Infrastructure.Mappers;
 
-public interface IEntityMapper<TEntity, TDbModel>
+/// <summary>
+/// Entity ↔ DbModel マッパー（汎用インターフェース）
+/// 
+/// 【型パラメータ】
+/// - TEntity: Entity<TId>（ID型をサポート）
+/// - TDbModel: データベースモデル
+/// - TId: Entity の ID 型（ValueObject など、通常は RowId）
+/// </summary>
+public interface IEntityMapper<TEntity, TDbModel, TId>
+    where TEntity : Entity<TId>
+    where TDbModel : class
+    where TId : notnull
 {
     /// <summary>
     /// Domain Entity → DbModel（保存用）
@@ -63,13 +75,15 @@ using SupportAdvance.Contexts.YourGroup.YourContext.Domain.Entities;
 using SupportAdvance.Contexts.YourGroup.YourContext.Domain.ValueObjects;
 using SupportAdvance.Contexts.YourGroup.YourContext.Infrastructure.DataAccess.Models;
 using SupportAdvance.Infrastructure.Mappers;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 namespace SupportAdvance.Contexts.YourGroup.YourContext.Infrastructure.Mappers;
 
-public class YourEntityMapper : IEntityMapper<YourEntity, YourEntityDbModel>
+public class YourEntityMapper : IEntityMapper<YourEntity, YourEntityDbModel, RowId>
 {
     /// <summary>
     /// Domain Entity → DbModel（保存用）
+    /// 【責務】RowId ValueObject → long 変換、その他は直接マッピング
     /// 【注意】監査情報（createdBy など）は Repository で設定される
     /// </summary>
     public YourEntityDbModel ToDbModel(YourEntity entity)
@@ -78,8 +92,8 @@ public class YourEntityMapper : IEntityMapper<YourEntity, YourEntityDbModel>
 
         return new YourEntityDbModel
         {
-            // row_id は Entity.Id から
-            RowId = entity.Id,
+            // row_id は Entity.Id（RowId ValueObject）から long に変換
+            RowId = entity.Id.Value,  // RowId → long 変換
 
             // ビジネスカラム：Entity から直接マッピング
             YourBusinessId = entity.YourBusinessId.Value,
@@ -98,6 +112,7 @@ public class YourEntityMapper : IEntityMapper<YourEntity, YourEntityDbModel>
 
     /// <summary>
     /// DbModel → Domain Entity（読み取り用）
+    /// 【責務】long → RowId ValueObject 変換、その他は直接マッピング
     /// 【注意】DbModel には LocalDateTime が格納されている
     /// </summary>
     public YourEntity ToDomainEntity(YourEntityDbModel dbModel, IClock clock)
@@ -108,14 +123,15 @@ public class YourEntityMapper : IEntityMapper<YourEntity, YourEntityDbModel>
         // 1. DbModel の値から ValueObject を構築
         var yourBusinessId = YourBusinessId.From(dbModel.YourBusinessId);
         var amount = dbModel.Amount.HasValue ? Money.From(dbModel.Amount.Value) : null;
+        var rowId = RowId.From(dbModel.RowId);  // long → RowId ValueObject 変換
 
-        // 2. Entity を構築（rowId を渡す）
+        // 2. Entity を構築（rowId を RowId ValueObject として渡す）
         var entity = new YourEntity(
-            dbModel.RowId,
             yourBusinessId,
             dbModel.Name,
             amount,
-            clock
+            clock,
+            rowId  // RowId ValueObject
         );
 
         // 3. Entity は構築完了

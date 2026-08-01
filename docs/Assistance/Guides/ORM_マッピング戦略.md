@@ -365,13 +365,43 @@ Infrastructure/
 | ORM | 初期化方法 | マッピング方法 | 型 | 用途 |
 |---|---|---|---|---|
 | **Dapper** | SqlMapper.AddTypeMap | グローバル | LocalDateTime | SELECT/INSERT/UPDATE |
+| **Dapper** | SqlMapper.AddTypeMap | グローバル | RowId | SELECT/INSERT/UPDATE |
 | **RepoDb** | TypeMapper.Add | グローバル | LocalDateTime | Query/Insert/Update |
+| **RepoDb** | TypeMapper.Add | グローバル | RowId | Query/Insert/Update |
+
+---
+
+## 🔄 RowId ValueObject のマッピング
+
+### DbModel ↔ Domain Entity
+
+**DbModel**: `long RowId` → **Mapper** → **Entity**: `RowId RowId`
+
+- **DbModel 層**: 素の long を使用（ORM との親和性）
+- **Mapper 層**: long ↔ RowId 変換を実施
+  - ToDbModel: `entity.Id.Value` で RowId → long
+  - ToDomainEntity: `RowId.From(dbModel.RowId)` で long → RowId
+- **Entity 層**: RowId ValueObject を使用（型安全）
+
+### マッピング設定
+
+```csharp
+// Dapper
+SqlMapper.AddTypeMap(typeof(RowId), DbType.Int64);
+
+// RepoDb
+TypeMapper.Add<RowId>(DbType.Int64, true);
+```
+
+**注意**: RowId は DbModel では long のまま保持し、ORM レベルでの自動変換は行わない。
+Mapper が責務を持つことで、型変換を明示的・一元管理する。
 
 ---
 
 ## 参考資料
 
-- **Mapper_パターンガイド.md**: Mapper 実装例
-- **DbModel_設計ルール.md**: DbModel の LocalDateTime 使用
+- **Mapper_パターンガイド.md**: Mapper 実装例（RowId 変換含む）
+- **DbModel_設計ルール.md**: DbModel は long を使用
+- **Repository_パターンガイド.md**: RepositoryBase の汎用化
 - **LocalDateTime_タイムゾーン_ガイド.md**: LocalDateTime と JST
-- **TABLE_DESIGN_STANDARDS.md**: SQL Server スキーマ（datetime2(7)）
+- **TABLE_DESIGN_STANDARDS.md**: SQL Server スキーマ（bigint）

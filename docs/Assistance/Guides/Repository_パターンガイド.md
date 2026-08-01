@@ -6,19 +6,24 @@ Generic Repository パターンと監査情報管理の実装ガイドです。
 
 ## 📋 基本原則
 
-### RepositoryBase<TEntity, TDbModel>
+### RepositoryBase<TEntity, TDbModel, TId>
 
 すべての Repository は `RepositoryBase` を継承し、監査情報の自動管理を実現します。
 
 ```csharp
-public abstract class RepositoryBase<TEntity, TDbModel>
+using SupportAdvance.SharedKernel.Entities;
+
+public abstract class RepositoryBase<TEntity, TDbModel, TId>
+    where TEntity : Entity<TId>
+    where TDbModel : class
+    where TId : notnull
 {
-    protected readonly IEntityMapper<TEntity, TDbModel> _mapper;
+    protected readonly IEntityMapper<TEntity, TDbModel, TId> _mapper;
     protected readonly ICurrentUserService _currentUser;
     protected readonly IClock _clock;
 
     protected RepositoryBase(
-        IEntityMapper<TEntity, TDbModel> mapper,
+        IEntityMapper<TEntity, TDbModel, TId> mapper,
         ICurrentUserService currentUser,
         IClock clock)
     {
