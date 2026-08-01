@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
 using SupportAdvance.Common.Clocks;
-using SupportAdvance.SharedKernel.ValueObjects;
 using SupportAdvance.SharedKernel.ValueObjects.Abstractions;
 
 namespace SupportAdvance.SharedKernel.ValueObjects.Audit;
@@ -36,7 +33,7 @@ public sealed class UpdatedAt : PrimitiveValueObject<DateTime?>, IEquatable<Upda
     /// 【責務】未更新状態を表現する
     /// </summary>
     /// <returns>未更新状態のUpdatedAtのインスタンス</returns>
-    public static UpdatedAt Unset() => new(null, isSet: false);
+    public static UpdatedAt Unset() => new(null, false);
 
     /// <summary>
     /// 指定された日時からUpdatedAtのインスタンスを生成する（層間の型変換用）
@@ -50,7 +47,7 @@ public sealed class UpdatedAt : PrimitiveValueObject<DateTime?>, IEquatable<Upda
     {
         if (input == null || !input.HasValue)
         {
-            result = Unset();  // ← null → Unset() で成功
+            result = Unset(); // ← null → Unset() で成功
             return true;
         }
 
@@ -123,7 +120,7 @@ public sealed class UpdatedAt : PrimitiveValueObject<DateTime?>, IEquatable<Upda
     /// <returns>ValueField を含むコンポーネント列</returns>
     protected override IEnumerable<object?> GetValueComponents()
     {
-        yield return ValueField;  // DateTime? を返す
+        yield return ValueField; // DateTime? を返す
     }
 
     /// <summary>
@@ -138,7 +135,9 @@ public sealed class UpdatedAt : PrimitiveValueObject<DateTime?>, IEquatable<Upda
 
         // null は許容（未更新状態を表現）
         if (normalized == null)
+        {
             return;
+        }
 
         // DateTime.MinValue や DateTime.MaxValue は除外
         if (normalized == DateTime.MinValue || normalized == DateTime.MaxValue)
