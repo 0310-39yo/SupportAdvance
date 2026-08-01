@@ -1,5 +1,4 @@
 using SupportAdvance.Common.Clocks;
-using SupportAdvance.Contexts.Master.Employee.Domain.Entities;
 using SupportAdvance.Contexts.Master.Employee.Infrastructure.DbModels;
 using SupportAdvance.Infrastructure.Mappers;
 using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
