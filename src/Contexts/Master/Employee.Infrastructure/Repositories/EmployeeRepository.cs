@@ -20,32 +20,32 @@ public class EmployeeRepository : RepositoryBase<EmployeeEntity, EmployeeDbModel
     {
     }
 
-    public Task<Employee?> GetByIdAsync(RowId employeeId)
+    public Task<EmployeeEntity?> GetByIdAsync(RowId employeeId)
     {
         throw new NotImplementedException("Database access layer to be implemented");
     }
 
-    public Task<Employee?> GetByEmployeeNumberAsync(string employeeNumber)
+    public Task<EmployeeEntity?> GetByEmployeeNumberAsync(string employeeNumber)
     {
         throw new NotImplementedException("Database access layer to be implemented");
     }
 
-    public Task<Employee?> GetByEmailAsync(string email)
+    public Task<EmployeeEntity?> GetByEmailAsync(string email)
     {
         throw new NotImplementedException("Database access layer to be implemented");
     }
 
-    public Task<IEnumerable<Employee>> GetByDepartmentIdAsync(RowId departmentId)
+    public Task<IEnumerable<EmployeeEntity>> GetByDepartmentIdAsync(RowId departmentId)
     {
         throw new NotImplementedException("Database access layer to be implemented");
     }
 
-    public Task CreateAsync(Employee employee)
+    public Task CreateAsync(EmployeeEntity employee)
     {
         throw new NotImplementedException("Database access layer to be implemented");
     }
 
-    public Task UpdateAsync(Employee employee)
+    public Task UpdateAsync(EmployeeEntity employee)
     {
         throw new NotImplementedException("Database access layer to be implemented");
     }

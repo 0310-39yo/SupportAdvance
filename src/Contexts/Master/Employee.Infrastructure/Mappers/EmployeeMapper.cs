@@ -3,12 +3,13 @@ using SupportAdvance.Contexts.Master.Employee.Domain.Entities;
 using SupportAdvance.Contexts.Master.Employee.Infrastructure.DbModels;
 using SupportAdvance.Infrastructure.Mappers;
 using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
+using EmployeeEntity = SupportAdvance.Contexts.Master.Employee.Domain.Entities.Employee;
 
 namespace SupportAdvance.Contexts.Master.Employee.Infrastructure.Mappers;
 
-public class EmployeeMapper : IEntityMapper<Employee, EmployeeDbModel, RowId>
+public class EmployeeMapper : IEntityMapper<EmployeeEntity, EmployeeDbModel, RowId>
 {
-    public EmployeeDbModel ToDbModel(Employee entity)
+    public EmployeeDbModel ToDbModel(EmployeeEntity entity)
     {
         ArgumentNullException.ThrowIfNull(entity);
 
@@ -26,7 +27,7 @@ public class EmployeeMapper : IEntityMapper<Employee, EmployeeDbModel, RowId>
         };
     }
 
-    public Employee ToDomainEntity(EmployeeDbModel dbModel, IClock clock)
+    public EmployeeEntity ToDomainEntity(EmployeeDbModel dbModel, IClock clock)
     {
         ArgumentNullException.ThrowIfNull(dbModel);
         ArgumentNullException.ThrowIfNull(clock);
