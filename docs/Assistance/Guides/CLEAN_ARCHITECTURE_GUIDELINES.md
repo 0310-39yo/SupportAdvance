@@ -141,7 +141,8 @@ public interface IClock
 **特徴:**
 - ロギング・監査などの**インターフェースと実装の両方**をこの層だけで完結させる（例：`IAppLogging<T>` と NLog 実装 `FrameworkLoggingAdapter`）
 - 実装に必要な技術要素（NLog など）は **NuGet パッケージとして直接参照**し、Infrastructure プロジェクトには依存しない
-- そのため参照方向は **Infrastructure → Crosscutting** の一方向のみ。Crosscutting → Infrastructure は禁止（循環参照になるため）
+- そのため参照方向は **Infrastructure → Crosscutting** の一方向のみ。Crosscutting → Infrastructure は禁止
+  - 理由：Crosscutting が Infrastructure（技術実装の詳細）に依存すると、横断的関心事が技術詳細に結合し、再利用性が低下するため
 - Domain への依存も避ける
 
 **許可される参照:**
@@ -413,7 +414,8 @@ services.AddApplicationServices();
 - `✗` = 禁止
 - `**` = Presentation → Infrastructure：Program.cs（Composition Root）のみ許可。プロジェクト参照上は Infrastructure に到達可能な構成だが、`Program` 型を除く全ての型が Infrastructure 名前空間に依存しないことを [自動検証](#自動検証の導入) で担保する
 - `***` = Infrastructure → Application：**インターフェース実装パターンのみ許可**。Application層で定義されたインターフェース（例：IRepository）を Infrastructure層が実装する場合、Application プロジェクトへの参照が必須。直接型を参照することは禁止（DI により逆転）
-- `Common` は依存ゼロの最内層。`Crosscutting → Infrastructure` は禁止（実装は Infrastructure が Crosscutting のインターフェースを実装する一方向のみ）
+- `Common` は依存ゼロの最内層
+- `Crosscutting → Infrastructure` は禁止 — Crosscutting は NLog などの NuGet パッケージを直接参照し、技術詳細（Infrastructure）に依存しない設計。Infrastructure が Crosscutting のインターフェースを実装する一方向のみ許可
 - **Application → Application** = 汎用 Application層（`src/Application`）と Bounded Context別層（`src/Contexts/*/Application`）の関係。汎用層はインターフェース定義のみ、Context別層がそれを実装。Context別層が汎用層に依存することは許可。逆に汎用層が Context別層を参照することは禁止
 
 ---
