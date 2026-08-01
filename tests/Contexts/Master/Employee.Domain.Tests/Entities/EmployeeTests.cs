@@ -1,6 +1,8 @@
+using SupportAdvance.Common.Clocks;
 using SupportAdvance.Contexts.Master.Employee.Domain.Entities;
 using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 using Xunit;
+using EmployeeEntity = SupportAdvance.Contexts.Master.Employee.Domain.Entities.Employee;
 
 namespace SupportAdvance.Contexts.Master.Employee.Domain.Tests.Entities;
 
@@ -16,7 +18,7 @@ public class EmployeeTests
         var departmentId = RowId.From(1);
         var jobTitle = "Engineer";
 
-        var employee = new Employee(employeeNumber, firstName, lastName, email, departmentId, jobTitle);
+        var employee = new EmployeeEntity(employeeNumber, firstName, lastName, email, departmentId, jobTitle);
 
         Assert.Equal(employeeNumber, employee.EmployeeNumber);
         Assert.Equal(firstName, employee.FirstName);
@@ -33,7 +35,7 @@ public class EmployeeTests
     {
         var rowId = RowId.From(50);
         var departmentId = RowId.From(1);
-        var employee = new Employee("EMP001", "John", "Doe", "john@example.com", departmentId, "Engineer", null, rowId);
+        var employee = new EmployeeEntity("EMP001", "John", "Doe", "john@example.com", departmentId, "Engineer", null, rowId);
 
         Assert.Equal(50, employee.Id.Value);
     }
@@ -41,9 +43,9 @@ public class EmployeeTests
     [Fact]
     public void Constructor_WithHireDate_ShouldSetHireDate()
     {
-        var hireDate = LocalDateTime.From(new DateTime(2024, 1, 1));
+        var hireDate = new LocalDateTime(new DateTime(2024, 1, 1));
         var departmentId = RowId.From(1);
-        var employee = new Employee("EMP001", "John", "Doe", "john@example.com", departmentId, "Engineer", hireDate);
+        var employee = new EmployeeEntity("EMP001", "John", "Doe", "john@example.com", departmentId, "Engineer", hireDate);
 
         Assert.Equal(hireDate, employee.HireDate);
     }
@@ -53,7 +55,7 @@ public class EmployeeTests
     {
         var oldDepartmentId = RowId.From(1);
         var newDepartmentId = RowId.From(2);
-        var employee = new Employee("EMP001", "John", "Doe", "john@example.com", oldDepartmentId, "Engineer");
+        var employee = new EmployeeEntity("EMP001", "John", "Doe", "john@example.com", oldDepartmentId, "Engineer");
 
         employee.TransferDepartment(newDepartmentId);
 
@@ -64,7 +66,7 @@ public class EmployeeTests
     public void ChangeJobTitle_ShouldUpdateJobTitle()
     {
         var departmentId = RowId.From(1);
-        var employee = new Employee("EMP001", "John", "Doe", "john@example.com", departmentId, "Engineer");
+        var employee = new EmployeeEntity("EMP001", "John", "Doe", "john@example.com", departmentId, "Engineer");
         var newJobTitle = "Senior Engineer";
 
         employee.ChangeJobTitle(newJobTitle);
@@ -76,7 +78,7 @@ public class EmployeeTests
     public void SetActive_ShouldChangeIsActiveFlag()
     {
         var departmentId = RowId.From(1);
-        var employee = new Employee("EMP001", "John", "Doe", "john@example.com", departmentId, "Engineer");
+        var employee = new EmployeeEntity("EMP001", "John", "Doe", "john@example.com", departmentId, "Engineer");
         Assert.True(employee.IsActive);
 
         employee.SetActive(false);
@@ -91,7 +93,7 @@ public class EmployeeTests
     {
         var departmentId = RowId.From(1);
         Assert.Throws<ArgumentNullException>(() =>
-            new Employee(null!, "John", "Doe", "john@example.com", departmentId, "Engineer"));
+            new EmployeeEntity(null!, "John", "Doe", "john@example.com", departmentId, "Engineer"));
     }
 
     [Fact]
@@ -99,7 +101,7 @@ public class EmployeeTests
     {
         var departmentId = RowId.From(1);
         Assert.Throws<ArgumentNullException>(() =>
-            new Employee("EMP001", null!, "Doe", "john@example.com", departmentId, "Engineer"));
+            new EmployeeEntity("EMP001", null!, "Doe", "john@example.com", departmentId, "Engineer"));
     }
 
     [Fact]
@@ -107,14 +109,14 @@ public class EmployeeTests
     {
         var departmentId = RowId.From(1);
         Assert.Throws<ArgumentNullException>(() =>
-            new Employee("EMP001", "John", null!, "john@example.com", departmentId, "Engineer"));
+            new EmployeeEntity("EMP001", "John", null!, "john@example.com", departmentId, "Engineer"));
     }
 
     [Fact]
     public void TransferDepartment_WithNullDepartmentId_ShouldThrow()
     {
         var departmentId = RowId.From(1);
-        var employee = new Employee("EMP001", "John", "Doe", "john@example.com", departmentId, "Engineer");
+        var employee = new EmployeeEntity("EMP001", "John", "Doe", "john@example.com", departmentId, "Engineer");
 
         Assert.Throws<ArgumentNullException>(() =>
             employee.TransferDepartment(null!));
@@ -124,7 +126,7 @@ public class EmployeeTests
     public void ChangeJobTitle_WithNullJobTitle_ShouldThrow()
     {
         var departmentId = RowId.From(1);
-        var employee = new Employee("EMP001", "John", "Doe", "john@example.com", departmentId, "Engineer");
+        var employee = new EmployeeEntity("EMP001", "John", "Doe", "john@example.com", departmentId, "Engineer");
 
         Assert.Throws<ArgumentNullException>(() =>
             employee.ChangeJobTitle(null!));
