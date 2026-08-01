@@ -212,7 +212,9 @@ public class [Entity]CreatedEvent : DomainEvent
   <ItemGroup>
     <ProjectReference Include="..\..\..\Application\Application.csproj" />
     <ProjectReference Include="..\Domain\[NewContextName].Domain.csproj" />
+    <ProjectReference Include="..\..\..\SharedKernel\SharedKernel.csproj" />
     <ProjectReference Include="..\..\..\Common\Common.csproj" />
+    <ProjectReference Include="..\..\..\Crosscutting\Crosscutting.csproj" />
   </ItemGroup>
 
 </Project>
@@ -359,7 +361,9 @@ public static class DependencyInjection
     <ProjectReference Include="..\..\..\Infrastructure\Infrastructure.csproj" />
     <ProjectReference Include="..\Application\[NewContextName].Application.csproj" />
     <ProjectReference Include="..\Domain\[NewContextName].Domain.csproj" />
+    <ProjectReference Include="..\..\..\SharedKernel\SharedKernel.csproj" />
     <ProjectReference Include="..\..\..\Common\Common.csproj" />
+    <ProjectReference Include="..\..\..\Crosscutting\Crosscutting.csproj" />
   </ItemGroup>
 
 </Project>
