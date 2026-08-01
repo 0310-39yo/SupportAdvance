@@ -9,11 +9,12 @@ namespace SupportAdvance.Contexts.Samples.CarPreferences.Domain.DomainEvents;
 ///
 /// 【発行】UserPreferences.UpdateBodyType()
 /// 【用途】ログ、検索インデックス更新
+/// 【識別子】RowId（システム基本ID、マイナンバー相当）
 /// </summary>
 public sealed class BodyTypeUpdatedEvent : IDomainEvent
 {
-    /// <summary>ユーザーID</summary>
-    public RespondentPersonId UserId { get; }
+    /// <summary>row_id（システム基本ID）</summary>
+    public long RowId { get; }
 
     /// <summary>変更前のボディタイプ</summary>
     public BodyType? OldBodyType { get; }
@@ -25,15 +26,14 @@ public sealed class BodyTypeUpdatedEvent : IDomainEvent
     public LocalDateTime OccurredAt { get; }
 
     public BodyTypeUpdatedEvent(
-        RespondentPersonId userId,
+        long rowId,
         BodyType? oldBodyType,
         BodyType newBodyType,
         LocalDateTime occurredAt)
     {
-        ArgumentNullException.ThrowIfNull(userId);
         ArgumentNullException.ThrowIfNull(newBodyType);
 
-        UserId = userId;
+        RowId = rowId;
         OldBodyType = oldBodyType;
         NewBodyType = newBodyType;
         OccurredAt = occurredAt;

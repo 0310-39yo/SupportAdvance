@@ -53,6 +53,7 @@ public class CreateUserPreferencesUseCase
             _clock);
 
         // [3] Domain層呼び出し（Entity 作成）
+        // 注：新規作成時は rowId が未定（DB挿入後に採番）
         var preferences = new UserPreferences(userId, respondedAt, _clock);
 
         // 初期設定を適用
@@ -82,12 +83,11 @@ public class CreateUserPreferencesUseCase
             await _eventDispatcher.DispatchAsync(@event);
         }
 
-        // PreferencesCreatedEvent を発行
-        await _eventDispatcher.DispatchAsync(
-            new PreferencesCreatedEvent(userId, _clock.JstNow));
-
         // [5] 永続化
         await _repository.AddAsync(preferences);
+
+        // 注：PreferencesCreatedEvent は新規作成時に rowId が未定（DB挿入後採番）
+        // ため、ここでは発行しない。必要に応じて別途メカニズムを検討
 
         _logger.LogInformation(
             $"Preferences created for user {request.UserId}");

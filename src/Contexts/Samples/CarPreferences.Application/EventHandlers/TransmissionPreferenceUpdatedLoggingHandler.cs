@@ -26,7 +26,7 @@ public class TransmissionPreferenceUpdatedLoggingHandler
         var newPref = @event.NewPreference ? "Auto" : "Manual";
 
         _logger.LogInformation(
-            $"Transmission preference updated for user {@event.UserId}: " +
+            $"Transmission preference updated for row_id {@event.RowId}: " +
             $"{oldPref} -> {newPref}");
 
         return Task.CompletedTask;

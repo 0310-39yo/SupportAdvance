@@ -1,5 +1,4 @@
 using SupportAdvance.Common.Clocks;
-using SupportAdvance.Contexts.Samples.CarPreferences.Domain.ValueObjects;
 using SupportAdvance.SharedKernel.Entities;
 
 namespace SupportAdvance.Contexts.Samples.CarPreferences.Domain.DomainEvents;
@@ -9,22 +8,21 @@ namespace SupportAdvance.Contexts.Samples.CarPreferences.Domain.DomainEvents;
 ///
 /// 【発行】Application層（CreateUserPreferencesUseCase）
 /// 【用途】ウェルカムメール、初期推奨、ログ
+/// 【識別子】RowId（システム基本ID、マイナンバー相当）
 /// </summary>
 public sealed class PreferencesCreatedEvent : IDomainEvent
 {
-    /// <summary>ユーザーID</summary>
-    public RespondentPersonId UserId { get; }
+    /// <summary>row_id（システム基本ID）</summary>
+    public long RowId { get; }
 
     /// <summary>イベント発生時刻（JST）</summary>
     public LocalDateTime OccurredAt { get; }
 
     public PreferencesCreatedEvent(
-        RespondentPersonId userId,
+        long rowId,
         LocalDateTime occurredAt)
     {
-        ArgumentNullException.ThrowIfNull(userId);
-
-        UserId = userId;
+        RowId = rowId;
         OccurredAt = occurredAt;
     }
 }

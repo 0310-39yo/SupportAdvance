@@ -14,9 +14,16 @@ namespace SupportAdvance.Contexts.Samples.CarPreferences.Domain.Entities;
 /// - ビジネスルール検証
 ///
 /// 【ライフサイクル】ユーザー登録～退会まで
+///
+/// 【識別子設計】
+/// - Entity.Id: row_id（DB主キー、SQL Serverシーケンス）
+/// - UserId: ユーザーID（ビジネス識別子、1000～9999）
 /// </summary>
-public class UserPreferences : AggregateRoot<RespondentPersonId>
+public class UserPreferences : AggregateRoot<long>
 {
+    /// <summary>ユーザーID（ビジネス識別子、1000～9999）</summary>
+    private RespondentPersonId _userId = null!;
+
     /// <summary>希望車種</summary>
     private CarModel? _preferredModel;
 
@@ -42,6 +49,9 @@ public class UserPreferences : AggregateRoot<RespondentPersonId>
     private LocalDateTime _createdAt;
 
     // 公開プロパティ（読み取り専用）
+
+    /// <summary>ユーザーID（ビジネス識別子）</summary>
+    public RespondentPersonId UserId => _userId;
 
     /// <summary>希望車種</summary>
     public CarModel? PreferredModel => _preferredModel;
@@ -71,20 +81,25 @@ public class UserPreferences : AggregateRoot<RespondentPersonId>
     /// UserPreferences を生成
     ///
     /// 【責務】Entity の初期化
+    /// 【新規作成】rowId = 0（DB挿入後に採番される）
+    /// 【既存読み込み】rowId を指定
     /// </summary>
-    /// <param name="id">ユーザーID</param>
+    /// <param name="userId">ユーザーID（ビジネス識別子）</param>
     /// <param name="respondedAt">回答日時</param>
     /// <param name="clock">現在時刻取得用</param>
+    /// <param name="rowId">row_id（DB主キー、デフォルト=0）</param>
     public UserPreferences(
-        RespondentPersonId id,
+        RespondentPersonId userId,
         RespondentAt respondedAt,
-        IClock clock)
+        IClock clock,
+        long rowId = 0)
     {
-        ArgumentNullException.ThrowIfNull(id);
+        ArgumentNullException.ThrowIfNull(userId);
         ArgumentNullException.ThrowIfNull(respondedAt);
         ArgumentNullException.ThrowIfNull(clock);
 
-        Id = id;
+        Id = rowId;
+        _userId = userId;
         _respondedAt = respondedAt;
         _createdAt = clock.JstNow;
         _updatedAt = clock.JstNow;
@@ -104,7 +119,7 @@ public class UserPreferences : AggregateRoot<RespondentPersonId>
         _updatedAt = clock.JstNow;
 
         this.RaiseDomainEvent(new PreferencesUpdatedEvent(
-            this.Id,
+            this.Id,  // RowId（システム基本ID）
             PreferenceChangeType.ModelUpdated,
             oldModel?.ToString() ?? "未設定",
             model.ToString(),
@@ -135,7 +150,7 @@ public class UserPreferences : AggregateRoot<RespondentPersonId>
         _updatedAt = clock.JstNow;
 
         this.RaiseDomainEvent(new BudgetUpdatedEvent(
-            this.Id,
+            this.Id,  // RowId（システム基本ID）
             oldFrom, oldTo,
             from, to,
             clock.JstNow));
@@ -159,7 +174,7 @@ public class UserPreferences : AggregateRoot<RespondentPersonId>
         _updatedAt = clock.JstNow;
 
         this.RaiseDomainEvent(new BodyTypeUpdatedEvent(
-            this.Id,
+            this.Id,  // RowId（システム基本ID）
             oldBodyType,
             bodyType,
             clock.JstNow));
@@ -182,7 +197,7 @@ public class UserPreferences : AggregateRoot<RespondentPersonId>
         _updatedAt = clock.JstNow;
 
         this.RaiseDomainEvent(new TransmissionPreferenceUpdatedEvent(
-            this.Id,
+            this.Id,  // RowId（システム基本ID）
             oldPreference,
             prefersAutomatic,
             clock.JstNow));

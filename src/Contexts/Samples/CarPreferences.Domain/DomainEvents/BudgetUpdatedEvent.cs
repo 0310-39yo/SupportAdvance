@@ -9,11 +9,12 @@ namespace SupportAdvance.Contexts.Samples.CarPreferences.Domain.DomainEvents;
 ///
 /// 【発行】UserPreferences.UpdateBudget()
 /// 【用途】ログ、キャッシュ無効化、検索インデックス更新
+/// 【識別子】RowId（システム基本ID、マイナンバー相当）
 /// </summary>
 public sealed class BudgetUpdatedEvent : IDomainEvent
 {
-    /// <summary>ユーザーID</summary>
-    public RespondentPersonId UserId { get; }
+    /// <summary>row_id（システム基本ID）</summary>
+    public long RowId { get; }
 
     /// <summary>変更前の予算下限</summary>
     public Money? OldBudgetFrom { get; }
@@ -31,16 +32,14 @@ public sealed class BudgetUpdatedEvent : IDomainEvent
     public LocalDateTime OccurredAt { get; }
 
     public BudgetUpdatedEvent(
-        RespondentPersonId userId,
+        long rowId,
         Money? oldFrom,
         Money? oldTo,
         Money? newFrom,
         Money? newTo,
         LocalDateTime occurredAt)
     {
-        ArgumentNullException.ThrowIfNull(userId);
-
-        UserId = userId;
+        RowId = rowId;
         OldBudgetFrom = oldFrom;
         OldBudgetTo = oldTo;
         NewBudgetFrom = newFrom;

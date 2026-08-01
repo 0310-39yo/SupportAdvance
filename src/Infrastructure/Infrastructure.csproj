@@ -10,8 +10,6 @@
     <Folder Include="Data\Connections\" />
     <Folder Include="Data\Repositories\" />
     <Folder Include="Data\Migrations\" />
-    <Folder Include="ORM\Dapper\" />
-    <Folder Include="ORM\RepoDB\" />
   </ItemGroup>
 
   <ItemGroup>
@@ -19,14 +17,16 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.9" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.9" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.9" />
-    <PackageReference Include="RepoDb.PostgreSql" Version="1.14.1" />
-    <PackageReference Include="RepoDb.PostgreSql.BulkOperations" Version="1.14.0" />
-    <PackageReference Include="RepoDb.SqlServer" Version="1.14.0" />
-    <PackageReference Include="RepoDb.SqlServer.BulkOperations" Version="1.14.0" />
+    <PackageReference Include="RepoDb.PostgreSql" Version="1.15.0" />
+    <PackageReference Include="RepoDb.PostgreSql.BulkOperations" Version="1.15.0" />
+    <PackageReference Include="RepoDb.SqlServer" Version="1.15.0" />
+    <PackageReference Include="RepoDb.SqlServer.BulkOperations" Version="1.15.0" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.6" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Crosscutting\Crosscutting.csproj" />
+    <ProjectReference Include="..\SharedKernel\SharedKernel.csproj" />
   </ItemGroup>
 
 </Project>
