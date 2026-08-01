@@ -72,81 +72,7 @@ services.RegisterUseCaseWithDecorators<
 
 ---
 
-### パターン2: ドメインイベント＆イベントハンドラー
-
-Domain層で重要な事象が発生した場合、ドメインイベントを発行し、Application層がリッスンしてログを記録。
-
-**構造:**
-
-```
-Domain層
-  ├─ Entity（ドメインロジック）
-  ├─ Event（PreferencesChangedEvent など）
-  └─ AggregateRoot
-		└─ RaisEvent(PreferencesChangedEvent)
-
-Application層
-  ├─ EventHandler
-  │   └─ ログ出力、他のアクション
-  └─ EventPublisher
-```
-
-**実装例：**
-
-```csharp
-// ✅ Domain層: イベント定義（ログなし）
-public class PreferencesChangedEvent : IDomainEvent
-{
-	public string UserId { get; set; }
-	public DateTime ChangedAt { get; set; }
-	public string ChangeDescription { get; set; }
-}
-
-// ✅ Domain層: Entityでイベント発行
-public class UserPreferences : AggregateRoot
-{
-	public void UpdatePreferences(CarModel model)
-	{
-		// ビジネスロジック
-		this.PreferredModel = model;
-
-		// イベント発行（ログなし）
-		RaiseEvent(new PreferencesChangedEvent 
-		{ 
-			UserId = this.UserId,
-			ChangeDescription = $"Updated to {model.Name}",
-			ChangedAt = DateTime.UtcNow
-		});
-	}
-}
-
-// ✅ Application層: イベントハンドラー
-public class PreferencesChangedEventHandler : IEventHandler<PreferencesChangedEvent>
-{
-	private readonly IAppLogging<PreferencesChangedEventHandler> _logger;
-
-	public async Task HandleAsync(PreferencesChangedEvent @event)
-	{
-		// ここでログ出力
-		_logger.LogInformation(
-			$"User preferences changed - UserId: {@event.UserId}, " +
-			$"Description: {@event.ChangeDescription}, " +
-			$"Timestamp: {@event.ChangedAt}");
-
-		// 必要に応じて他の処理（メール送信など）
-		await SendNotificationAsync(@event);
-	}
-}
-```
-
-**メリット:**
-- Domain層は完全に独立（テスト容易）
-- イベント駆動で疎結合
-- 複数のハンドラーを容易に追加可能
-
----
-
-### パターン3: 統計情報・メトリクスの記録
+### パターン2: 統計情報・メトリクスの記録
 
 ドメインサービスが計算結果や統計情報を返し、Application層が記録。
 
@@ -156,7 +82,7 @@ public class PreferencesChangedEventHandler : IEventHandler<PreferencesChangedEv
 // ✅ Domain層: 統計情報を返す（ログなし）
 public class CarPreferencesStatisticsService
 {
-	public CarPreferencesStatistics GetStatistics(List<UserPreferences> preferences)
+	public CarPreferencesStatistics GetStatistics(List<UserPreferences> preferences, IClock clock)
 	{
 		var stats = new CarPreferencesStatistics
 		{
@@ -166,7 +92,7 @@ public class CarPreferencesStatisticsService
 				.Select(g => new { Model = g.Key, Count = g.Count() })
 				.OrderByDescending(x => x.Count)
 				.ToList(),
-			RecordedAt = DateTime.UtcNow
+			RecordedAt = clock.JstNow  // LocalDateTime使用
 		};
 
 		return stats;
@@ -179,10 +105,11 @@ public class GetCarPreferencesStatisticsUseCase
 {
 	private readonly CarPreferencesStatisticsService _service;
 	private readonly IAppLogging<GetCarPreferencesStatisticsUseCase> _logger;
+	private readonly IClock _clock;
 
 	public async Task<GetStatisticsResponse> ExecuteAsync(GetStatisticsRequest request)
 	{
-		var stats = _service.GetStatistics(request.PreferencesList);
+		var stats = _service.GetStatistics(request.PreferencesList, _clock);
 
 		// Application層でログ出力
 		_logger.LogInformation(
@@ -258,7 +185,7 @@ public class GetCarPreferencesStatisticsUseCase
 
 ---
 
-## 🔄 実装フロー（推奨パターン1）
+## 🔄 実装フロー（推奨パターン1: デコレーター + Application層）
 
 ### シーケンス図
 
@@ -377,6 +304,92 @@ public async Task ExecuteAsync_WithValidRequest_ShouldReturnPreferences()
 | **クロスカッティングコンサーン** | デコレーターパターン |
 | **例外処理** | Domain: ビジネス例外発生、Application: ハンドル＆ログ |
 | **イベント駆動** | Domain: イベント発行、Application: リッスン＆ログ |
+
+---
+
+## 🚧 将来計画: ドメインイベント＆イベントハンドラー
+
+以下のパターンは **実装検討中** です。Entity基底クラスとドメインイベント機構の完成後に導入予定。
+
+### パターン概要
+
+Domain層で重要な事象が発生した場合、ドメインイベントを発行し、Application層がリッスンしてログを記録。
+
+**構造:**
+
+```
+Domain層
+  ├─ Entity（ドメインロジック）
+  ├─ IDomainEvent（イベント定義）
+  └─ AggregateRoot
+		└─ RaiseDomainEvent(IDomainEvent)
+
+Application層
+  ├─ IDomainEventHandler<TEvent>
+  │   └─ ログ出力、他のアクション
+  └─ EventDispatcher
+```
+
+### 実装例（将来）
+
+```csharp
+// ✅ Domain層: イベント定義（ログなし）
+public class PreferencesUpdatedEvent : IDomainEvent
+{
+	public string UserId { get; set; }
+	public LocalDateTime UpdatedAt { get; set; }  // LocalDateTime使用
+	public string ChangeDescription { get; set; }
+}
+
+// ✅ Domain層: Entityでイベント発行
+public class UserPreferences : AggregateRoot
+{
+	public void UpdatePreferences(CarModel model, IClock clock)
+	{
+		// ビジネスロジック
+		this.PreferredModel = model;
+		this.UpdatedAt = clock.JstNow;  // LocalDateTime
+
+		// イベント発行（ログなし）
+		this.RaiseDomainEvent(new PreferencesUpdatedEvent 
+		{ 
+			UserId = this.UserId,
+			ChangeDescription = $"Updated to {model.Name}",
+			UpdatedAt = clock.JstNow
+		});
+	}
+}
+
+// ✅ Application層: イベントハンドラー
+public class PreferencesUpdatedEventHandler : IDomainEventHandler<PreferencesUpdatedEvent>
+{
+	private readonly IAppLogging<PreferencesUpdatedEventHandler> _logger;
+
+	public async Task HandleAsync(PreferencesUpdatedEvent @event)
+	{
+		// ここでログ出力
+		_logger.LogInformation(
+			$"User preferences changed - UserId: {@event.UserId}, " +
+			$"Description: {@event.ChangeDescription}, " +
+			$"UpdatedAt: {@event.UpdatedAt}");
+
+		// 必要に応じて他の処理（メール送信など）
+		await SendNotificationAsync(@event);
+	}
+}
+```
+
+### メリット（実装時）
+
+- Domain層は完全に独立（テスト容易）
+- イベント駆動で疎結合
+- 複数のハンドラーを容易に追加可能
+- 監査ログの自動生成に有用
+
+### 実装時期
+
+SharedKernel に Entity基底クラスと IDomainEvent の実装が完了した後を予定。
+参照: [実施者実装計画](../../memory/project_actor_implementation_plan.md)
 
 ---
 
