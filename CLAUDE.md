@@ -248,6 +248,18 @@ public class UpdateOrderService
 
 ---
 
+## ⚠️ 検討中のドキュメント
+
+`docs/Assistance/Consider/` ディレクトリ内のドキュメントは**検討中および進行中の項目**です。
+
+❌ **参照しないでください** — 実装やコードレビュー時の参考にしないこと  
+❌ **参考資料ではありません** — 不完全または暫定的な内容を含みます  
+❌ **修正対象外** — ドキュメント齟齬調査対象外です  
+
+詳細は `docs/Assistance/Consider/README.md` を参照。
+
+---
+
 ## 🚀 CI/CD での自動検証
 
 依存関係の遵守は現状コードレビューに依存している。`NetArchTest.Rules` を使った型レベルの検証テスト例は [CLEAN_ARCHITECTURE_GUIDELINES.md の「自動検証の導入」](docs/Assistance/Guides/CLEAN_ARCHITECTURE_GUIDELINES.md#自動検証の導入) を参照。特に「Presentation → Infrastructure は Program.cs のみ」は `.csproj` の `ProjectReference` だけでは強制できないため、このテストでの担保が必須。
