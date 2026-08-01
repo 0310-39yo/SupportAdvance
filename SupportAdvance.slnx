@@ -58,6 +58,7 @@
     <Project Path="tests/Crosscutting.Tests/Crosscutting.Tests.csproj" Id="a1b2c3d4-e5f6-47a8-9b0c-2d3e4f5a6b7c" />
     <Project Path="tests/Infrastructure.Tests/Infrastructure.Tests.csproj" Id="f1f2a3b4-c5d6-47f8-9f0a-6b7c8d9e0f1b" />
     <Project Path="tests/SharedKernel.Tests/SharedKernel.Tests.csproj" Id="b1c2d3e4-f5a6-47b8-9c0d-3e4f5a6b7c8d" />
+    <Project Path="tests/Architecture.Tests/Architecture.Tests.csproj" Id="c1c2d3e4-f5a6-47b8-9c0d-3e4f5a6b7c8d" />
   </Folder>
   <Folder Name="/tests/Contexts/" />
   <Folder Name="/tests/Contexts/Samples/">

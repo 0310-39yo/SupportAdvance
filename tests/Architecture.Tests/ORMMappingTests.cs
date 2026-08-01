@@ -7,7 +7,7 @@ using SupportAdvance.Infrastructure.ORM.RepoDB;
 using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 using Xunit;
 
-namespace SupportAdvance.Architecture.Tests;
+namespace Architecture.Tests;
 
 /// <summary>
 /// ORM（Dapper・RepoDb）の型マッピング検証

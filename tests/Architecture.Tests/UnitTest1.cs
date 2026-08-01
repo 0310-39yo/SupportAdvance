@@ -1,4 +1,4 @@
-﻿namespace SupportAdvance.Architecture.Tests;
+﻿namespace Architecture.Tests;
 
 public class UnitTest1
 {
