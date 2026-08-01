@@ -526,7 +526,7 @@ public class NewEntity
 | **null の意味** | 削除されていない（删除フラグ不要） |
 | **値の意味** | 削除された日時 |
 | **DateTime Kind** | UTC/Local 区別なし。UTC 推奨 |
-| **自動生成** | From(DateTime.UtcNow)で現在UTC日時を使用推奨 |
+| **自動生成** | IClock.JstNowを経由して日時を取得し、From()で生成。DateTime.UtcNow/DateTime.Nowの直接使用は禁止（Clock実装内部のみ許可） |
 | **等価性演算子** | == / != は自動的に Equals に委譲される（.NET仕様） |
 | **削除取消** | 一度削除後の取消は新規 Unset() 生成により実現 |
 | **削除権限** | 削除操作の権限チェックは Entity/Use Case 層で実施 |

@@ -307,7 +307,7 @@ Validate(DateTime normalized)
 | **null許容** | TryFromではnull許容、FromではArgumentException |
 | **例外タイプ** | ArgumentExceptionのみ使用 |
 | **ログ出力** | UpdatedAt側では行わない |
-| **自動生成** | From(DateTime.UtcNow)で現在UTC日時を使用推奨 |
+| **自動生成** | IClock.JstNowを経由して日時を取得し、From()で生成。DateTime.UtcNow/DateTime.Nowの直接使用は禁止（Clock実装内部のみ許可） |
 | **等価性演算子** | == / != は自動的に Equals に委譲される（.NET仕様） |
 
 ---

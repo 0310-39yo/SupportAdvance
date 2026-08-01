@@ -105,17 +105,25 @@ public class PreferencesChangedEvent : IDomainEvent
 // ✅ Domain層: Entityでイベント発行
 public class UserPreferences : AggregateRoot
 {
+	private readonly IClock _clock;
+
+	public UserPreferences(IClock clock)
+	{
+		_clock = clock ?? throw new ArgumentNullException(nameof(clock));
+	}
+
 	public void UpdatePreferences(CarModel model)
 	{
 		// ビジネスロジック
 		this.PreferredModel = model;
 
 		// イベント発行（ログなし）
+		// IClock 経由で日時を取得
 		RaiseEvent(new PreferencesChangedEvent 
 		{ 
 			UserId = this.UserId,
 			ChangeDescription = $"Updated to {model.Name}",
-			ChangedAt = DateTime.UtcNow
+			ChangedAt = _clock.JstNow
 		});
 	}
 }
@@ -156,6 +164,13 @@ public class PreferencesChangedEventHandler : IEventHandler<PreferencesChangedEv
 // ✅ Domain層: 統計情報を返す（ログなし）
 public class CarPreferencesStatisticsService
 {
+	private readonly IClock _clock;
+
+	public CarPreferencesStatisticsService(IClock clock)
+	{
+		_clock = clock ?? throw new ArgumentNullException(nameof(clock));
+	}
+
 	public CarPreferencesStatistics GetStatistics(List<UserPreferences> preferences)
 	{
 		var stats = new CarPreferencesStatistics
@@ -166,7 +181,7 @@ public class CarPreferencesStatisticsService
 				.Select(g => new { Model = g.Key, Count = g.Count() })
 				.OrderByDescending(x => x.Count)
 				.ToList(),
-			RecordedAt = DateTime.UtcNow
+			RecordedAt = _clock.JstNow  // IClock 経由で取得
 		};
 
 		return stats;

@@ -291,7 +291,7 @@ namespace SupportAdvance.Infrastructure.Persistence.Repositories
 		Name = driver.Name,
 		CarModelValue = _carModelMapper.ToDb(driver.CarModel),  // ★ IsSet 区別
 		CreatedAt = driver.CreatedAt,
-		UpdatedAt = DateTime.UtcNow
+		UpdatedAt = _clock.JstNow.Value  // IClock 経由で取得
 	  };
 	}
   }
@@ -340,12 +340,14 @@ var dbDrivers = await connection.QueryAsync<DbDriver>(
 ### 4.4 新規行挿入（Insert）
 
 ```csharp
+// Repository の _clock 経由で取得
+var now = _clock.JstNow.Value;
 var dbDriver = new DbDriver
 {
   Name = "Taro Tanaka",
   CarModelValue = 2,  // SUV（Unset なら null）
-  CreatedAt = DateTime.UtcNow,
-  UpdatedAt = DateTime.UtcNow
+  CreatedAt = now,
+  UpdatedAt = now
 };
 
 var identity = await connection.InsertAsync<DbDriver>(dbDriver);
@@ -355,12 +357,13 @@ var identity = await connection.InsertAsync<DbDriver>(dbDriver);
 ### 4.5 行更新（Update）
 
 ```csharp
+// Repository の _clock 経由で取得
 var dbDriver = new DbDriver
 {
   Id = 1,
   Name = "Taro Tanaka",
   CarModelValue = null,  // Unset に変更
-  UpdatedAt = DateTime.UtcNow
+  UpdatedAt = _clock.JstNow.Value
 };
 
 var affectedRows = await connection.UpdateAsync<DbDriver>(dbDriver);

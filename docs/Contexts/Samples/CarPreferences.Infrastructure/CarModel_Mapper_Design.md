@@ -324,7 +324,7 @@ public async Task UpdateAsync(Driver driver)
 	Name = driver.Name,
 	CarModelValue = _carModelMapper.ToDb(driver.CarModel),  // Domain → DB 変換
 	CreatedAt = driver.CreatedAt,
-	UpdatedAt = DateTime.UtcNow
+	UpdatedAt = _clock.JstNow.Value  // IClock 経由で取得
   };
 
   using (var connection = new SqlConnection(_connectionString))

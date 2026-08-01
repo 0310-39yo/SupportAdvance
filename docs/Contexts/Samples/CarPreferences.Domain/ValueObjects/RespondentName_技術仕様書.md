@@ -272,13 +272,16 @@ public class Respondent  // ドメインエンティティ
 	public CreatedAt CreatedAt { get; }
 	public UpdatedAt UpdatedAt { get; }
 
-	public Respondent(RespondentId id, RespondentName name, RespondentAge age)
+	private readonly IClock _clock;
+
+	public Respondent(RespondentId id, RespondentName name, RespondentAge age, IClock clock)
 	{
 		Id = id ?? throw new ArgumentNullException(nameof(id));
 		Name = name ?? throw new ArgumentNullException(nameof(name));
 		Age = age ?? throw new ArgumentNullException(nameof(age));
-		CreatedAt = CreatedAt.From(DateTime.UtcNow);
-		UpdatedAt = UpdatedAt.From(DateTime.UtcNow);
+		_clock = clock ?? throw new ArgumentNullException(nameof(clock));
+		CreatedAt = CreatedAt.From(_clock.JstNow);
+		UpdatedAt = UpdatedAt.From(_clock.JstNow);
 	}
 }
 

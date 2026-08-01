@@ -160,8 +160,11 @@ var entitiesCreatedInJanuary = entities
     .ToList();
 
 // UpdatedAt での検索
+// ⚠️ IClock から事前に現在日時を取得してから使用
+var now = _clock.JstNow.Value;
+var sevenDaysAgo = now.AddDays(-7);
 var recentlyUpdated = entities
-    .Where(e => e.UpdatedAt.Value >= DateTime.UtcNow.AddDays(-7))
+    .Where(e => e.UpdatedAt.Value >= sevenDaysAgo)
     .ToList();
 
 // DeletedAt での検索
@@ -380,8 +383,12 @@ public class Entity
     }
 }
 
-// 非推奨: DateTime.UtcNow を直接使用
+// ❌ 非推奨: DateTime.UtcNow を直接使用
 // CreatedAt.From(DateTime.UtcNow)  // ← テスト困難、時刻制御不可
+
+// ✅ 推奨: IClock 経由で日時を取得
+// private readonly IClock _clock;  // DI で注入
+// CreatedAt.From(_clock.JstNow)  // ← テスト可能、時刻制御可能
 ```
 
 ### 15.2 削除操作の権限管理
