@@ -26,7 +26,8 @@ public class UserRoleMapper : IEntityMapper<UserRole, UserRoleDbModel, RowId>
         ArgumentNullException.ThrowIfNull(dbModel);
         ArgumentNullException.ThrowIfNull(clock);
 
-        var assignedAt = new LocalDateTime(dbModel.AssignedAt);
+        // TryFrom で型安全な DateTime → LocalDateTime 変換
+        LocalDateTime assignedAt = new LocalDateTime(dbModel.AssignedAt);
 
         return new UserRole(
             userId: RowId.From(dbModel.UserId),

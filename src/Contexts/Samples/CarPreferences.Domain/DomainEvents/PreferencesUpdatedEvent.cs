@@ -9,12 +9,12 @@ namespace SupportAdvance.Contexts.Samples.CarPreferences.Domain.DomainEvents;
 ///
 /// 【発行】UserPreferences.UpdatePreferredModel()
 /// 【用途】ログ、監査ログ、ユーザー通知
-/// 【識別子】RowId（システム基本ID、マイナンバー相当）
+/// 【識別子】EventId（GUID ValueObject）
 /// </summary>
 public sealed class PreferencesUpdatedEvent : IDomainEvent
 {
-    /// <summary>row_id（システム基本ID）ValueObject</summary>
-    public RowId RowId { get; }
+    /// <summary>イベント一意識別子（GUID ValueObject）</summary>
+    public DomainEventId EventId { get; }
 
     /// <summary>変更タイプ</summary>
     public PreferenceChangeType ChangeType { get; }
@@ -29,18 +29,18 @@ public sealed class PreferencesUpdatedEvent : IDomainEvent
     public LocalDateTime OccurredAt { get; }
 
     public PreferencesUpdatedEvent(
-        RowId rowId,
+        DomainEventId eventId,
         PreferenceChangeType changeType,
         string oldValue,
         string newValue,
         LocalDateTime occurredAt)
     {
-        ArgumentNullException.ThrowIfNull(rowId);
+        ArgumentNullException.ThrowIfNull(eventId);
         ArgumentNullException.ThrowIfNull(changeType);
         ArgumentNullException.ThrowIfNull(oldValue);
         ArgumentNullException.ThrowIfNull(newValue);
 
-        RowId = rowId;
+        EventId = eventId;
         ChangeType = changeType;
         OldValue = oldValue;
         NewValue = newValue;

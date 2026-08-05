@@ -91,6 +91,8 @@ public class UserPreferencesRepository
 
     /// <summary>
     /// プリファレンスを削除（論理削除）
+    ///
+    /// 【責務】Domain層での削除操作（Entity.SoftDelete()）を DB に反映
     /// </summary>
     public async Task<bool> DeleteAsync(RespondentPersonId userId)
     {
@@ -98,8 +100,21 @@ public class UserPreferencesRepository
 
         try
         {
-            var deletedAt = Clock.JstNow;
-            await _dataAccess.DeleteAsync(userId.Value ?? 0, deletedAt);
+            var preferences = await GetAsync(userId);
+            if (preferences == null)
+            {
+                return false;
+            }
+
+            var isDeleted = preferences.SoftDelete(Clock);
+            if (!isDeleted)
+            {
+                return false;  // 既に削除済み
+            }
+
+            var dbModel = MapToDatabaseForUpdate(preferences);
+            await _dataAccess.UpdateAsync(dbModel);
+
             return true;
         }
         catch (InvalidOperationException)

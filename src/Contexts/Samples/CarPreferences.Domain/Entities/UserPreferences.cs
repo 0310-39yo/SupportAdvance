@@ -2,6 +2,7 @@ using SupportAdvance.Common.Clocks;
 using SupportAdvance.Contexts.Samples.CarPreferences.Domain.DomainEvents;
 using SupportAdvance.Contexts.Samples.CarPreferences.Domain.ValueObjects;
 using SupportAdvance.SharedKernel.Entities;
+using SupportAdvance.SharedKernel.ValueObjects.Audit;
 using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 namespace SupportAdvance.Contexts.Samples.CarPreferences.Domain.Entities;
@@ -43,11 +44,14 @@ public class UserPreferences : AggregateRoot<RowId>
     /// <summary>ユーザーが質問に回答した日時</summary>
     private RespondentAt _respondedAt = RespondentAt.Unset();
 
-    /// <summary>最終更新日時</summary>
-    private LocalDateTime _updatedAt;
+    /// <summary>作成日時（ValueObject）</summary>
+    private CreatedAt _createdAt = null!;
 
-    /// <summary>作成日時</summary>
-    private LocalDateTime _createdAt;
+    /// <summary>最終更新日時（ValueObject、未更新状態対応）</summary>
+    private UpdatedAt _updatedAt = null!;
+
+    /// <summary>削除日時（ValueObject、論理削除対応）</summary>
+    private DeletedAt _deletedAt = null!;
 
     // 公開プロパティ（読み取り専用）
 
@@ -72,11 +76,14 @@ public class UserPreferences : AggregateRoot<RowId>
     /// <summary>回答日時</summary>
     public RespondentAt RespondedAt => _respondedAt;
 
-    /// <summary>最終更新日時</summary>
-    public LocalDateTime UpdatedAt => _updatedAt;
+    /// <summary>作成日時（ValueObject）</summary>
+    public CreatedAt CreatedAt => _createdAt;
 
-    /// <summary>作成日時</summary>
-    public LocalDateTime CreatedAt => _createdAt;
+    /// <summary>最終更新日時（ValueObject）</summary>
+    public UpdatedAt UpdatedAt => _updatedAt;
+
+    /// <summary>削除日時（ValueObject）</summary>
+    public DeletedAt DeletedAt => _deletedAt;
 
     /// <summary>
     /// UserPreferences を生成
@@ -102,9 +109,52 @@ public class UserPreferences : AggregateRoot<RowId>
         Id = rowId ?? RowId.New();
         _userId = userId;
         _respondedAt = respondedAt;
-        _createdAt = clock.JstNow;
-        _updatedAt = clock.JstNow;
+        _createdAt = CreatedAt.From(clock.JstNow);
+        _updatedAt = UpdatedAt.From(clock.JstNow);
+        _deletedAt = DeletedAt.Unset();
         _prefersAutomatic = true;  // デフォルト値
+    }
+
+    /// <summary>
+    /// DB から復元した UserPreferences を再構築
+    ///
+    /// 【責務】Mapper/Repository が DB 読み込み値を Domain Entity に変換
+    /// 【用途】MapToDomain() → Reconstruct() の流れで使用
+    /// </summary>
+    public static UserPreferences Reconstruct(
+        RespondentPersonId userId,
+        RespondentAt respondedAt,
+        CreatedAt createdAt,
+        UpdatedAt updatedAt,
+        DeletedAt deletedAt,
+        RowId rowId,
+        CarModel? preferredModel = null,
+        BodyType? preferredBodyType = null,
+        bool prefersAutomatic = true,
+        Money? budgetFrom = null,
+        Money? budgetTo = null)
+    {
+        ArgumentNullException.ThrowIfNull(userId);
+        ArgumentNullException.ThrowIfNull(respondedAt);
+        ArgumentNullException.ThrowIfNull(createdAt);
+        ArgumentNullException.ThrowIfNull(updatedAt);
+        ArgumentNullException.ThrowIfNull(deletedAt);
+        ArgumentNullException.ThrowIfNull(rowId);
+
+        // ダミーの Clock で一時的に Entity を構築（フィールドはすぐ上書き）
+        var entity = new UserPreferences(userId, respondedAt, new SystemClock(), rowId);
+
+        // DB値で監査フィールドと ビジネスプロパティを上書き
+        entity._createdAt = createdAt;
+        entity._updatedAt = updatedAt;
+        entity._deletedAt = deletedAt;
+        entity._preferredModel = preferredModel;
+        entity._preferredBodyType = preferredBodyType;
+        entity._prefersAutomatic = prefersAutomatic;
+        entity._budgetFrom = budgetFrom;
+        entity._budgetTo = budgetTo;
+
+        return entity;
     }
 
     /// <summary>
@@ -117,14 +167,14 @@ public class UserPreferences : AggregateRoot<RowId>
 
         var oldModel = _preferredModel;
         _preferredModel = model;
-        _updatedAt = clock.JstNow;
+        _updatedAt = UpdatedAt.From(clock.JstNow);
 
         this.RaiseDomainEvent(new PreferencesUpdatedEvent(
-            this.Id,  // RowId（システム基本ID）
+            DomainEventId.New(),  // イベント ID（GUID）
             PreferenceChangeType.ModelUpdated,
             oldModel?.ToString() ?? "未設定",
             model.ToString(),
-            clock.JstNow));
+            new LocalDateTime(_updatedAt.Value!.Value)));
     }
 
     /// <summary>
@@ -148,13 +198,13 @@ public class UserPreferences : AggregateRoot<RowId>
 
         _budgetFrom = from;
         _budgetTo = to;
-        _updatedAt = clock.JstNow;
+        _updatedAt = UpdatedAt.From(clock.JstNow);
 
         this.RaiseDomainEvent(new BudgetUpdatedEvent(
-            this.Id,  // RowId（システム基本ID）
+            DomainEventId.New(),  // イベント ID（GUID）
             oldFrom, oldTo,
             from, to,
-            clock.JstNow));
+            new LocalDateTime(_updatedAt.Value!.Value)));
     }
 
     /// <summary>
@@ -172,13 +222,13 @@ public class UserPreferences : AggregateRoot<RowId>
 
         var oldBodyType = _preferredBodyType;
         _preferredBodyType = bodyType;
-        _updatedAt = clock.JstNow;
+        _updatedAt = UpdatedAt.From(clock.JstNow);
 
         this.RaiseDomainEvent(new BodyTypeUpdatedEvent(
-            this.Id,  // RowId（システム基本ID）
+            DomainEventId.New(),  // イベント ID（GUID）
             oldBodyType,
             bodyType,
-            clock.JstNow));
+            new LocalDateTime(_updatedAt.Value!.Value)));
     }
 
     /// <summary>
@@ -195,13 +245,13 @@ public class UserPreferences : AggregateRoot<RowId>
 
         var oldPreference = _prefersAutomatic;
         _prefersAutomatic = prefersAutomatic;
-        _updatedAt = clock.JstNow;
+        _updatedAt = UpdatedAt.From(clock.JstNow);
 
         this.RaiseDomainEvent(new TransmissionPreferenceUpdatedEvent(
-            this.Id,  // RowId（システム基本ID）
+            DomainEventId.New(),  // イベント ID（GUID）
             oldPreference,
             prefersAutomatic,
-            clock.JstNow));
+            new LocalDateTime(_updatedAt.Value!.Value)));
     }
 
     /// <summary>
@@ -239,4 +289,30 @@ public class UserPreferences : AggregateRoot<RowId>
             UpdateBudget(budgetFrom, budgetTo, clock);
         }
     }
+
+    /// <summary>
+    /// ユーザーの好みを論理削除（DeletedAt を設定）
+    ///
+    /// 【責務】Domain層での削除状態設定
+    /// 【戻り値】削除成功時 true、既に削除済みなら false
+    /// </summary>
+    public bool SoftDelete(IClock clock)
+    {
+        ArgumentNullException.ThrowIfNull(clock);
+
+        if (_deletedAt.IsDeleted)
+        {
+            return false;
+        }
+
+        _deletedAt = DeletedAt.From(clock.JstNow);
+        _updatedAt = UpdatedAt.From(clock.JstNow);
+
+        return true;
+    }
+
+    /// <summary>
+    /// 削除状態を判定
+    /// </summary>
+    public bool IsDeleted => _deletedAt.IsDeleted;
 }

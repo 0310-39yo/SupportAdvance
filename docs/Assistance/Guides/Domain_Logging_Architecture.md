@@ -330,19 +330,28 @@ Application層
   └─ EventDispatcher
 ```
 
-### 実装例（将来）
+### 実装例
 
 ```csharp
 // ✅ Domain層: イベント定義（ログなし）
 public class PreferencesUpdatedEvent : IDomainEvent
 {
-	public string UserId { get; set; }
-	public LocalDateTime UpdatedAt { get; set; }  // LocalDateTime使用
-	public string ChangeDescription { get; set; }
+	public DomainEventId EventId { get; }          // イベント一意識別子（GUID）
+	public string ChangeDescription { get; }
+	public LocalDateTime OccurredAt { get; }       // LocalDateTime使用
+
+	public PreferencesUpdatedEvent(DomainEventId eventId, string changeDescription, LocalDateTime occurredAt)
+	{
+		ArgumentNullException.ThrowIfNull(eventId);
+		
+		EventId = eventId;
+		ChangeDescription = changeDescription;
+		OccurredAt = occurredAt;
+	}
 }
 
 // ✅ Domain層: Entityでイベント発行
-public class UserPreferences : AggregateRoot
+public class UserPreferences : AggregateRoot<RowId>
 {
 	public void UpdatePreferences(CarModel model, IClock clock)
 	{
@@ -351,12 +360,11 @@ public class UserPreferences : AggregateRoot
 		this.UpdatedAt = clock.JstNow;  // LocalDateTime
 
 		// イベント発行（ログなし）
-		this.RaiseDomainEvent(new PreferencesUpdatedEvent 
-		{ 
-			UserId = this.UserId,
-			ChangeDescription = $"Updated to {model.Name}",
-			UpdatedAt = clock.JstNow
-		});
+		this.RaiseDomainEvent(new PreferencesUpdatedEvent(
+			DomainEventId.New(),                    // イベント ID（GUID）
+			$"Updated to {model.Name}",
+			clock.JstNow
+		));
 	}
 }
 

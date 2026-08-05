@@ -19,7 +19,7 @@ public sealed class RespondentAtTests
         var pastDate = new DateTime(2026, 7, 8, 10, 0, 0);
 
         // Act
-        var result = RespondentAt.From(pastDate, clock);
+        var result = RespondentAt.From(new LocalDateTime(pastDate), clock);
 
         // Assert
         Assert.True(result.IsSet);
@@ -50,11 +50,11 @@ public sealed class RespondentAtTests
         var pastDate = now.AddHours(-1);
 
         // Act
-        var result = RespondentAt.From(pastDate, clock);
+        var result = RespondentAt.From(new LocalDateTime(pastDate), clock);
 
         // Assert
         Assert.True(result.IsSet);
-        Assert.Equal(pastDate, result.Value);
+        Assert.Equal(new LocalDateTime(pastDate).Value, result.Value.Value);
     }
 
     /// <summary>VO-CLK-02: 現在日時は検証成功、IsSet=true で返す</summary>
@@ -66,11 +66,11 @@ public sealed class RespondentAtTests
         var clock = new MockClock(now);
 
         // Act
-        var result = RespondentAt.From(now, clock);
+        var result = RespondentAt.From(new LocalDateTime(now), clock);
 
         // Assert
         Assert.True(result.IsSet);
-        Assert.Equal(now, result.Value);
+        Assert.Equal(new LocalDateTime(now).Value, result.Value.Value);
     }
 
     /// <summary>VO-CLK-03: 未来日は ArgumentException をスロー</summary>
@@ -83,7 +83,7 @@ public sealed class RespondentAtTests
         var futureDate = now.AddHours(1);
 
         // Act & Assert
-        var ex = Assert.Throws<ArgumentException>(() => RespondentAt.From(futureDate, clock));
+        var ex = Assert.Throws<ArgumentException>(() => RespondentAt.From(new LocalDateTime(futureDate), clock));
         Assert.Contains("cannot be in the future", ex.Message);
     }
 
@@ -95,7 +95,7 @@ public sealed class RespondentAtTests
         var clock = new MockClock(new DateTime(2026, 7, 8, 12, 0, 0));
 
         // Act & Assert
-        var ex = Assert.Throws<ArgumentException>(() => RespondentAt.From(DateTime.MinValue, clock));
+        var ex = Assert.Throws<ArgumentException>(() => RespondentAt.From(new LocalDateTime(DateTime.MinValue), clock));
         Assert.Contains("must be a valid system timestamp", ex.Message);
     }
 
@@ -107,7 +107,7 @@ public sealed class RespondentAtTests
         var clock = new MockClock(new DateTime(2026, 7, 8, 12, 0, 0));
 
         // Act & Assert
-        var ex = Assert.Throws<ArgumentException>(() => RespondentAt.From(DateTime.MaxValue, clock));
+        var ex = Assert.Throws<ArgumentException>(() => RespondentAt.From(new LocalDateTime(DateTime.MaxValue), clock));
         Assert.Contains("must be a valid system timestamp", ex.Message);
     }
 
@@ -136,11 +136,11 @@ public sealed class RespondentAtTests
         var pastDate = new DateTime(2026, 7, 8, 10, 0, 0);
 
         // Act
-        var result = RespondentAt.From(pastDate, clock);
+        var result = RespondentAt.From(new LocalDateTime(pastDate), clock);
 
         // Assert
         Assert.True(result.IsSet);
-        Assert.Equal(pastDate, result.Value);
+        Assert.Equal(new LocalDateTime(pastDate).Value, result.Value.Value);
     }
 
     /// <summary>VO-OPT-03: TryFrom(null, clock) は true を返し、Unset インスタンスを返す</summary>
@@ -151,7 +151,7 @@ public sealed class RespondentAtTests
         var clock = new MockClock(new DateTime(2026, 7, 8, 12, 0, 0));
 
         // Act
-        var success = RespondentAt.TryFrom((DateTime?)null, clock, out var result);
+        var success = RespondentAt.TryFrom((LocalDateTime?)null, clock, out var result);
 
         // Assert
         Assert.True(success);
@@ -167,12 +167,12 @@ public sealed class RespondentAtTests
         var pastDate = new DateTime(2026, 7, 8, 10, 0, 0);
 
         // Act
-        var success = RespondentAt.TryFrom(pastDate, clock, out var result);
+        var success = RespondentAt.TryFrom(new LocalDateTime(pastDate), clock, out var result);
 
         // Assert
         Assert.True(success);
         Assert.True(result.IsSet);
-        Assert.Equal(pastDate, result.Value);
+        Assert.Equal(new LocalDateTime(pastDate).Value, result.Value.Value);
     }
 
     /// <summary>VO-OPT-05: TryFrom(invalid, clock) は false を返し、Unset インスタンスを返す</summary>
@@ -184,7 +184,7 @@ public sealed class RespondentAtTests
         var clock = new MockClock(new DateTime(2026, 7, 8, 12, 0, 0));
 
         // Act
-        var success = RespondentAt.TryFrom(invalidDate, clock, out var result);
+        var success = RespondentAt.TryFrom(new LocalDateTime(invalidDate), clock, out var result);
 
         // Assert
         Assert.False(success);
@@ -198,14 +198,14 @@ public sealed class RespondentAtTests
         // Arrange
         var clock = new MockClock(new DateTime(2026, 7, 8, 12, 0, 0));
         var pastDate = new DateTime(2026, 7, 8, 10, 0, 0);
-        var respondentAt = RespondentAt.From(pastDate, clock);
+        var respondentAt = RespondentAt.From(new LocalDateTime(pastDate), clock);
 
         // Act
         var success = respondentAt.TryGetValue(out var value);
 
         // Assert
         Assert.True(success);
-        Assert.Equal(pastDate, value);
+        Assert.Equal(new LocalDateTime(pastDate).Value, value.Value);
     }
 
     /// <summary>VO-OPT-07: TryGetValue(out value) は IsSet=false で false を返す</summary>
@@ -220,7 +220,7 @@ public sealed class RespondentAtTests
 
         // Assert
         Assert.False(success);
-        Assert.Equal(default(DateTime), value);
+        Assert.Equal(default(LocalDateTime), value);
     }
 
     #endregion
@@ -234,8 +234,8 @@ public sealed class RespondentAtTests
         // Arrange
         var clock = new MockClock(new DateTime(2026, 7, 8, 12, 0, 0));
         var date = new DateTime(2026, 7, 8, 10, 0, 0);
-        var respondentAt1 = RespondentAt.From(date, clock);
-        var respondentAt2 = RespondentAt.From(date, clock);
+        var respondentAt1 = RespondentAt.From(new LocalDateTime(date), clock);
+        var respondentAt2 = RespondentAt.From(new LocalDateTime(date), clock);
 
         // Act & Assert
         Assert.True(respondentAt1.Equals(respondentAt2));
@@ -248,7 +248,7 @@ public sealed class RespondentAtTests
     {
         // Arrange
         var clock = new MockClock(new DateTime(2026, 7, 8, 12, 0, 0));
-        var respondentAt = RespondentAt.From(new DateTime(2026, 7, 8, 10, 0, 0), clock);
+        var respondentAt = RespondentAt.From(new LocalDateTime(new DateTime(2026, 7, 8, 10, 0, 0)), clock);
 
         // Act & Assert
         Assert.True(respondentAt.Equals(respondentAt));
@@ -279,8 +279,8 @@ public sealed class RespondentAtTests
         var clock = new MockClock(new DateTime(2026, 7, 8, 12, 0, 0));
         var date1 = new DateTime(2026, 7, 8, 10, 0, 0);
         var date2 = new DateTime(2026, 7, 8, 9, 0, 0);
-        var respondentAt1 = RespondentAt.From(date1, clock);
-        var respondentAt2 = RespondentAt.From(date2, clock);
+        var respondentAt1 = RespondentAt.From(new LocalDateTime(date1), clock);
+        var respondentAt2 = RespondentAt.From(new LocalDateTime(date2), clock);
 
         // Act & Assert
         Assert.False(respondentAt1.Equals(respondentAt2));
@@ -293,7 +293,7 @@ public sealed class RespondentAtTests
     {
         // Arrange
         var clock = new MockClock(new DateTime(2026, 7, 8, 12, 0, 0));
-        var respondentAt = RespondentAt.From(new DateTime(2026, 7, 8, 10, 0, 0), clock);
+        var respondentAt = RespondentAt.From(new LocalDateTime(new DateTime(2026, 7, 8, 10, 0, 0)), clock);
         var unset = RespondentAt.Unset();
 
         // Act & Assert
@@ -307,7 +307,7 @@ public sealed class RespondentAtTests
     {
         // Arrange
         var clock = new MockClock(new DateTime(2026, 7, 8, 12, 0, 0));
-        var respondentAt = RespondentAt.From(new DateTime(2026, 7, 8, 10, 0, 0), clock);
+        var respondentAt = RespondentAt.From(new LocalDateTime(new DateTime(2026, 7, 8, 10, 0, 0)), clock);
 
         // Act & Assert
         Assert.False(respondentAt.Equals(null));
@@ -324,8 +324,8 @@ public sealed class RespondentAtTests
         // Arrange
         var clock = new MockClock(new DateTime(2026, 7, 8, 12, 0, 0));
         var date = new DateTime(2026, 7, 8, 10, 0, 0);
-        var respondentAt1 = RespondentAt.From(date, clock);
-        var respondentAt2 = RespondentAt.From(date, clock);
+        var respondentAt1 = RespondentAt.From(new LocalDateTime(date), clock);
+        var respondentAt2 = RespondentAt.From(new LocalDateTime(date), clock);
 
         // Act & Assert
         Assert.Equal(respondentAt1.GetHashCode(), respondentAt2.GetHashCode());
@@ -337,7 +337,7 @@ public sealed class RespondentAtTests
     {
         // Arrange
         var clock = new MockClock(new DateTime(2026, 7, 8, 12, 0, 0));
-        var respondentAt = RespondentAt.From(new DateTime(2026, 7, 8, 10, 0, 0), clock);
+        var respondentAt = RespondentAt.From(new LocalDateTime(new DateTime(2026, 7, 8, 10, 0, 0)), clock);
         var unset = RespondentAt.Unset();
 
         // Act & Assert
@@ -350,7 +350,7 @@ public sealed class RespondentAtTests
     {
         // Arrange
         var clock = new MockClock(new DateTime(2026, 7, 8, 12, 0, 0));
-        var respondentAt = RespondentAt.From(new DateTime(2026, 7, 8, 10, 0, 0), clock);
+        var respondentAt = RespondentAt.From(new LocalDateTime(new DateTime(2026, 7, 8, 10, 0, 0)), clock);
 
         // Act
         var hashCode1 = respondentAt.GetHashCode();
@@ -371,8 +371,8 @@ public sealed class RespondentAtTests
         // Arrange
         var clock = new MockClock(new DateTime(2026, 7, 8, 12, 0, 0));
         var date = new DateTime(2026, 7, 8, 10, 0, 0);
-        var respondentAt1 = RespondentAt.From(date, clock);
-        var respondentAt2 = RespondentAt.From(date, clock);
+        var respondentAt1 = RespondentAt.From(new LocalDateTime(date), clock);
+        var respondentAt2 = RespondentAt.From(new LocalDateTime(date), clock);
 
         // Act & Assert
         Assert.True(respondentAt1 == respondentAt2);
@@ -386,8 +386,8 @@ public sealed class RespondentAtTests
         var clock = new MockClock(new DateTime(2026, 7, 8, 12, 0, 0));
         var date1 = new DateTime(2026, 7, 8, 10, 0, 0);
         var date2 = new DateTime(2026, 7, 8, 9, 0, 0);
-        var respondentAt1 = RespondentAt.From(date1, clock);
-        var respondentAt2 = RespondentAt.From(date2, clock);
+        var respondentAt1 = RespondentAt.From(new LocalDateTime(date1), clock);
+        var respondentAt2 = RespondentAt.From(new LocalDateTime(date2), clock);
 
         // Act & Assert
         Assert.False(respondentAt1 == respondentAt2);
@@ -401,8 +401,8 @@ public sealed class RespondentAtTests
         var clock = new MockClock(new DateTime(2026, 7, 8, 12, 0, 0));
         var date1 = new DateTime(2026, 7, 8, 10, 0, 0);
         var date2 = new DateTime(2026, 7, 8, 9, 0, 0);
-        var respondentAt1 = RespondentAt.From(date1, clock);
-        var respondentAt2 = RespondentAt.From(date2, clock);
+        var respondentAt1 = RespondentAt.From(new LocalDateTime(date1), clock);
+        var respondentAt2 = RespondentAt.From(new LocalDateTime(date2), clock);
 
         // Act & Assert
         Assert.True(respondentAt1 != respondentAt2);
@@ -434,7 +434,7 @@ public sealed class RespondentAtTests
         // Arrange
         var clock = new MockClock(new DateTime(2026, 7, 8, 12, 0, 0));
         var date = new DateTime(2026, 7, 8, 10, 30, 0);
-        var respondentAt = RespondentAt.From(date, clock);
+        var respondentAt = RespondentAt.From(new LocalDateTime(date), clock);
 
         // Act
         var result = respondentAt.ToString();
@@ -456,7 +456,7 @@ public sealed class RespondentAtTests
         // Arrange
         var clock = new MockClock(new DateTime(2026, 7, 8, 12, 0, 0));
         var date = new DateTime(2026, 7, 8, 10, 0, 0);
-        var respondentAt = RespondentAt.From(date, clock);
+        var respondentAt = RespondentAt.From(new LocalDateTime(date), clock);
 
         // Act
         var components = respondentAt.GetEqualityComponents().ToList();
@@ -464,7 +464,7 @@ public sealed class RespondentAtTests
         // Assert
         Assert.NotEmpty(components);
         Assert.True(components[0] is bool && (bool)components[0] == true); // IsSet が先頭
-        Assert.Contains(date, components); // ValueField が含まれる
+        Assert.Contains(new LocalDateTime(date), components); // ValueField が含まれる
     }
 
     /// <summary>VO-GVC-02: IsSet=false の場合、GetEqualityComponents に IsSet=false のみが含まれる</summary>
@@ -489,8 +489,8 @@ public sealed class RespondentAtTests
         // Arrange
         var clock = new MockClock(new DateTime(2026, 7, 8, 12, 0, 0));
         var date = new DateTime(2026, 7, 8, 10, 0, 0);
-        var respondentAt1 = RespondentAt.From(date, clock);
-        var respondentAt2 = RespondentAt.From(date, clock);
+        var respondentAt1 = RespondentAt.From(new LocalDateTime(date), clock);
+        var respondentAt2 = RespondentAt.From(new LocalDateTime(date), clock);
 
         // Act & Assert - GetEqualityComponents は protected なので、Equals で確認
         Assert.Equal(respondentAt1, respondentAt2);
@@ -512,13 +512,13 @@ public sealed class RespondentAtTests
         // Arrange
         var clock = new MockClock(new DateTime(2026, 7, 8, 12, 0, 0));
         var date = new DateTime(2026, 7, 8, 10, 0, 0);
-        var respondentAt = RespondentAt.From(date, clock);
+        var respondentAt = RespondentAt.From(new LocalDateTime(date), clock);
 
         // Act
         var value = respondentAt.Value;
 
         // Assert
-        Assert.Equal(date, value);
+        Assert.Equal(new LocalDateTime(date).Value, value.Value);
     }
 
     /// <summary>VO-VAL-02: IsSet=false の場合、DateTime.MinValue を返す</summary>
@@ -532,7 +532,7 @@ public sealed class RespondentAtTests
         var value = unset.Value;
 
         // Assert
-        Assert.Equal(DateTime.MinValue, value);
+        Assert.Equal(new LocalDateTime(DateTime.MinValue), value);
     }
 
     /// <summary>VO-VAL-03: Value プロパティの戻り値型は DateTime（nullable ではない）</summary>
@@ -541,16 +541,16 @@ public sealed class RespondentAtTests
     {
         // Arrange
         var clock = new MockClock(new DateTime(2026, 7, 8, 12, 0, 0));
-        var respondentAt = RespondentAt.From(new DateTime(2026, 7, 8, 10, 0, 0), clock);
+        var respondentAt = RespondentAt.From(new LocalDateTime(new DateTime(2026, 7, 8, 10, 0, 0)), clock);
 
         // Act
         var value = respondentAt.Value;
 
-        // Assert - DateTime（nullable ではない）を返す
-        Assert.IsType<DateTime>(value);
-        // DateTime? でなく DateTime であることを確認（型チェック）
+        // Assert - LocalDateTime（nullable ではない）を返す
+        Assert.IsType<LocalDateTime>(value);
+        // LocalDateTime? でなく LocalDateTime であることを確認（型チェック）
         var valueType = respondentAt.Value.GetType();
-        Assert.Equal(typeof(DateTime), valueType);
+        Assert.Equal(typeof(LocalDateTime), valueType);
     }
 
     #endregion

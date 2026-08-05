@@ -170,7 +170,7 @@ public class YourAggregate : AggregateRoot<RowId>
         _children.Add(child);
         
         // ドメインイベント発行
-        RaiseDomainEvent(new YourChildAddedEvent(this.Id, child.Id));
+        RaiseDomainEvent(new YourChildAddedEvent(DomainEventId.New()));
     }
 }
 ```
@@ -194,14 +194,14 @@ namespace SupportAdvance.Contexts.YourGroup.YourContext.Domain.DomainEvents;
 
 public class YourEntityCreatedEvent : IDomainEvent
 {
-    public RowId AggregateRootId { get; }
+    public DomainEventId EventId { get; }
     public LocalDateTime OccurredAt { get; }
 
-    public YourEntityCreatedEvent(RowId rowId, LocalDateTime occurredAt)
+    public YourEntityCreatedEvent(DomainEventId eventId, LocalDateTime occurredAt)
     {
-        ArgumentNullException.ThrowIfNull(rowId);
-        AggregateRootId = rowId;
-        OccurredOn = DateTime.UtcNow;
+        ArgumentNullException.ThrowIfNull(eventId);
+        EventId = eventId;
+        OccurredAt = occurredAt;
     }
 }
 ```
@@ -209,15 +209,19 @@ public class YourEntityCreatedEvent : IDomainEvent
 ### イベント発行
 
 ```csharp
-public class YourEntity : Entity<long>
+public class YourEntity : Entity<RowId>
 {
-    public YourEntity(long rowId, YourBusinessId yourBusinessId, IClock clock)
+    public YourEntity(RowId rowId, YourBusinessId yourBusinessId, IClock clock)
     {
+        ArgumentNullException.ThrowIfNull(rowId);
+        ArgumentNullException.ThrowIfNull(yourBusinessId);
+        ArgumentNullException.ThrowIfNull(clock);
+
         Id = rowId;
         _yourBusinessId = yourBusinessId;
 
-        // ドメインイベント発行（rowId を パラメータに使用）
-        RaiseDomainEvent(new YourEntityCreatedEvent(rowId));
+        // ドメインイベント発行（EventId を新規生成）
+        RaiseDomainEvent(new YourEntityCreatedEvent(DomainEventId.New(), clock.JstNow));
     }
 }
 ```
@@ -228,12 +232,12 @@ public class YourEntity : Entity<long>
 
 ### Entity 定義
 
-- [ ] **Entity<long>** を継承（row_id がID）
+- [ ] **Entity<RowId>** を継承（RowId ValueObject がID）
 - [ ] **ビジネス識別子** は別 ValueObject プロパティ
 - [ ] **不変性**: private フィールド、public プロパティ（get のみ）
 - [ ] **コンストラクタ**: 必須フィールドをすべて引数に
 - [ ] **ビジネスロジック**: DDD 仕様に沿った操作メソッド
-- [ ] **ドメインイベント**: 重要な変更は RaiseDomainEvent()
+- [ ] **ドメインイベント**: 重要な変更は RaiseDomainEvent()で DomainEventId.New() を使用
 
 ### ValueObject
 
@@ -244,11 +248,11 @@ public class YourEntity : Entity<long>
 
 ### AggregateRoot
 
-- [ ] **AggregateRoot<long>** を継承
+- [ ] **AggregateRoot<RowId>** を継承（RowId ValueObject ベース）
 - [ ] **ビジネス識別子** は ValueObject
 - [ ] **子要素** は List<Entity> で管理
 - [ ] **トランザクション境界**: Aggregate 内で一貫性を保証
-- [ ] **ドメインイベント**: 重要な変更を発行
+- [ ] **ドメインイベント**: 重要な変更を発行（DomainEventId.New() で識別子生成）
 
 ---
 

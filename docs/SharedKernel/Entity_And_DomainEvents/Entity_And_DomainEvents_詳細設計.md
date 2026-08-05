@@ -38,13 +38,23 @@ namespace SupportAdvance.SharedKernel.Entities;
 /// 
 /// 【タイムゾーン】すべてのイベント発生時刻は JST（日本標準時）
 /// 【不変性】イベントは発行後に変更されない前提
+/// 【識別子】EventId（GUID ValueObject）で各イベントを一意識別
 /// </summary>
 public interface IDomainEvent
 {
     /// <summary>
+    /// イベント一意識別子（GUID ValueObject）
+    /// 
+    /// 【型】DomainEventId（GUID を保持する ValueObject）
+    /// 【用途】各ドメインイベントを一意に識別
+    /// 【必須】すべてのイベント実装で必ず値を持つこと
+    /// </summary>
+    DomainEventId EventId { get; }
+
+    /// <summary>
     /// イベント発生時刻（JST）
     /// 
-    /// 【型】LocalDateTime（JPMorganChase/NodaTimeではなく、Systemの型体系を使用）
+    /// 【型】LocalDateTime（System の型体系を使用）
     /// 【タイムゾーン】常に JST（Tokyo Standard Time）
     /// 【用途】監査ログ、イベント順序付けなど
     /// 【必須】すべてのイベント実装で必ず値を持つこと
@@ -56,12 +66,15 @@ public interface IDomainEvent
 ### 実装方針
 
 - `interface` として定義（抽象基底クラスではない）
-- `LocalDateTime` 型のプロパティのみ
+- `EventId` プロパティ（DomainEventId）を追加
+- `LocalDateTime` 型の `OccurredAt` プロパティは継続
 - XML コメントは詳細に記述
 - `DateTime.UtcNow` は絶対に使用しない
 
 ### テスト観点
+- IDomainEvent を実装したクラスは `EventId` プロパティを必ず持つ
 - IDomainEvent を実装したクラスは `OccurredAt` プロパティを必ず持つ
+- `EventId` は `DomainEventId` 型
 - `OccurredAt` は `LocalDateTime` 型
 
 ---
@@ -144,7 +157,7 @@ public abstract class Entity<TId> : IEquatable<Entity<TId>>
     /// {
     ///     _status = newStatus;
     ///     this.RaiseDomainEvent(new StatusChangedEvent(
-    ///         this.Id,
+    ///         DomainEventId.New(),  // イベント ID（GUID）
     ///         newStatus,
     ///         clock.JstNow
     ///     ));

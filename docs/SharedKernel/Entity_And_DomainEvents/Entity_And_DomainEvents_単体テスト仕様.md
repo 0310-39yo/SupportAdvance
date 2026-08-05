@@ -82,7 +82,7 @@ public sealed class TestEntity : Entity<TestId>
     public void UpdateName(string newName, IClock clock)
     {
         Name = newName;
-        this.RaiseDomainEvent(new TestDomainEvent(this.Id, newName, clock.JstNow));
+        this.RaiseDomainEvent(new TestDomainEvent(DomainEventId.New(), this.Id, newName, clock.JstNow));
     }
 }
 
@@ -106,12 +106,16 @@ public sealed class TestAggregateRoot : AggregateRoot<TestId>
 // tests/SharedKernel.Tests/Entities/Fixtures/TestDomainEvent.cs
 public sealed class TestDomainEvent : IDomainEvent
 {
+    public DomainEventId EventId { get; }
     public TestId EntityId { get; }
     public string Message { get; }
     public LocalDateTime OccurredAt { get; }
 
-    public TestDomainEvent(TestId entityId, string message, LocalDateTime occurredAt)
+    public TestDomainEvent(DomainEventId eventId, TestId entityId, string message, LocalDateTime occurredAt)
     {
+        ArgumentNullException.ThrowIfNull(eventId);
+
+        EventId = eventId;
         EntityId = entityId;
         Message = message;
         OccurredAt = occurredAt;
@@ -143,7 +147,7 @@ public void RaiseDomainEvent_WithValidEvent_ShouldAddEventToDomainEvents()
     var entity = new TestEntity(entityId);
     var clock = new SystemClock();
     var eventMessage = "Test event";
-    var @event = new TestDomainEvent(entityId, eventMessage, clock.JstNow);
+    var @event = new TestDomainEvent(DomainEventId.New(), entityId, eventMessage, clock.JstNow);
 
     // Act
     entity.UpdateName("NewName", clock);  // RaiseDomainEvent() が呼ばれる

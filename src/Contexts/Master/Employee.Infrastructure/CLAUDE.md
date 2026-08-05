@@ -7,43 +7,64 @@
 ### EmployeeDbModel, DepartmentDbModel
 - 監査カラム（row_id, row_version, created_at, created_by 等）8つ必須
 - Domain エンティティのプロパティに対応
-- long でプリミティブ型保持（RowId は Mapper で変換）
-- DateTime でプリミティブ型保持（LocalDateTime は Mapper で変換）
+- **long でプリミティブ型保持**（RowId は Mapper で変換）
+- **DateTime でプリミティブ型保持**（LocalDateTime は Mapper で変換）
+- 理由：ORM マッピングの明確性と責務分離
+
+### DbModel のコード例
+```csharp
+public class EmployeeDbModel
+{
+    // 監査フィールド: DateTime プリミティブ型
+    public DateTime CreatedAt { get; set; }        // ← DateTime
+    public DateTime? UpdatedAt { get; set; }       // ← DateTime?
+    public DateTime? DeletedAt { get; set; }       // ← DateTime?
+    
+    // ビジネスフィールド: DateTime プリミティブ型
+    public DateTime? HireDate { get; set; }        // ← DateTime?
+}
+```
 
 ## Mapper 実装
 
-### RowId マッピング
+### 双方向変換パターン
+
+#### ToDbModel: Entity → DbModel (LocalDateTime → DateTime)
 ```csharp
-// ToDbModel: Entity → DbModel
 public EmployeeDbModel ToDbModel(Employee entity)
 {
     return new EmployeeDbModel
     {
-        RowId = entity.Id.Value,  // RowId.Value で long に
-        DepartmentId = entity.DepartmentId.Value,  // RowId.Value
+        RowId = entity.Id.Value,                    // RowId → long
+        CreatedAt = entity.CreatedAt.Value,         // LocalDateTime → DateTime
+        HireDate = entity.HireDate.HasValue 
+            ? entity.HireDate.Value.Value           // LocalDateTime → DateTime
+            : (DateTime?)null,
         EmployeeNumber = entity.EmployeeNumber,
     };
 }
+```
 
-// ToDomainEntity: DbModel → Entity
+#### ToDomainEntity: DbModel → Entity (DateTime → LocalDateTime)
+```csharp
 public Employee ToDomainEntity(EmployeeDbModel dbModel, IClock clock)
 {
+    // DateTime → LocalDateTime 変換（型安全）
     var hireDate = dbModel.HireDate.HasValue
-        ? LocalDateTime.From(dbModel.HireDate.Value)  // DateTime → LocalDateTime
+        ? new LocalDateTime(dbModel.HireDate.Value)  // DateTime → LocalDateTime
         : null;
 
     return new Employee(
         employeeNumber: dbModel.EmployeeNumber,
-        ...
         hireDate: hireDate,
-        rowId: RowId.From(dbModel.RowId));  // long → RowId
+        rowId: RowId.From(dbModel.RowId));          // long → RowId
 }
 ```
 
-### LocalDateTime マッピング
-- Domain の LocalDateTime（JST）→ DbModel の DateTime（UTC）
-- DbModel の DateTime（UTC）→ Domain の LocalDateTime（JST）
-- グローバル ORM マッピング（Dapper/RepoDb）で自動変換
+### LocalDateTime マッピング責務
+- **Mapper の責務**: Entity（LocalDateTime） ↔ DbModel（DateTime）の明示的な変換
+- **グローバル ORM マッピング**: Dapper/RepoDb でプリミティブ型を自動マッピング
+- **型安全性**: 新しい LocalDateTime(...) で明示的な型変換を実施
 
 ## Repository 実装
 

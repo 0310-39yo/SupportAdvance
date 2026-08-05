@@ -3,6 +3,7 @@ using SupportAdvance.Contexts.Samples.CarPreferences.Domain.Entities;
 using SupportAdvance.Contexts.Samples.CarPreferences.Domain.ValueObjects;
 using SupportAdvance.Contexts.Samples.CarPreferences.Infrastructure.DataAccess.Models;
 using SupportAdvance.Infrastructure.Mappers;
+using SupportAdvance.SharedKernel.ValueObjects.Audit;
 using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 namespace SupportAdvance.Contexts.Samples.CarPreferences.Infrastructure.Mappers;
@@ -20,7 +21,7 @@ namespace SupportAdvance.Contexts.Samples.CarPreferences.Infrastructure.Mappers;
 public class UserPreferencesMapper : IEntityMapper<UserPreferences, UserPreferencesDbModel, RowId>
 {
     /// <summary>
-    /// Domain Entity → DbModel（保存用、RowId → long 変換）
+    /// Domain Entity → DbModel（保存用、RowId → long 変換、ValueObject → DateTime 変換）
     /// </summary>
     public UserPreferencesDbModel ToDbModel(UserPreferences entity)
     {
@@ -30,11 +31,11 @@ public class UserPreferencesMapper : IEntityMapper<UserPreferences, UserPreferen
         {
             RowId = entity.Id.Value,  // RowId → long 変換
             UserId = entity.UserId.Value ?? 0,  // int? → int
-            CreatedAt = entity.CreatedAt,  // LocalDateTime をそのまま使用
+            CreatedAt = new LocalDateTime(entity.CreatedAt.Value),  // DateTime → LocalDateTime
             CreatedBy = 0,  // Repository で設定される
-            UpdatedAt = entity.UpdatedAt == entity.CreatedAt ? null : entity.UpdatedAt,
+            UpdatedAt = entity.UpdatedAt.HasUpdated ? new LocalDateTime(entity.UpdatedAt.Value!.Value) : null,  // DateTime? → LocalDateTime?
             UpdatedBy = null,  // Repository で設定される
-            DeletedAt = null,
+            DeletedAt = entity.DeletedAt.IsDeleted ? new LocalDateTime(entity.DeletedAt.Value!.Value) : null,  // DateTime? → LocalDateTime?
             DeletedBy = null,
             PreferredModel = entity.PreferredModel?.Value,
             PreferredBodyType = entity.PreferredBodyType?.ToString(),
@@ -45,22 +46,74 @@ public class UserPreferencesMapper : IEntityMapper<UserPreferences, UserPreferen
     }
 
     /// <summary>
-    /// DbModel → Domain Entity（読み取り用、long → RowId ValueObject 変換）
+    /// DbModel → Domain Entity（読み取り用、long → RowId ValueObject 変換、TryFrom で型安全化）
     /// </summary>
     public UserPreferences ToDomainEntity(UserPreferencesDbModel dbModel, IClock clock)
     {
         ArgumentNullException.ThrowIfNull(dbModel);
         ArgumentNullException.ThrowIfNull(clock);
 
-        // ValueObject 変換（LocalDateTime → DateTime）
-        var userId = RespondentPersonId.From(dbModel.UserId);
-        var respondedAt = RespondentAt.From(dbModel.CreatedAt.Value, clock);
+        // ① ビジネス ValueObject 変換
+        if (!RespondentPersonId.TryFrom(dbModel.UserId, out var userId))
+        {
+            throw new InvalidOperationException(
+                $"Failed to convert UserId: {dbModel.UserId}");
+        }
 
-        // Entity 構築（dbModel.RowId (long) → RowId ValueObject 変換）
-        var entity = new UserPreferences(userId, respondedAt, clock, RowId.From(dbModel.RowId));
+        if (!RespondentAt.TryFrom(
+            dbModel.CreatedAt,
+            clock, out var respondedAt))
+        {
+            throw new InvalidOperationException(
+                $"Failed to convert CreatedAt to RespondentAt: {dbModel.CreatedAt}");
+        }
 
-        // ビジネスロジックは設定しない（読み取り専用）
-        // 必要に応じて別途メソッドで設定可能
+        // ② 監査 ValueObject の変換（TryFrom で失敗時は例外）
+        if (!CreatedAt.TryFrom(
+            dbModel.CreatedAt,
+            out var createdAt))
+        {
+            throw new InvalidOperationException(
+                $"Failed to convert CreatedAt ValueObject: {dbModel.CreatedAt}");
+        }
+
+        if (!UpdatedAt.TryFrom(
+            dbModel.UpdatedAt,
+            out var updatedAt))
+        {
+            throw new InvalidOperationException(
+                $"Failed to convert UpdatedAt ValueObject: {dbModel.UpdatedAt}");
+        }
+
+        if (!DeletedAt.TryFrom(
+            dbModel.DeletedAt,
+            out var deletedAt))
+        {
+            throw new InvalidOperationException(
+                $"Failed to convert DeletedAt ValueObject: {dbModel.DeletedAt}");
+        }
+
+        // ③ Reconstruct Factory メソッド呼び出し（DB値で復元）
+        var entity = UserPreferences.Reconstruct(
+            userId,
+            respondedAt,
+            createdAt,
+            updatedAt,
+            deletedAt,
+            RowId.From(dbModel.RowId),
+            dbModel.PreferredModel.HasValue
+                ? CarModel.From(dbModel.PreferredModel.Value)
+                : null,
+            dbModel.PreferredBodyType != null
+                ? BodyType.From(dbModel.PreferredBodyType)
+                : null,
+            dbModel.PrefersAutomatic,
+            dbModel.BudgetFrom.HasValue
+                ? Money.From(dbModel.BudgetFrom.Value)
+                : null,
+            dbModel.BudgetTo.HasValue
+                ? Money.From(dbModel.BudgetTo.Value)
+                : null);
 
         return entity;
     }

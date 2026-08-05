@@ -32,6 +32,11 @@ namespace SupportAdvance.SharedKernel.Entities;
 public interface IDomainEvent
 {
     /// <summary>
+    /// イベント一意識別子（GUID ValueObject）
+    /// </summary>
+    DomainEventId EventId { get; }
+
+    /// <summary>
     /// イベント発生時刻（JST）
     /// </summary>
     LocalDateTime OccurredAt { get; }
@@ -39,6 +44,7 @@ public interface IDomainEvent
 ```
 
 **要件**:
+- `EventId` は DomainEventId ValueObject（GUID）で各イベントを一意識別
 - LocalDateTime 型で JST を格納
 - イベント発生時刻は必須
 
@@ -48,22 +54,22 @@ using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 public class PreferencesUpdatedEvent : IDomainEvent
 {
-    public RowId RowId { get; }                      // AggregateRoot の識別子（RowId ValueObject）
+    public DomainEventId EventId { get; }            // イベント一意識別子（GUID ValueObject）
     public PreferenceChangeType ChangeType { get; }
     public string OldValue { get; }
     public string NewValue { get; }
-    public LocalDateTime OccurredAt { get; }  // 必須
+    public LocalDateTime OccurredAt { get; }         // 必須
 
     public PreferencesUpdatedEvent(
-        RowId rowId,
+        DomainEventId eventId,
         PreferenceChangeType changeType,
         string oldValue,
         string newValue,
         LocalDateTime occurredAt)
     {
-        ArgumentNullException.ThrowIfNull(rowId);
+        ArgumentNullException.ThrowIfNull(eventId);
 
-        RowId = rowId;
+        EventId = eventId;
         ChangeType = changeType;
         OldValue = oldValue;
         NewValue = newValue;
@@ -157,7 +163,7 @@ public class UserPreferences : AggregateRoot<RowId>  // RowId ValueObject ベー
 
         // Domain層内でイベント発行
         this.RaiseDomainEvent(new PreferencesUpdatedEvent(
-            this.Id,  // RowId ValueObject（型安全）
+            DomainEventId.New(),  // イベント ID（GUID ValueObject）
             PreferenceChangeType.ModelUpdated,
             oldModel?.ToString() ?? "未設定",
             model.ToString(),

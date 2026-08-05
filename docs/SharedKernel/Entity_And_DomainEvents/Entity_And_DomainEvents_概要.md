@@ -145,7 +145,7 @@ src/SharedKernel/
 
 ```csharp
 // Domain層
-public class UserPreferences : AggregateRoot<long>  // RowId ベース
+public class UserPreferences : AggregateRoot<RowId>  // RowId ValueObject ベース
 {
     private RespondentPersonId _userId;             // ビジネス識別子
     private CarModel? _preferredModel;
@@ -157,7 +157,7 @@ public class UserPreferences : AggregateRoot<long>  // RowId ベース
 
         // イベント発行（ログなし）
         this.RaiseDomainEvent(new PreferencesUpdatedEvent(
-            this.Id,  // RowId（システム基本ID）
+            DomainEventId.New(),  // イベント ID（GUID ValueObject）
             PreferenceChangeType.ModelUpdated,
             oldModel?.ToString() ?? "未設定",
             model.ToString(),
@@ -169,20 +169,22 @@ public class UserPreferences : AggregateRoot<long>  // RowId ベース
 // Domain層：イベント定義
 public class PreferencesUpdatedEvent : IDomainEvent
 {
-    public long RowId { get; }
+    public DomainEventId EventId { get; }           // イベント一意識別子（GUID ValueObject）
     public PreferenceChangeType ChangeType { get; }
     public string OldValue { get; }
     public string NewValue { get; }
     public LocalDateTime OccurredAt { get; }
 
     public PreferencesUpdatedEvent(
-        long rowId,
+        DomainEventId eventId,
         PreferenceChangeType changeType,
         string oldValue,
         string newValue,
         LocalDateTime occurredAt)
     {
-        RowId = rowId;
+        ArgumentNullException.ThrowIfNull(eventId);
+
+        EventId = eventId;
         ChangeType = changeType;
         OldValue = oldValue;
         NewValue = newValue;

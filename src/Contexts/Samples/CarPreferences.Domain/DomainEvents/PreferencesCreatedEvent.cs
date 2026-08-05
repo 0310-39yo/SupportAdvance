@@ -9,23 +9,23 @@ namespace SupportAdvance.Contexts.Samples.CarPreferences.Domain.DomainEvents;
 ///
 /// 【発行】Application層（CreateUserPreferencesUseCase）
 /// 【用途】ウェルカムメール、初期推奨、ログ
-/// 【識別子】RowId（システム基本ID、マイナンバー相当）
+/// 【識別子】EventId（GUID ValueObject）
 /// </summary>
 public sealed class PreferencesCreatedEvent : IDomainEvent
 {
-    /// <summary>row_id（システム基本ID）ValueObject</summary>
-    public RowId RowId { get; }
+    /// <summary>イベント一意識別子（GUID ValueObject）</summary>
+    public DomainEventId EventId { get; }
 
     /// <summary>イベント発生時刻（JST）</summary>
     public LocalDateTime OccurredAt { get; }
 
     public PreferencesCreatedEvent(
-        RowId rowId,
+        DomainEventId eventId,
         LocalDateTime occurredAt)
     {
-        ArgumentNullException.ThrowIfNull(rowId);
+        ArgumentNullException.ThrowIfNull(eventId);
 
-        RowId = rowId;
+        EventId = eventId;
         OccurredAt = occurredAt;
     }
 }

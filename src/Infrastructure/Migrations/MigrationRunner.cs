@@ -1,6 +1,7 @@
 using System.Data;
 using System.Data.SqlClient;
 using System.Reflection;
+using SupportAdvance.Common.Clocks;
 
 namespace SupportAdvance.Infrastructure.Migrations;
 
@@ -19,11 +20,14 @@ namespace SupportAdvance.Infrastructure.Migrations;
 public class MigrationRunner
 {
     private readonly string _connectionString;
+    private readonly IClock _clock;
 
-    public MigrationRunner(string connectionString)
+    public MigrationRunner(string connectionString, IClock clock)
     {
         ArgumentNullException.ThrowIfNull(connectionString);
+        ArgumentNullException.ThrowIfNull(clock);
         _connectionString = connectionString;
+        _clock = clock;
     }
 
     /// <summary>
@@ -179,7 +183,7 @@ public class MigrationRunner
             INSERT INTO __MigrationHistory (MigrationName, ExecutedAt, Success)
             VALUES (@Name, @ExecutedAt, @Success)";
         command.Parameters.AddWithValue("@Name", migrationName);
-        command.Parameters.AddWithValue("@ExecutedAt", DateTime.UtcNow.ToString("O"));
+        command.Parameters.AddWithValue("@ExecutedAt", _clock.JstNow.Value.ToString("O"));
         command.Parameters.AddWithValue("@Success", success ? 1 : 0);
         await command.ExecuteNonQueryAsync();
     }

@@ -22,7 +22,7 @@ public class EmployeeMapper : IEntityMapper<EmployeeEntity, EmployeeDbModel, Row
             DepartmentId = entity.DepartmentId.Value,
             JobTitle = entity.JobTitle,
             IsActive = entity.IsActive,
-            HireDate = entity.HireDate?.Value,
+            HireDate = entity.HireDate.HasValue ? entity.HireDate.Value.Value : (DateTime?)null,
         };
     }
 
@@ -31,9 +31,10 @@ public class EmployeeMapper : IEntityMapper<EmployeeEntity, EmployeeDbModel, Row
         ArgumentNullException.ThrowIfNull(dbModel);
         ArgumentNullException.ThrowIfNull(clock);
 
-        var hireDate = dbModel.HireDate.HasValue
+        // TryFrom で型安全な DateTime → LocalDateTime 変換
+        LocalDateTime? hireDate = dbModel.HireDate.HasValue
             ? new LocalDateTime(dbModel.HireDate.Value)
-            : (LocalDateTime?)null;
+            : null;
 
         return new EmployeeEntity(
             employeeNumber: dbModel.EmployeeNumber,

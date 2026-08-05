@@ -7,30 +7,53 @@
 ### UserDbModel, RoleDbModel, UserRoleDbModel
 - 監査カラム（row_id, row_version, created_at, created_by 等）8つ必須
 - Domain エンティティのプロパティに対応
-- long でプリミティブ型保持（RowId は Mapper で変換）
+- **long でプリミティブ型保持**（RowId は Mapper で変換）
+- **DateTime でプリミティブ型保持**（LocalDateTime は Mapper で変換）
+
+### DbModel のコード例
+```csharp
+public class UserRoleDbModel
+{
+    // 監査フィールド: DateTime プリミティブ型
+    public DateTime CreatedAt { get; set; }        // ← DateTime
+    public DateTime? UpdatedAt { get; set; }       // ← DateTime?
+    public DateTime? DeletedAt { get; set; }       // ← DateTime?
+    
+    // ビジネスフィールド: DateTime プリミティブ型
+    public DateTime AssignedAt { get; set; }       // ← DateTime
+}
+```
 
 ## Mapper 実装
 
-### RowId マッピング
+### 双方向変換パターン
+
+#### ToDbModel: Entity → DbModel (LocalDateTime → DateTime)
 ```csharp
-// ToDbModel: Entity → DbModel
-public UserDbModel ToDbModel(User entity)
+public UserRoleDbModel ToDbModel(UserRole entity)
 {
-    return new UserDbModel
+    return new UserRoleDbModel
     {
-        RowId = entity.Id.Value,  // RowId.Value で long に
-        LoginId = entity.LoginId,
+        RowId = entity.Id.Value,                    // RowId → long
+        UserId = entity.UserId.Value,               // RowId → long
+        RoleId = entity.RoleId.Value,               // RowId → long
+        AssignedAt = entity.AssignedAt.Value,       // LocalDateTime → DateTime
     };
 }
+```
 
-// ToDomainEntity: DbModel → Entity
-public User ToDomainEntity(UserDbModel dbModel, IClock clock)
+#### ToDomainEntity: DbModel → Entity (DateTime → LocalDateTime)
+```csharp
+public UserRole ToDomainEntity(UserRoleDbModel dbModel, IClock clock)
 {
-    return new User(
-        loginId: dbModel.LoginId,
-        email: dbModel.Email,
-        hashedPassword: dbModel.HashedPassword,
-        rowId: RowId.From(dbModel.RowId));  // long から RowId に
+    // DateTime → LocalDateTime 変換（型安全）
+    LocalDateTime assignedAt = new LocalDateTime(dbModel.AssignedAt);
+
+    return new UserRole(
+        userId: RowId.From(dbModel.UserId),        // long → RowId
+        roleId: RowId.From(dbModel.RoleId),        // long → RowId
+        assignedAt: assignedAt,
+        rowId: RowId.From(dbModel.RowId));         // long → RowId
 }
 ```
 

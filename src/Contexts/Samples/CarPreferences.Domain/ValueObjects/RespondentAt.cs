@@ -7,8 +7,8 @@ namespace SupportAdvance.Contexts.Samples.CarPreferences.Domain.ValueObjects;
 /// 回答日時を表すValueObject
 /// IClock を使用したビジネスロジック検証が必要なため IOptionalValidateWithClock を実装
 /// </summary>
-public sealed class RespondentAt : PrimitiveValueObject<DateTime>,
-    IOptionalValidateWithClock<RespondentAt, DateTime>,
+public sealed class RespondentAt : PrimitiveValueObject<LocalDateTime>,
+    IOptionalValidateWithClock<RespondentAt, LocalDateTime>,
     IEquatable<RespondentAt>
 {
     /// <summary>
@@ -31,7 +31,7 @@ public sealed class RespondentAt : PrimitiveValueObject<DateTime>,
     /// </remarks>
     /// <param name="value">日時の値</param>
     /// <param name="isSet">未設定状態かどうかを示すフラグ</param>
-    private RespondentAt(DateTime value, bool isSet) : base(value, isSet)
+    private RespondentAt(LocalDateTime value, bool isSet) : base(value, isSet)
     {
     }
 
@@ -55,7 +55,7 @@ public sealed class RespondentAt : PrimitiveValueObject<DateTime>,
     /// <param name="clock">現在時刻を取得するためのクロックインターフェース</param>
     /// <returns>検証済みで設定状態（IsSet=true）のインスタンス</returns>
     /// <exception cref="ArgumentException">形式検証またはビジネスロジック検証に失敗した場合</exception>
-    public static RespondentAt From(DateTime value, IClock clock)
+    public static RespondentAt From(LocalDateTime value, IClock clock)
     {
         var instance = new RespondentAt(value, true);
         instance.ValidateWithClock(value, clock);
@@ -72,7 +72,7 @@ public sealed class RespondentAt : PrimitiveValueObject<DateTime>,
     /// <param name="clock">現在時刻を取得するためのクロックインターフェース</param>
     /// <param name="result">生成結果を受け取る out パラメータ</param>
     /// <returns>生成に成功した場合、または null 入力を Unset に変換した場合は true；検証失敗時は false</returns>
-    public static bool TryFrom(DateTime? input, IClock clock, out RespondentAt result)
+    public static bool TryFrom(LocalDateTime? input, IClock clock, out RespondentAt result)
     {
         if (!input.HasValue)
         {
@@ -102,8 +102,8 @@ public sealed class RespondentAt : PrimitiveValueObject<DateTime>,
     /// <param name="clock">現在時刻を取得するためのクロックインターフェース</param>
     /// <param name="result">生成結果を受け取る out パラメータ</param>
     /// <returns>生成に成功した場合は true；検証失敗時は false</returns>
-    public static bool TryFrom(DateTime input, IClock clock, out RespondentAt result)
-        => TryFrom((DateTime?)input, clock, out result);
+    public static bool TryFrom(LocalDateTime input, IClock clock, out RespondentAt result)
+        => TryFrom((LocalDateTime?)input, clock, out result);
 
 
 
@@ -117,21 +117,21 @@ public sealed class RespondentAt : PrimitiveValueObject<DateTime>,
     /// <param name="value">検証対象の回答日時</param>
     /// <param name="clock">現在時刻を供給するクロック</param>
     /// <exception cref="ArgumentException">未来日が指定された場合</exception>
-    public void ValidateWithClock(DateTime value, IClock clock)
+    public void ValidateWithClock(LocalDateTime value, IClock clock)
     {
         var nowJst = clock.JstNow.Value;
-        if (value > nowJst)
+        if (value.Value > nowJst)
         {
             throw new ArgumentException("RespondentAt cannot be in the future.", nameof(value));
         }
     }
     /// <summary>
-    /// 保持する DateTime 値を取得する
+    /// 保持する LocalDateTime 値を取得する
     /// </summary>
     /// <remarks>
-    /// IsSet=true の場合は DateTime 値を返し、IsSet=false の場合は DateTime.MinValue を返す
+    /// IsSet=true の場合は LocalDateTime 値を返し、IsSet=false の場合は new LocalDateTime(DateTime.MinValue) を返す
     /// </remarks>
-    public DateTime Value => IsSet ? ValueField : DateTime.MinValue;
+    public LocalDateTime Value => IsSet ? ValueField : new LocalDateTime(DateTime.MinValue);
 
     /// <summary>
     /// 指定されたオブジェクトと等価かどうかを判定する
@@ -181,20 +181,20 @@ public sealed class RespondentAt : PrimitiveValueObject<DateTime>,
     }
 
     /// <summary>
-    /// 形式検証を実施する（DateTime の基本的な妥当性をチェック）
+    /// 形式検証を実施する（LocalDateTime の基本的な妥当性をチェック）
     /// </summary>
     /// <remarks>
-    /// 【責務1】DateTime.MinValue/MaxValue を除外する
+    /// 【責務1】LocalDateTime.MinValue/MaxValue を除外する
     /// 【責務2】形式的な有効性をチェックする（現在時刻は不要）
     /// 【責務3】ビジネスロジック検証（未来日チェック）は ValidateWithClock で別途実施
     /// </remarks>
     /// <param name="normalized">検証対象の日時</param>
     /// <exception cref="ArgumentException">MinValue または MaxValue が指定された場合</exception>
-    public override void Validate(DateTime normalized)
+    public override void Validate(LocalDateTime normalized)
     {
         base.Validate(normalized);
 
-        if (normalized == DateTime.MinValue || normalized == DateTime.MaxValue)
+        if (normalized.Value == DateTime.MinValue || normalized.Value == DateTime.MaxValue)
         {
             throw new ArgumentException($"RespondentAt must be a valid system timestamp, not {nameof(DateTime.MinValue)} or {nameof(DateTime.MaxValue)}.");
         }

@@ -23,7 +23,7 @@ public class PreferencesUpdatedLoggingHandler
         ArgumentNullException.ThrowIfNull(@event);
 
         _logger.LogInformation(
-            $"Preferences updated for row_id {@event.RowId}: " +
+            $"Preferences updated for event_id {@event.EventId}: " +
             $"Type={@event.ChangeType}, OldValue={@event.OldValue}, NewValue={@event.NewValue}");
 
         return Task.CompletedTask;

@@ -186,8 +186,73 @@ public class UpdateOrderService
 ## ⏰ LocalDateTime 使用規則
 
 ### 基本原則
-- 全層で LocalDateTime を使用（DateTimeの直接使用は禁止）
+- **Domain/Application 層**: LocalDateTime を使用（DateTime の直接使用は禁止）
+- **Infrastructure/DbModel 層**: DateTime プリミティブ型を使用（ORM マッピング用）
+- **Mapper 層**: DateTime ↔ LocalDateTime の明示的な双方向変換を実装
 - IClock 経由でのみ日時を取得
+
+### 層別の責務
+
+| 層 | 型 | 責務 |
+|----|----|------|
+| **Domain/Entity** | LocalDateTime | ビジネスロジック（型安全） |
+| **Application/DTO** | LocalDateTime | 外部インターフェース |
+| **DbModel** | DateTime | ORM マッピング（プリミティブ型） |
+| **Mapper** | 双方向変換 | DateTime ↔ LocalDateTime 変換 |
+
+### DbModel での DateTime 使用
+
+DbModel はすべての日時フィールドを **DateTime（プリミティブ型）** で保持します。理由：
+
+1. **ORM マッピングの明確性** - Dapper/RepoDb のグローバルマッピングで自動変換
+2. **責務の分離** - Infrastructure 層は DB ネイティブ型を使用
+3. **型安全性** - Mapper で明示的な変換を実施
+
+**DbModel の例**:
+```csharp
+public class UserPreferencesDbModel
+{
+    // 監査フィールドは DateTime（プリミティブ型）
+    public DateTime CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
+    public DateTime? DeletedAt { get; set; }
+    
+    // ビジネスフィールドも DateTime
+    public DateTime? RespondedAt { get; set; }
+}
+```
+
+### Mapper での双方向変換
+
+Mapper は Entity ↔ DbModel の変換時に DateTime ↔ LocalDateTime を実装します。
+
+**ToDbModel: Entity → DbModel** (LocalDateTime → DateTime):
+```csharp
+public EmployeeDbModel ToDbModel(Employee entity)
+{
+    return new EmployeeDbModel
+    {
+        CreatedAt = entity.CreatedAt.Value,  // LocalDateTime → DateTime
+        HireDate = entity.HireDate.HasValue 
+            ? entity.HireDate.Value.Value  // LocalDateTime.Value で DateTime 取得
+            : (DateTime?)null,
+    };
+}
+```
+
+**ToDomainEntity: DbModel → Entity** (DateTime → LocalDateTime):
+```csharp
+public Employee ToDomainEntity(EmployeeDbModel dbModel, IClock clock)
+{
+    var hireDate = dbModel.HireDate.HasValue
+        ? new LocalDateTime(dbModel.HireDate.Value)  // DateTime → LocalDateTime
+        : null;
+    
+    return new Employee(
+        hireDate: hireDate,
+        ...);
+}
+```
 
 ### DateTime の使用禁止の例外
 - **Clock の実装内部**：DateTime.Now, DateTime.UtcNow などは使用してもよい
@@ -241,6 +306,34 @@ public class UpdateOrderService
 - Domain / Application: **インターフェースのみ定義**
 - Infrastructure: **インターフェースを実装**
 - Presentation: Application のインターフェースを使用
+
+---
+
+## 📁 ドキュメント管理
+
+### フォルダ構成
+
+プロジェクトドキュメントは以下のフォルダで管理します：
+
+| フォルダ | 用途 | ファイル例 |
+|---|---|---|
+| `docs/Assistance/Plans` | 計画書、実装計画、分析計画 | `20260802_実装計画.md` |
+| `docs/Assistance/Reports` | 分析結果、準拠調査、レビュー報告書 | `20260802_準拠調査報告.md` |
+
+### 命名規則
+
+**必須:** ファイル名の先頭に日付を `yyyyMMdd_` 形式で付与
+
+```
+✓ 20260802_実装計画.md
+✓ 20260731_準拠調査報告.md
+✗ 実装計画.md（日付なし）
+```
+
+### ドキュメント選定ガイド
+
+- **Plans**: これから実施する計画、検討案、設計書
+- **Reports**: 実施後の報告、分析結果、調査レポート、レビュー結果
 
 ---
 

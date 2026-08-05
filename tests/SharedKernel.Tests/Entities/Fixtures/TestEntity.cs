@@ -1,5 +1,6 @@
 using SupportAdvance.Common.Clocks;
 using SupportAdvance.SharedKernel.Entities;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 namespace SupportAdvance.SharedKernel.Tests.Entities.Fixtures;
 
@@ -19,7 +20,7 @@ public sealed class TestEntity : Entity<TestId>
     public void UpdateName(string newName, IClock clock)
     {
         Name = newName;
-        this.RaiseDomainEvent(new TestDomainEvent(this.Id, newName, clock.JstNow));
+        this.RaiseDomainEvent(new TestDomainEvent(DomainEventId.New(), this.Id, newName, clock.JstNow));
     }
 
     public IReadOnlyList<IDomainEvent> GetDomainEvents() => this.DomainEvents;

@@ -1,4 +1,5 @@
 using SupportAdvance.Application.UseCases;
+using SupportAdvance.Common.Clocks;
 using SupportAdvance.Contexts.Samples.CarPreferences.Application.Repositories;
 using SupportAdvance.Contexts.Samples.CarPreferences.Domain.ValueObjects;
 using SupportAdvance.Crosscutting.Logging;
@@ -50,8 +51,8 @@ public class GetUserPreferencesUseCase
             PrefersAutomatic = preferences.PrefersAutomatic,
             BudgetFrom = preferences.BudgetFrom?.Amount,
             BudgetTo = preferences.BudgetTo?.Amount,
-            CreatedAt = preferences.CreatedAt,
-            UpdatedAt = preferences.UpdatedAt
+            CreatedAt = new LocalDateTime(preferences.CreatedAt.Value),
+            UpdatedAt = new LocalDateTime(preferences.UpdatedAt.Value!.Value)
         };
     }
 }

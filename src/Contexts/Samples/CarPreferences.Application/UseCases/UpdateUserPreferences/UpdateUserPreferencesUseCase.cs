@@ -106,7 +106,7 @@ public class UpdateUserPreferencesUseCase
         return new UpdateUserPreferencesResponse
         {
             UserId = userId.ToString(),
-            UpdatedAt = preferences.UpdatedAt
+            UpdatedAt = new LocalDateTime(preferences.UpdatedAt.Value!.Value)
         };
     }
 }

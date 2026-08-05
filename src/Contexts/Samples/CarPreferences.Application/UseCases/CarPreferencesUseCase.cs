@@ -32,7 +32,7 @@ public class CarPreferencesUseCase : IUseCase<CarPreferencesRequest, CarPreferen
 
         return new CarPreferencesResponse
         {
-            ExecutedAt = _clock.JstNow.Value,
+            ExecutedAt = _clock.JstNow,
             IsSuccess = true,
             Message = $"Processed: {request.Name} - {request.Details}"
         };

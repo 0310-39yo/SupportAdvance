@@ -1,4 +1,5 @@
 using SupportAdvance.Common.Clocks;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 namespace SupportAdvance.SharedKernel.Entities;
 
@@ -13,6 +14,15 @@ namespace SupportAdvance.SharedKernel.Entities;
 /// </summary>
 public interface IDomainEvent
 {
+    /// <summary>
+    /// イベント一意識別子（GUID ValueObject）
+    ///
+    /// 【用途】各ドメインイベントを一意に識別
+    /// 【型】DomainEventId（GUID ValueObject）
+    /// 【必須】すべてのイベント実装で必ず値を持つこと
+    /// </summary>
+    DomainEventId EventId { get; }
+
     /// <summary>
     /// イベント発生時刻（JST）
     ///

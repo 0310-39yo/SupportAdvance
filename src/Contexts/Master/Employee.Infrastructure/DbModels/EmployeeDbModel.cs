@@ -1,5 +1,9 @@
 namespace SupportAdvance.Contexts.Master.Employee.Infrastructure.DbModels;
 
+/// <summary>
+/// 従業員 DbModel - ORM マッピング用
+/// 【注意】DateTime はプリミティブ型のまま保持。LocalDateTime への変換は Mapper の責務。
+/// </summary>
 public class EmployeeDbModel
 {
     public long RowId { get; set; }

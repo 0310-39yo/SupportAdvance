@@ -1,4 +1,5 @@
 using SupportAdvance.Application.UseCases;
+using SupportAdvance.Common.Clocks;
 using SupportAdvance.Contexts.Samples.CarPreferences.Domain.ValueObjects;
 
 namespace SupportAdvance.Contexts.Samples.CarPreferences.Application.UseCases.CreateUserPreferences;
@@ -12,7 +13,7 @@ public class CreateUserPreferencesRequest : IRequest
     public int UserId { get; set; }
 
     /// <summary>回答日時（RespondentAt として解析）</summary>
-    public DateTime RespondedAt { get; set; }
+    public LocalDateTime RespondedAt { get; set; }
 
     /// <summary>希望車種（CarModel の内部値）</summary>
     public int? PreferredModelValue { get; set; }

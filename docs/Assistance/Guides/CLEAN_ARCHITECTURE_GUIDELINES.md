@@ -202,16 +202,20 @@ public interface IAppLogging<T>
 ```csharp
 namespace SupportAdvance.Contexts.Samples.CarPreferences.Domain.Entities;
 
-public class Car : Entity
+public class Car : AggregateRoot<RowId>
 {
     public CarModel Model { get; private set; }
-    public DateTime PurchasedAt { get; private set; }
+    public LocalDateTime UpdatedAt { get; private set; }
 
-    public void UpdateModel(CarModel model)
+    public void UpdateModel(CarModel model, IClock clock)
     {
+        ArgumentNullException.ThrowIfNull(model);
+        ArgumentNullException.ThrowIfNull(clock);
+
         // ビジネスルールを実装
         Model = model;
-        RaiseDomainEvent(new CarModelUpdatedEvent(this.Id, model));
+        UpdatedAt = clock.JstNow;
+        RaiseDomainEvent(new CarModelUpdatedEvent(DomainEventId.New(), model, clock.JstNow));
     }
 }
 ```
