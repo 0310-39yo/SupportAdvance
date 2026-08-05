@@ -2,7 +2,7 @@ using SupportAdvance.Common.Clocks;
 using SupportAdvance.SharedKernel.Entities;
 using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
-namespace SupportAdvance.Contexts.Auth.Identity.Domain.Entities;
+namespace SupportAdvance.Contexts.Identity.Domain.Entities;
 
 public class UserRole : AggregateRoot<RowId>
 {

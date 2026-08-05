@@ -1,4 +1,4 @@
-namespace SupportAdvance.Contexts.Auth.Identity.Infrastructure.DbModels;
+namespace SupportAdvance.Contexts.Identity.Infrastructure.DbModels;
 
 public class UserRoleDbModel
 {
