@@ -1,13 +1,13 @@
 using SupportAdvance.Common.Clocks;
-using SupportAdvance.Contexts.Master.Employee.Infrastructure.Mappers;
+using SupportAdvance.Contexts.Employee.Domain.Entities;
+using SupportAdvance.Contexts.Employee.Infrastructure.DbModels;
+using SupportAdvance.Contexts.Employee.Infrastructure.Mappers;
 using SupportAdvance.Contexts.Master.Employee.Application.Repositories;
-using SupportAdvance.Contexts.Master.Employee.Domain.Entities;
-using SupportAdvance.Contexts.Master.Employee.Infrastructure.DbModels;
 using SupportAdvance.Infrastructure.Repositories;
 using SupportAdvance.Infrastructure.Services;
 using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
-namespace SupportAdvance.Contexts.Master.Employee.Infrastructure.Repositories;
+namespace SupportAdvance.Contexts.Employee.Infrastructure.Repositories;
 
 public class DepartmentRepository : RepositoryBase<Department, DepartmentDbModel, RowId>, IDepartmentRepository
 {

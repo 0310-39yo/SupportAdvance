@@ -1,10 +1,10 @@
 using SupportAdvance.Common.Clocks;
-using SupportAdvance.Contexts.Master.Employee.Domain.Entities;
-using SupportAdvance.Contexts.Master.Employee.Infrastructure.DbModels;
+using SupportAdvance.Contexts.Employee.Domain.Entities;
+using SupportAdvance.Contexts.Employee.Infrastructure.DbModels;
 using SupportAdvance.Infrastructure.Mappers;
 using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
-namespace SupportAdvance.Contexts.Master.Employee.Infrastructure.Mappers;
+namespace SupportAdvance.Contexts.Employee.Infrastructure.Mappers;
 
 public class DepartmentMapper : IEntityMapper<Department, DepartmentDbModel, RowId>
 {

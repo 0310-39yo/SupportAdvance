@@ -1,4 +1,4 @@
-namespace SupportAdvance.Contexts.Master.Employee.Infrastructure.DbModels;
+namespace SupportAdvance.Contexts.Employee.Infrastructure.DbModels;
 
 public class DepartmentDbModel
 {

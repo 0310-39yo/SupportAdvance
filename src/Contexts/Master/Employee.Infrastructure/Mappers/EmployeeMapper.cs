@@ -1,10 +1,10 @@
 using SupportAdvance.Common.Clocks;
-using SupportAdvance.Contexts.Master.Employee.Infrastructure.DbModels;
+using SupportAdvance.Contexts.Employee.Infrastructure.DbModels;
 using SupportAdvance.Infrastructure.Mappers;
 using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
-using EmployeeEntity = SupportAdvance.Contexts.Master.Employee.Domain.Entities.Employee;
+using EmployeeEntity = SupportAdvance.Contexts.Employee.Domain.Entities.Employee;
 
-namespace SupportAdvance.Contexts.Master.Employee.Infrastructure.Mappers;
+namespace SupportAdvance.Contexts.Employee.Infrastructure.Mappers;
 
 public class EmployeeMapper : IEntityMapper<EmployeeEntity, EmployeeDbModel, RowId>
 {

@@ -1,7 +1,7 @@
 using SupportAdvance.Common.Clocks;
 using SupportAdvance.Contexts.Master.Employee.Application.Repositories;
 using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
-using EmployeeEntity = SupportAdvance.Contexts.Master.Employee.Domain.Entities.Employee;
+using EmployeeEntity = SupportAdvance.Contexts.Employee.Domain.Entities.Employee;
 
 namespace SupportAdvance.Contexts.Master.Employee.Application.UseCases;
 

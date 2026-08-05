@@ -1,7 +1,7 @@
 using SupportAdvance.SharedKernel.Entities;
 using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
-namespace SupportAdvance.Contexts.Master.Employee.Domain.Entities;
+namespace SupportAdvance.Contexts.Employee.Domain.Entities;
 
 public class Department : AggregateRoot<RowId>
 {

@@ -1,6 +1,5 @@
-using SupportAdvance.Contexts.Master.Employee.Domain.Entities;
 using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
-using EmployeeEntity = SupportAdvance.Contexts.Master.Employee.Domain.Entities.Employee;
+using EmployeeEntity = SupportAdvance.Contexts.Employee.Domain.Entities.Employee;
 
 namespace SupportAdvance.Contexts.Master.Employee.Application.Repositories;
 

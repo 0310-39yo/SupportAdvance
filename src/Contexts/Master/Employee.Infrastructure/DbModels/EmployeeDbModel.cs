@@ -1,4 +1,4 @@
-namespace SupportAdvance.Contexts.Master.Employee.Infrastructure.DbModels;
+namespace SupportAdvance.Contexts.Employee.Infrastructure.DbModels;
 
 /// <summary>
 /// 従業員 DbModel - ORM マッピング用
