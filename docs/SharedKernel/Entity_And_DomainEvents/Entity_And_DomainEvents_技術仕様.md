@@ -10,7 +10,7 @@
 
 - **何を実装するのか**: Domain層の状態変化をドメインイベントで記録
 - **どこに実装するのか**: src/SharedKernel/Entities/Abstractions/
-- **誰が使うのか**: CarPreferences.Domain など各 Bounded Context の Domain層
+- **誰が使うのか**: Identity.Domain, Employee.Domain など各 Bounded Context の Domain層
 
 ---
 
@@ -33,6 +33,7 @@ public interface IDomainEvent
 {
     /// <summary>
     /// イベント一意識別子（GUID ValueObject）
+    /// 【用途】このイベント自体を識別、トレーシング
     /// </summary>
     DomainEventId EventId { get; }
 
@@ -40,36 +41,47 @@ public interface IDomainEvent
     /// イベント発生時刻（JST）
     /// </summary>
     LocalDateTime OccurredAt { get; }
+    
+    /// <summary>
+    /// 注記：AggregateRootId は具体的なイベント実装で型パラメータとして指定
+    /// 例：OrderId, EmployeeId, UserPreferencesId など集約固有のID
+    /// </summary>
 }
 ```
 
 **要件**:
 - `EventId` は DomainEventId ValueObject（GUID）で各イベントを一意識別
-- LocalDateTime 型で JST を格納
+- `LocalDateTime` 型で JST を格納
 - イベント発生時刻は必須
+- `AggregateRootId` は具体的なイベント型で、集約固有のID ValueObject を指定
 
 **使用例**:
 ```csharp
 using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
+using SupportAdvance.Contexts.CarPreferences.Domain.ValueObjects;
 
-public class PreferencesUpdatedEvent : IDomainEvent
+public class UserPreferencesUpdatedEvent : IDomainEvent
 {
-    public DomainEventId EventId { get; }            // イベント一意識別子（GUID ValueObject）
-    public PreferenceChangeType ChangeType { get; }
+    public DomainEventId EventId { get; }  // イベント自体のID（GUID）
+    public UserPreferencesId AggregateRootId { get; }  // ← 集約のID（GUID ベース ValueObject）
+    public string ChangeType { get; }
     public string OldValue { get; }
     public string NewValue { get; }
-    public LocalDateTime OccurredAt { get; }         // 必須
+    public LocalDateTime OccurredAt { get; }  // 必須
 
-    public PreferencesUpdatedEvent(
+    public UserPreferencesUpdatedEvent(
         DomainEventId eventId,
-        PreferenceChangeType changeType,
+        UserPreferencesId aggregateRootId,
+        string changeType,
         string oldValue,
         string newValue,
         LocalDateTime occurredAt)
     {
         ArgumentNullException.ThrowIfNull(eventId);
+        ArgumentNullException.ThrowIfNull(aggregateRootId);
 
         EventId = eventId;
+        AggregateRootId = aggregateRootId;
         ChangeType = changeType;
         OldValue = oldValue;
         NewValue = newValue;
@@ -88,12 +100,13 @@ namespace SupportAdvance.SharedKernel.Entities;
 /// <summary>
 /// ドメインエンティティの基底クラス
 /// </summary>
-/// <typeparam name="TId">ID型（ValueObject）</typeparam>
+/// <typeparam name="TId">ID型（集約固有のID ValueObject）</typeparam>
 public abstract class Entity<TId> : IEquatable<Entity<TId>>
     where TId : notnull
 {
     /// <summary>
-    /// Entity の識別子
+    /// Entity の識別子（集約固有のID ValueObject）
+    /// 【例】OrderId, EmployeeId, UserPreferencesId など
     /// </summary>
     public TId Id { get; protected set; }
 
@@ -106,6 +119,7 @@ public abstract class Entity<TId> : IEquatable<Entity<TId>>
     /// 指定されたドメインイベントを発行
     /// 【責務】イベントをリストに追加するのみ
     /// 【実行階層】Domain層（ビジネスロジック内）
+    /// 【用法】RaiseDomainEvent(new YourEventType(...))
     /// </summary>
     /// <param name="domainEvent">発行するイベント</param>
     /// <exception cref="ArgumentNullException">イベントが null の場合</exception>
@@ -117,7 +131,7 @@ public abstract class Entity<TId> : IEquatable<Entity<TId>>
     public override bool Equals(object? obj);
 
     /// <summary>
-    /// Entity の等価性判定（ID ベース）
+    /// Entity の等価性判定（ID ベース、型安全版）
     /// </summary>
     public bool Equals(Entity<TId>? other);
 
@@ -129,42 +143,69 @@ public abstract class Entity<TId> : IEquatable<Entity<TId>>
 ```
 
 **要件**:
-- Generic 型パラメータ `TId` は ValueObject など不変値オブジェクト
+- Generic 型パラメータ `TId` は集約固有の ID ValueObject（AggregateId を継承）
 - `DomainEvents` は読み取り専用リスト
 - `RaiseDomainEvent()` は protected で Domain層内でのみアクセス可
 - Entity の等価性判定は ID ベース
 
 **使用例**:
 ```csharp
-using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 using SupportAdvance.Common.Clocks;
+using SupportAdvance.SharedKernel.Entities;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
+using SupportAdvance.Contexts.CarPreferences.Domain.ValueObjects;
 
 // Domain層
-public class UserPreferences : AggregateRoot<RowId>  // RowId ValueObject ベース
+public class UserPreferences : AggregateRoot<UserPreferencesId>
 {
-    private RespondentPersonId _userId;             // ビジネス識別子（別ID）
+    private RowId _preferencesRowId;  // テーブルの物理キー（プライベート）
+    private RespondentPersonId _userId;
     private CarModel? _preferredModel;
     private LocalDateTime _updatedAt;
 
+    public RespondentPersonId UserId => _userId;
+    public CarModel? PreferredModel => _preferredModel;
+
     // コンストラクタ
-    public UserPreferences(RespondentPersonId userId, IClock clock, RowId? rowId = null)
+    public UserPreferences(
+        UserPreferencesId id,
+        RespondentPersonId userId,
+        RowId? preferencesRowId = null,
+        IClock? clock = null)
     {
-        Id = rowId ?? RowId.New();  // 未採番の場合は RowId.New()（value=0）
+        ArgumentNullException.ThrowIfNull(id);
+        ArgumentNullException.ThrowIfNull(userId);
+
+        Id = id;  // 集約ID（UserPreferencesId）
         _userId = userId;
-        _updatedAt = clock.JstNow;
+        _preferencesRowId = preferencesRowId ?? RowId.New();
+        _updatedAt = clock?.JstNow ?? LocalDateTime.Now;
+
+        if (clock != null)
+        {
+            RaiseDomainEvent(new UserPreferencesCreatedEvent(
+                DomainEventId.New(),
+                this.Id,  // ← AggregateRootId = UserPreferencesId
+                _updatedAt
+            ));
+        }
     }
 
     // ビジネスメソッド
     public void UpdatePreferredModel(CarModel model, IClock clock)
     {
+        ArgumentNullException.ThrowIfNull(model);
+        ArgumentNullException.ThrowIfNull(clock);
+
         var oldModel = _preferredModel;
         _preferredModel = model;
         _updatedAt = clock.JstNow;
 
         // Domain層内でイベント発行
-        this.RaiseDomainEvent(new PreferencesUpdatedEvent(
-            DomainEventId.New(),  // イベント ID（GUID ValueObject）
-            PreferenceChangeType.ModelUpdated,
+        this.RaiseDomainEvent(new UserPreferencesUpdatedEvent(
+            DomainEventId.New(),              // ← イベント自体のID（毎回新規）
+            this.Id,                          // ← AggregateRootId = UserPreferencesId
+            "PreferredModel",
             oldModel?.ToString() ?? "未設定",
             model.ToString(),
             _updatedAt
@@ -181,10 +222,17 @@ Entity<TId> を継承した AggregateRoot の基盤クラス。
 namespace SupportAdvance.SharedKernel.Entities;
 
 /// <summary>
-/// AggregateRoot の基底クラス
-/// 集約ルートはトランザクション境界を表現
+/// AggregateRoot（集約ルート）の基底クラス
+/// 
+/// 【意味論】
+/// - AggregateRoot はトランザクション境界を表現
+/// - 一度に保存・削除される複数の Entity をグループ化
+/// 
+/// 【機能】
+/// - Entity<TId> を継承（すべてのEntity機能を保有）
+/// - 固有機能は将来追加予定
 /// </summary>
-/// <typeparam name="TId">ID型（ValueObject）</typeparam>
+/// <typeparam name="TId">ID型（集約固有のID ValueObject）</typeparam>
 public abstract class AggregateRoot<TId> : Entity<TId>
     where TId : notnull
 {
@@ -200,16 +248,19 @@ public abstract class AggregateRoot<TId> : Entity<TId>
 **使用例**:
 ```csharp
 using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
+using SupportAdvance.Contexts.CarPreferences.Domain.ValueObjects;
 
-// 集約ルートは AggregateRoot<RowId> を継承（RowId ValueObject ベース）
-public class UserPreferences : AggregateRoot<RowId>
+// 集約ルート：UserPreferences
+// TId = UserPreferencesId（集約固有のID ValueObject）
+public class UserPreferences : AggregateRoot<UserPreferencesId>
 {
-    private RespondentPersonId _userId;  // ビジネス識別子は別プロパティ
+    public UserPreferencesId Id { get; }  // ← GUID ベースのビジネスID
+    private RowId _preferencesRowId { get; }  // ← テーブルの物理キー（プライベート）
     
-    public UserPreferences(RespondentPersonId userId, IClock clock, RowId? rowId = null)
+    public UserPreferences(UserPreferencesId id, RowId? preferencesRowId = null, IClock clock)
     {
-        Id = rowId ?? RowId.New();  // DB採番前は RowId.New()（value=0）
-        _userId = userId;
+        Id = id;
+        _preferencesRowId = preferencesRowId ?? RowId.New();
         // ...
     }
 }
@@ -234,6 +285,7 @@ public interface IDomainEventHandler<TEvent>
     /// イベント処理（Application層で実装）
     /// 【実行階層】Application層
     /// 【責務】ログ出力、他システムへの通知など
+    /// 【イベント属性の利用】AggregateRootId から対象エンティティを特定
     /// </summary>
     /// <param name="event">処理するイベント</param>
     /// <returns>処理完了タスク</returns>
@@ -244,29 +296,36 @@ public interface IDomainEventHandler<TEvent>
 **要件**:
 - Application層で実装されるインターフェース
 - ハンドラーは async/await に対応
+- イベントの AggregateRootId を使用して対象を特定
 
 **使用例**:
 ```csharp
-// Application層
-public class PreferencesUpdatedEventHandler : IDomainEventHandler<PreferencesUpdatedEvent>
-{
-    private readonly ILogger<PreferencesUpdatedEventHandler> _logger;
+using Microsoft.Extensions.Logging;
+using SupportAdvance.SharedKernel.Entities.DomainEvents;
+using SupportAdvance.Contexts.CarPreferences.Domain.DomainEvents;
 
-    public PreferencesUpdatedEventHandler(ILogger<PreferencesUpdatedEventHandler> logger)
+// Application層
+public class UserPreferencesUpdatedEventHandler : IDomainEventHandler<UserPreferencesUpdatedEvent>
+{
+    private readonly ILogger<UserPreferencesUpdatedEventHandler> _logger;
+
+    public UserPreferencesUpdatedEventHandler(ILogger<UserPreferencesUpdatedEventHandler> logger)
     {
         _logger = logger;
     }
 
-    public async Task HandleAsync(PreferencesUpdatedEvent @event)
+    public async Task HandleAsync(UserPreferencesUpdatedEvent @event)
     {
-        // ログ出力
+        // イベントの AggregateRootId から対象の UserPreferences を特定
+        var userPreferencesId = @event.AggregateRootId;
+
         _logger.LogInformation(
-            "Preferences updated - RowId: {RowId}, " +
+            "UserPreferences updated - Id: {UserPreferencesId}, " +
             "ChangeType: {ChangeType}, " +
             "OldValue: {OldValue}, " +
             "NewValue: {NewValue}, " +
             "At: {OccurredAt}",
-            @event.RowId,
+            userPreferencesId,
             @event.ChangeType,
             @event.OldValue,
             @event.NewValue,
@@ -285,20 +344,23 @@ public class PreferencesUpdatedEventHandler : IDomainEventHandler<PreferencesUpd
 
 ```csharp
 // Domain層：イベント定義
-public class CarModelChangedEvent : IDomainEvent
+public class UserPreferencesModelChangedEvent : IDomainEvent
 {
-    public UserId UserId { get; }
+    public DomainEventId EventId { get; }
+    public UserPreferencesId AggregateRootId { get; }  // ← 集約のID
     public CarModel OldModel { get; }
     public CarModel NewModel { get; }
     public LocalDateTime OccurredAt { get; }
 
-    public CarModelChangedEvent(
-        UserId userId,
+    public UserPreferencesModelChangedEvent(
+        DomainEventId eventId,
+        UserPreferencesId aggregateRootId,
         CarModel oldModel,
         CarModel newModel,
         LocalDateTime occurredAt)
     {
-        UserId = userId;
+        EventId = eventId;
+        AggregateRootId = aggregateRootId;
         OldModel = oldModel;
         NewModel = newModel;
         OccurredAt = occurredAt;
@@ -306,7 +368,7 @@ public class CarModelChangedEvent : IDomainEvent
 }
 
 // Domain層：Entity で使用
-public class UserPreferences : AggregateRoot<UserId>
+public class UserPreferences : AggregateRoot<UserPreferencesId>
 {
     private CarModel _preferredModel;
 
@@ -316,8 +378,11 @@ public class UserPreferences : AggregateRoot<UserId>
         _preferredModel = newModel;
 
         // イベント発行
-        this.RaiseDomainEvent(new CarModelChangedEvent(
-            this.Id,
+        // EventId：イベント自体のID（毎回新規）
+        // AggregateRootId：この集約のID（UserPreferencesId）
+        this.RaiseDomainEvent(new UserPreferencesModelChangedEvent(
+            DomainEventId.New(),   // ← イベントのID
+            this.Id,               // ← 集約のID（UserPreferencesId）
             oldModel,
             newModel,
             clock.JstNow
@@ -329,7 +394,7 @@ public class UserPreferences : AggregateRoot<UserId>
 ### パターン2: 複数イベント発行
 
 ```csharp
-public class UserPreferences : AggregateRoot<UserId>
+public class UserPreferences : AggregateRoot<UserPreferencesId>
 {
     public void BulkUpdatePreferences(
         CarModel model,
@@ -341,8 +406,19 @@ public class UserPreferences : AggregateRoot<UserId>
         _age = age;
 
         // 複数のイベント発行
-        this.RaiseDomainEvent(new ModelUpdatedEvent(this.Id, model, clock.JstNow));
-        this.RaiseDomainEvent(new AgeUpdatedEvent(this.Id, age, clock.JstNow));
+        this.RaiseDomainEvent(new UserPreferencesModelChangedEvent(
+            DomainEventId.New(),
+            this.Id,  // ← 集約のID
+            model,
+            clock.JstNow
+        ));
+        
+        this.RaiseDomainEvent(new UserPreferencesAgeChangedEvent(
+            DomainEventId.New(),
+            this.Id,  // ← 集約のID
+            age,
+            clock.JstNow
+        ));
     }
 }
 ```
@@ -352,23 +428,20 @@ public class UserPreferences : AggregateRoot<UserId>
 ```csharp
 public class UpdatePreferencesUseCase : IUseCase<UpdatePreferencesRequest, UpdatePreferencesResponse>
 {
-    private readonly IPreferencesRepository _repository;
-    private readonly IEventDispatcher _eventDispatcher;
+    private readonly IUserPreferencesRepository _repository;
+    private readonly IDomainEventDispatcher _eventDispatcher;
 
     public async Task<UpdatePreferencesResponse> ExecuteAsync(UpdatePreferencesRequest request)
     {
         // 1. Entity 取得・更新
-        var preferences = await _repository.GetAsync(request.UserId);
-        preferences.UpdatePreferences(request.Model);
+        var preferences = await _repository.GetByIdAsync(request.UserPreferencesId);
+        preferences.UpdatePreferredModel(request.Model, _clock);
 
         // 2. イベント処理
-        foreach (var @event in preferences.DomainEvents)
-        {
-            await _eventDispatcher.DispatchAsync(@event);
-        }
+        await _eventDispatcher.DispatchAsync(preferences.DomainEvents);
 
         // 3. 保存
-        await _repository.SaveAsync(preferences);
+        await _repository.UpdateAsync(preferences);
 
         return new UpdatePreferencesResponse { Success = true };
     }
@@ -383,6 +456,7 @@ public class UpdatePreferencesUseCase : IUseCase<UpdatePreferencesRequest, Updat
 
 - ✅ Entity は Domain層で状態変化時にイベント発行
 - ✅ イベント型は IDomainEvent を実装
+- ✅ イベント内に EventId と AggregateRootId を含める
 - ✅ イベント内の日時は LocalDateTime（JST）を使用
 - ✅ ハンドラーは Application層で実装
 - ✅ Entity の ID による等価性判定を活用
@@ -393,6 +467,7 @@ public class UpdatePreferencesUseCase : IUseCase<UpdatePreferencesRequest, Updat
 - ❌ Domain層内で DateTime.UtcNow を使用しない（Clock 経由で LocalDateTime を取得）
 - ❌ Application層でビジネスロジックを記述しない（Domain層で実装）
 - ❌ イベント処理結果を Entity に反映しない（イベントは通知のみ）
+- ❌ AggregateRootId に long（RowId）を使用しない（集約固有のID ValueObject を使用）
 
 ---
 
@@ -400,33 +475,49 @@ public class UpdatePreferencesUseCase : IUseCase<UpdatePreferencesRequest, Updat
 
 ### Entity を継承した具体クラス実装時
 
-- [ ] Entity<TId> または AggregateRoot<TId> を継承
-- [ ] ID 型（TId）を ValueObject で定義
-- [ ] ビジネスメソッド内で RaiseDomainEvent() を呼び出し
-- [ ] イベント型は IDomainEvent を実装
-- [ ] イベント内に LocalDateTime（OCCurredAt）を含める
+- [ ] **Entity<XXXId>** または **AggregateRoot<XXXId>** を継承（XXXId = 集約固有のID）
+- [ ] **XXXId ValueObject** を定義（AggregateId を継承、GUID ベース）
+- [ ] **TId = XXXId** をジェネリック型パラメータに指定
+- [ ] **RowId** をプライベート属性で保持（表示しない）
+- [ ] ビジネスメソッド内で **RaiseDomainEvent()** を呼び出し
+- [ ] イベント型は **IDomainEvent** を実装
+- [ ] イベント内に **EventId**（毎回新規）と **AggregateRootId**（this.Id）を含める
+- [ ] イベント内に **LocalDateTime（OccurredAt）** を含める
 - [ ] DomainEvents プロパティで取得可能
+
+### ドメインイベント実装時
+
+- [ ] **IDomainEvent** を実装
+- [ ] **EventId: DomainEventId** プロパティを持つ
+- [ ] **AggregateRootId: XXXId** プロパティを持つ（集約固有のID型）
+- [ ] **OccurredAt: LocalDateTime** プロパティを持つ
+- [ ] コンストラクタで null チェック実装
+- [ ] 不変（読み取り専用プロパティ）
 
 ### イベントハンドラー実装時
 
-- [ ] IDomainEventHandler<TEvent> を実装
-- [ ] HandleAsync メソッドを async Task で定義
-- [ ] イベントのプロパティを活用してログ・処理
-- [ ] Application層に配置
-- [ ] DI 登録
+- [ ] **IDomainEventHandler<TEvent>** を実装
+- [ ] **HandleAsync** メソッドを async Task で定義
+- [ ] **イベントの AggregateRootId** を使用して対象を特定
+- [ ] ログ出力・外部連携などのサイドエフェクト実装
+- [ ] **Application層** に配置
+- [ ] **DI に登録** （services.AddScoped<IDomainEventHandler<YourEvent>>()）
 
 ---
 
 ## 🔗 関連ドキュメント
 
-- [Entity_And_DomainEvents_詳細設計.md](Entity_And_DomainEvents_詳細設計.md) - 実装詳細（AI向け）
-- [Entity_And_DomainEvents_単体テスト仕様.md](Entity_And_DomainEvents_単体テスト仕様.md) - テスト仕様
-- [Domain_Logging_Architecture.md](../Guides/Domain_Logging_Architecture.md) - ドメイン層ログ設計
+- [Entity_And_DomainEvents_詳細設計.md](Entity_And_DomainEvents_詳細設計.md) — 実装詳細（AI向け）
+- [Entity_And_DomainEvents_単体テスト仕様.md](Entity_And_DomainEvents_単体テスト仕様.md) — テスト仕様
+- [Entity_設計ガイドライン.md](../Guides/Entity_設計ガイドライン.md) — Entity<TId> パターンの詳細
+- [ドメインイベント_設計ガイド.md](../Guides/ドメインイベント_設計ガイド.md) — イベント駆動設計パターン
+- [AggregateId_設計ガイド.md](../Guides/AggregateId_設計ガイド.md) — GUID ベース ID の実装
 
 ---
 
 ## 📝 更新履歴
 
 | 日付 | 更新内容 |
-|---|---|
-| 2026-08-01 | 初版作成。Entity基底クラスとドメインイベントの技術仕様を定義 |
+|------|---------|
+| 2026-08-07 | 全面改版。Entity<TId> が集約固有のID（XXXId）を使用するように更新。EventId と AggregateRootId の役割分離を明確化。RowId をテーブル物理キーに限定 |
+

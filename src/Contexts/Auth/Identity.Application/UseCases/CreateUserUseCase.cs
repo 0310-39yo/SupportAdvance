@@ -1,19 +1,22 @@
+using SupportAdvance.Common.Clocks;
 using SupportAdvance.Contexts.Auth.Identity.Application.Repositories;
-using SupportAdvance.Contexts.Identity.Domain.Entities;
-using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
+using SupportAdvance.Contexts.Auth.Identity.Domain.Entities;
+using SupportAdvance.Contexts.Auth.Identity.Domain.ValueObjects;
 
 namespace SupportAdvance.Contexts.Auth.Identity.Application.UseCases;
 
 public class CreateUserUseCase
 {
     private readonly IUserRepository _userRepository;
+    private readonly IClock _clock;
 
-    public CreateUserUseCase(IUserRepository userRepository)
+    public CreateUserUseCase(IUserRepository userRepository, IClock clock)
     {
         _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
+        _clock = clock ?? throw new ArgumentNullException(nameof(clock));
     }
 
-    public async Task<RowId> ExecuteAsync(
+    public async Task<UserId> ExecuteAsync(
         string loginId,
         string email,
         string hashedPassword,
@@ -35,7 +38,14 @@ public class CreateUserUseCase
             throw new InvalidOperationException($"User with email '{email}' already exists.");
         }
 
-        var user = new User(loginId, email, hashedPassword, displayName);
+        var user = new User(
+            UserId.New(),
+            loginId,
+            email,
+            hashedPassword,
+            displayName,
+            null,
+            _clock);
         await _userRepository.CreateAsync(user);
 
         return user.Id;

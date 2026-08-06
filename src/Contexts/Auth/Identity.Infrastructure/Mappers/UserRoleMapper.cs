@@ -1,12 +1,13 @@
 using SupportAdvance.Common.Clocks;
-using SupportAdvance.Contexts.Identity.Domain.Entities;
-using SupportAdvance.Contexts.Identity.Infrastructure.DbModels;
+using SupportAdvance.Contexts.Auth.Identity.Domain.Entities;
+using SupportAdvance.Contexts.Auth.Identity.Domain.ValueObjects;
+using SupportAdvance.Contexts.Auth.Identity.Infrastructure.DbModels;
 using SupportAdvance.Infrastructure.Mappers;
 using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
-namespace SupportAdvance.Contexts.Identity.Infrastructure.Mappers;
+namespace SupportAdvance.Contexts.Auth.Identity.Infrastructure.Mappers;
 
-public class UserRoleMapper : IEntityMapper<UserRole, UserRoleDbModel, RowId>
+public class UserRoleMapper : IEntityMapper<UserRole, UserRoleDbModel, UserRoleId>
 {
     public UserRoleDbModel ToDbModel(UserRole entity)
     {
@@ -14,10 +15,17 @@ public class UserRoleMapper : IEntityMapper<UserRole, UserRoleDbModel, RowId>
 
         return new UserRoleDbModel
         {
-            RowId = entity.Id.Value,
+            RowId = entity.RowId.Value,
+            UserRoleId = entity.Id.Value,
             UserId = entity.UserId.Value,
             RoleId = entity.RoleId.Value,
-            AssignedAt = entity.AssignedAt.Value,
+            AssignedAt = entity.AssignedAt,
+            CreatedAt = default,
+            CreatedBy = 0,
+            UpdatedAt = null,
+            UpdatedBy = null,
+            DeletedAt = null,
+            DeletedBy = null,
         };
     }
 
@@ -26,13 +34,15 @@ public class UserRoleMapper : IEntityMapper<UserRole, UserRoleDbModel, RowId>
         ArgumentNullException.ThrowIfNull(dbModel);
         ArgumentNullException.ThrowIfNull(clock);
 
-        // TryFrom で型安全な DateTime → LocalDateTime 変換
-        LocalDateTime assignedAt = new LocalDateTime(dbModel.AssignedAt);
+        var userRoleId = UserRoleId.From(dbModel.UserRoleId);
+        var rowId = RowId.From(dbModel.RowId);
 
         return new UserRole(
+            id: userRoleId,
             userId: RowId.From(dbModel.UserId),
             roleId: RowId.From(dbModel.RoleId),
-            assignedAt: assignedAt,
-            rowId: RowId.From(dbModel.RowId));
+            assignedAt: dbModel.AssignedAt,
+            rowId: rowId,
+            clock: clock);
     }
 }

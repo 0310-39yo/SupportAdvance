@@ -1,7 +1,8 @@
 using SupportAdvance.Common.Clocks;
 using SupportAdvance.Contexts.Master.Employee.Application.Repositories;
+using SupportAdvance.Contexts.Master.Employee.Domain.ValueObjects;
 using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
-using EmployeeEntity = SupportAdvance.Contexts.Employee.Domain.Entities.Employee;
+using EmployeeEntity = SupportAdvance.Contexts.Master.Employee.Domain.Entities.Employee;
 
 namespace SupportAdvance.Contexts.Master.Employee.Application.UseCases;
 
@@ -16,7 +17,7 @@ public class CreateEmployeeUseCase
         _clock = clock ?? throw new ArgumentNullException(nameof(clock));
     }
 
-    public async Task<RowId> ExecuteAsync(
+    public async Task<EmployeeId> ExecuteAsync(
         string employeeNumber,
         string firstName,
         string lastName,
@@ -44,13 +45,16 @@ public class CreateEmployeeUseCase
         }
 
         var employee = new EmployeeEntity(
+            EmployeeId.New(),
             employeeNumber,
             firstName,
             lastName,
             email,
             departmentId,
             jobTitle,
-            _clock.JstNow);
+            null,
+            null,
+            _clock);
 
         await _employeeRepository.CreateAsync(employee);
 

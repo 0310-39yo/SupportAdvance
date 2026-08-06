@@ -1,12 +1,13 @@
 using SupportAdvance.Common.Clocks;
-using SupportAdvance.Contexts.Employee.Domain.Entities;
-using SupportAdvance.Contexts.Employee.Infrastructure.DbModels;
+using SupportAdvance.Contexts.Master.Employee.Domain.Entities;
+using SupportAdvance.Contexts.Master.Employee.Domain.ValueObjects;
+using SupportAdvance.Contexts.Master.Employee.Infrastructure.DbModels;
 using SupportAdvance.Infrastructure.Mappers;
 using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
-namespace SupportAdvance.Contexts.Employee.Infrastructure.Mappers;
+namespace SupportAdvance.Contexts.Master.Employee.Infrastructure.Mappers;
 
-public class DepartmentMapper : IEntityMapper<Department, DepartmentDbModel, RowId>
+public class DepartmentMapper : IEntityMapper<Department, DepartmentDbModel, DepartmentId>
 {
     public DepartmentDbModel ToDbModel(Department entity)
     {
@@ -14,11 +15,18 @@ public class DepartmentMapper : IEntityMapper<Department, DepartmentDbModel, Row
 
         return new DepartmentDbModel
         {
-            RowId = entity.Id.Value,
+            RowId = entity.RowId.Value,
+            DepartmentId = entity.Id.Value,
             Name = entity.Name,
             Description = entity.Description,
             ParentDepartmentId = entity.ParentDepartmentId?.Value,
             IsActive = entity.IsActive,
+            CreatedAt = default,
+            CreatedBy = 0,
+            UpdatedAt = null,
+            UpdatedBy = null,
+            DeletedAt = null,
+            DeletedBy = null,
         };
     }
 
@@ -27,14 +35,19 @@ public class DepartmentMapper : IEntityMapper<Department, DepartmentDbModel, Row
         ArgumentNullException.ThrowIfNull(dbModel);
         ArgumentNullException.ThrowIfNull(clock);
 
+        var departmentId = DepartmentId.From(dbModel.DepartmentId);
+        var rowId = RowId.From(dbModel.RowId);
+
         var parentDepartmentId = dbModel.ParentDepartmentId.HasValue
             ? RowId.From(dbModel.ParentDepartmentId.Value)
             : null;
 
         return new Department(
+            id: departmentId,
             name: dbModel.Name,
             description: dbModel.Description,
             parentDepartmentId: parentDepartmentId,
-            rowId: RowId.From(dbModel.RowId));
+            rowId: rowId,
+            clock: clock);
     }
 }

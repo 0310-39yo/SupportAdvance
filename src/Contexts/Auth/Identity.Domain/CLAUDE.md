@@ -5,29 +5,38 @@
 ## エンティティ設計
 
 ### User
-- `AggregateRoot<RowId>` パターン
+- `AggregateRoot<UserId>` パターン（GUID ベースの AggregateId）
+- RowId をプライベート属性として保持（テーブルの物理キー）
 - LoginId, Email, HashedPassword を必須プロパティ
 - IsActive フラグで有効/無効を管理
 - 変更メソッド：ChangePassword, SetActive, UpdateEmail
 
 ### Role
-- `AggregateRoot<RowId>` パターン
+- `AggregateRoot<RoleId>` パターン（GUID ベースの AggregateId）
+- RowId をプライベート属性として保持（テーブルの物理キー）
 - Name（ユニーク）、Permissions（JSON シリアライズ対象）
 - IsActive フラグで有効/無効を管理
 
 ### UserRole
 - User と Role の関連付け（多対多）
-- `AggregateRoot<RowId>` パターン
+- `AggregateRoot<UserRoleId>` パターン（GUID ベースの AggregateId）
+- RowId をプライベート属性として保持（テーブルの物理キー）
 - AssignedAt に LocalDateTime（JST）を使用
 
-## RowId ValueObject
+## ID 設計
 
-すべてのエンティティ ID は `RowId` ValueObject を使用。
-- `Entity<RowId>` 継承
+### AggregateId（集約ビジネスID）
+- UserId, RoleId, UserRoleId は AggregateId を継承
+- GUID ベース（型安全性確保）
+- Entity.Id で参照
+
+### RowId（テーブル物理キー）
+- Entity のプライベート属性
+- テーブルの行を一意に識別
 - DB 採番前は `RowId.New()`（value=0）
 - DB 採番後は `RowId.From(dbValue)` で作成
 
-詳細は [SharedKernel](../../SharedKernel/ValueObjects/Identifiers/RowId.cs) 参照。
+詳細は [SharedKernel](../../SharedKernel/ValueObjects/Identifiers/) 参照。
 
 ## 依存関係
 

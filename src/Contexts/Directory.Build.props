@@ -1,5 +1,6 @@
 <Project>
   <PropertyGroup>
+    <!-- デフォルト: Contexts 直下のプロジェクト用（例：Application, Common） -->
     <RootNamespace>SupportAdvance.Contexts.$(MSBuildProjectName)</RootNamespace>
   </PropertyGroup>
 </Project>

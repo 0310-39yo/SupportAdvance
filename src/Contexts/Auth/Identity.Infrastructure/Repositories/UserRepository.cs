@@ -1,15 +1,15 @@
 using SupportAdvance.Common.Clocks;
 using SupportAdvance.Contexts.Auth.Identity.Application.Repositories;
-using SupportAdvance.Contexts.Identity.Domain.Entities;
-using SupportAdvance.Contexts.Identity.Infrastructure.DbModels;
-using SupportAdvance.Contexts.Identity.Infrastructure.Mappers;
+using SupportAdvance.Contexts.Auth.Identity.Domain.Entities;
+using SupportAdvance.Contexts.Auth.Identity.Domain.ValueObjects;
+using SupportAdvance.Contexts.Auth.Identity.Infrastructure.DbModels;
+using SupportAdvance.Contexts.Auth.Identity.Infrastructure.Mappers;
 using SupportAdvance.Infrastructure.Repositories;
 using SupportAdvance.Infrastructure.Services;
-using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
-namespace SupportAdvance.Contexts.Identity.Infrastructure.Repositories;
+namespace SupportAdvance.Contexts.Auth.Identity.Infrastructure.Repositories;
 
-public class UserRepository : RepositoryBase<User, UserDbModel, RowId>, IUserRepository
+public class UserRepository : RepositoryBase<User, UserDbModel, UserId>, IUserRepository
 {
     public UserRepository(
         UserMapper mapper,
@@ -19,7 +19,7 @@ public class UserRepository : RepositoryBase<User, UserDbModel, RowId>, IUserRep
     {
     }
 
-    public Task<User?> GetByIdAsync(RowId userId)
+    public Task<User?> GetByIdAsync(UserId userId)
     {
         throw new NotImplementedException("Database access layer to be implemented");
     }
@@ -44,7 +44,7 @@ public class UserRepository : RepositoryBase<User, UserDbModel, RowId>, IUserRep
         throw new NotImplementedException("Database access layer to be implemented");
     }
 
-    public Task DeleteAsync(RowId userId)
+    public Task DeleteAsync(UserId userId)
     {
         throw new NotImplementedException("Database access layer to be implemented");
     }

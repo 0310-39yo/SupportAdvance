@@ -1,13 +1,14 @@
 using System.Text.Json;
 using SupportAdvance.Common.Clocks;
-using SupportAdvance.Contexts.Identity.Domain.Entities;
-using SupportAdvance.Contexts.Identity.Infrastructure.DbModels;
+using SupportAdvance.Contexts.Auth.Identity.Domain.Entities;
+using SupportAdvance.Contexts.Auth.Identity.Domain.ValueObjects;
+using SupportAdvance.Contexts.Auth.Identity.Infrastructure.DbModels;
 using SupportAdvance.Infrastructure.Mappers;
 using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
-namespace SupportAdvance.Contexts.Identity.Infrastructure.Mappers;
+namespace SupportAdvance.Contexts.Auth.Identity.Infrastructure.Mappers;
 
-public class RoleMapper : IEntityMapper<Role, RoleDbModel, RowId>
+public class RoleMapper : IEntityMapper<Role, RoleDbModel, RoleId>
 {
     public RoleDbModel ToDbModel(Role entity)
     {
@@ -17,10 +18,17 @@ public class RoleMapper : IEntityMapper<Role, RoleDbModel, RowId>
 
         return new RoleDbModel
         {
-            RowId = entity.Id.Value,
+            RowId = entity.RowId.Value,
+            RoleId = entity.Id.Value,
             Name = entity.Name,
             Description = entity.Description,
             PermissionsJson = permissionsJson,
+            CreatedAt = default,
+            CreatedBy = 0,
+            UpdatedAt = null,
+            UpdatedBy = null,
+            DeletedAt = null,
+            DeletedBy = null,
         };
     }
 
@@ -30,11 +38,15 @@ public class RoleMapper : IEntityMapper<Role, RoleDbModel, RowId>
         ArgumentNullException.ThrowIfNull(clock);
 
         var permissions = JsonSerializer.Deserialize<List<string>>(dbModel.PermissionsJson) ?? new List<string>();
+        var roleId = RoleId.From(dbModel.RoleId);
+        var rowId = RowId.From(dbModel.RowId);
 
         return new Role(
+            id: roleId,
             name: dbModel.Name,
             permissions: permissions,
             description: dbModel.Description,
-            rowId: RowId.From(dbModel.RowId));
+            rowId: rowId,
+            clock: clock);
     }
 }

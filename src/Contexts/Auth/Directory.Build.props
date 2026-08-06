@@ -1,0 +1,5 @@
+<Project>
+  <PropertyGroup>
+    <RootNamespace>SupportAdvance.Contexts.Auth.$(MSBuildProjectName)</RootNamespace>
+  </PropertyGroup>
+</Project>

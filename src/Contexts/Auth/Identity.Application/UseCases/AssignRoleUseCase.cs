@@ -1,6 +1,7 @@
 using SupportAdvance.Common.Clocks;
 using SupportAdvance.Contexts.Auth.Identity.Application.Repositories;
-using SupportAdvance.Contexts.Identity.Domain.Entities;
+using SupportAdvance.Contexts.Auth.Identity.Domain.Entities;
+using SupportAdvance.Contexts.Auth.Identity.Domain.ValueObjects;
 using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 namespace SupportAdvance.Contexts.Auth.Identity.Application.UseCases;
@@ -27,7 +28,13 @@ public class AssignRoleUseCase
             throw new InvalidOperationException($"User already has role with ID '{roleId.Value}'.");
         }
 
-        var userRole = new UserRole(userId, roleId, _clock.JstNow);
+        var userRole = new UserRole(
+            UserRoleId.New(),
+            userId,
+            roleId,
+            _clock.JstNow,
+            null,
+            _clock);
         await _userRoleRepository.CreateAsync(userRole);
     }
 }

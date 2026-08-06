@@ -1,15 +1,16 @@
 using SupportAdvance.Common.Clocks;
 using SupportAdvance.Contexts.Auth.Identity.Application.Repositories;
-using SupportAdvance.Contexts.Identity.Domain.Entities;
-using SupportAdvance.Contexts.Identity.Infrastructure.DbModels;
-using SupportAdvance.Contexts.Identity.Infrastructure.Mappers;
+using SupportAdvance.Contexts.Auth.Identity.Domain.Entities;
+using SupportAdvance.Contexts.Auth.Identity.Domain.ValueObjects;
+using SupportAdvance.Contexts.Auth.Identity.Infrastructure.DbModels;
+using SupportAdvance.Contexts.Auth.Identity.Infrastructure.Mappers;
 using SupportAdvance.Infrastructure.Repositories;
 using SupportAdvance.Infrastructure.Services;
 using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
-namespace SupportAdvance.Contexts.Identity.Infrastructure.Repositories;
+namespace SupportAdvance.Contexts.Auth.Identity.Infrastructure.Repositories;
 
-public class UserRoleRepository : RepositoryBase<UserRole, UserRoleDbModel, RowId>, IUserRoleRepository
+public class UserRoleRepository : RepositoryBase<UserRole, UserRoleDbModel, UserRoleId>, IUserRoleRepository
 {
     public UserRoleRepository(
         UserRoleMapper mapper,
@@ -34,7 +35,7 @@ public class UserRoleRepository : RepositoryBase<UserRole, UserRoleDbModel, RowI
         throw new NotImplementedException("Database access layer to be implemented");
     }
 
-    public Task DeleteAsync(RowId userRoleId)
+    public Task DeleteAsync(UserRoleId userRoleId)
     {
         throw new NotImplementedException("Database access layer to be implemented");
     }

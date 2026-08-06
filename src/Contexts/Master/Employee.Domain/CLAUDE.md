@@ -5,7 +5,8 @@
 ## エンティティ設計
 
 ### Employee
-- `AggregateRoot<RowId>` パターン
+- `AggregateRoot<EmployeeId>` パターン（GUID ベースの AggregateId）
+- RowId をプライベート属性として保持（テーブルの物理キー）
 - EmployeeNumber（社員番号、ユニーク）を識別子として使用
 - FirstName, LastName で姓名を分離
 - Email、DepartmentId、JobTitle を属性に持つ
@@ -14,20 +15,27 @@
 - 変更メソッド：TransferDepartment, ChangeJobTitle, SetActive
 
 ### Department
-- `AggregateRoot<RowId>` パターン
+- `AggregateRoot<DepartmentId>` パターン（GUID ベースの AggregateId）
+- RowId をプライベート属性として保持（テーブルの物理キー）
 - Name（ユニーク）を主要識別子
 - ParentDepartmentId で部門階層をサポート
 - IsActive フラグで有効/無効を管理
 - 変更メソッド：UpdateName, SetActive
 
-## RowId ValueObject
+## ID 設計
 
-すべてのエンティティ ID は `RowId` ValueObject を使用。
-- `Entity<RowId>` 継承
+### AggregateId（集約ビジネスID）
+- EmployeeId, DepartmentId は AggregateId を継承
+- GUID ベース（型安全性確保）
+- Entity.Id で参照
+
+### RowId（テーブル物理キー）
+- Entity のプライベート属性
+- テーブルの行を一意に識別
 - DB 採番前は `RowId.New()`（value=0）
 - DB 採番後は `RowId.From(dbValue)` で作成
 
-詳細は [SharedKernel](../../SharedKernel/ValueObjects/Identifiers/RowId.cs) 参照。
+詳細は [SharedKernel](../../SharedKernel/ValueObjects/Identifiers/) 参照。
 
 ## LocalDateTime 使用
 

@@ -1,4 +1,5 @@
 using SupportAdvance.Contexts.Master.Employee.Application.Repositories;
+using SupportAdvance.Contexts.Master.Employee.Domain.ValueObjects;
 using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 namespace SupportAdvance.Contexts.Master.Employee.Application.UseCases;
@@ -12,7 +13,7 @@ public class TransferEmployeeUseCase
         _employeeRepository = employeeRepository ?? throw new ArgumentNullException(nameof(employeeRepository));
     }
 
-    public async Task ExecuteAsync(RowId employeeId, RowId newDepartmentId)
+    public async Task ExecuteAsync(EmployeeId employeeId, RowId newDepartmentId)
     {
         ArgumentNullException.ThrowIfNull(employeeId);
         ArgumentNullException.ThrowIfNull(newDepartmentId);

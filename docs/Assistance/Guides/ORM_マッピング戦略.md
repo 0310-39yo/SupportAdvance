@@ -127,12 +127,13 @@ C# LocalDateTime → Dapper/RepoDb → DbType.DateTime2 → SQL datetime2(7)
 SQL datetime2(7) → Dapper/RepoDb → DbType.DateTime2 → C# LocalDateTime
 ```
 
-### コード例
+### コード例（単一テーブル集約）
 
 ```csharp
 // Entity with LocalDateTime
-public class YourEntity : Entity<long>
+public class YourEntity : Entity<YourEntityId>
 {
+    private RowId _rowId;
     public LocalDateTime CreatedAt { get; }
     public LocalDateTime? UpdatedAt { get; }
 }
@@ -141,6 +142,7 @@ public class YourEntity : Entity<long>
 public class YourEntityDbModel
 {
     public long RowId { get; set; }
+    public Guid YourEntityId { get; set; }
     public LocalDateTime CreatedAt { get; set; }      // ✓ LocalDateTime
     public LocalDateTime? UpdatedAt { get; set; }     // ✓ LocalDateTime?
 }
@@ -148,19 +150,21 @@ public class YourEntityDbModel
 // SQL Server table
 // CREATE TABLE t_YourEntity (
 //   row_id bigint NOT NULL PRIMARY KEY,
+//   your_entity_id uniqueidentifier NOT NULL,
 //   created_at datetime2(7) NOT NULL,               -- datetime2
 //   updated_at datetime2(7) NULL,                   -- datetime2
 //   ...
 // )
 
 // Mapper: 直接マッピング（変換不要）
-public class YourEntityMapper : IEntityMapper<YourEntity, YourEntityDbModel>
+public class YourEntityMapper : IEntityMapper<YourEntity, YourEntityDbModel, YourEntityId>
 {
     public YourEntityDbModel ToDbModel(YourEntity entity)
     {
         return new YourEntityDbModel
         {
-            RowId = entity.Id,
+            RowId = entity.RowId.Value,
+            YourEntityId = entity.Id.Value,
             CreatedAt = entity.CreatedAt,   // LocalDateTime → LocalDateTime
             UpdatedAt = entity.UpdatedAt    // LocalDateTime? → LocalDateTime?
         };
@@ -169,13 +173,149 @@ public class YourEntityMapper : IEntityMapper<YourEntity, YourEntityDbModel>
     public YourEntity ToDomainEntity(YourEntityDbModel dbModel, IClock clock)
     {
         return new YourEntity(
-            dbModel.RowId,
+            YourEntityId.From(dbModel.YourEntityId),
+            RowId.From(dbModel.RowId),
             dbModel.CreatedAt,   // LocalDateTime → LocalDateTime
             clock
         );
     }
 }
 ```
+
+### コード例（複数テーブル集約）
+
+複数テーブル集約の場合、複数の DbModel が対応する複数の テーブルに存在します。各テーブルには LocalDateTime カラムがあり、ORM は統一的に DateTime2 にマッピングします：
+
+```csharp
+// 親Entity（集約ルート）
+public class YourAggregate : AggregateRoot<YourAggregateId>
+{
+    private RowId _aggregateRowId;
+    private List<YourChild> _children;
+    public LocalDateTime CreatedAt { get; }
+    public LocalDateTime? UpdatedAt { get; }
+}
+
+// 子Entity（複数テーブル）
+public class YourChild : Entity<YourChildId>
+{
+    private RowId _childRowId;
+    public LocalDateTime CreatedAt { get; }
+    public LocalDateTime? UpdatedAt { get; }
+}
+
+// 親テーブル用 DbModel
+public class YourAggregateDbModel
+{
+    public long RowId { get; set; }
+    public Guid YourAggregateId { get; set; }
+    public LocalDateTime CreatedAt { get; set; }      // ✓ LocalDateTime
+    public LocalDateTime? UpdatedAt { get; set; }     // ✓ LocalDateTime?
+    public List<YourChildDbModel>? Children { get; set; }
+}
+
+// 子テーブル用 DbModel
+public class YourChildDbModel
+{
+    public long RowId { get; set; }
+    public Guid YourChildId { get; set; }
+    public Guid ParentAggregateId { get; set; }       // FK to parent
+    public LocalDateTime CreatedAt { get; set; }      // ✓ LocalDateTime
+    public LocalDateTime? UpdatedAt { get; set; }     // ✓ LocalDateTime?
+}
+
+// SQL Server tables
+// CREATE TABLE t_your_aggregate (
+//   row_id bigint NOT NULL PRIMARY KEY,
+//   your_aggregate_id uniqueidentifier NOT NULL,
+//   created_at datetime2(7) NOT NULL,
+//   updated_at datetime2(7) NULL,
+//   ...
+// )
+//
+// CREATE TABLE t_your_children (
+//   row_id bigint NOT NULL PRIMARY KEY,
+//   your_child_id uniqueidentifier NOT NULL,
+//   parent_aggregate_id uniqueidentifier NOT NULL FK,
+//   created_at datetime2(7) NOT NULL,
+//   updated_at datetime2(7) NULL,
+//   ...
+// )
+
+// Mapper: 複数テーブルの複数1:1マッピングを組み合わせ
+public class YourAggregateMapper : IEntityMapper<YourAggregate, YourAggregateDbModel, YourAggregateId>
+{
+    private readonly YourChildMapper _childMapper;
+
+    public YourAggregateMapper(YourChildMapper childMapper)
+    {
+        _childMapper = childMapper;
+    }
+
+    public YourAggregateDbModel ToDbModel(YourAggregate aggregate)
+    {
+        return new YourAggregateDbModel
+        {
+            // 親テーブル：YourAggregate → YourAggregateDbModel（1:1マッピング）
+            RowId = aggregate.AggregateRowId.Value,
+            YourAggregateId = aggregate.Id.Value,
+            CreatedAt = aggregate.CreatedAt,      // LocalDateTime → LocalDateTime
+            UpdatedAt = aggregate.UpdatedAt,      // LocalDateTime? → LocalDateTime?
+            
+            // 子テーブル：各YourChild → YourChildDbModel（複数の1:1マッピング）
+            Children = aggregate.Children
+                .Select(_childMapper.ToDbModel)   // 子Mapperが個別の1:1マッピングを処理
+                .ToList()
+        };
+    }
+
+    public YourAggregate ToDomainEntity(YourAggregateDbModel dbModel, IClock clock)
+    {
+        // 親Entity復元：YourAggregateDbModel → YourAggregate（1:1マッピング）
+        var aggregate = new YourAggregate(
+            YourAggregateId.From(dbModel.YourAggregateId),
+            RowId.From(dbModel.RowId),
+            clock
+        );
+
+        // 子Entity復元：各YourChildDbModel → YourChild（複数の1:1マッピング）
+        foreach (var childDbModel in dbModel.Children ?? Enumerable.Empty<YourChildDbModel>())
+        {
+            var child = _childMapper.ToDomainEntity(childDbModel, clock);  // 子Mapperが個別の1:1マッピングを処理
+            aggregate.AddChild(child);
+        }
+
+        return aggregate;
+    }
+}
+
+// 子Mapper：各子Entity用の独立した1:1マッピング
+public class YourChildMapper : IEntityMapper<YourChild, YourChildDbModel, YourChildId>
+{
+    public YourChildDbModel ToDbModel(YourChild entity)
+    {
+        return new YourChildDbModel
+        {
+            RowId = entity.ChildRowId.Value,
+            YourChildId = entity.Id.Value,
+            CreatedAt = entity.CreatedAt,   // LocalDateTime → LocalDateTime
+            UpdatedAt = entity.UpdatedAt    // LocalDateTime? → LocalDateTime?
+        };
+    }
+
+    public YourChild ToDomainEntity(YourChildDbModel dbModel, IClock clock)
+    {
+        return new YourChild(
+            YourChildId.From(dbModel.YourChildId),
+            RowId.From(dbModel.RowId),
+            dbModel.CreatedAt,   // LocalDateTime → LocalDateTime
+            clock
+        );
+    }
+}
+```
+
+**重要**: 複数テーブル集約でも、各テーブルは DbModel で LocalDateTime を保持します。ORM のグローバルマッピングが統一的に DateTime2 に変換するため、Mapper は変換ロジックを記述する必要がありません。複数テーブルの複合性は Mapper の構造（複数の1:1マッピングの組み合わせ）に現れます。
 
 ---
 
@@ -400,8 +540,9 @@ Mapper が責務を持つことで、型変換を明示的・一元管理する�
 
 ## 参考資料
 
-- **Mapper_パターンガイド.md**: Mapper 実装例（RowId 変換含む）
+- **Mapper_パターンガイド.md**: Mapper 実装例（RowId 変換含む）、複数テーブル集約の複数1:1マッピング
+- **Entity_設計ガイドライン.md**: Entity と RowId 管理、複数テーブル集約の構成
+- **Repository_パターンガイド.md**: RepositoryBase の汎用化、複数テーブル集約の DataAccess 実装
 - **DbModel_設計ルール.md**: DbModel は long を使用
-- **Repository_パターンガイド.md**: RepositoryBase の汎用化
 - **LocalDateTime_タイムゾーン_ガイド.md**: LocalDateTime と JST
 - **TABLE_DESIGN_STANDARDS.md**: SQL Server スキーマ（bigint）

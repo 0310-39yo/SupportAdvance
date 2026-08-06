@@ -18,6 +18,10 @@ public abstract class RepositoryBase<TEntity, TDbModel, TId>
     where TDbModel : class
     where TId : notnull
 {
+    /// <summary>
+    /// TId: Entity の ID 型（AggregateId を継承した ValueObject）
+    /// 例：OrderId, EmployeeId, UserPreferencesId
+    /// </summary>
     protected readonly IEntityMapper<TEntity, TDbModel, TId> _mapper;
     protected readonly ICurrentUserService _currentUser;
     protected readonly IClock _clock;
@@ -77,9 +81,16 @@ namespace SupportAdvance.Contexts.YourGroup.YourContext.Application.Repositories
 
 public interface IYourEntityRepository
 {
-    // 取得
+    // 集約ID（AggregateId）で取得
+    // 【推奨】ビジネスロジックは集約ID でアクセスすべき
+    Task<YourEntity?> GetByIdAsync(YourEntityId id);
+
+    // ビジネスID で取得（任意）
     Task<YourEntity?> GetByBusinessIdAsync(YourBusinessId businessId);
+
+    // テーブルRowId で取得（内部用、通常は非推奨）
     Task<YourEntity?> GetByRowIdAsync(long rowId);
+
     Task<IReadOnlyList<YourEntity>> GetAllAsync();
 
     // 保存
@@ -87,7 +98,7 @@ public interface IYourEntityRepository
     Task UpdateAsync(YourEntity entity);
 
     // 削除
-    Task<bool> DeleteAsync(YourBusinessId businessId);
+    Task<bool> DeleteAsync(YourEntityId id);
 }
 ```
 
@@ -108,8 +119,16 @@ using SupportAdvance.Infrastructure.Services;
 
 namespace SupportAdvance.Contexts.YourGroup.YourContext.Infrastructure.Repositories;
 
+/// <summary>
+/// YourEntity の Repository 実装
+/// 
+/// 【ID の扱い】
+/// - GetByIdAsync(YourEntityId): 推奨。集約ID（GUID）で検索
+/// - GetByBusinessIdAsync(): ビジネスID で検索（任意）
+/// - GetByRowIdAsync(): テーブル物理キー（long）で検索（内部用）
+/// </summary>
 public class YourEntityRepository
-    : RepositoryBase<YourEntity, YourEntityDbModel>,
+    : RepositoryBase<YourEntity, YourEntityDbModel, YourEntityId>,
       IYourEntityRepository
 {
     private readonly IYourEntityDataAccess _dataAccess;
@@ -124,25 +143,48 @@ public class YourEntityRepository
         _dataAccess = dataAccess ?? throw new ArgumentNullException(nameof(dataAccess));
     }
 
+    /// <summary>
+    /// 集約ID で検索（推奨）
+    /// 【パラメータ】id: YourEntityId（GUID ベース）
+    /// 【戻り値】見つからなければ null
+    /// </summary>
+    public async Task<YourEntity?> GetByIdAsync(YourEntityId id)
+    {
+        ArgumentNullException.ThrowIfNull(id);
+
+        // DataAccess でビジネスID で検索
+        var dbModel = await _dataAccess.GetByYourEntityIdAsync(id.Value);
+        
+        if (dbModel == null)
+            return null;
+
+        // Mapper で Domain Entity に変換
+        return MapToDomain(dbModel);
+    }
+
+    /// <summary>
+    /// ビジネスID で検索（任意）
+    /// </summary>
     public async Task<YourEntity?> GetByBusinessIdAsync(YourBusinessId businessId)
     {
         ArgumentNullException.ThrowIfNull(businessId);
 
-        // 1. DataAccess でビジネス ID で検索
         var dbModel = await _dataAccess.GetByBusinessIdAsync(businessId.Value);
         
-        // 2. DbModel が見つからなかった
         if (dbModel == null)
             return null;
 
-        // 3. Mapper で Domain Entity に変換
         return MapToDomain(dbModel);
     }
 
+    /// <summary>
+    /// テーブル行ID で検索（内部用）
+    /// 【通常は推奨されない】集約ID（AggregateId）での検索を推奨
+    /// </summary>
     public async Task<YourEntity?> GetByRowIdAsync(long rowId)
     {
         if (rowId <= 0)
-            throw new ArgumentException("RowId は正の値である必要があります。");
+            throw new ArgumentException("RowId は正の値である必要があります。", nameof(rowId));
 
         var dbModel = await _dataAccess.GetByRowIdAsync(rowId);
         return dbModel == null ? null : MapToDomain(dbModel);
@@ -157,41 +199,59 @@ public class YourEntityRepository
             .AsReadOnly();
     }
 
+    /// <summary>
+    /// Entity を新規追加
+    /// 【監査情報】Repository が自動設定
+    /// - CreatedBy: ICurrentUserService から取得
+    /// - CreatedAt: IClock.JstNow
+    /// </summary>
     public async Task AddAsync(YourEntity entity)
     {
         ArgumentNullException.ThrowIfNull(entity);
 
-        // 1. Mapper で DbModel に変換
-        var dbModel = MapToDatabaseForInsert(entity);  // ← createdBy, createdAt を自動設定
+        // Mapper で DbModel に変換＆監査情報自動設定
+        var dbModel = MapToDatabaseForInsert(entity);
 
-        // 2. DataAccess で保存
+        // DataAccess で保存
         await _dataAccess.InsertAsync(dbModel);
     }
 
+    /// <summary>
+    /// Entity を更新
+    /// 【監査情報】Repository が自動設定
+    /// - UpdatedBy: ICurrentUserService から取得
+    /// - UpdatedAt: IClock.JstNow
+    /// </summary>
     public async Task UpdateAsync(YourEntity entity)
     {
         ArgumentNullException.ThrowIfNull(entity);
 
-        // 1. Mapper で DbModel に変換
-        var dbModel = MapToDatabaseForUpdate(entity);  // ← updatedBy, updatedAt を自動設定
+        // Mapper で DbModel に変換＆監査情報自動設定
+        var dbModel = MapToDatabaseForUpdate(entity);
 
-        // 2. DataAccess で更新
+        // DataAccess で更新
         await _dataAccess.UpdateAsync(dbModel);
     }
 
-    public async Task<bool> DeleteAsync(YourBusinessId businessId)
+    /// <summary>
+    /// Entity を論理削除
+    /// 【監査情報】Repository が自動設定
+    /// - DeletedBy: ICurrentUserService から取得
+    /// - DeletedAt: IClock.JstNow
+    /// </summary>
+    public async Task<bool> DeleteAsync(YourEntityId id)
     {
-        ArgumentNullException.ThrowIfNull(businessId);
+        ArgumentNullException.ThrowIfNull(id);
 
-        // 1. ビジネス ID で検索
-        var dbModel = await _dataAccess.GetByBusinessIdAsync(businessId.Value);
+        // 集約ID で検索
+        var dbModel = await _dataAccess.GetByYourEntityIdAsync(id.Value);
         if (dbModel == null)
             return false;
 
-        // 2. 論理削除：監査情報を設定
-        SetDeletedByAudit(dbModel);  // ← deletedBy, deletedAt を自動設定
+        // 論理削除：監査情報を設定
+        SetDeletedByAudit(dbModel);
 
-        // 3. DataAccess で削除マーク
+        // DataAccess で削除マーク
         await _dataAccess.UpdateAsync(dbModel);
 
         return true;
@@ -210,8 +270,15 @@ namespace SupportAdvance.Contexts.YourGroup.YourContext.Infrastructure.DataAcces
 
 public interface IYourEntityDataAccess
 {
+    // 集約ID（GUID）で検索
+    Task<YourEntityDbModel?> GetByYourEntityIdAsync(Guid yourEntityId);
+
+    // ビジネスID で検索
     Task<YourEntityDbModel?> GetByBusinessIdAsync(int businessId);
+
+    // テーブル行ID で検索
     Task<YourEntityDbModel?> GetByRowIdAsync(long rowId);
+
     Task<List<YourEntityDbModel>> GetAllAsync();
     Task InsertAsync(YourEntityDbModel model);
     Task UpdateAsync(YourEntityDbModel model);
@@ -219,6 +286,8 @@ public interface IYourEntityDataAccess
 ```
 
 ### 4. DataAccess 実装
+
+#### 単一テーブル集約
 
 ```csharp
 // src/Contexts/YourGroup/YourContext/YourContext.Infrastructure/DataAccess/YourEntityDataAccess.cs
@@ -242,6 +311,22 @@ public class YourEntityDataAccess : IYourEntityDataAccess
     private string GetConnectionString() 
         => _dbSettings.ConnectionStrings["SupportAdvance"];
 
+    /// <summary>
+    /// 集約ID（GUID）で検索（推奨）
+    /// </summary>
+    public async Task<YourEntityDbModel?> GetByYourEntityIdAsync(Guid yourEntityId)
+    {
+        using (var connection = new SqlConnection(GetConnectionString()))
+        {
+            return await connection.QueryAsync<YourEntityDbModel>(
+                x => x.YourEntityId == yourEntityId && x.DeletedAt == null
+            ).ContinueWith(t => t.Result.FirstOrDefault());
+        }
+    }
+
+    /// <summary>
+    /// ビジネスID で検索
+    /// </summary>
     public async Task<YourEntityDbModel?> GetByBusinessIdAsync(int businessId)
     {
         using (var connection = new SqlConnection(GetConnectionString()))
@@ -252,6 +337,9 @@ public class YourEntityDataAccess : IYourEntityDataAccess
         }
     }
 
+    /// <summary>
+    /// テーブル行ID で検索
+    /// </summary>
     public async Task<YourEntityDbModel?> GetByRowIdAsync(long rowId)
     {
         using (var connection = new SqlConnection(GetConnectionString()))
@@ -292,17 +380,201 @@ public class YourEntityDataAccess : IYourEntityDataAccess
 }
 ```
 
+#### 複数テーブル集約
+
+複数テーブル集約の場合、DataAccess は複数テーブルの操作を調整します：
+
+```csharp
+// src/Contexts/YourGroup/YourContext/YourContext.Infrastructure/DataAccess/IYourAggregateDataAccess.cs
+
+using SupportAdvance.Contexts.YourGroup.YourContext.Infrastructure.DataAccess.Models;
+
+namespace SupportAdvance.Contexts.YourGroup.YourContext.Infrastructure.DataAccess;
+
+/// <summary>
+/// 複数テーブル集約の DataAccess インターフェース
+/// 【責務】複数テーブル（親 + 子）の操作を調整
+/// </summary>
+public interface IYourAggregateDataAccess
+{
+    // 集約ID で復元（親テーブル + 子テーブルを読み込み）
+    Task<YourAggregateDbModel?> GetByAggregateIdAsync(Guid aggregateId);
+
+    Task<List<YourAggregateDbModel>> GetAllAsync();
+
+    // 複数テーブルに保存
+    Task InsertAsync(YourAggregateDbModel model);
+    
+    // 複数テーブルを更新
+    Task UpdateAsync(YourAggregateDbModel model);
+}
+
+// src/Contexts/YourGroup/YourContext/YourContext.Infrastructure/DataAccess/YourAggregateDataAccess.cs
+
+using RepoDb;
+using System.Data.SqlClient;
+using System.Transactions;
+using SupportAdvance.Common.Configuration;
+using SupportAdvance.Contexts.YourGroup.YourContext.Infrastructure.DataAccess.Models;
+
+namespace SupportAdvance.Contexts.YourGroup.YourContext.Infrastructure.DataAccess;
+
+/// <summary>
+/// 複数テーブル集約の DataAccess 実装
+/// 【処理内容】
+/// - GetByAggregateIdAsync: 親テーブルから読み込み、子テーブルを JOIN で取得
+/// - InsertAsync: 親テーブル → 子テーブルの順番で挿入
+/// - UpdateAsync: トランザクション内で親→子を更新
+/// </summary>
+public class YourAggregateDataAccess : IYourAggregateDataAccess
+{
+    private readonly IDatabaseSettings _dbSettings;
+
+    public YourAggregateDataAccess(IDatabaseSettings dbSettings)
+    {
+        _dbSettings = dbSettings ?? throw new ArgumentNullException(nameof(dbSettings));
+    }
+
+    private string GetConnectionString() 
+        => _dbSettings.ConnectionStrings["SupportAdvance"];
+
+    /// <summary>
+    /// 集約ID で復元（複数テーブル読み込み）
+    /// 【処理】
+    /// ① t_your_aggregate から親レコードを取得
+    /// ② t_your_children から子レコードを取得（FK: parent_aggregate_id）
+    /// </summary>
+    public async Task<YourAggregateDbModel?> GetByAggregateIdAsync(Guid aggregateId)
+    {
+        using (var connection = new SqlConnection(GetConnectionString()))
+        {
+            // ① 親テーブル：t_your_aggregate
+            var aggregate = await connection.QueryAsync<YourAggregateDbModel>(
+                x => x.YourAggregateId == aggregateId && x.DeletedAt == null
+            ).ContinueWith(t => t.Result.FirstOrDefault());
+
+            if (aggregate == null)
+                return null;
+
+            // ② 子テーブル：t_your_children（FK で関連付け）
+            var children = await connection.QueryAsync<YourChildDbModel>(
+                x => x.ParentAggregateId == aggregateId && x.DeletedAt == null
+            );
+
+            aggregate.Children = children.ToList();
+            return aggregate;
+        }
+    }
+
+    public async Task<List<YourAggregateDbModel>> GetAllAsync()
+    {
+        using (var connection = new SqlConnection(GetConnectionString()))
+        {
+            // 親テーブルをすべて取得
+            var aggregates = await connection.QueryAsync<YourAggregateDbModel>(
+                x => x.DeletedAt == null
+            );
+
+            // 各親レコードに対して子レコードを取得
+            foreach (var aggregate in aggregates)
+            {
+                var children = await connection.QueryAsync<YourChildDbModel>(
+                    x => x.ParentAggregateId == aggregate.YourAggregateId && x.DeletedAt == null
+                );
+                aggregate.Children = children.ToList();
+            }
+
+            return aggregates.ToList();
+        }
+    }
+
+    /// <summary>
+    /// 複数テーブルに新規保存
+    /// 【処理】
+    /// ① 親レコードを t_your_aggregate に挿入
+    /// ② 子レコードを t_your_children に挿入（各子 FK: parent_aggregate_id）
+    /// </summary>
+    public async Task InsertAsync(YourAggregateDbModel model)
+    {
+        ArgumentNullException.ThrowIfNull(model);
+
+        using (var connection = new SqlConnection(GetConnectionString()))
+        {
+            using (var transaction = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
+            {
+                // ① 親レコード保存
+                await connection.InsertAsync("t_YourAggregate", model);
+
+                // ② 子レコード保存（複数テーブルの場合）
+                if (model.Children != null && model.Children.Count > 0)
+                {
+                    foreach (var child in model.Children)
+                    {
+                        // FK: ParentAggregateId を設定（親の ID）
+                        child.ParentAggregateId = model.YourAggregateId;
+                        await connection.InsertAsync("t_YourChildren", child);
+                    }
+                }
+
+                transaction.Complete();
+            }
+        }
+    }
+
+    /// <summary>
+    /// 複数テーブルを更新
+    /// 【処理】
+    /// ① 親レコードを t_your_aggregate で更新
+    /// ② 子レコードを削除＆再挿入（論理削除パターン）
+    /// </summary>
+    public async Task UpdateAsync(YourAggregateDbModel model)
+    {
+        ArgumentNullException.ThrowIfNull(model);
+
+        using (var connection = new SqlConnection(GetConnectionString()))
+        {
+            using (var transaction = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
+            {
+                // ① 親レコード更新
+                await connection.UpdateAsync("t_YourAggregate", model);
+
+                // ② 子レコード更新（既存を削除マーク＆新規レコード追加）
+                if (model.Children != null && model.Children.Count > 0)
+                {
+                    // 既存子レコード削除マーク
+                    await connection.ExecuteAsync(
+                        "UPDATE t_YourChildren SET deleted_at = @now WHERE parent_aggregate_id = @parentId",
+                        new { now = DateTime.UtcNow, parentId = model.YourAggregateId }
+                    );
+
+                    // 新規子レコード追加
+                    foreach (var child in model.Children)
+                    {
+                        child.ParentAggregateId = model.YourAggregateId;
+                        await connection.InsertAsync("t_YourChildren", child);
+                    }
+                }
+
+                transaction.Complete();
+            }
+        }
+    }
+}
+```
+
+**重要**: 複数テーブル集約の DataAccess は、複数テーブル間の **操作順序** と **トランザクション管理** を担当します。Mapper は単なる型変換で、テーブル操作の複雑性は DataAccess に委譲されます。
+
 ---
 
 ## ✅ 実装チェックリスト
 
 ### Repository インターフェース
 
-- [ ] **Domain に依存しない**: Domain Entity 型を返す
-- [ ] **Application に定義**: Repository インターフェースは Application 層
-- [ ] **ビジネス ID メソッド**: GetByBusinessIdAsync など
-- [ ] **RowId メソッド**: GetByRowIdAsync など
+- [ ] **GetByIdAsync(TId id)**: 集約ID で取得（推奨）
+- [ ] **ビジネスID メソッド**: GetByBusinessIdAsync など（任意）
+- [ ] **RowId メソッド**: GetByRowIdAsync など（内部用、非推奨）
 - [ ] **Add/Update/Delete**: CRUD 操作をすべてカバー
+- [ ] **Domain Entity を返す**: DbModel ではなく Entity を返す
 
 ### Repository 実装
 
@@ -314,6 +586,7 @@ public class YourEntityDataAccess : IYourEntityDataAccess
 
 ### DataAccess 実装
 
+- [ ] **GetByIdAsync(Guid id)**: 集約ID（GUID）で検索
 - [ ] **DeletedAt IS NULL**: 論理削除を WHERE 句で自動フィルタ
 - [ ] **RepoDb lambda WHERE**: connection.QueryAsync<T>(x => ...) パターン
 - [ ] **ConnectionString**: IDatabaseSettings から取得
@@ -329,16 +602,13 @@ public class YourEntityDataAccess : IYourEntityDataAccess
 // ✗ 禁止: Repository が DbModel を返す
 public interface IYourEntityRepository
 {
-    Task<YourEntityDbModel?> GetAsync(int businessId);  // ✗ DbModel
+    Task<YourEntityDbModel?> GetAsync(YourEntityId id);  // ✗ DbModel
 }
-```
 
-**修正:**
-```csharp
 // ✓ Repository は Entity を返す
 public interface IYourEntityRepository
 {
-    Task<YourEntity?> GetAsync(YourBusinessId businessId);  // ✓ Entity
+    Task<YourEntity?> GetByIdAsync(YourEntityId id);  // ✓ Entity
 }
 ```
 
@@ -346,56 +616,29 @@ public interface IYourEntityRepository
 
 ```csharp
 // ✗ 禁止: Repository が手動で Entity を構築
-public class YourEntityRepository : IYourEntityRepository
-{
-    public async Task<YourEntity?> GetAsync(YourBusinessId businessId)
-    {
-        var dbModel = await _dataAccess.GetByBusinessIdAsync(businessId.Value);
-        
-        // ✗ 手動で Entity を構築
-        return new YourEntity(
-            dbModel.RowId,
-            YourBusinessId.From(dbModel.YourBusinessId),
-            dbModel.Name,
-            _clock
-        );
-    }
-}
-```
+var entity = new YourEntity(
+    dbModel.RowId,
+    YourBusinessId.From(dbModel.YourBusinessId),
+    dbModel.Name
+);
 
-**修正:**
-```csharp
 // ✓ Mapper を使用
-public class YourEntityRepository : IYourEntityRepository
-{
-    public async Task<YourEntity?> GetAsync(YourBusinessId businessId)
-    {
-        var dbModel = await _dataAccess.GetByBusinessIdAsync(businessId.Value);
-        return dbModel == null ? null : MapToDomain(dbModel);  // Mapper 使用
-    }
-}
+var entity = MapToDomain(dbModel);
 ```
 
-### パターン3: 監査情報を手動で設定
+### パターン3: Guid と long を混同
 
 ```csharp
-// ✗ 禁止: Repository が監査情報を手動で設定
-public async Task AddAsync(YourEntity entity)
+// ✗ 禁止：集約ID（Guid）とRowId（long）を混同
+public async Task<YourEntity?> GetByIdAsync(long rowId)  // ✗ long を受け取る
 {
-    var dbModel = _mapper.ToDbModel(entity);
-    dbModel.CreatedBy = _currentUser.EmployeeRowId;  // ✗ 手動設定
-    dbModel.CreatedAt = _clock.JstNow;  // ✗ 手動設定
-    await _dataAccess.InsertAsync(dbModel);
+    var dbModel = await _dataAccess.GetByYourEntityIdAsync(rowId);  // ✗ Guid を Longに
 }
-```
 
-**修正:**
-```csharp
-// ✓ MapToDatabaseForInsert を使用
-public async Task AddAsync(YourEntity entity)
+// ✓ 正しい：それぞれの型で検索
+public async Task<YourEntity?> GetByIdAsync(YourEntityId id)  // ✓ YourEntityId（Guid ベース）
 {
-    var dbModel = MapToDatabaseForInsert(entity);  // 自動設定
-    await _dataAccess.InsertAsync(dbModel);
+    var dbModel = await _dataAccess.GetByYourEntityIdAsync(id.Value);  // Guid で検索
 }
 ```
 
@@ -413,26 +656,6 @@ DbModel (createdBy, updatedBy, createdAt, updatedAt)
 DataAccess
     ↓
 SQL Server (t_YourEntity テーブル)
-```
-
-### フロー例
-
-```csharp
-// 1. UseCase が Entity を作成
-var entity = new YourEntity(rowId, businessId, name, clock);
-
-// 2. Repository.AddAsync(entity) を呼び出し
-await _repository.AddAsync(entity);
-
-// 3. Repository が Mapper で DbModel に変換
-var dbModel = _mapper.ToDbModel(entity);
-
-// 4. Repository が監査情報を自動設定
-dbModel.CreatedBy = _currentUser.EmployeeRowId;  // ICurrentUserService から取得
-dbModel.CreatedAt = _clock.JstNow;
-
-// 5. DataAccess で DB に保存
-await _dataAccess.InsertAsync(dbModel);
 ```
 
 ---
@@ -460,7 +683,9 @@ YourContext.Application/
 
 ## 参考資料
 
-- **Mapper_パターンガイド.md**: Mapper 実装方法
-- **Entity_設計ガイドライン.md**: Entity 設計
-- **DbModel_設計ルール.md**: DbModel 設計
-- **src/Contexts/Samples/CarPreferences.Infrastructure**: 実装例
+- **Mapper_パターンガイド.md** — AggregateId ↔ RowId マッピング、複数テーブル集約の複数1:1マッピング
+- **Entity_設計ガイドライン.md** — Entity と AggregateId、複数テーブル集約の Entity 構造
+- **ORM_マッピング戦略.md** — LocalDateTime マッピング、複数テーブル集約のマッピング例
+- **AggregateId_設計ガイド.md** — GUID ベース ID の実装
+- **DbModel_設計ルール.md** — DbModel 設計
+

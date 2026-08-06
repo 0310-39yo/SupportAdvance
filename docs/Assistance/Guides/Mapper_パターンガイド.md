@@ -12,16 +12,27 @@ Mapper の責務は **型変換のみ**です。ビジネスコンテキスト�
 
 | 層 | 責務 | 例 |
 |---|---|---|
-| **Mapper** | 純粋な型変換 | Entity.Id → DbModel.RowId |
+| **Mapper** | 純粋な型変換 | AggregateId（GUID）→ DbModel、RowId（long）の変換 |
 | **Repository** | ビジネスコンテキスト管理 | createdBy を ICurrentUserService から取得 |
 
-### マッピング方向
+### マッピング方向と ID の役割分離
 
 ```
-Domain Entity ←→ DbModel（SQL Server）
+Domain Entity ↔ DbModel（SQL Server）
     ↑                ↓
-  ビジネス        技術的な永続化形式
-   ロジック
+ビジネスロジック    技術的な永続化形式
+
+Entity が保持する ID（独立した2つ）：
+- AggregateId（GUID ベース ValueObject）：ビジネスID
+- RowId（long ValueObject）：テーブルの物理キー
+
+Mapper の責務（ValueObject ↔ primitive 型の型変換のみ）：
+- Entity.Id（AggregateId） → DbModel.AggregateIdカラム（Guid）
+- Entity.RowId（RowId） → DbModel.RowIdカラム（long）
+- その他の ValueObject → primitive 型の相互変換
+
+【重要】Mapper は AggregateId と RowId の対応付けは行わない
+（Entity コンストラクタで両方を保持）
 ```
 
 ---
@@ -42,9 +53,13 @@ namespace SupportAdvance.Infrastructure.Mappers;
 /// Entity ↔ DbModel マッパー（汎用インターフェース）
 /// 
 /// 【型パラメータ】
-/// - TEntity: Entity<TId>（ID型をサポート）
+/// - TEntity: Entity<TId>（集約固有のID型）
 /// - TDbModel: データベースモデル
-/// - TId: Entity の ID 型（ValueObject など、通常は RowId）
+/// - TId: Entity の ID 型（AggregateId 継承の ValueObject）
+/// 
+/// 【ID の役割】
+/// - TId（AggregateId）: ビジネスID（Entity の Identity）
+/// - DbModel.RowId: テーブルの物理キー（long）
 /// </summary>
 public interface IEntityMapper<TEntity, TDbModel, TId>
     where TEntity : Entity<TId>
@@ -53,11 +68,13 @@ public interface IEntityMapper<TEntity, TDbModel, TId>
 {
     /// <summary>
     /// Domain Entity → DbModel（保存用）
+    /// 【責務】AggregateId → RowId 変換、その他は型変換のみ
     /// </summary>
     TDbModel ToDbModel(TEntity entity);
 
     /// <summary>
     /// DbModel → Domain Entity（読み取り用）
+    /// 【責務】RowId → AggregateId 変換、その他は型変換のみ
     /// </summary>
     TEntity ToDomainEntity(TDbModel dbModel, IClock clock);
 }
@@ -65,7 +82,7 @@ public interface IEntityMapper<TEntity, TDbModel, TId>
 
 ### Mapper 実装例
 
-#### シンプルな Entity マッピング
+#### シンプルな Entity マッピング（GUID ベース ID）
 
 ```csharp
 // src/Contexts/YourGroup/YourContext/YourContext.Infrastructure/Mappers/YourEntityMapper.cs
@@ -79,12 +96,21 @@ using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 namespace SupportAdvance.Contexts.YourGroup.YourContext.Infrastructure.Mappers;
 
-public class YourEntityMapper : IEntityMapper<YourEntity, YourEntityDbModel, RowId>
+/// <summary>
+/// YourEntity ↔ YourEntityDbModel マッパー
+/// 
+/// 【ID マッピング】
+/// - Entity.Id: YourEntityId（AggregateId 継承、GUID ベース）
+/// - DbModel.RowId: long（テーブル物理キー）
+/// - DbModel.YourEntityId: Guid（ビジネスID、Entity の ID を保存）
+/// </summary>
+public class YourEntityMapper : IEntityMapper<YourEntity, YourEntityDbModel, YourEntityId>
 {
     /// <summary>
     /// Domain Entity → DbModel（保存用）
-    /// 【責務】RowId ValueObject → long 変換、その他は直接マッピング
-    /// 【注意】監査情報（createdBy など）は Repository で設定される
+    /// 【ID 変換】AggregateId.Value（Guid） → DbModel.YourEntityId（Guid）
+    /// 【RowId】テーブル行の物理キー（DB採番）
+    /// 【監査情報】Repository が設定するため、ここでは初期値のみ
     /// </summary>
     public YourEntityDbModel ToDbModel(YourEntity entity)
     {
@@ -92,19 +118,23 @@ public class YourEntityMapper : IEntityMapper<YourEntity, YourEntityDbModel, Row
 
         return new YourEntityDbModel
         {
-            // row_id は Entity.Id（RowId ValueObject）から long に変換
-            RowId = entity.Id.Value,  // RowId → long 変換
+            // RowId: テーブルの物理キー
+            // 新規作成時は 0（DB採番）、更新時は既存値
+            RowId = entity.RowId?.Value ?? 0,
+
+            // YourEntityId: Entity の集約ID（GUID ベース）を保存
+            YourEntityId = entity.Id.Value,  // AggregateId → Guid 変換
 
             // ビジネスカラム：Entity から直接マッピング
             YourBusinessId = entity.YourBusinessId.Value,
             Name = entity.Name,
             Amount = entity.Amount?.Amount,  // ValueObject → primitive
 
-            // 監査情報：Repository で設定されるため、ここでは初期値のみ
+            // 監査情報：Repository が上書き
             CreatedAt = entity.CreatedAt,
-            CreatedBy = 0,  // Repository が上書き
+            CreatedBy = 0,  // Repository が実行ユーザーに上書き
             UpdatedAt = entity.UpdatedAt,
-            UpdatedBy = null,  // Repository が上書き
+            UpdatedBy = null,
             DeletedAt = null,
             DeletedBy = null
         };
@@ -112,47 +142,78 @@ public class YourEntityMapper : IEntityMapper<YourEntity, YourEntityDbModel, Row
 
     /// <summary>
     /// DbModel → Domain Entity（読み取り用）
-    /// 【責務】long → RowId ValueObject 変換、その他は直接マッピング
-    /// 【注意】DbModel には LocalDateTime が格納されている
+    /// 【ID 変換】DbModel.YourEntityId（Guid） → Entity.Id（YourEntityId）
+    /// 【RowId】DbModel.RowId（long） → Entity.RowId（RowId ValueObject）
+    /// 【監査情報】DbModel から Entity へ直接マッピング
     /// </summary>
     public YourEntity ToDomainEntity(YourEntityDbModel dbModel, IClock clock)
     {
         ArgumentNullException.ThrowIfNull(dbModel);
         ArgumentNullException.ThrowIfNull(clock);
 
-        // 1. DbModel の値から ValueObject を構築
+        // 1. ID を ValueObject に変換
+        var yourEntityId = YourEntityId.From(dbModel.YourEntityId);  // Guid → YourEntityId
         var yourBusinessId = YourBusinessId.From(dbModel.YourBusinessId);
+        var rowId = RowId.From(dbModel.RowId);  // long → RowId ValueObject
         var amount = dbModel.Amount.HasValue ? Money.From(dbModel.Amount.Value) : null;
-        var rowId = RowId.From(dbModel.RowId);  // long → RowId ValueObject 変換
 
-        // 2. Entity を構築（rowId を RowId ValueObject として渡す）
+        // 2. Entity を構築
         var entity = new YourEntity(
-            yourBusinessId,
-            dbModel.Name,
-            amount,
-            clock,
-            rowId  // RowId ValueObject
+            id: yourEntityId,           // 集約ID（YourEntityId）
+            businessId: yourBusinessId,
+            name: dbModel.Name,
+            amount: amount,
+            rowId: rowId,               // テーブル物理キー
+            clock: clock
         );
 
-        // 3. Entity は構築完了
+        // 3. Entity は構築完了（DomainEvents はクリア）
         return entity;
     }
 }
 ```
 
-#### 複雑な Entity マッピング
+#### AggregateRoot マッピング（複数テーブル集約）
+
+複数テーブル集約は、**複数の1:1マッピングの組み合わせ** として実装されます：
+
+```
+YourAggregate（集約ルート）
+  ├─ [1:1] → YourAggregateDbModel（t_your_aggregate）
+  └─ List<YourChild>（複数の子Entity）
+      └─ [各1:1] → YourChildDbModel（t_your_children の各行）
+```
+
+Mapper の責務は集約全体を管理し、各Entity ↔ DbModel の1:1変換を組み合わせることです。
 
 ```csharp
 // src/Contexts/YourGroup/YourContext/YourContext.Infrastructure/Mappers/YourAggregateMapper.cs
 
 using SupportAdvance.Common.Clocks;
 using SupportAdvance.Contexts.YourGroup.YourContext.Domain.Entities;
+using SupportAdvance.Contexts.YourGroup.YourContext.Domain.ValueObjects;
 using SupportAdvance.Contexts.YourGroup.YourContext.Infrastructure.DataAccess.Models;
 using SupportAdvance.Infrastructure.Mappers;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 namespace SupportAdvance.Contexts.YourGroup.YourContext.Infrastructure.Mappers;
 
-public class YourAggregateMapper : IEntityMapper<YourAggregate, YourAggregateDbModel>
+/// <summary>
+/// YourAggregate ↔ DbModel マッパー（複数テーブル集約）
+/// 
+/// 【複数テーブル構成】
+/// - t_your_aggregate: 集約ルート（YourAggregateId を保存）
+/// - t_your_children: 子Entity（それぞれのRowIdと親YourAggregateIdを保存）
+/// 
+/// 【マッピング方式】複数の1:1マッピングの組み合わせ
+/// - YourAggregate（1個） → YourAggregateDbModel（1個）【1:1】
+/// - List&lt;YourChild&gt;（N個） → List&lt;YourChildDbModel&gt;（N個）【各1:1】
+/// 
+/// 【ID 管理】
+/// - 親Entity: YourAggregateId（GUID ビジネスID）+ YourAggregateRowId（テーブル物理キー）
+/// - 各子Entity: YourChildId（GUID ビジネスID）+ YourChildRowId（テーブル物理キー）
+/// </summary>
+public class YourAggregateMapper : IEntityMapper<YourAggregate, YourAggregateDbModel, YourAggregateId>
 {
     private readonly YourChildEntityMapper _childMapper;
 
@@ -161,44 +222,72 @@ public class YourAggregateMapper : IEntityMapper<YourAggregate, YourAggregateDbM
         _childMapper = childMapper ?? throw new ArgumentNullException(nameof(childMapper));
     }
 
+    /// <summary>
+    /// YourAggregate → DbModels（複数の1:1マッピング）
+    /// 
+    /// 【処理内容】
+    /// ① 親Entity → 親DbModel（1:1マッピング）
+    /// ② 子Entity各々 → 子DbModel各々（複数の1:1マッピング）
+    /// </summary>
     public YourAggregateDbModel ToDbModel(YourAggregate aggregate)
     {
         ArgumentNullException.ThrowIfNull(aggregate);
 
-        // 親の DbModel を構築
+        // ① 親の DbModel を構築（YourAggregate → YourAggregateDbModel の1:1マッピング）
         var dbModel = new YourAggregateDbModel
         {
-            RowId = aggregate.Id,
-            AggregateBusinessId = aggregate.AggregateId.Value,
+            // テーブルの物理キー
+            RowId = aggregate.YourAggregateRowId?.Value ?? 0,
+
+            // 集約ID（GUID ベース、ビジネスID）
+            YourAggregateId = aggregate.Id.Value,
+
+            // その他のカラム
             CreatedAt = aggregate.CreatedAt,
             CreatedBy = 0,  // Repository で設定
             UpdatedAt = aggregate.UpdatedAt,
-            UpdatedBy = null,  // Repository で設定
+            UpdatedBy = null,
             DeletedAt = null,
             DeletedBy = null
         };
 
-        // 子要素も DbModel に変換
+        // ② 子要素も DbModel に変換（複数の1:1マッピング）
+        // 各 YourChild → YourChildDbModel（1:1）
         dbModel.Children = aggregate.Children
-            .Select(_childMapper.ToDbModel)
+            .Select(_childMapper.ToDbModel)  // 子Mapperが各1:1マッピングを処理
             .ToList();
 
         return dbModel;
     }
 
+    /// <summary>
+    /// DbModels → YourAggregate（複数の1:1マッピング）
+    /// 
+    /// 【処理内容】
+    /// ① 親DbModel → 親Entity（1:1マッピング）
+    /// ② 子DbModel各々 → 子Entity各々（複数の1:1マッピング）
+    /// </summary>
     public YourAggregate ToDomainEntity(YourAggregateDbModel dbModel, IClock clock)
     {
         ArgumentNullException.ThrowIfNull(dbModel);
         ArgumentNullException.ThrowIfNull(clock);
 
-        // 親の Entity を構築
-        var aggregateId = YourAggregateBusinessId.From(dbModel.AggregateBusinessId);
-        var aggregate = new YourAggregate(dbModel.RowId, aggregateId, clock);
+        // ① 親のID変換（親DbModel → 親Entity の1:1マッピング）
+        var aggregateId = YourAggregateId.From(dbModel.YourAggregateId);  // Guid → YourAggregateId
+        var aggregateRowId = RowId.From(dbModel.RowId);  // long → RowId
 
-        // 子要素も Entity に変換して追加
+        // 親の Entity を構築
+        var aggregate = new YourAggregate(
+            id: aggregateId,
+            aggregateRowId: aggregateRowId,
+            clock: clock
+        );
+
+        // ② 子要素も Entity に変換して追加（複数の1:1マッピング）
+        // 各 YourChildDbModel → YourChild（1:1）
         foreach (var childDbModel in dbModel.Children ?? Enumerable.Empty<YourChildEntityDbModel>())
         {
-            var child = _childMapper.ToDomainEntity(childDbModel, clock);
+            var child = _childMapper.ToDomainEntity(childDbModel, clock);  // 子Mapperが各1:1マッピングを処理
             aggregate.AddChild(child);
         }
 
@@ -207,179 +296,152 @@ public class YourAggregateMapper : IEntityMapper<YourAggregate, YourAggregateDbM
 }
 ```
 
+**重要**: Mapper は集約全体を1つの単位として管理します。複数の Mapper を作成するのではなく、**1つの Mapper が複数の1:1変換を組み合わせる** ことで、テーブル構成に依存した設計判断を明示的に行います。
+
+---
+
+## 🔑 ID マッピングの詳細
+
+### DbModel での ID 保持
+
+DbModel には **2つの ID** を保持します：
+
+```csharp
+public class YourEntityDbModel
+{
+    /// <summary>
+    /// テーブルの物理キー（row_id）
+    /// 【型】long
+    /// 【用途】テーブル行を識別（DB採番）
+    /// 【可視性】通常は外部非公開
+    /// </summary>
+    public long RowId { get; set; }
+
+    /// <summary>
+    /// 集約ID（ビジネスID）
+    /// 【型】Guid
+    /// 【用途】Entity の ID（Entity 復元時に必須）
+    /// 【可視性】Repository でクエリ条件に使用可能
+    /// </summary>
+    public Guid YourEntityId { get; set; }
+
+    // ... その他のカラム
+}
+```
+
+### Mapper での型変換（対応付けなし）
+
+Mapper は **ValueObject → primitive 型の型変換のみ**。AggregateId と RowId は独立した ID で、対応付けは行いません：
+
+```csharp
+// Entity → DbModel（型変換のみ）
+public YourEntityDbModel ToDbModel(YourEntity entity)
+{
+    return new YourEntityDbModel
+    {
+        // ✓ 型変換：RowId（ValueObject） → long
+        RowId = entity.RowId?.Value ?? 0,
+        
+        // ✓ 型変換：AggregateId（ValueObject） → Guid
+        YourEntityId = entity.Id.Value,
+        
+        // ✗ AggregateId と RowId の「対応付け」は行わない
+        // Entity が両方を独立して保持している
+    };
+}
+
+// DbModel → Entity（型変換のみ）
+public YourEntity ToDomainEntity(YourEntityDbModel dbModel, IClock clock)
+{
+    // ✓ 型変換：Guid → YourEntityId（ValueObject）
+    var aggregateId = YourEntityId.From(dbModel.YourEntityId);
+    
+    // ✓ 型変換：long → RowId（ValueObject）
+    var rowId = RowId.From(dbModel.RowId);
+    
+    // ✓ Entity が両方のIDを保持（対応付けは Entity コンストラクタで行われる）
+    return new YourEntity(
+        id: aggregateId,
+        rowId: rowId,
+        clock: clock
+    );
+}
+```
+
+**重要**: Mapper は AggregateId と RowId の対応付けを行いません。Entity コンストラクタで両方の ID が設定されます。
+
 ---
 
 ## ✅ 実装チェックリスト
 
 ### ToDbModel（Entity → DbModel）
 
-- [ ] **Entity.Id** → **DbModel.RowId**
+- [ ] **Entity.Id**（AggregateId） → **DbModel.YourEntityId**（Guid）
+- [ ] **Entity.RowId** → **DbModel.RowId**（long）
 - [ ] **ValueObject** → **primitive 型** に変換
 - [ ] **監査情報** は初期値のみ（Repository が上書き）
 - [ ] **null チェック**: ArgumentNullException
-- [ ] **ビジネスID** は ValueObject から .Value で抽出
 
 ### ToDomainEntity（DbModel → Entity）
 
-- [ ] **DbModel.RowId** → **Entity.Id**
+- [ ] **DbModel.YourEntityId**（Guid） → **Entity.Id**（AggregateId）
+- [ ] **DbModel.RowId**（long） → **Entity.RowId**（RowId ValueObject）
 - [ ] **primitive 型** → **ValueObject** に変換
 - [ ] **LocalDateTime** はそのまま使用（変換不要）
 - [ ] **null チェック**: ArgumentNullException
-- [ ] **IClock** を引数に受け取る（コンストラクタに渡す）
+- [ ] **IClock** を引数に受け取る
 
 ---
 
 ## ❌ 避けるべきパターン
 
-### パターン1: Mapper が認証情報を管理
+### パターン1: Mapper が Entity.RowId を無視
 
 ```csharp
-// ✗ 禁止: Mapper が ICurrentUserService に依存
-public class YourEntityMapper : IEntityMapper<YourEntity, YourEntityDbModel>
+// ✗ 禁止：RowId の変換を忘れる
+public YourEntity ToDomainEntity(YourEntityDbModel dbModel, IClock clock)
 {
-    private readonly ICurrentUserService _currentUser;
+    var aggregateId = YourEntityId.From(dbModel.YourEntityId);
+    
+    return new YourEntity(
+        id: aggregateId,
+        // ✗ RowId を渡さない！
+        clock: clock
+    );
+}
 
-    public YourEntityMapper(ICurrentUserService currentUser)
-    {
-        _currentUser = currentUser;
-    }
-
-    public YourEntityDbModel ToDbModel(YourEntity entity)
-    {
-        return new YourEntityDbModel
-        {
-            RowId = entity.Id,
-            CreatedBy = _currentUser.EmployeeRowId,  // ✗ Mapper が認証を管理
-        };
-    }
+// ✓ 正しい：RowId も変換して渡す
+public YourEntity ToDomainEntity(YourEntityDbModel dbModel, IClock clock)
+{
+    var aggregateId = YourEntityId.From(dbModel.YourEntityId);
+    var rowId = RowId.From(dbModel.RowId);
+    
+    return new YourEntity(
+        id: aggregateId,
+        rowId: rowId,
+        clock: clock
+    );
 }
 ```
 
-**修正:**
-```csharp
-// ✓ Mapper は純粋な型変換のみ
-public class YourEntityMapper : IEntityMapper<YourEntity, YourEntityDbModel>
-{
-    public YourEntityDbModel ToDbModel(YourEntity entity)
-    {
-        return new YourEntityDbModel
-        {
-            RowId = entity.Id,
-            CreatedBy = 0,  // Repository で設定される
-        };
-    }
-}
-```
-
-### パターン2: Mapper がビジネスロジックを実行
+### パターン2: AggregateId と RowId を混同
 
 ```csharp
-// ✗ 禁止: Mapper がビジネス変換を実行
-public class YourEntityMapper : IEntityMapper<YourEntity, YourEntityDbModel>
+// ✗ 禁止：AggregateId を RowId のように扱う
+public YourEntity ToDomainEntity(YourEntityDbModel dbModel, IClock clock)
 {
-    public YourEntityDbModel ToDbModel(YourEntity entity)
-    {
-        var dbModel = new YourEntityDbModel();
-        
-        // ✗ ビジネスロジック：税金計算など
-        dbModel.TotalWithTax = entity.Amount * 1.1m;
-        
-        return dbModel;
-    }
-}
-```
-
-**修正:**
-```csharp
-// ✓ Entity でビジネスロジックを実行、Mapper は結果を転送
-public class YourEntity : Entity<long>
-{
-    public Money GetTotalWithTax() => Amount * 1.1m;  // Entity がビジネスロジック
+    var rowId = RowId.From((long)dbModel.YourEntityId);  // ✗ Guid を long に!
+    
+    return new YourEntity(id: rowId, clock: clock);
 }
 
-public class YourEntityMapper : IEntityMapper<YourEntity, YourEntityDbModel>
+// ✓ 正しい：AggregateId と RowId を分離
+public YourEntity ToDomainEntity(YourEntityDbModel dbModel, IClock clock)
 {
-    public YourEntityDbModel ToDbModel(YourEntity entity)
-    {
-        return new YourEntityDbModel
-        {
-            RowId = entity.Id,
-            TotalWithTax = entity.GetTotalWithTax().Amount,  // 結果を転送
-        };
-    }
-}
-```
-
-### パターン3: DbModel が DateTime を使用
-
-```csharp
-// ✗ 禁止: DbModel に DateTime を使用
-public class YourEntityDbModel
-{
-    public DateTime CreatedAt { get; set; }  // ✗ DateTime
-}
-
-public class YourEntityMapper : IEntityMapper<YourEntity, YourEntityDbModel>
-{
-    public YourEntityDbModel ToDbModel(YourEntity entity)
-    {
-        return new YourEntityDbModel
-        {
-            CreatedAt = entity.CreatedAt.ToDateTime(TimeOnly.MinValue),  // ✗ 変換が必要
-        };
-    }
-}
-```
-
-**修正:**
-```csharp
-// ✓ DbModel は LocalDateTime を使用
-public class YourEntityDbModel
-{
-    public LocalDateTime CreatedAt { get; set; }  // ✓ LocalDateTime
-}
-
-public class YourEntityMapper : IEntityMapper<YourEntity, YourEntityDbModel>
-{
-    public YourEntityDbModel ToDbModel(YourEntity entity)
-    {
-        return new YourEntityDbModel
-        {
-            CreatedAt = entity.CreatedAt,  // ✓ 直接マッピング
-        };
-    }
-}
-```
-
----
-
-## 🔗 LocalDateTime マッピング
-
-DbModel と Entity の両方が **LocalDateTime** を使用します。
-
-```csharp
-// Entity: LocalDateTime
-public class YourEntity : Entity<long>
-{
-    public LocalDateTime CreatedAt { get; }
-    public LocalDateTime? UpdatedAt { get; }
-}
-
-// DbModel: LocalDateTime
-public class YourEntityDbModel
-{
-    public LocalDateTime CreatedAt { get; set; }
-    public LocalDateTime? UpdatedAt { get; set; }
-}
-
-// Mapper: 直接マッピング（変換不要）
-public YourEntityDbModel ToDbModel(YourEntity entity)
-{
-    return new YourEntityDbModel
-    {
-        CreatedAt = entity.CreatedAt,  // ✓ LocalDateTime → LocalDateTime
-        UpdatedAt = entity.UpdatedAt   // ✓ LocalDateTime → LocalDateTime
-    };
+    var aggregateId = YourEntityId.From(dbModel.YourEntityId);  // Guid
+    var rowId = RowId.From(dbModel.RowId);                      // long
+    
+    return new YourEntity(id: aggregateId, rowId: rowId, clock: clock);
 }
 ```
 
@@ -396,6 +458,7 @@ YourContext.Infrastructure/
 ├── DataAccess/
 │   ├── Models/
 │   │   ├── YourEntityDbModel.cs
+│   │   ├── YourChildEntityDbModel.cs
 │   │   └── YourAggregateDbModel.cs
 ```
 
@@ -403,7 +466,9 @@ YourContext.Infrastructure/
 
 ## 参考資料
 
-- **Repository_パターンガイド.md**: Mapper の使用方法
-- **Entity_設計ガイドライン.md**: Entity と ValueObject
-- **DbModel_設計ルール.md**: DbModel の設計原則
-- **src/Contexts/Samples/CarPreferences.Infrastructure/Mappers**: 実装例
+- **Repository_パターンガイド.md** — Mapper の使用方法、複数テーブル集約の DataAccess 実装
+- **Entity_設計ガイドライン.md** — Entity と AggregateId、複数テーブル集約の Entity 構造
+- **ORM_マッピング戦略.md** — LocalDateTime マッピング、複数テーブル集約のマッピング戦略
+- **AggregateId_設計ガイド.md** — GUID ベース ID の実装
+- **DbModel_設計ルール.md** — DbModel の設計原則
+

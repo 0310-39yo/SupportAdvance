@@ -1,11 +1,15 @@
 using SupportAdvance.Common.Clocks;
 using SupportAdvance.SharedKernel.Entities;
 using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
+using SupportAdvance.Contexts.Master.Employee.Domain.ValueObjects;
 
-namespace SupportAdvance.Contexts.Employee.Domain.Entities;
+namespace SupportAdvance.Contexts.Master.Employee.Domain.Entities;
 
-public class Employee : AggregateRoot<RowId>
+public class Employee : AggregateRoot<EmployeeId>
 {
+    private RowId _rowId = null!;
+
+    public RowId RowId => _rowId;
     public string EmployeeNumber { get; private set; }
     public string FirstName { get; private set; }
     public string LastName { get; private set; }
@@ -16,6 +20,7 @@ public class Employee : AggregateRoot<RowId>
     public LocalDateTime? HireDate { get; private set; }
 
     public Employee(
+        EmployeeId id,
         string employeeNumber,
         string firstName,
         string lastName,
@@ -23,9 +28,11 @@ public class Employee : AggregateRoot<RowId>
         RowId departmentId,
         string jobTitle,
         LocalDateTime? hireDate = null,
-        RowId? rowId = null)
+        RowId? rowId = null,
+        IClock? clock = null)
         : base()
     {
+        ArgumentNullException.ThrowIfNull(id);
         ArgumentNullException.ThrowIfNull(employeeNumber);
         ArgumentNullException.ThrowIfNull(firstName);
         ArgumentNullException.ThrowIfNull(lastName);
@@ -33,7 +40,8 @@ public class Employee : AggregateRoot<RowId>
         ArgumentNullException.ThrowIfNull(departmentId);
         ArgumentNullException.ThrowIfNull(jobTitle);
 
-        Id = rowId ?? RowId.New();
+        Id = id;
+        _rowId = rowId ?? RowId.New();
         EmployeeNumber = employeeNumber;
         FirstName = firstName;
         LastName = lastName;
