@@ -1,7 +1,7 @@
 using System.Data;
 using Dapper;
 using SupportAdvance.Common.Clocks;
-using SupportAdvance.SharedKernel.ValueObjects.Audit;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 namespace SupportAdvance.Infrastructure.ORM.Dapper;
 
@@ -35,3 +35,4 @@ public static class DapperTypeHandlerRegistration
         SqlMapper.AddTypeMap(typeof(RowId), DbType.Int64);
     }
 }
+

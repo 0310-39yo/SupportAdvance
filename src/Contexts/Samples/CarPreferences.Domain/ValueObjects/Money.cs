@@ -1,4 +1,5 @@
 namespace SupportAdvance.Contexts.Samples.CarPreferences.Domain.ValueObjects;
+using SupportAdvance.SharedKernel.ValueObjects.Audit;
 
 /// <summary>
 /// 金額を表す ValueObject
@@ -216,3 +217,4 @@ public sealed class Money : IEquatable<Money>, IComparable<Money>
         return left.Amount >= right.Amount;
     }
 }
+

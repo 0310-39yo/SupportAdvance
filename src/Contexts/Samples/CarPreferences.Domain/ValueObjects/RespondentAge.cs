@@ -1,6 +1,7 @@
 using SupportAdvance.SharedKernel.ValueObjects.Abstractions;
 
 namespace SupportAdvance.Contexts.Samples.CarPreferences.Domain.ValueObjects;
+using SupportAdvance.SharedKernel.ValueObjects.Audit;
 
 /// <summary>
 /// 回答者の年齢を表すValueObject
@@ -194,3 +195,4 @@ public sealed class RespondentAge : PrimitiveValueObject<int>, IOptionalValueObj
         }
     }
 }
+

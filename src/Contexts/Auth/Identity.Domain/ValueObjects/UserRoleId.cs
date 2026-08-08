@@ -1,4 +1,4 @@
-using SupportAdvance.SharedKernel.ValueObjects.Audit;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 namespace SupportAdvance.Contexts.Auth.Identity.Domain.ValueObjects;
 
@@ -24,3 +24,4 @@ public class UserRoleId : AggregateId
     /// </summary>
     public static UserRoleId From(Guid value) => new(value);
 }
+

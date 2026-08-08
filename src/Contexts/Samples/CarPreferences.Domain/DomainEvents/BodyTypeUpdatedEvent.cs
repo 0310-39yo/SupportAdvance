@@ -1,9 +1,10 @@
 using SupportAdvance.Common.Clocks;
 using SupportAdvance.Contexts.Samples.CarPreferences.Domain.ValueObjects;
 using SupportAdvance.SharedKernel.Entities;
-using SupportAdvance.SharedKernel.ValueObjects.Audit;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 namespace SupportAdvance.Contexts.Samples.CarPreferences.Domain.DomainEvents;
+using SupportAdvance.SharedKernel.ValueObjects.Audit;
 
 /// <summary>
 /// ユーザーの希望ボディタイプが更新されたイベント
@@ -41,3 +42,5 @@ public sealed class BodyTypeUpdatedEvent : IDomainEvent
         OccurredAt = occurredAt;
     }
 }
+
+

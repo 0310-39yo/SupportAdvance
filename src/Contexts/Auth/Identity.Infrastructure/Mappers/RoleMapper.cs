@@ -4,7 +4,7 @@ using SupportAdvance.Contexts.Auth.Identity.Domain.Entities;
 using SupportAdvance.Contexts.Auth.Identity.Domain.ValueObjects;
 using SupportAdvance.Contexts.Auth.Identity.Infrastructure.DbModels;
 using SupportAdvance.Infrastructure.Mappers;
-using SupportAdvance.SharedKernel.ValueObjects.Audit;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 namespace SupportAdvance.Contexts.Auth.Identity.Infrastructure.Mappers;
 
@@ -50,3 +50,4 @@ public class RoleMapper : IEntityMapper<Role, RoleDbModel, RoleId>
             clock: clock);
     }
 }
+

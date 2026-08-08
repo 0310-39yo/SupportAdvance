@@ -2,6 +2,7 @@ using SupportAdvance.SharedKernel.ValueObjects;
 using SupportAdvance.SharedKernel.ValueObjects.Abstractions;
 
 namespace SupportAdvance.Contexts.Samples.CarPreferences.Domain.ValueObjects;
+using SupportAdvance.SharedKernel.ValueObjects.Audit;
 
 /// <summary>
 /// 車のモデルを表すValueObject
@@ -203,3 +204,4 @@ public sealed class CarModel : EnumValueObject<int>, IOptionalValueObject<CarMod
         _ => throw new ArgumentOutOfRangeException(nameof(ValueField), $"Unknown car model: {ValueField}")
     };
 }
+

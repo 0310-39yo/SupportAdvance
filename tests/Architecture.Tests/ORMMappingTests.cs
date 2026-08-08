@@ -4,7 +4,7 @@ using RepoDb;
 using SupportAdvance.Common.Clocks;
 using SupportAdvance.Infrastructure.ORM.Dapper;
 using SupportAdvance.Infrastructure.ORM.RepoDB;
-using SupportAdvance.SharedKernel.ValueObjects.Audit;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 using Xunit;
 
 namespace Architecture.Tests;
@@ -79,3 +79,4 @@ public class ORMMappingTests
         Assert.Equal(DateTimeKind.Unspecified, value.Kind);
     }
 }
+

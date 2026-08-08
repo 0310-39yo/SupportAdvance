@@ -2,6 +2,7 @@ using SupportAdvance.Common.Clocks;
 using SupportAdvance.SharedKernel.ValueObjects.Abstractions;
 
 namespace SupportAdvance.Contexts.Samples.CarPreferences.Domain.ValueObjects;
+using SupportAdvance.SharedKernel.ValueObjects.Audit;
 
 /// <summary>
 /// 回答日時を表すValueObject
@@ -209,3 +210,4 @@ public sealed class RespondentAt : PrimitiveValueObject<LocalDateTime>,
         }
     }
 }
+

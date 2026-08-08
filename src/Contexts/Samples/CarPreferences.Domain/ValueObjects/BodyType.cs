@@ -1,4 +1,5 @@
 namespace SupportAdvance.Contexts.Samples.CarPreferences.Domain.ValueObjects;
+using SupportAdvance.SharedKernel.ValueObjects.Audit;
 
 /// <summary>
 /// 自動車ボディタイプを表す ValueObject
@@ -129,3 +130,4 @@ public sealed class BodyType : IEquatable<BodyType>
     /// </summary>
     public static bool operator !=(BodyType? left, BodyType? right) => !(left == right);
 }
+

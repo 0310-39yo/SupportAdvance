@@ -3,7 +3,7 @@ using SupportAdvance.Contexts.Master.Employee.Domain.Entities;
 using SupportAdvance.Contexts.Master.Employee.Domain.ValueObjects;
 using SupportAdvance.Contexts.Master.Employee.Infrastructure.DbModels;
 using SupportAdvance.Infrastructure.Mappers;
-using SupportAdvance.SharedKernel.ValueObjects.Audit;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 namespace SupportAdvance.Contexts.Master.Employee.Infrastructure.Mappers;
 
@@ -51,3 +51,4 @@ public class DepartmentMapper : IEntityMapper<Department, DepartmentDbModel, Dep
             clock: clock);
     }
 }
+

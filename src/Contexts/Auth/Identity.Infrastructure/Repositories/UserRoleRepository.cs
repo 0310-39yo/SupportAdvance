@@ -6,7 +6,7 @@ using SupportAdvance.Contexts.Auth.Identity.Infrastructure.DbModels;
 using SupportAdvance.Contexts.Auth.Identity.Infrastructure.Mappers;
 using SupportAdvance.Infrastructure.Repositories;
 using SupportAdvance.Infrastructure.Services;
-using SupportAdvance.SharedKernel.ValueObjects.Audit;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 namespace SupportAdvance.Contexts.Auth.Identity.Infrastructure.Repositories;
 
@@ -45,3 +45,4 @@ public class UserRoleRepository : RepositoryBase<UserRole, UserRoleDbModel, User
         throw new NotImplementedException("Database access layer to be implemented");
     }
 }
+

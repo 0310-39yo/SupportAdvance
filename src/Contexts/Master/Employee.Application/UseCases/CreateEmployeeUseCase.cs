@@ -1,7 +1,7 @@
 using SupportAdvance.Common.Clocks;
 using SupportAdvance.Contexts.Master.Employee.Application.Repositories;
 using SupportAdvance.Contexts.Master.Employee.Domain.ValueObjects;
-using SupportAdvance.SharedKernel.ValueObjects.Audit;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 using EmployeeEntity = SupportAdvance.Contexts.Master.Employee.Domain.Entities.Employee;
 
 namespace SupportAdvance.Contexts.Master.Employee.Application.UseCases;
@@ -61,3 +61,4 @@ public class CreateEmployeeUseCase
         return employee.Id;
     }
 }
+

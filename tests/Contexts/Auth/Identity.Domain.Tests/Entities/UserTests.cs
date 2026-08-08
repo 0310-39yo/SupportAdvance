@@ -1,5 +1,5 @@
 using SupportAdvance.Contexts.Auth.Identity.Domain.Entities;
-using SupportAdvance.SharedKernel.ValueObjects.Audit;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 using Xunit;
 
 namespace SupportAdvance.Contexts.Auth.Identity.Domain.Tests.Entities;
@@ -113,3 +113,4 @@ public class UserTests
             new User("test", "test@example.com", null!));
     }
 }
+

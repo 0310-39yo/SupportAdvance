@@ -1,6 +1,6 @@
 using SupportAdvance.Contexts.Master.Employee.Application.Repositories;
 using SupportAdvance.Contexts.Master.Employee.Domain.ValueObjects;
-using SupportAdvance.SharedKernel.ValueObjects.Audit;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 namespace SupportAdvance.Contexts.Master.Employee.Application.UseCases;
 
@@ -28,3 +28,4 @@ public class TransferEmployeeUseCase
         await _employeeRepository.UpdateAsync(employee);
     }
 }
+

@@ -1,8 +1,9 @@
 using SupportAdvance.Common.Clocks;
 using SupportAdvance.SharedKernel.Entities;
-using SupportAdvance.SharedKernel.ValueObjects.Audit;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 namespace SupportAdvance.Contexts.Samples.CarPreferences.Domain.DomainEvents;
+using SupportAdvance.SharedKernel.ValueObjects.Audit;
 
 /// <summary>
 /// ユーザーの初期好み設定が作成されたイベント
@@ -29,3 +30,5 @@ public sealed class PreferencesCreatedEvent : IDomainEvent
         OccurredAt = occurredAt;
     }
 }
+
+

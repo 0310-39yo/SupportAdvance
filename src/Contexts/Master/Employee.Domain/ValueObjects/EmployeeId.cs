@@ -1,4 +1,4 @@
-using SupportAdvance.SharedKernel.ValueObjects.Audit;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 namespace SupportAdvance.Contexts.Master.Employee.Domain.ValueObjects;
 
@@ -24,3 +24,4 @@ public class EmployeeId : AggregateId
     /// </summary>
     public static EmployeeId From(Guid value) => new(value);
 }
+

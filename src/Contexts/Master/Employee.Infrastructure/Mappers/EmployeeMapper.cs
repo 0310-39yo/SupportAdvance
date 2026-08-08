@@ -2,7 +2,7 @@ using SupportAdvance.Common.Clocks;
 using SupportAdvance.Contexts.Master.Employee.Domain.ValueObjects;
 using SupportAdvance.Contexts.Master.Employee.Infrastructure.DbModels;
 using SupportAdvance.Infrastructure.Mappers;
-using SupportAdvance.SharedKernel.ValueObjects.Audit;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 using EmployeeEntity = SupportAdvance.Contexts.Master.Employee.Domain.Entities.Employee;
 
 namespace SupportAdvance.Contexts.Master.Employee.Infrastructure.Mappers;
@@ -55,3 +55,4 @@ public class EmployeeMapper : IEntityMapper<EmployeeEntity, EmployeeDbModel, Emp
             clock: clock);
     }
 }
+

@@ -1,5 +1,5 @@
 using SupportAdvance.Contexts.Master.Employee.Domain.Entities;
-using SupportAdvance.SharedKernel.ValueObjects.Audit;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 using Xunit;
 
 namespace SupportAdvance.Contexts.Master.Employee.Domain.Tests.Entities;
@@ -103,3 +103,4 @@ public class DepartmentTests
         Assert.Null(department.ParentDepartmentId);
     }
 }
+

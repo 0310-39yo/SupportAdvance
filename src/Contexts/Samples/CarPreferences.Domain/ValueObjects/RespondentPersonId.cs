@@ -2,6 +2,7 @@ using SupportAdvance.SharedKernel.ValueObjects;
 using SupportAdvance.SharedKernel.ValueObjects.Abstractions;
 
 namespace SupportAdvance.Contexts.Samples.CarPreferences.Domain.ValueObjects;
+using SupportAdvance.SharedKernel.ValueObjects.Audit;
 
 /// <summary>
 /// 回答者の個人IDを表すValueObject
@@ -198,3 +199,4 @@ public sealed class RespondentPersonId : PrimitiveValueObject<int>, IOptionalVal
         }
     }
 }
+

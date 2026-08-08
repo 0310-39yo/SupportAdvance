@@ -2,7 +2,7 @@ using SupportAdvance.Common.Clocks;
 using SupportAdvance.Contexts.Auth.Identity.Application.Repositories;
 using SupportAdvance.Contexts.Auth.Identity.Domain.Entities;
 using SupportAdvance.Contexts.Auth.Identity.Domain.ValueObjects;
-using SupportAdvance.SharedKernel.ValueObjects.Audit;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 namespace SupportAdvance.Contexts.Auth.Identity.Application.UseCases;
 
@@ -38,3 +38,4 @@ public class AssignRoleUseCase
         await _userRoleRepository.CreateAsync(userRole);
     }
 }
+

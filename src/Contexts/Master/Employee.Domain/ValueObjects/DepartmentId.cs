@@ -1,4 +1,4 @@
-using SupportAdvance.SharedKernel.ValueObjects.Audit;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 namespace SupportAdvance.Contexts.Master.Employee.Domain.ValueObjects;
 
@@ -24,3 +24,4 @@ public class DepartmentId : AggregateId
     /// </summary>
     public static DepartmentId From(Guid value) => new(value);
 }
+

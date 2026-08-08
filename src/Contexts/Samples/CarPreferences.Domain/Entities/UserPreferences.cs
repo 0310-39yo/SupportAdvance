@@ -2,10 +2,11 @@ using SupportAdvance.Common.Clocks;
 using SupportAdvance.Contexts.Samples.CarPreferences.Domain.DomainEvents;
 using SupportAdvance.Contexts.Samples.CarPreferences.Domain.ValueObjects;
 using SupportAdvance.SharedKernel.Entities;
-using SupportAdvance.SharedKernel.ValueObjects.Audit;
-using SupportAdvance.SharedKernel.ValueObjects.Audit;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 namespace SupportAdvance.Contexts.Samples.CarPreferences.Domain.Entities;
+using SupportAdvance.SharedKernel.ValueObjects.Audit;
 
 /// <summary>
 /// ユーザーの自動車関連の好みを管理する AggregateRoot
@@ -338,3 +339,5 @@ public class UserPreferences : AggregateRoot<UserPreferencesId>
         _rowId = rowId;
     }
 }
+
+

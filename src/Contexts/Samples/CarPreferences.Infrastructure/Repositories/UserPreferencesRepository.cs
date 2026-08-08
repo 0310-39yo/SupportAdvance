@@ -8,7 +8,7 @@ using SupportAdvance.Contexts.Samples.CarPreferences.Infrastructure.DataAccess.M
 using SupportAdvance.Contexts.Samples.CarPreferences.Infrastructure.Mappers;
 using SupportAdvance.Infrastructure.Repositories;
 using SupportAdvance.Infrastructure.Services;
-using SupportAdvance.SharedKernel.ValueObjects.Audit;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 namespace SupportAdvance.Contexts.Samples.CarPreferences.Infrastructure.Repositories;
 
@@ -147,3 +147,4 @@ public class UserPreferencesRepository
             .AsReadOnly();
     }
 }
+

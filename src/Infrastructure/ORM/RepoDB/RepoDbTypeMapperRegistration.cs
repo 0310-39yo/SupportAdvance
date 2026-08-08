@@ -1,7 +1,7 @@
 using System.Data;
 using RepoDb;
 using SupportAdvance.Common.Clocks;
-using SupportAdvance.SharedKernel.ValueObjects.Audit;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 namespace SupportAdvance.Infrastructure.ORM.RepoDB;
 
@@ -30,3 +30,4 @@ public static class RepoDbTypeMapperRegistration
         TypeMapper.Add<RowId>(DbType.Int64, true);
     }
 }
+

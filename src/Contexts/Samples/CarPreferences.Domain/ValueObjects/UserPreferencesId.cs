@@ -1,6 +1,7 @@
-using SupportAdvance.SharedKernel.ValueObjects.Audit;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 namespace SupportAdvance.Contexts.Samples.CarPreferences.Domain.ValueObjects;
+using SupportAdvance.SharedKernel.ValueObjects.Audit;
 
 /// <summary>
 /// ユーザー好み設定を識別する ID（GUID ベース）
@@ -27,3 +28,5 @@ public class UserPreferencesId : AggregateId
     /// </summary>
     public static UserPreferencesId From(Guid value) => new(value);
 }
+
+

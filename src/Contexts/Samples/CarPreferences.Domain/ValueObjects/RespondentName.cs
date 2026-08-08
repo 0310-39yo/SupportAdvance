@@ -1,6 +1,7 @@
 using SupportAdvance.SharedKernel.ValueObjects.Abstractions;
 
 namespace SupportAdvance.Contexts.Samples.CarPreferences.Domain.ValueObjects;
+using SupportAdvance.SharedKernel.ValueObjects.Audit;
 
 /// <summary>
 /// 回答者の名前を表すValueObject
@@ -170,3 +171,4 @@ public sealed class RespondentName : PrimitiveValueObject<string>, IOptionalValu
     /// <returns>等価である場合は true、そうでない場合は false</returns>
     public override bool Equals(object? obj) => Equals(obj as RespondentName);
 }
+

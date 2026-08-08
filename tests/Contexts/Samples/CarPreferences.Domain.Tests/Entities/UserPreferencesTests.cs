@@ -1,7 +1,7 @@
 using SupportAdvance.Common.Clocks;
 using SupportAdvance.Contexts.Samples.CarPreferences.Domain.Entities;
 using SupportAdvance.Contexts.Samples.CarPreferences.Domain.ValueObjects;
-using SupportAdvance.SharedKernel.ValueObjects.Audit;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 using SupportAdvance.SharedKernel.ValueObjects.Audit;
 
 namespace SupportAdvance.Tests.Contexts.Samples.CarPreferences.Domain.Tests.Entities;
@@ -173,3 +173,4 @@ public sealed class UserPreferencesTests
         Assert.False(entity.IsDeleted);
     }
 }
+

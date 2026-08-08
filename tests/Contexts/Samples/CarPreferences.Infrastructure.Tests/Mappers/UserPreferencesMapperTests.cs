@@ -3,8 +3,8 @@ using SupportAdvance.Contexts.Samples.CarPreferences.Domain.Entities;
 using SupportAdvance.Contexts.Samples.CarPreferences.Domain.ValueObjects;
 using SupportAdvance.Contexts.Samples.CarPreferences.Infrastructure.DataAccess.Models;
 using SupportAdvance.Contexts.Samples.CarPreferences.Infrastructure.Mappers;
-using SupportAdvance.SharedKernel.ValueObjects.Audit;
-using SupportAdvance.SharedKernel.ValueObjects.Audit;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 namespace SupportAdvance.Tests.Contexts.Samples.CarPreferences.Infrastructure.Tests.Mappers;
 
@@ -310,3 +310,4 @@ public sealed class UserPreferencesMapperTests
         }
     }
 }
+

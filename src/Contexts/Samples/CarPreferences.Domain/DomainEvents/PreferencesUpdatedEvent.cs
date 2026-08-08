@@ -1,8 +1,9 @@
 using SupportAdvance.Common.Clocks;
 using SupportAdvance.SharedKernel.Entities;
-using SupportAdvance.SharedKernel.ValueObjects.Audit;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 namespace SupportAdvance.Contexts.Samples.CarPreferences.Domain.DomainEvents;
+using SupportAdvance.SharedKernel.ValueObjects.Audit;
 
 /// <summary>
 /// ユーザーの好み設定が更新されたイベント
@@ -65,3 +66,5 @@ public enum PreferenceChangeType
     /// <summary>トランスミッション希望が変更</summary>
     TransmissionUpdated = 4
 }
+
+
