@@ -69,8 +69,8 @@ RespondentAt の各メンバーが以下を満たすことを確認：
 | VO-CLK-01 | 過去日は検証成功、IsSet=true で返す | 正常系 | 技術仕様書 § 2.3 |
 | VO-CLK-02 | 現在日時は検証成功、IsSet=true で返す | 正常系 | 技術仕様書 § 2.3 |
 | VO-CLK-03 | 未来日は ArgumentException をスロー | 異常系 | 技術仕様書 § 2.3 |
-| VO-CLK-04 | DateTime.MinValue は ArgumentException をスロー | 異常系 | 技術仕様書 § 2.3 |
-| VO-CLK-05 | DateTime.MaxValue は ArgumentException をスロー | 異常系 | 技術仕様書 § 2.3 |
+| VO-CLK-04 | LocalDateTime.MinValue は ArgumentException をスロー | 異常系 | 技術仕様書 § 2.3 |
+| VO-CLK-05 | LocalDateTime.MaxValue は ArgumentException をスロー | 異常系 | 技術仕様書 § 2.3 |
 
 ### グループ OPT：`IOptionalValidateWithClock` メソッド
 
@@ -143,7 +143,7 @@ RespondentAt の各メンバーが以下を満たすことを確認：
 | 観点ID | 観点（説明） | 分類 | 依拠仕様 |
 |--------|------|------|---------|
 | VO-VAL-01 | IsSet=true の場合、ValueField（DateTime 値）を返す | 正常系 | 詳細設計書 § 3.7 |
-| VO-VAL-02 | IsSet=false の場合、DateTime.MinValue を返す | 正常系 | 詳細設計書 § 3.7 |
+| VO-VAL-02 | IsSet=false の場合、LocalDateTime.MinValue を返す | 正常系 | 詳細設計書 § 3.7 |
 | VO-VAL-03 | Value プロパティの戻り値型は DateTime（nullable ではない） | 正常系 | 詳細設計書 § 3.7 |
 
 ---
@@ -172,8 +172,8 @@ RespondentAt の各メンバーが以下を満たすことを確認：
 - From(過去日, clock) → 成功、IsSet=true
 - From(現在日時, clock) → 成功、IsSet=true
 - From(未来日, clock) → ArgumentException
-- From(DateTime.MinValue, clock) → ArgumentException
-- From(DateTime.MaxValue, clock) → ArgumentException
+- From(LocalDateTime.MinValue, clock) → ArgumentException
+- From(LocalDateTime.MaxValue, clock) → ArgumentException
 
 **期待結果**: 各ケースが仕様通りの結果を返す
 
@@ -356,8 +356,8 @@ Assert.Throws<ArgumentException>(() => RespondentAt.From(futureDate, clock));  /
 | **有効な過去日** | 2026-07-08 10:00:00 | 正常系テスト |
 | **現在日時** | 2026-07-08 12:00:00（Clock で固定） | 正常系テスト |
 | **有効な未来日** | 2026-07-08 14:00:00 | 異常系テスト（未来日チェック） |
-| **MinValue** | DateTime.MinValue | 異常系テスト |
-| **MaxValue** | DateTime.MaxValue | 異常系テスト |
+| **MinValue** | LocalDateTime.MinValue | 異常系テスト |
+| **MaxValue** | LocalDateTime.MaxValue | 異常系テスト |
 | **別の有効値** | 2026-06-01 09:30:00 | 非等価性テスト |
 
 ---

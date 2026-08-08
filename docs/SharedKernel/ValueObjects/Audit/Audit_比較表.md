@@ -71,8 +71,8 @@
 | 検証項目 | CreatedAt | UpdatedAt | DeletedAt |
 |---|---|---|---|
 | **null** | 許可しない（必須） | 許可しない（必須） | 許可（未削除状態） |
-| **DateTime.MinValue** | 除外 | 除外 | 除外 |
-| **DateTime.MaxValue** | 除外 | 除外 | 除外 |
+| **LocalDateTime.MinValue** | 除外 | 除外 | 除外 |
+| **LocalDateTime.MaxValue** | 除外 | 除外 | 除外 |
 | **過去の日時** | 許可 | 許可 | 許可 |
 | **未来の日時** | 許可 | 許可 | 許可 |
 | **クロック源** | IClock（JST=Unspecified） | IClock（JST=Unspecified） | IClock（JST=Unspecified） |

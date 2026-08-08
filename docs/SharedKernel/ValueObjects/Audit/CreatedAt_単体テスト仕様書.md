@@ -65,14 +65,14 @@ Assert.Equal(new DateTime(2025, 1, 15, 10, 30, 0), createdAt.Value);
 Assert.True(createdAt.IsSet);
 ```
 
-#### TC-From-002: DateTime.MinValue で ArgumentException がスローされる
+#### TC-From-002: LocalDateTime.MinValue で ArgumentException がスローされる
 
 **前提条件:**
 - テスト対象: `CreatedAt.From(LocalDateTime)`
-- 入力: LocalDateTime(DateTime.MinValue)
+- 入力: LocalDateTime(LocalDateTime.MinValue)
 
 **テスト手順:**
-1. `DateTime.MinValue` を含む LocalDateTime を作成
+1. `LocalDateTime.MinValue` を含む LocalDateTime を作成
 2. `CreatedAt.From(localDateTime)` を呼び出す
 3. ArgumentException がスローされることを確認
 4. 例外メッセージに "MinValue" を含む
@@ -80,25 +80,25 @@ Assert.True(createdAt.IsSet);
 **期待結果:**
 ```csharp
 var exception = Assert.Throws<ArgumentException>(() =>
-    CreatedAt.From(new LocalDateTime(DateTime.MinValue)));
+    CreatedAt.From(new LocalDateTime(LocalDateTime.MinValue)));
 Assert.Contains("MinValue", exception.Message);
 ```
 
-#### TC-From-003: DateTime.MaxValue で ArgumentException がスローされる
+#### TC-From-003: LocalDateTime.MaxValue で ArgumentException がスローされる
 
 **前提条件:**
 - テスト対象: `CreatedAt.From(LocalDateTime)`
-- 入力: LocalDateTime(DateTime.MaxValue)
+- 入力: LocalDateTime(LocalDateTime.MaxValue)
 
 **テスト手順:**
-1. `DateTime.MaxValue` を含む LocalDateTime を作成
+1. `LocalDateTime.MaxValue` を含む LocalDateTime を作成
 2. `CreatedAt.From(localDateTime)` を呼び出す
 3. ArgumentException がスローされることを確認
 
 **期待結果:**
 ```csharp
 var exception = Assert.Throws<ArgumentException>(() =>
-    CreatedAt.From(new LocalDateTime(DateTime.MaxValue)));
+    CreatedAt.From(new LocalDateTime(LocalDateTime.MaxValue)));
 Assert.Contains("MaxValue", exception.Message);
 ```
 
@@ -145,7 +145,7 @@ Assert.Equal(new DateTime(2025, 1, 15, 10, 30, 0), result.Value);
 
 **期待結果:**
 ```csharp
-bool success = CreatedAt.TryFrom(new LocalDateTime(DateTime.MinValue), out var result);
+bool success = CreatedAt.TryFrom(new LocalDateTime(LocalDateTime.MinValue), out var result);
 Assert.False(success);
 ```
 
@@ -153,7 +153,7 @@ Assert.False(success);
 
 **期待結果:**
 ```csharp
-bool success = CreatedAt.TryFrom(new LocalDateTime(DateTime.MaxValue), out var result);
+bool success = CreatedAt.TryFrom(new LocalDateTime(LocalDateTime.MaxValue), out var result);
 Assert.False(success);
 ```
 
@@ -315,26 +315,26 @@ Assert.Equal("first", dict[key]);
 
 ## 5. 検証テスト
 
-#### TC-Validate-MinValue-001: DateTime.MinValue は除外される
+#### TC-Validate-MinValue-001: LocalDateTime.MinValue は除外される
 
 ```csharp
 var ex = Assert.Throws<ArgumentException>(() =>
-    CreatedAt.From(new LocalDateTime(DateTime.MinValue)));
+    CreatedAt.From(new LocalDateTime(LocalDateTime.MinValue)));
 Assert.Contains("MinValue", ex.Message);
 ```
 
-#### TC-Validate-MaxValue-001: DateTime.MaxValue は除外される
+#### TC-Validate-MaxValue-001: LocalDateTime.MaxValue は除外される
 
 ```csharp
 var ex = Assert.Throws<ArgumentException>(() =>
-    CreatedAt.From(new LocalDateTime(DateTime.MaxValue)));
+    CreatedAt.From(new LocalDateTime(LocalDateTime.MaxValue)));
 Assert.Contains("MaxValue", ex.Message);
 ```
 
 #### TC-Validate-ValidRange-001: 最小有効値で生成できる
 
 ```csharp
-var minValid = DateTime.MinValue.AddTicks(1);
+var minValid = LocalDateTime.MinValue.AddTicks(1);
 var clock = new MockClock(minValid);
 var createdAt = CreatedAt.From(clock.JstNow);
 Assert.Equal(minValid, createdAt.Value);
@@ -343,7 +343,7 @@ Assert.Equal(minValid, createdAt.Value);
 #### TC-Validate-ValidRange-002: 最大有効値で生成できる
 
 ```csharp
-var maxValid = DateTime.MaxValue.AddTicks(-1);
+var maxValid = LocalDateTime.MaxValue.AddTicks(-1);
 var clock = new MockClock(maxValid);
 var createdAt = CreatedAt.From(clock.JstNow);
 Assert.Equal(maxValid, createdAt.Value);

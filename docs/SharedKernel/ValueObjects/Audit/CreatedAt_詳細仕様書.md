@@ -79,7 +79,7 @@ From(LocalDateTime value)  ← IClock.JstNow から取得
 ```
 
 **例外処理:**
-- `ArgumentException` : DateTime.MinValue または DateTime.MaxValue の場合
+- `ArgumentException` : LocalDateTime.MinValue または LocalDateTime.MaxValue の場合
 
 **使用シーン:**
 - Entity 生成時に IClock から取得した現在時刻を記録: `CreatedAt.From(_clock.JstNow)`
@@ -221,10 +221,10 @@ protected override void Validate(DateTime normalized)
 {
     base.Validate(normalized);
 
-    if (normalized == DateTime.MinValue || normalized == DateTime.MaxValue)
+    if (normalized == LocalDateTime.MinValue || normalized == LocalDateTime.MaxValue)
     {
         throw new ArgumentException(
-            $"CreatedAt must be a valid system timestamp, not {nameof(DateTime.MinValue)} or {nameof(DateTime.MaxValue)}."
+            $"CreatedAt must be a valid system timestamp, not {nameof(LocalDateTime.MinValue)} or {nameof(LocalDateTime.MaxValue)}."
         );
     }
 }
@@ -237,17 +237,17 @@ Validate(DateTime normalized)
   ↓
   base.Validate(normalized)  [基底クラスの検証]
   ↓
-  normalized == DateTime.MinValue ?
+  normalized == LocalDateTime.MinValue ?
     ├─ true → ArgumentException スロー
     └─ false
       ↓
-      normalized == DateTime.MaxValue ?
+      normalized == LocalDateTime.MaxValue ?
         ├─ true → ArgumentException スロー
         └─ false → OK
 ```
 
 **検証の意図:**
-- DateTime.MinValue/MaxValue は「無効な日時」として扱う
+- LocalDateTime.MinValue/MaxValue は「無効な日時」として扱う
 - 実用的な日時範囲（0001-01-01 00:00:01 ～ 9999-12-31 23:59:58）のみを受け入れ
 - ドメイン固有ルールの実装例
 

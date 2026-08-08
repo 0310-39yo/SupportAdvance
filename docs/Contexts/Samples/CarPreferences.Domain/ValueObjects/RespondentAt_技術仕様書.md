@@ -32,7 +32,7 @@
 
 | ルール | 詳細 |
 |---|---|
-| **基本検証** | `DateTime.MinValue`、`DateTime.MaxValue` は不許可（無効な時刻表現） |
+| **基本検証** | `LocalDateTime.MinValue`、`LocalDateTime.MaxValue` は不許可（無効な時刻表現） |
 | **未来日禁止** | 回答日時は常に過去であるべき（現在時刻より後は不許可） |
 | **Clock 依存性** | ビジネスロジック検証は Clock インターフェース経由で現在時刻を取得 |
 | **未設定状態の共有** | `Unset()` で生成した複数のインスタンスは等価（値が等しい） |
@@ -65,11 +65,11 @@ var respondentAt = RespondentAt.From(new DateTime(2026, 7, 8, 10, 30, 0), clock)
 DateTime dt = respondentAt.Value;  // 2026-07-08 10:30:00
 
 var unset = RespondentAt.Unset();
-DateTime value = unset.Value;  // DateTime.MinValue（注意）
+DateTime value = unset.Value;  // LocalDateTime.MinValue（注意）
 ```
 
 **特性:**
-- IsSet=true なら値、false なら DateTime.MinValue を返す
+- IsSet=true なら値、false なら LocalDateTime.MinValue を返す
 - Domain ロジック内で IsSet が既知の場合に使用
 - イミュータビリティのため get のみ
 
@@ -125,7 +125,7 @@ Assert.Equal(dt, respondentAt.Value);
 ```
 
 **例外:**
-- `ArgumentException`: DateTime.MinValue / DateTime.MaxValue が渡された場合
+- `ArgumentException`: LocalDateTime.MinValue / LocalDateTime.MaxValue が渡された場合
 - `ArgumentException`: 未来日（現在時刻より後）が渡された場合
 
 **【重要】検証の二段階実施:**
@@ -137,7 +137,7 @@ Assert.Equal(dt, respondentAt.Value);
 
 ```csharp
 // 基本検証に失敗
-RespondentAt.From(DateTime.MinValue, clock);  // → ArgumentException
+RespondentAt.From(LocalDateTime.MinValue, clock);  // → ArgumentException
 
 // ビジネス検証に失敗
 var futureDate = DateTime.UtcNow.AddHours(1);
@@ -164,7 +164,7 @@ Assert.True(instance.IsSet);
 Assert.Equal(dt, instance.Value);
 
 // 無効な値 → Unset を返す（false）
-bool success = RespondentAt.TryFrom(DateTime.MaxValue, clock, out var unset);
+bool success = RespondentAt.TryFrom(LocalDateTime.MaxValue, clock, out var unset);
 Assert.False(success);
 Assert.False(unset.IsSet);
 ```
@@ -196,7 +196,7 @@ Assert.False(unset.IsSet);
 // MinValue/MaxValue チェック
 try
 {
-    RespondentAt.From(DateTime.MinValue, clock);
+    RespondentAt.From(LocalDateTime.MinValue, clock);
 }
 catch (ArgumentException ex)
 {
@@ -205,8 +205,8 @@ catch (ArgumentException ex)
 ```
 
 **検証内容:**
-- `DateTime.MinValue` の除外
-- `DateTime.MaxValue` の除外
+- `LocalDateTime.MinValue` の除外
+- `LocalDateTime.MaxValue` の除外
 
 **【重要】Clock を必要としない理由:**
 - DateTime の形式的な有効性のチェックのため、現在時刻は不要

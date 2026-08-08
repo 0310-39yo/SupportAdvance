@@ -28,7 +28,7 @@ public interface IValidatable<TValue>
 ### 1.2 責務
 
 - **形式検証** — Clock に依存しない基本的な制約チェック
-- **型の有効性チェック** — `DateTime.MinValue/MaxValue` など不正な値の除外
+- **型の有効性チェック** — `LocalDateTime.MinValue/MaxValue` など不正な値の除外
 - **範囲チェック** — 年齢 0～150 など基本的な範囲制限
 - **例外の発行** — 検証失敗時に適切な例外をスロー
 
@@ -57,7 +57,7 @@ public interface IValidatable<TValue>
 
 | 値の型 | 検証項目 |
 |-------|---------|
-| `DateTime` | `DateTime.MinValue` / `MaxValue` の除外 |
+| `DateTime` | `LocalDateTime.MinValue` / `MaxValue` の除外 |
 | `int`（年齢） | 0～150 の範囲内か |
 | `string` | null または空文字列の除外、長さ制限 |
 | `decimal`（金額） | 負数の除外、小数点以下の精度 |
@@ -259,7 +259,7 @@ public sealed class RespondentAt : PrimitiveValueObject<DateTime>,
     // 形式検証（Clock 不要）
     public override void Validate(DateTime normalized)
     {
-        if (normalized == DateTime.MinValue || normalized == DateTime.MaxValue)
+        if (normalized == LocalDateTime.MinValue || normalized == LocalDateTime.MaxValue)
             throw new ArgumentException("有効な日時ではありません。");
     }
 

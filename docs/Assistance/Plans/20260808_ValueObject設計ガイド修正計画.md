@@ -85,7 +85,7 @@ Assert.IsFalse(unset.TryGetValue(out _));  // 取得失敗
 - IsSet=false：その型のデフォルト値
   - string/DateTime? → null
   - int → 0
-  - DateTime → DateTime.MinValue
+  - DateTime → LocalDateTime.MinValue
 
 **等価性判定:**
 ```csharp
@@ -119,7 +119,7 @@ public sealed class CreatedAt : PrimitiveValueObject<DateTime>, IEquatable<Creat
 
     public override void Validate(DateTime normalized)
     {
-        if (normalized == DateTime.MinValue || normalized == DateTime.MaxValue)
+        if (normalized == LocalDateTime.MinValue || normalized == LocalDateTime.MaxValue)
             throw new ArgumentException("有効な日時ではありません。");
     }
 

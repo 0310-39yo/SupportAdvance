@@ -129,7 +129,7 @@ public sealed class RespondentAt : PrimitiveValueObject<DateTime>
     // 形式検証（Clock 不要）
     public override void Validate(DateTime dt)
     {
-        if (dt == DateTime.MinValue || dt == DateTime.MaxValue)
+        if (dt == LocalDateTime.MinValue || dt == LocalDateTime.MaxValue)
             throw new ArgumentException("有効な日時ではありません。");
     }
 
@@ -235,7 +235,7 @@ public sealed class RespondentAt : PrimitiveValueObject<DateTime>,
     // 形式検証
     public override void Validate(DateTime dt)
     {
-        if (dt == DateTime.MinValue || dt == DateTime.MaxValue)
+        if (dt == LocalDateTime.MinValue || dt == LocalDateTime.MaxValue)
             throw new ArgumentException("有効な日時ではありません。");
     }
 

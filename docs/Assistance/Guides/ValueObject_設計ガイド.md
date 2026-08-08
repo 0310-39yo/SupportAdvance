@@ -132,8 +132,8 @@ public sealed class CreatedAt : PrimitiveValueObject<DateTime>, IEquatable<Creat
 
     public override void Validate(DateTime normalized)
     {
-        // DateTime.MinValue / MaxValue は除外
-        if (normalized == DateTime.MinValue || normalized == DateTime.MaxValue)
+        // LocalDateTime.MinValue / MaxValue は除外
+        if (normalized == LocalDateTime.MinValue || normalized == LocalDateTime.MaxValue)
         {
             throw new ArgumentException("CreatedAt must be a valid system timestamp.");
         }
@@ -1068,10 +1068,10 @@ public sealed class CreatedAt : PrimitiveValueObject<DateTime>, IEquatable<Creat
 
     public DateTime Value => ValueField;
 
-    public override void Validate(DateTime normalized)
+    public override void Validate(LocalDateTime normalized)
     {
         base.Validate(normalized);
-        if (normalized == DateTime.MinValue || normalized == DateTime.MaxValue)
+        if (normalized == LocalDateTime.MinValue || normalized == LocalDateTime.MaxValue)
             throw new ArgumentException("有効な日時ではありません。");
     }
 

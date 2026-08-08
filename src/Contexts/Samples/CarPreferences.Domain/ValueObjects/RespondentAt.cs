@@ -129,9 +129,9 @@ public sealed class RespondentAt : PrimitiveValueObject<LocalDateTime>,
     /// 保持する LocalDateTime 値を取得する
     /// </summary>
     /// <remarks>
-    /// IsSet=true の場合は LocalDateTime 値を返し、IsSet=false の場合は new LocalDateTime(DateTime.MinValue) を返す
+    /// IsSet=true の場合は LocalDateTime 値を返し、IsSet=false の場合は LocalDateTime.MinValue を返す
     /// </remarks>
-    public LocalDateTime Value => IsSet ? ValueField : new LocalDateTime(DateTime.MinValue);
+    public LocalDateTime Value => IsSet ? ValueField : LocalDateTime.MinValue;
 
     /// <summary>
     /// 指定されたオブジェクトと等価かどうかを判定する
@@ -194,9 +194,9 @@ public sealed class RespondentAt : PrimitiveValueObject<LocalDateTime>,
     {
         base.Validate(normalized);
 
-        if (normalized.Value == DateTime.MinValue || normalized.Value == DateTime.MaxValue)
+        if (normalized == LocalDateTime.MinValue || normalized == LocalDateTime.MaxValue)
         {
-            throw new ArgumentException($"RespondentAt must be a valid system timestamp, not {nameof(DateTime.MinValue)} or {nameof(DateTime.MaxValue)}.");
+            throw new ArgumentException($"RespondentAt must be a valid system timestamp, not {nameof(LocalDateTime.MinValue)} or {nameof(LocalDateTime.MaxValue)}.");
         }
     }
 }

@@ -44,14 +44,14 @@ public class CreatedAtTests
     public void From_WithMinValue_ThrowsArgumentException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentException>(() => CreatedAt.From(new LocalDateTime(DateTime.MinValue)));
+        Assert.Throws<ArgumentException>(() => CreatedAt.From(LocalDateTime.MinValue));
     }
 
     [Fact]
     public void From_WithMaxValue_ThrowsArgumentException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentException>(() => CreatedAt.From(new LocalDateTime(DateTime.MaxValue)));
+        Assert.Throws<ArgumentException>(() => CreatedAt.From(LocalDateTime.MaxValue));
     }
 
     [Fact]
@@ -239,7 +239,7 @@ public class CreatedAtTests
     public void TryFrom_WithMinValue_ReturnsFalse()
     {
         // Act
-        bool success = CreatedAt.TryFrom(new LocalDateTime(DateTime.MinValue), out var createdAt);
+        bool success = CreatedAt.TryFrom(LocalDateTime.MinValue, out var createdAt);
 
         // Assert
         Assert.False(success);
@@ -250,7 +250,7 @@ public class CreatedAtTests
     public void TryFrom_WithMaxValue_ReturnsFalse()
     {
         // Act
-        bool success = CreatedAt.TryFrom(new LocalDateTime(DateTime.MaxValue), out var createdAt);
+        bool success = CreatedAt.TryFrom(LocalDateTime.MaxValue, out var createdAt);
 
         // Assert
         Assert.False(success);
@@ -280,7 +280,7 @@ public class CreatedAtTests
     public void TryFrom_NonNullable_WithMinValue_ReturnsFalse()
     {
         // Act
-        bool success = CreatedAt.TryFrom(new LocalDateTime(DateTime.MinValue), out var createdAt);
+        bool success = CreatedAt.TryFrom(LocalDateTime.MinValue, out var createdAt);
 
         // Assert
         Assert.False(success);

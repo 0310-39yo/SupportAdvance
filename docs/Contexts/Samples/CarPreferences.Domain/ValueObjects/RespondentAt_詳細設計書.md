@@ -109,7 +109,7 @@ public DateTime Value => ValueField;
 
 **実装詳細:**
 - IsSet=true なら ValueField（DateTime 値）を返す
-- IsSet=false なら DateTime.MinValue を返す（注意：null でない）
+- IsSet=false なら LocalDateTime.MinValue を返す（注意：null でない）
 - イミュータビリティのため get のみ（セッター不可）
 
 **設計判断:**
@@ -122,7 +122,7 @@ var respondentAt = RespondentAt.From(new DateTime(2026, 7, 8, 10, 30, 0), clock)
 DateTime dt = respondentAt.Value;  // 2026-07-08 10:30:00
 
 var unset = RespondentAt.Unset();
-DateTime value = unset.Value;  // DateTime.MinValue（注意）
+DateTime value = unset.Value;  // LocalDateTime.MinValue（注意）
 ```
 
 ### 2.2.3 Value と TryGetValue() の比較表
@@ -178,7 +178,7 @@ new RespondentAt(false) の呼び出し
   ↓
 PrimitiveValueObject(bool isSet=false) の基本コンストラクタ
   ├─ IsSet = false
-  └─ ValueField = default!（DateTime.MinValue）
+  └─ ValueField = default!（LocalDateTime.MinValue）
 ```
 
 **使用例:**
@@ -218,14 +218,14 @@ new RespondentAt(value, true) の呼び出し
 ```
 
 **例外処理:**
-- `ArgumentException`: DateTime.MinValue / DateTime.MaxValue
+- `ArgumentException`: LocalDateTime.MinValue / LocalDateTime.MaxValue
 - `ArgumentException`: 未来日（現在時刻より後）
 
 ```csharp
 // 例外シナリオ
 try
 {
-    RespondentAt.From(DateTime.MinValue, clock);
+    RespondentAt.From(LocalDateTime.MinValue, clock);
 }
 catch (ArgumentException ex)
 {
@@ -320,7 +320,7 @@ Assert.True(success);  // true
 Assert.True(instance.IsSet);
 
 // 無効な値
-bool success = RespondentAt.TryFrom(DateTime.MaxValue, clock, out var unset);
+bool success = RespondentAt.TryFrom(LocalDateTime.MaxValue, clock, out var unset);
 Assert.False(success);  // false（検証失敗）
 Assert.False(unset.IsSet);
 ```
@@ -353,10 +353,10 @@ public override void Validate(DateTime normalized)
 {
     base.Validate(normalized);
 
-    if (normalized == DateTime.MinValue || normalized == DateTime.MaxValue)
+    if (normalized == LocalDateTime.MinValue || normalized == LocalDateTime.MaxValue)
     {
         throw new ArgumentException(
-            $"RespondentAt must be a valid system timestamp, not {nameof(DateTime.MinValue)} or {nameof(DateTime.MaxValue)}.");
+            $"RespondentAt must be a valid system timestamp, not {nameof(LocalDateTime.MinValue)} or {nameof(LocalDateTime.MaxValue)}.");
     }
 }
 ```
@@ -364,8 +364,8 @@ public override void Validate(DateTime normalized)
 **役割:** 基本検証 — DateTime 形式の妥当性をチェック
 
 **検証内容:**
-- `DateTime.MinValue` の除外
-- `DateTime.MaxValue` の除外
+- `LocalDateTime.MinValue` の除外
+- `LocalDateTime.MaxValue` の除外
 
 **呼び出しタイミング:**
 - `PrimitiveValueObject` の基本コンストラクタから自動実行
@@ -737,7 +737,7 @@ var respondentAt = RespondentAt.From(new DateTime(2026, 7, 8, 10, 0, 0), mockClo
 // 現在時刻を 12:00:00 に固定して検証実施
 ```
 
-### 7.2 DateTime.MinValue/MaxValue の除外理由
+### 7.2 LocalDateTime.MinValue/MaxValue の除外理由
 
 **理由:**
 - これらの値は有効なシステムタイムスタンプでない

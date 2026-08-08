@@ -89,7 +89,7 @@ From(LocalDateTime value)  ← IClock.JstNow から取得
 ```
 
 **例外処理:**
-- `ArgumentException` : DateTime.MinValue または DateTime.MaxValue の場合
+- `ArgumentException` : LocalDateTime.MinValue または LocalDateTime.MaxValue の場合
 
 **使用シーン:**
 - Entity を論理削除: `entity.DeletedAt = DeletedAt.From(_clock.JstNow)`（Entity が IClock を DI 受け取り）
@@ -297,10 +297,10 @@ protected override void Validate(DateTime? normalized)
         return;
 
     // 有効な DateTime のみ検証
-    if (normalized == DateTime.MinValue || normalized == DateTime.MaxValue)
+    if (normalized == LocalDateTime.MinValue || normalized == LocalDateTime.MaxValue)
     {
         throw new ArgumentException(
-            $"DeletedAt must be a valid system timestamp, not {nameof(DateTime.MinValue)} or {nameof(DateTime.MaxValue)}."
+            $"DeletedAt must be a valid system timestamp, not {nameof(LocalDateTime.MinValue)} or {nameof(LocalDateTime.MaxValue)}."
         );
     }
 }
@@ -317,18 +317,18 @@ Validate(DateTime? normalized)
     ├─ true → OK（未削除状態）
     └─ false
       ↓
-      normalized == DateTime.MinValue ?
+      normalized == LocalDateTime.MinValue ?
         ├─ true → ArgumentException スロー
         └─ false
           ↓
-          normalized == DateTime.MaxValue ?
+          normalized == LocalDateTime.MaxValue ?
             ├─ true → ArgumentException スロー
             └─ false → OK
 ```
 
 **検証の意図:**
 - null は許可（未削除状態の正当な表現）
-- DateTime.MinValue/MaxValue は「無効な日時」として扱う
+- LocalDateTime.MinValue/MaxValue は「無効な日時」として扱う
 - 実用的な日時範囲（0001-01-01 00:00:01 ～ 9999-12-31 23:59:58）のみを受け入れ
 - ドメイン固有ルールの実装例
 

@@ -343,8 +343,8 @@ public static bool TryFromDbValue(DateTime? input, out UpdatedAt result)
 
 ```csharp
 public static UpdatedAt Unset()
-    => new(new LocalDateTime(DateTime.MinValue), false);
-    //   ─────────────────────────────────────  ──────
+    => new(LocalDateTime.MinValue, false);
+    //   ──────────────────────  ──────
     //   Value は null ではなくデフォルト値     IsSet = false で「未設定」を表現
 ```
 

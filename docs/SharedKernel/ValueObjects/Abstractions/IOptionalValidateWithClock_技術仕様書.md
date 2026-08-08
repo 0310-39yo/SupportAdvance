@@ -151,7 +151,7 @@ public static RespondentAt From(DateTime value, IClock clock)
 try
 {
     // Validate で例外（形式チェック失敗）
-    var respondentAt = RespondentAt.From(DateTime.MinValue, clock);
+    var respondentAt = RespondentAt.From(LocalDateTime.MinValue, clock);
 }
 catch (ArgumentException ex)
 {
@@ -310,7 +310,7 @@ public sealed class RespondentAt : PrimitiveValueObject<DateTime>,
     public override void Validate(DateTime dt)
     {
         // 形式検証（Clock 不要）
-        if (dt == DateTime.MinValue || dt == DateTime.MaxValue)
+        if (dt == LocalDateTime.MinValue || dt == LocalDateTime.MaxValue)
             throw new ArgumentException("有効な日時ではありません。");
     }
 

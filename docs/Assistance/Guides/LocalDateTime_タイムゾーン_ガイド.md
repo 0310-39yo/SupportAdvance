@@ -22,7 +22,7 @@ SupportAdvance は **日本標準時（JST / UTC+9）** のみで動作します
 |---|---|---|---|
 | **アプリケーション層** | LocalDateTime | IClock.JstNow | var now = _clock.JstNow; |
 | **Entity** | LocalDateTime | コンストラクタで受け取り | new Entity(rowId, ..., clock) |
-| **DbModel** | LocalDateTime | ORM マッピング | dbModel.CreatedAt = LocalDateTime |
+| **DbModel** | DateTime | ORM マッピング用プリミティブ型（JST として解釈、Mapper で変換） | dbModel.CreatedAt = DateTime |
 | **SQL Server** | datetime2(7) | JST として解釈 | [created_at] datetime2(7) |
 | **外部 API** | DateTime / ISO 8601 | 受け取り後に変換 | LocalDateTime.FromDateTime(...) |
 
@@ -131,12 +131,10 @@ public class YourEntity : Entity<long>
 }
 ```
 
-### 5. DbModel での LocalDateTime 使用
+### 5. DbModel での DateTime 使用（ORM マッピング用）
 
 ```csharp
 // src/Contexts/YourGroup/YourContext/YourContext.Infrastructure/DataAccess/Models/YourEntityDbModel.cs
-
-using NodaTime;
 
 namespace SupportAdvance.Contexts.YourGroup.YourContext.Infrastructure.DataAccess.Models;
 
@@ -144,17 +142,17 @@ public class YourEntityDbModel
 {
     public long RowId { get; set; }
     
-    // ✓ LocalDateTime を使用
-    public LocalDateTime CreatedAt { get; set; }
+    // ✓ DateTime を使用（ORM マッピング用プリミティブ型、JST として解釈）
+    public DateTime CreatedAt { get; set; }
     public long CreatedBy { get; set; }
-    public LocalDateTime? UpdatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
     public long? UpdatedBy { get; set; }
-    public LocalDateTime? DeletedAt { get; set; }
+    public DateTime? DeletedAt { get; set; }
     public long? DeletedBy { get; set; }
 }
 ```
 
-### 6. Mapper での LocalDateTime マッピング
+### 6. Mapper での DateTime ↔ LocalDateTime 変換
 
 ```csharp
 // src/Contexts/YourGroup/YourContext/YourContext.Infrastructure/Mappers/YourEntityMapper.cs
@@ -163,6 +161,7 @@ using NodaTime;
 using SupportAdvance.Common.Clocks;
 using SupportAdvance.Contexts.YourGroup.YourContext.Domain.Entities;
 using SupportAdvance.Infrastructure.Mappers;
+using SupportAdvance.SharedKernel.ValueObjects.Audit;
 
 namespace SupportAdvance.Contexts.YourGroup.YourContext.Infrastructure.Mappers;
 
@@ -173,16 +172,19 @@ public class YourEntityMapper : IEntityMapper<YourEntity, YourEntityDbModel>
         return new YourEntityDbModel
         {
             RowId = entity.Id,
-            CreatedAt = entity.CreatedAt,   // ✓ LocalDateTime → LocalDateTime
-            UpdatedAt = entity.UpdatedAt    // ✓ LocalDateTime? → LocalDateTime?
+            CreatedAt = entity.CreatedAt.ToDbValue(),      // ✓ LocalDateTime → DateTime（ValueObject の変換メソッド）
+            UpdatedAt = entity.UpdatedAt.HasUpdated ? entity.UpdatedAt.ToDbValue() : null    // ✓ LocalDateTime? → DateTime?
         };
     }
 
     public YourEntity ToDomainEntity(YourEntityDbModel dbModel, IClock clock)
     {
+        if (!CreatedAt.TryFromDbValue(dbModel.CreatedAt, out var createdAt))
+            throw new InvalidOperationException($"Failed to convert CreatedAt: {dbModel.CreatedAt}");
+
         return new YourEntity(
             dbModel.RowId,
-            dbModel.CreatedAt,  // ✓ LocalDateTime → LocalDateTime
+            createdAt,  // ✓ DateTime → LocalDateTime（ValueObject の変換メソッド）
             clock
         );
     }
@@ -230,13 +232,15 @@ public async Task ProcessExternalData(string externalTimestamp)
 
 ### DbModel 層
 
-- [ ] **LocalDateTime 型**: すべての日時カラム
-- [ ] **DateTime は禁止**: Dapper/RepoDb マッピングで自動変換
+- [ ] **DateTime 型**: すべての日時カラム（プリミティブ型、ORM マッピング用）
+- [ ] **LocalDateTime は禁止**: Mapper の責務を侵害
 
 ### Mapper 層
 
-- [ ] **型変換なし**: LocalDateTime → LocalDateTime の直接マッピング
-- [ ] **ORM に依存**: datetime2(7) への変換は ORM に委譲
+- [ ] **型変換あり**: LocalDateTime ↔ DateTime の明示的な変換を実装
+  - Entity → DbModel: LocalDateTime.ToDbValue() で DateTime に変換
+  - DbModel → Entity: CreatedAt.TryFromDbValue() で DateTime から LocalDateTime に変換
+- [ ] **ValueObject メソッド使用**: 監査ValueObjects (CreatedAt/UpdatedAt/DeletedAt) の ToDbValue/TryFromDbValue を使用
 
 ### ORM レベル
 
@@ -335,22 +339,22 @@ public class SystemClock : IClock
 }
 ```
 
-### パターン4: DbModel に DateTime
+### パターン4: DbModel に LocalDateTime を使用
 
 ```csharp
-// ✗ 禁止: DbModel が DateTime
+// ✗ 禁止: DbModel が LocalDateTime（型変換の責務混在）
 public class YourEntityDbModel
 {
-    public DateTime CreatedAt { get; set; }  // ✗ DateTime
+    public LocalDateTime CreatedAt { get; set; }  // ✗ LocalDateTime（Mapper 責務を侵害）
 }
 ```
 
 **修正:**
 ```csharp
-// ✓ DbModel は LocalDateTime
+// ✓ DbModel は DateTime（ORM マッピング用プリミティブ型）
 public class YourEntityDbModel
 {
-    public LocalDateTime CreatedAt { get; set; }  // ✓ LocalDateTime
+    public DateTime CreatedAt { get; set; }  // ✓ DateTime（JST として解釈、Mapper で変換）
 }
 ```
 

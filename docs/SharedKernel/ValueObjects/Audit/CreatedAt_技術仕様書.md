@@ -64,7 +64,7 @@ var createdAt = CreatedAt.From(clock.JstNow);
 ```
 
 **例外:**
-- `ArgumentException` : 値が DateTime.MinValue または DateTime.MaxValue の場合
+- `ArgumentException` : 値が LocalDateTime.MinValue または LocalDateTime.MaxValue の場合
 
 #### `TryFrom(LocalDateTime? input, out CreatedAt result) : bool`
 
@@ -137,8 +137,8 @@ string str = createdAt.ToString();  // "2025-01-01T10:30:00"
 ### 3.1 Validate メソッド
 
 **検証項目:**
-- ✓ `DateTime.MinValue` は除外 (値：0001-01-01T00:00:00)
-- ✓ `DateTime.MaxValue` は除外 (値：9999-12-31T23:59:59.9999999)
+- ✓ `LocalDateTime.MinValue` は除外 (値：0001-01-01T00:00:00)
+- ✓ `LocalDateTime.MaxValue` は除外 (値：9999-12-31T23:59:59.9999999)
 - ✗ その他の有効な DateTime は受け入れ（過去・未来・現在・UTC/Local 区別なし）
 
 **例:**
@@ -153,13 +153,13 @@ var ok1 = CreatedAt.From(clock.JstNow);
 var clock2 = new MockClock(new DateTime(2000, 1, 1, 0, 0, 0, DateTimeKind.Unspecified));
 var ok2 = CreatedAt.From(clock2.JstNow);
 
-// NG: DateTime.MinValue
+// NG: LocalDateTime.MinValue
 var exception1 = Assert.Throws<ArgumentException>(() =>
-    CreatedAt.From(new LocalDateTime(DateTime.MinValue)));  // ArgumentException
+    CreatedAt.From(new LocalDateTime(LocalDateTime.MinValue)));  // ArgumentException
 
-// NG: DateTime.MaxValue
+// NG: LocalDateTime.MaxValue
 var exception2 = Assert.Throws<ArgumentException>(() =>
-    CreatedAt.From(new LocalDateTime(DateTime.MaxValue)));  // ArgumentException
+    CreatedAt.From(new LocalDateTime(LocalDateTime.MaxValue)));  // ArgumentException
 ```
 
 ---

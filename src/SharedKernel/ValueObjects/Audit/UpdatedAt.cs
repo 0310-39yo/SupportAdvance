@@ -36,7 +36,7 @@ public sealed class UpdatedAt : PrimitiveValueObject<LocalDateTime?>, IEquatable
     /// 【設計】Value は常に LocalDateTime を保持（Domain層での型安全性確保）。IsSet=false で未更新状態を判定
     /// </summary>
     /// <returns>未更新状態のUpdatedAtのインスタンス</returns>
-    public static UpdatedAt Unset() => new(new LocalDateTime(DateTime.MinValue), false);
+    public static UpdatedAt Unset() => new(LocalDateTime.MinValue, false);
 
     /// <summary>
     /// 指定された DateTime からUpdatedAtのインスタンスを生成する（Infrastructure層での型変換用）
@@ -184,11 +184,11 @@ public sealed class UpdatedAt : PrimitiveValueObject<LocalDateTime?>, IEquatable
         }
 
         var value = normalized.Value;
-        // DateTime.MinValue や DateTime.MaxValue は除外
-        if (value.Value == DateTime.MinValue || value.Value == DateTime.MaxValue)
+        // LocalDateTime.MinValue や MaxValue は除外
+        if (value == LocalDateTime.MinValue || value == LocalDateTime.MaxValue)
         {
             throw new ArgumentException(
-                $"UpdatedAt must be a valid system timestamp, not {nameof(DateTime.MinValue)} or {nameof(DateTime.MaxValue)}.");
+                $"UpdatedAt must be a valid system timestamp, not {nameof(LocalDateTime.MinValue)} or {nameof(LocalDateTime.MaxValue)}.");
         }
     }
 }

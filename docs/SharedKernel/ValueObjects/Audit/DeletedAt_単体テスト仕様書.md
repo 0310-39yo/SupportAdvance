@@ -68,21 +68,21 @@ Assert.True(deletedAt.IsDeleted);
 Assert.True(deletedAt.IsSet);
 ```
 
-#### TC-From-002: DateTime.MinValue で ArgumentException がスローされる
+#### TC-From-002: LocalDateTime.MinValue で ArgumentException がスローされる
 
 **期待結果:**
 ```csharp
 var exception = Assert.Throws<ArgumentException>(() =>
-    DeletedAt.From(new LocalDateTime(DateTime.MinValue)));
+    DeletedAt.From(new LocalDateTime(LocalDateTime.MinValue)));
 Assert.Contains("MinValue", exception.Message);
 ```
 
-#### TC-From-003: DateTime.MaxValue で ArgumentException がスローされる
+#### TC-From-003: LocalDateTime.MaxValue で ArgumentException がスローされる
 
 **期待結果:**
 ```csharp
 var exception = Assert.Throws<ArgumentException>(() =>
-    DeletedAt.From(new LocalDateTime(DateTime.MaxValue)));
+    DeletedAt.From(new LocalDateTime(LocalDateTime.MaxValue)));
 Assert.Contains("MaxValue", exception.Message);
 ```
 
@@ -166,7 +166,7 @@ Assert.True(result.IsDeleted);
 
 **期待結果:**
 ```csharp
-bool success = DeletedAt.TryFrom(new LocalDateTime(DateTime.MinValue), out var result);
+bool success = DeletedAt.TryFrom(new LocalDateTime(LocalDateTime.MinValue), out var result);
 Assert.False(success);
 ```
 
@@ -174,7 +174,7 @@ Assert.False(success);
 
 **期待結果:**
 ```csharp
-bool success = DeletedAt.TryFrom(new LocalDateTime(DateTime.MaxValue), out var result);
+bool success = DeletedAt.TryFrom(new LocalDateTime(LocalDateTime.MaxValue), out var result);
 Assert.False(success);
 ```
 
@@ -360,19 +360,19 @@ Assert.Equal(3, set.Count);  // 3 つのユニークな値
 
 ## 5. 検証テスト
 
-#### TC-Validate-MinValue-001: DateTime.MinValue は除外される
+#### TC-Validate-MinValue-001: LocalDateTime.MinValue は除外される
 
 ```csharp
 var ex = Assert.Throws<ArgumentException>(() =>
-    DeletedAt.From(new LocalDateTime(DateTime.MinValue)));
+    DeletedAt.From(new LocalDateTime(LocalDateTime.MinValue)));
 Assert.Contains("MinValue", ex.Message);
 ```
 
-#### TC-Validate-MaxValue-001: DateTime.MaxValue は除外される
+#### TC-Validate-MaxValue-001: LocalDateTime.MaxValue は除外される
 
 ```csharp
 var ex = Assert.Throws<ArgumentException>(() =>
-    DeletedAt.From(new LocalDateTime(DateTime.MaxValue)));
+    DeletedAt.From(new LocalDateTime(LocalDateTime.MaxValue)));
 Assert.Contains("MaxValue", ex.Message);
 ```
 

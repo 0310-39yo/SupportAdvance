@@ -161,11 +161,11 @@ public sealed class CreatedAt : PrimitiveValueObject<LocalDateTime>, IEquatable<
     {
         base.Validate(normalized);
 
-        // DateTime.MinValue や DateTime.MaxValue は除外
-        if (normalized.Value == DateTime.MinValue || normalized.Value == DateTime.MaxValue)
+        // LocalDateTime.MinValue や MaxValue は除外
+        if (normalized == LocalDateTime.MinValue || normalized == LocalDateTime.MaxValue)
         {
             throw new ArgumentException(
-                $"CreatedAt must be a valid system timestamp, not {nameof(DateTime.MinValue)} or {nameof(DateTime.MaxValue)}.");
+                $"CreatedAt must be a valid system timestamp, not {nameof(LocalDateTime.MinValue)} or {nameof(LocalDateTime.MaxValue)}.");
         }
     }
 }

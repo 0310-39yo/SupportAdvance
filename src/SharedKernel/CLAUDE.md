@@ -15,7 +15,7 @@
 - **Unset()** は null ではなく有効なインスタンス（Value = 型のデフォルト値）
   ```csharp
   public static UpdatedAt Unset()
-      => new(new LocalDateTime(DateTime.MinValue), false);  // Value を常に保持
+      => new(LocalDateTime.MinValue, false);  // Value を常に保持
   ```
 
 - **Domain層では null チェック不要**（IsSet で判定）

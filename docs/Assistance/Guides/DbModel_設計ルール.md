@@ -21,7 +21,7 @@ SQL Server (datetime2, bigint, nvarchar など)
 ### 責務
 
 - **Entity プロパティの正確な転写**: ビジネスロジックなし
-- **LocalDateTime 使用**: JST タイムゾーン一貫性
+- **DateTime 使用**: ORM マッピング用のプリミティブ型（JST として解釈、LocalDateTime への変換は Mapper で実施）
 - **監査カラムの8つ**: row_id, row_version, created_at/by, updated_at/by, deleted_at/by
 - **ORM 用プロパティ**: テーブルカラムと 1:1 対応
 
@@ -44,7 +44,7 @@ namespace SupportAdvance.Contexts.YourGroup.YourContext.Infrastructure.DataAcces
 /// 【責務】
 /// - Entity → DbModel 変換時の型テンプレート
 /// - SQL Server t_YourEntity テーブルとの 1:1 対応
-/// - LocalDateTime 型でタイムゾーン統一
+/// - DateTime 型でORM マッピング用プリミティブ型を統一（JST として解釈）
 /// 
 /// 【監査カラム（必須）】
 /// - row_id: システム主キー（Sequence で自動採番）
@@ -71,10 +71,10 @@ public class YourEntityDbModel
 
     /// <summary>
     /// 作成日時
-    /// LocalDateTime（JST）で格納（datetime2(7) にマッピング）
+    /// DateTime プリミティブ型（JST として解釈、ORM マッピング用）
     /// Repository が自動設定
     /// </summary>
-    public LocalDateTime CreatedAt { get; set; }
+    public DateTime CreatedAt { get; set; }
 
     /// <summary>
     /// 作成者（従業員 row_id）
@@ -85,9 +85,9 @@ public class YourEntityDbModel
 
     /// <summary>
     /// 更新日時（初期値 NULL）
-    /// 初回作成時は NULL、UPDATE 時に設定
+    /// DateTime プリミティブ型、初回作成時は NULL、UPDATE 時に設定
     /// </summary>
-    public LocalDateTime? UpdatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
 
     /// <summary>
     /// 更新者（従業員 row_id）
@@ -97,9 +97,9 @@ public class YourEntityDbModel
 
     /// <summary>
     /// 削除日時（論理削除用）
-    /// NULL = 有効、datetime2 = 削除済み
+    /// DateTime プリミティブ型、NULL = 有効、datetime2 = 削除済み
     /// </summary>
-    public LocalDateTime? DeletedAt { get; set; }
+    public DateTime? DeletedAt { get; set; }
 
     /// <summary>
     /// 削除者（従業員 row_id）
@@ -173,8 +173,6 @@ public class YourEntityMapper : IEntityMapper<YourEntity, YourEntityDbModel>
 ```csharp
 // src/Contexts/YourGroup/YourContext/YourContext.Infrastructure/DataAccess/Models/YourAggregateDbModel.cs
 
-using SupportAdvance.Common.Clocks;
-
 namespace SupportAdvance.Contexts.YourGroup.YourContext.Infrastructure.DataAccess.Models;
 
 public class YourAggregateDbModel
@@ -182,11 +180,11 @@ public class YourAggregateDbModel
     // 【監査カラム】
     public long RowId { get; set; }
     public byte[] RowVersion { get; set; } = null!;
-    public LocalDateTime CreatedAt { get; set; }
+    public DateTime CreatedAt { get; set; }
     public long CreatedBy { get; set; }
-    public LocalDateTime? UpdatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
     public long? UpdatedBy { get; set; }
-    public LocalDateTime? DeletedAt { get; set; }
+    public DateTime? DeletedAt { get; set; }
     public long? DeletedBy { get; set; }
 
     // 【ビジネスカラム】
@@ -206,11 +204,11 @@ public class YourAggregateDbModel
 - [ ] **監査カラム**: 8つすべてを含める
   - [ ] RowId (long, PK)
   - [ ] RowVersion (byte[])
-  - [ ] CreatedAt (LocalDateTime)
+  - [ ] CreatedAt (DateTime)
   - [ ] CreatedBy (long)
-  - [ ] UpdatedAt (LocalDateTime?)
+  - [ ] UpdatedAt (DateTime?)
   - [ ] UpdatedBy (long?)
-  - [ ] DeletedAt (LocalDateTime?)
+  - [ ] DeletedAt (DateTime?)
   - [ ] DeletedBy (long?)
 
 - [ ] **ビジネスカラム**: Entity のプロパティに対応
@@ -218,7 +216,7 @@ public class YourAggregateDbModel
   - [ ] string は null! アノテーション
   - [ ] ValueObject は primitive 型に変換 (int, string など)
 
-- [ ] **LocalDateTime 使用**: DateTime ではなく LocalDateTime
+- [ ] **DateTime 使用**: プリミティブ型でORM マッピング用（LocalDateTime ではなく）
 
 - [ ] **null 初期化**: null! アノテーション (NRT 対応)
 
@@ -226,22 +224,22 @@ public class YourAggregateDbModel
 
 ## ❌ 避けるべきパターン
 
-### パターン1: DbModel に DateTime
+### パターン1: DbModel に LocalDateTime を使用
 
 ```csharp
-// ✗ 禁止: DateTime を使用
+// ✗ 禁止: LocalDateTime を使用（型変換の責務混在）
 public class YourEntityDbModel
 {
-    public DateTime CreatedAt { get; set; }  // ✗ DateTime（タイムゾーン情報なし）
+    public LocalDateTime CreatedAt { get; set; }  // ✗ LocalDateTime（Mapper責務を侵害）
 }
 ```
 
 **修正:**
 ```csharp
-// ✓ LocalDateTime を使用
+// ✓ DateTime を使用（ORM マッピング用プリミティブ型）
 public class YourEntityDbModel
 {
-    public LocalDateTime CreatedAt { get; set; }  // ✓ LocalDateTime（JST 統一）
+    public DateTime CreatedAt { get; set; }  // ✓ DateTime（JST として解釈、Mapper で変換）
 }
 ```
 
@@ -317,11 +315,11 @@ public class YourEntityDbModel
 {
     public long RowId { get; set; }
     public byte[] RowVersion { get; set; }
-    public LocalDateTime CreatedAt { get; set; }
+    public DateTime CreatedAt { get; set; }
     public long CreatedBy { get; set; }
-    public LocalDateTime? UpdatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
     public long? UpdatedBy { get; set; }
-    public LocalDateTime? DeletedAt { get; set; }
+    public DateTime? DeletedAt { get; set; }
     public long? DeletedBy { get; set; }
     
     public string Name { get; set; }

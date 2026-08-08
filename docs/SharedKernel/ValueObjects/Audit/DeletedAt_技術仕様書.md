@@ -99,7 +99,7 @@ var deletedAt = DeletedAt.From(clock.JstNow);
 ```
 
 **例外:**
-- `ArgumentException` : 値が DateTime.MinValue または DateTime.MaxValue の場合
+- `ArgumentException` : 値が LocalDateTime.MinValue または LocalDateTime.MaxValue の場合
 
 #### `Unset() : DeletedAt`
 
@@ -194,8 +194,8 @@ string str2 = unset.ToString();  // "(not deleted)"
 **検証項目:**
 - ✓ `null` は受け入れ（未削除状態を表現）
 - ✓ 通常の有効な DateTime は受け入れ
-- ✗ `DateTime.MinValue` は除外 (値：0001-01-01T00:00:00)
-- ✗ `DateTime.MaxValue` は除外 (値：9999-12-31T23:59:59.9999999)
+- ✗ `LocalDateTime.MinValue` は除外 (値：0001-01-01T00:00:00)
+- ✗ `LocalDateTime.MaxValue` は除外 (値：9999-12-31T23:59:59.9999999)
 
 **例:**
 
@@ -212,13 +212,13 @@ var ok2 = DeletedAt.From(clock2.JstNow);
 // OK: 未削除状態
 var ok3 = DeletedAt.Unset();
 
-// NG: DateTime.MinValue
+// NG: LocalDateTime.MinValue
 var ng1 = Assert.Throws<ArgumentException>(() =>
-    DeletedAt.From(new LocalDateTime(DateTime.MinValue)));  // ArgumentException
+    DeletedAt.From(new LocalDateTime(LocalDateTime.MinValue)));  // ArgumentException
 
-// NG: DateTime.MaxValue
+// NG: LocalDateTime.MaxValue
 var ng2 = Assert.Throws<ArgumentException>(() =>
-    DeletedAt.From(new LocalDateTime(DateTime.MaxValue)));  // ArgumentException
+    DeletedAt.From(new LocalDateTime(LocalDateTime.MaxValue)));  // ArgumentException
 ```
 
 ---

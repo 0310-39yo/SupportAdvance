@@ -87,7 +87,7 @@ public sealed class RespondentAtTests
         Assert.Contains("cannot be in the future", ex.Message);
     }
 
-    /// <summary>VO-CLK-04: DateTime.MinValue は ArgumentException をスロー</summary>
+    /// <summary>VO-CLK-04: LocalDateTime.MinValue は ArgumentException をスロー</summary>
     [Fact]
     public void VO_CLK_04_From_WithMinValue_ThrowsArgumentException()
     {
@@ -95,11 +95,11 @@ public sealed class RespondentAtTests
         var clock = new MockClock(new DateTime(2026, 7, 8, 12, 0, 0));
 
         // Act & Assert
-        var ex = Assert.Throws<ArgumentException>(() => RespondentAt.From(new LocalDateTime(DateTime.MinValue), clock));
+        var ex = Assert.Throws<ArgumentException>(() => RespondentAt.From(LocalDateTime.MinValue, clock));
         Assert.Contains("must be a valid system timestamp", ex.Message);
     }
 
-    /// <summary>VO-CLK-05: DateTime.MaxValue は ArgumentException をスロー</summary>
+    /// <summary>VO-CLK-05: LocalDateTime.MaxValue は ArgumentException をスロー</summary>
     [Fact]
     public void VO_CLK_05_From_WithMaxValue_ThrowsArgumentException()
     {
@@ -107,7 +107,7 @@ public sealed class RespondentAtTests
         var clock = new MockClock(new DateTime(2026, 7, 8, 12, 0, 0));
 
         // Act & Assert
-        var ex = Assert.Throws<ArgumentException>(() => RespondentAt.From(new LocalDateTime(DateTime.MaxValue), clock));
+        var ex = Assert.Throws<ArgumentException>(() => RespondentAt.From(LocalDateTime.MaxValue, clock));
         Assert.Contains("must be a valid system timestamp", ex.Message);
     }
 
@@ -532,7 +532,7 @@ public sealed class RespondentAtTests
         var value = unset.Value;
 
         // Assert
-        Assert.Equal(new LocalDateTime(DateTime.MinValue), value);
+        Assert.Equal(LocalDateTime.MinValue, value);
     }
 
     /// <summary>VO-VAL-03: Value プロパティの戻り値型は DateTime（nullable ではない）</summary>

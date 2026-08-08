@@ -104,7 +104,7 @@ public sealed class UpdatedAt : PrimitiveValueObject<LocalDateTime?>
     // IsSet: false = 未更新状態
     
     public static UpdatedAt Unset()
-        => new(new LocalDateTime(DateTime.MinValue), false);
+        => new(LocalDateTime.MinValue, false);
     
     public bool HasUpdated => IsSet;  // IsSet の別名
 }
@@ -420,7 +420,7 @@ public sealed class UpdatedAt : PrimitiveValueObject<LocalDateTime?>
     private UpdatedAt(LocalDateTime? value, bool isSet) : base(value, isSet) { }
     
     public static UpdatedAt Unset() 
-        => new(new LocalDateTime(DateTime.MinValue), false);
+        => new(LocalDateTime.MinValue, false);
     
     public static UpdatedAt From(LocalDateTime value) 
         => new(value, true);
@@ -467,7 +467,7 @@ public sealed class UpdatedAt : PrimitiveValueObject<LocalDateTime?>
         }
     }
     
-    public LocalDateTime? Value => ValueField;  // IsSet=false の場合も ValueField = LocalDateTime(DateTime.MinValue) を保持
+    public LocalDateTime? Value => ValueField;  // IsSet=false の場合も ValueField = LocalDateTime.MinValue を保持
     public bool HasUpdated => IsSet;  // IsSet の別名
 }
 ```
@@ -478,7 +478,7 @@ public sealed class DeletedAt : PrimitiveValueObject<LocalDateTime?>
     private DeletedAt(LocalDateTime? value, bool isSet) : base(value, isSet) { }
     
     public static DeletedAt Unset() 
-        => new(new LocalDateTime(DateTime.MinValue), false);
+        => new(LocalDateTime.MinValue, false);
     
     public static DeletedAt From(LocalDateTime value) 
         => new(value, true);
@@ -525,7 +525,7 @@ public sealed class DeletedAt : PrimitiveValueObject<LocalDateTime?>
         }
     }
     
-    public LocalDateTime? Value => ValueField;  // IsSet=false の場合も ValueField = LocalDateTime(DateTime.MinValue) を保持
+    public LocalDateTime? Value => ValueField;  // IsSet=false の場合も ValueField = LocalDateTime.MinValue を保持
     public bool IsDeleted => IsSet;  // IsSet の別名
 }
 ```
@@ -572,7 +572,7 @@ DB: updated_at = NULL（未更新を示す）
   ↓
 Repository: UpdatedAt.TryFromDbValue(null)
   ↓
-Unset()に変換: new(new LocalDateTime(DateTime.MinValue), false)
+Unset()に変換: new(LocalDateTime.MinValue, false)
   ↓
 Domain: UpdatedAt.HasUpdated = false
   → ビジネスロジック: if (!entity.UpdatedAt.HasUpdated) ...
@@ -753,7 +753,7 @@ public sealed class YourAuditValueObject : PrimitiveValueObject<LocalDateTime?>
     private YourAuditValueObject(LocalDateTime? value, bool isSet) : base(value, isSet) { }
     
     public static YourAuditValueObject Unset() 
-        => new(new LocalDateTime(DateTime.MinValue), false);
+        => new(LocalDateTime.MinValue, false);
     
     public static YourAuditValueObject From(LocalDateTime value) 
         => new(value, true);
@@ -800,7 +800,7 @@ public sealed class YourAuditValueObject : PrimitiveValueObject<LocalDateTime?>
         }
     }
     
-    public LocalDateTime? Value => ValueField;  // IsSet=false の場合も LocalDateTime(DateTime.MinValue) を保持
+    public LocalDateTime? Value => ValueField;  // IsSet=false の場合も LocalDateTime.MinValue を保持
     
     protected override LocalDateTime? Normalize(LocalDateTime? input) => input;
     

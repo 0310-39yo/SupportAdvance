@@ -101,14 +101,14 @@ public class UpdatedAtTests
     public void From_WithMinValue_ThrowsArgumentException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentException>(() => UpdatedAt.From(new LocalDateTime(DateTime.MinValue)));
+        Assert.Throws<ArgumentException>(() => UpdatedAt.From(LocalDateTime.MinValue));
     }
 
     [Fact]
     public void From_WithMaxValue_ThrowsArgumentException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentException>(() => UpdatedAt.From(new LocalDateTime(DateTime.MaxValue)));
+        Assert.Throws<ArgumentException>(() => UpdatedAt.From(LocalDateTime.MaxValue));
     }
 
     #endregion
@@ -180,7 +180,7 @@ public class UpdatedAtTests
     public void TryFrom_Nullable_WithMinValue_ReturnsFalse()
     {
         // Act
-        var result = UpdatedAt.TryFrom(new LocalDateTime(DateTime.MinValue), out var updatedAt);
+        var result = UpdatedAt.TryFrom(LocalDateTime.MinValue, out var updatedAt);
 
         // Assert
         Assert.False(result);
@@ -191,7 +191,7 @@ public class UpdatedAtTests
     public void TryFrom_Nullable_WithMaxValue_ReturnsFalse()
     {
         // Act
-        var result = UpdatedAt.TryFrom(new LocalDateTime(DateTime.MaxValue), out var updatedAt);
+        var result = UpdatedAt.TryFrom(LocalDateTime.MaxValue, out var updatedAt);
 
         // Assert
         Assert.False(result);
@@ -202,7 +202,7 @@ public class UpdatedAtTests
     public void TryFrom_Nullable_WithInvalidDateTime_ReturnsFalse()
     {
         // Act
-        var result = UpdatedAt.TryFrom(new LocalDateTime(DateTime.MinValue), out var updatedAt);
+        var result = UpdatedAt.TryFrom(LocalDateTime.MinValue, out var updatedAt);
 
         // Assert
         Assert.False(result);
@@ -232,7 +232,7 @@ public class UpdatedAtTests
     public void TryFrom_NonNullable_WithMinValue_ReturnsFalse()
     {
         // Act
-        var result = UpdatedAt.TryFrom(new LocalDateTime(DateTime.MinValue), out var updatedAt);
+        var result = UpdatedAt.TryFrom(LocalDateTime.MinValue, out var updatedAt);
 
         // Assert
         Assert.False(result);
@@ -243,7 +243,7 @@ public class UpdatedAtTests
     public void TryFrom_NonNullable_WithMaxValue_ReturnsFalse()
     {
         // Act
-        var result = UpdatedAt.TryFrom(new LocalDateTime(DateTime.MaxValue), out var updatedAt);
+        var result = UpdatedAt.TryFrom(LocalDateTime.MaxValue, out var updatedAt);
 
         // Assert
         Assert.False(result);

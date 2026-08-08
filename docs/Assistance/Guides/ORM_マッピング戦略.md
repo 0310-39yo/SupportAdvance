@@ -6,15 +6,16 @@ Dapper と RepoDb の型マッピング統一戦略です。
 
 ## 📋 基本原則
 
-### LocalDateTime を統一型に
+### DateTime と LocalDateTime の分離
 
-SupportAdvance では **LocalDateTime** をすべてのテーブルに使用します。ORM レベルで LocalDateTime ↔ datetime2 のマッピングを統一化します。
+SupportAdvance では **Entity/Application 層で LocalDateTime を使用し、DbModel と ORM 層で DateTime を使用**します。層間の型変換を Mapper が責務を持つことで、型安全性と責務の明確化を実現します。
 
 | 層 | 型 | 用途 |
 |---|---|---|
-| **C# コード** | LocalDateTime | JST タイムゾーン情報 |
+| **Entity/Application** | LocalDateTime | JST タイムゾーン情報、型安全性 |
+| **DbModel/ORM** | DateTime | プリミティブ型、ORM マッピング（JST として解釈） |
+| **Mapper** | 双方向変換 | LocalDateTime ↔ DateTime の明示的な変換 |
 | **SQL Server** | datetime2(7) | タイムゾーン情報なし（JST と解釈） |
-| **ORM** | グローバルマッピング | LocalDateTime ↔ datetime2 自動変換 |
 
 ---
 
@@ -138,13 +139,13 @@ public class YourEntity : Entity<YourEntityId>
     public LocalDateTime? UpdatedAt { get; }
 }
 
-// DbModel with LocalDateTime
+// DbModel with DateTime（プリミティブ型）
 public class YourEntityDbModel
 {
     public long RowId { get; set; }
     public Guid YourEntityId { get; set; }
-    public LocalDateTime CreatedAt { get; set; }      // ✓ LocalDateTime
-    public LocalDateTime? UpdatedAt { get; set; }     // ✓ LocalDateTime?
+    public DateTime CreatedAt { get; set; }      // ✓ DateTime（ORM マッピング用）
+    public DateTime? UpdatedAt { get; set; }     // ✓ DateTime?（ORM マッピング用）
 }
 
 // SQL Server table
@@ -156,7 +157,7 @@ public class YourEntityDbModel
 //   ...
 // )
 
-// Mapper: 直接マッピング（変換不要）
+// Mapper: DateTime ↔ LocalDateTime 変換を実装
 public class YourEntityMapper : IEntityMapper<YourEntity, YourEntityDbModel, YourEntityId>
 {
     public YourEntityDbModel ToDbModel(YourEntity entity)
@@ -165,17 +166,24 @@ public class YourEntityMapper : IEntityMapper<YourEntity, YourEntityDbModel, You
         {
             RowId = entity.RowId.Value,
             YourEntityId = entity.Id.Value,
-            CreatedAt = entity.CreatedAt,   // LocalDateTime → LocalDateTime
-            UpdatedAt = entity.UpdatedAt    // LocalDateTime? → LocalDateTime?
+            CreatedAt = entity.CreatedAt.ToDbValue(),   // LocalDateTime → DateTime
+            UpdatedAt = entity.UpdatedAt.HasUpdated ? entity.UpdatedAt.ToDbValue() : null    // LocalDateTime? → DateTime?
         };
     }
 
     public YourEntity ToDomainEntity(YourEntityDbModel dbModel, IClock clock)
     {
+        if (!CreatedAt.TryFromDbValue(dbModel.CreatedAt, out var createdAt))
+            throw new InvalidOperationException($"Failed to convert CreatedAt: {dbModel.CreatedAt}");
+        
+        if (!UpdatedAt.TryFromDbValue(dbModel.UpdatedAt, out var updatedAt))
+            throw new InvalidOperationException($"Failed to convert UpdatedAt: {dbModel.UpdatedAt}");
+
         return new YourEntity(
             YourEntityId.From(dbModel.YourEntityId),
             RowId.From(dbModel.RowId),
-            dbModel.CreatedAt,   // LocalDateTime → LocalDateTime
+            createdAt,   // DateTime → LocalDateTime
+            updatedAt,
             clock
         );
     }
@@ -209,8 +217,8 @@ public class YourAggregateDbModel
 {
     public long RowId { get; set; }
     public Guid YourAggregateId { get; set; }
-    public LocalDateTime CreatedAt { get; set; }      // ✓ LocalDateTime
-    public LocalDateTime? UpdatedAt { get; set; }     // ✓ LocalDateTime?
+    public DateTime CreatedAt { get; set; }      // ✓ DateTime（ORM マッピング用）
+    public DateTime? UpdatedAt { get; set; }     // ✓ DateTime?（ORM マッピング用）
     public List<YourChildDbModel>? Children { get; set; }
 }
 
@@ -220,8 +228,8 @@ public class YourChildDbModel
     public long RowId { get; set; }
     public Guid YourChildId { get; set; }
     public Guid ParentAggregateId { get; set; }       // FK to parent
-    public LocalDateTime CreatedAt { get; set; }      // ✓ LocalDateTime
-    public LocalDateTime? UpdatedAt { get; set; }     // ✓ LocalDateTime?
+    public DateTime CreatedAt { get; set; }      // ✓ DateTime（ORM マッピング用）
+    public DateTime? UpdatedAt { get; set; }     // ✓ DateTime?（ORM マッピング用）
 }
 
 // SQL Server tables
@@ -315,7 +323,7 @@ public class YourChildMapper : IEntityMapper<YourChild, YourChildDbModel, YourCh
 }
 ```
 
-**重要**: 複数テーブル集約でも、各テーブルは DbModel で LocalDateTime を保持します。ORM のグローバルマッピングが統一的に DateTime2 に変換するため、Mapper は変換ロジックを記述する必要がありません。複数テーブルの複合性は Mapper の構造（複数の1:1マッピングの組み合わせ）に現れます。
+**重要**: 複数テーブル集約でも、各テーブルの DbModel は DateTime を保持します。Mapper が LocalDateTime ↔ DateTime の変換を実施することで、型安全性を確保し、責務を明確化します。複数テーブルの複合性は Mapper の構造（複数の1:1マッピングの組み合わせと各々の型変換）に現れます。
 
 ---
 
@@ -338,57 +346,65 @@ public class YourChildMapper : IEntityMapper<YourChild, YourChildDbModel, YourCh
 
 ### DbModel
 
-- [ ] **すべての日時カラムが LocalDateTime**: DateTime ではなく
-- [ ] **nullable 日時は LocalDateTime?**: updated_at, deleted_at など
-- [ ] **Mapper で直接マッピング**: 変換不要
+- [ ] **すべての日時カラムが DateTime**: LocalDateTime ではなく（プリミティブ型）
+- [ ] **nullable 日時は DateTime?**: updated_at, deleted_at など
+- [ ] **Mapper で型変換を実装**: LocalDateTime → DateTime (ToDbValue)、DateTime → LocalDateTime (TryFromDbValue)
 
 ---
 
 ## ❌ 避けるべきパターン
 
-### パターン1: DbModel に DateTime を使用
+### パターン1: DbModel に LocalDateTime を使用
 
 ```csharp
-// ✗ 禁止: DbModel に DateTime
+// ✗ 禁止: DbModel に LocalDateTime（型変換の責務混在）
 public class YourEntityDbModel
 {
-    public DateTime CreatedAt { get; set; }  // ✗ DateTime
-    public DateTime? UpdatedAt { get; set; }  // ✗ DateTime?
+    public LocalDateTime CreatedAt { get; set; }  // ✗ LocalDateTime（Mapper 責務を侵害）
+    public LocalDateTime? UpdatedAt { get; set; }  // ✗ LocalDateTime?
 }
 ```
 
 **修正:**
 ```csharp
-// ✓ DbModel は LocalDateTime を使用
+// ✓ DbModel は DateTime（ORM マッピング用プリミティブ型）
 public class YourEntityDbModel
 {
-    public LocalDateTime CreatedAt { get; set; }  // ✓ LocalDateTime
-    public LocalDateTime? UpdatedAt { get; set; }  // ✓ LocalDateTime?
+    public DateTime CreatedAt { get; set; }  // ✓ DateTime（JST として解釈、Mapper で変換）
+    public DateTime? UpdatedAt { get; set; }  // ✓ DateTime?
 }
 ```
 
-### パターン2: Mapper で型変換を実行
+### パターン2: Mapper で型変換を省略
 
 ```csharp
-// ✗ 禁止: Mapper が LocalDateTime → DateTime 変換
+// ✗ 禁止: Mapper が直接マッピング（型の不一致）
 public YourEntityDbModel ToDbModel(YourEntity entity)
 {
     return new YourEntityDbModel
     {
-        CreatedAt = entity.CreatedAt.ToDateTime(TimeOnly.MinValue)  // ✗ 変換
+        CreatedAt = entity.CreatedAt  // ✗ LocalDateTime を DateTime に割り当て（型エラー）
     };
 }
 ```
 
 **修正:**
 ```csharp
-// ✓ Mapper は直接マッピング
+// ✓ Mapper は型変換を実装（ValueObject メソッド使用）
 public YourEntityDbModel ToDbModel(YourEntity entity)
 {
     return new YourEntityDbModel
     {
-        CreatedAt = entity.CreatedAt  // ✓ LocalDateTime → LocalDateTime
+        CreatedAt = entity.CreatedAt.ToDbValue()  // ✓ LocalDateTime → DateTime（ValueObject メソッド）
     };
+}
+
+public YourEntity ToDomainEntity(YourEntityDbModel dbModel, IClock clock)
+{
+    if (!CreatedAt.TryFromDbValue(dbModel.CreatedAt, out var createdAt))
+        throw new InvalidOperationException($"Failed to convert CreatedAt: {dbModel.CreatedAt}");
+    
+    return new YourEntity(dbModel.RowId, createdAt, clock);  // ✓ DateTime → LocalDateTime
 }
 ```
 

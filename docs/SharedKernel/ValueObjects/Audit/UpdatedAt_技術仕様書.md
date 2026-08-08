@@ -68,7 +68,7 @@ var updatedAt = UpdatedAt.From(clock.JstNow);
 ```
 
 **例外:**
-- `ArgumentException` : 値が DateTime.MinValue または DateTime.MaxValue の場合
+- `ArgumentException` : 値が LocalDateTime.MinValue または LocalDateTime.MaxValue の場合
 
 #### `Unset() : UpdatedAt`
 

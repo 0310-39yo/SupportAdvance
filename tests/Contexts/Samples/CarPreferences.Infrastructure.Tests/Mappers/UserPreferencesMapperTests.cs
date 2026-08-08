@@ -133,6 +133,7 @@ public sealed class UserPreferencesMapperTests
         var dbModel = new UserPreferencesDbModel
         {
             RowId = 123,
+            UserPreferencesId = new Guid("550e8400-e29b-41d4-a716-446655440001"),
             UserId = 1000,
             CreatedAt = createdAtDateTime,  // ← DbModel は DateTime
             CreatedBy = 1,
@@ -167,6 +168,7 @@ public sealed class UserPreferencesMapperTests
         var dbModel = new UserPreferencesDbModel
         {
             RowId = 123,
+            UserPreferencesId = new Guid("550e8400-e29b-41d4-a716-446655440002"),
             UserId = 1000,
             CreatedAt = createdAtDateTime,  // ← DbModel は DateTime
             CreatedBy = 1,
@@ -201,6 +203,7 @@ public sealed class UserPreferencesMapperTests
         var dbModel = new UserPreferencesDbModel
         {
             RowId = 123,
+            UserPreferencesId = new Guid("550e8400-e29b-41d4-a716-446655440003"),
             UserId = 1000,
             CreatedAt = createdAtDateTime,  // ← DbModel は DateTime
             CreatedBy = 1,

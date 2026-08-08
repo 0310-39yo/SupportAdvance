@@ -15,6 +15,18 @@ public readonly struct LocalDateTime : IComparable<LocalDateTime>, IEquatable<Lo
     public DateTime Value { get; }
 
     /// <summary>
+    /// LocalDateTime の最小値（DateTime.MinValue）
+    /// 【用途】Unset 状態の表現、形式検証での境界値チェック
+    /// </summary>
+    public static readonly LocalDateTime MinValue = new(DateTime.MinValue);
+
+    /// <summary>
+    /// LocalDateTime の最大値（DateTime.MaxValue）
+    /// 【用途】形式検証での無効値チェック
+    /// </summary>
+    public static readonly LocalDateTime MaxValue = new(DateTime.MaxValue);
+
+    /// <summary>
     /// JST日時を指定して LocalDateTime を構築します
     /// </summary>
     /// <param name="jstValue">JST として解釈される DateTime。Kind は Unspecified である必要があります。</param>
