@@ -4,7 +4,7 @@ using SupportAdvance.Contexts.Samples.CarPreferences.Domain.ValueObjects;
 using SupportAdvance.Contexts.Samples.CarPreferences.Infrastructure.DataAccess.Models;
 using SupportAdvance.Infrastructure.Mappers;
 using SupportAdvance.SharedKernel.ValueObjects.Audit;
-using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
+using SupportAdvance.SharedKernel.ValueObjects.Audit;
 
 namespace SupportAdvance.Contexts.Samples.CarPreferences.Infrastructure.Mappers;
 

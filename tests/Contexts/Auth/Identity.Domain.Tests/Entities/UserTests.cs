@@ -1,5 +1,5 @@
 using SupportAdvance.Contexts.Auth.Identity.Domain.Entities;
-using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
+using SupportAdvance.SharedKernel.ValueObjects.Audit;
 using Xunit;
 
 namespace SupportAdvance.Contexts.Auth.Identity.Domain.Tests.Entities;

@@ -3,7 +3,7 @@ using SupportAdvance.Common.Clocks;
 using SupportAdvance.Contexts.Master.Employee.Application.Repositories;
 using SupportAdvance.Contexts.Master.Employee.Application.UseCases;
 using SupportAdvance.Contexts.Master.Employee.Domain.Entities;
-using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
+using SupportAdvance.SharedKernel.ValueObjects.Audit;
 using Xunit;
 
 namespace SupportAdvance.Contexts.Master.Employee.Application.Tests.UseCases;

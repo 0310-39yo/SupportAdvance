@@ -6,7 +6,7 @@ using SupportAdvance.Contexts.Auth.Identity.Infrastructure.DbModels;
 using SupportAdvance.Contexts.Auth.Identity.Infrastructure.Mappers;
 using SupportAdvance.Infrastructure.Repositories;
 using SupportAdvance.Infrastructure.Services;
-using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
+using SupportAdvance.SharedKernel.ValueObjects.Audit;
 
 namespace SupportAdvance.Contexts.Auth.Identity.Infrastructure.Repositories;
 

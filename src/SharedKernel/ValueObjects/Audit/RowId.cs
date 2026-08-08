@@ -1,4 +1,4 @@
-namespace SupportAdvance.SharedKernel.ValueObjects.Identifiers;
+namespace SupportAdvance.SharedKernel.ValueObjects.Audit;
 
 /// <summary>
 /// データベース行を一意に識別する主キー値を表すValueObject

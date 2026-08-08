@@ -4,7 +4,7 @@ using RepoDb;
 using SupportAdvance.Common.Clocks;
 using SupportAdvance.Infrastructure.ORM.Dapper;
 using SupportAdvance.Infrastructure.ORM.RepoDB;
-using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
+using SupportAdvance.SharedKernel.ValueObjects.Audit;
 using Xunit;
 
 namespace Architecture.Tests;

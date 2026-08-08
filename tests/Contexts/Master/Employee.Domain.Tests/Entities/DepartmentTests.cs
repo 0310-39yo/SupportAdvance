@@ -1,5 +1,5 @@
 using SupportAdvance.Contexts.Master.Employee.Domain.Entities;
-using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
+using SupportAdvance.SharedKernel.ValueObjects.Audit;
 using Xunit;
 
 namespace SupportAdvance.Contexts.Master.Employee.Domain.Tests.Entities;

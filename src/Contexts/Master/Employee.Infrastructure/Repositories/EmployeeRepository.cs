@@ -5,7 +5,7 @@ using SupportAdvance.Contexts.Master.Employee.Infrastructure.Mappers;
 using SupportAdvance.Contexts.Master.Employee.Application.Repositories;
 using SupportAdvance.Infrastructure.Repositories;
 using SupportAdvance.Infrastructure.Services;
-using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
+using SupportAdvance.SharedKernel.ValueObjects.Audit;
 using EmployeeEntity = SupportAdvance.Contexts.Master.Employee.Domain.Entities.Employee;
 
 namespace SupportAdvance.Contexts.Master.Employee.Infrastructure.Repositories;

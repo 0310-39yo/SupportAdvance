@@ -2,7 +2,7 @@ using Moq;
 using SupportAdvance.Contexts.Auth.Identity.Application.Repositories;
 using SupportAdvance.Contexts.Auth.Identity.Application.UseCases;
 using SupportAdvance.Contexts.Auth.Identity.Domain.Entities;
-using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
+using SupportAdvance.SharedKernel.ValueObjects.Audit;
 using Xunit;
 
 namespace SupportAdvance.Contexts.Auth.Identity.Application.Tests.UseCases;

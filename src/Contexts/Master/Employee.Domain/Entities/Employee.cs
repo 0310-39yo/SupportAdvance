@@ -1,6 +1,6 @@
 using SupportAdvance.Common.Clocks;
 using SupportAdvance.SharedKernel.Entities;
-using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
+using SupportAdvance.SharedKernel.ValueObjects.Audit;
 using SupportAdvance.Contexts.Master.Employee.Domain.ValueObjects;
 
 namespace SupportAdvance.Contexts.Master.Employee.Domain.Entities;

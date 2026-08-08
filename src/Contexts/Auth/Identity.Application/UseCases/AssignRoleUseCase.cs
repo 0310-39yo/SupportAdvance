@@ -2,7 +2,7 @@ using SupportAdvance.Common.Clocks;
 using SupportAdvance.Contexts.Auth.Identity.Application.Repositories;
 using SupportAdvance.Contexts.Auth.Identity.Domain.Entities;
 using SupportAdvance.Contexts.Auth.Identity.Domain.ValueObjects;
-using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
+using SupportAdvance.SharedKernel.ValueObjects.Audit;
 
 namespace SupportAdvance.Contexts.Auth.Identity.Application.UseCases;
 

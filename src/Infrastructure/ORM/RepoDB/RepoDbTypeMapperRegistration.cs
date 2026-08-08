@@ -1,7 +1,7 @@
 using System.Data;
 using RepoDb;
 using SupportAdvance.Common.Clocks;
-using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
+using SupportAdvance.SharedKernel.ValueObjects.Audit;
 
 namespace SupportAdvance.Infrastructure.ORM.RepoDB;
 

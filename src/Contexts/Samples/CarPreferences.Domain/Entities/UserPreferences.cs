@@ -3,7 +3,7 @@ using SupportAdvance.Contexts.Samples.CarPreferences.Domain.DomainEvents;
 using SupportAdvance.Contexts.Samples.CarPreferences.Domain.ValueObjects;
 using SupportAdvance.SharedKernel.Entities;
 using SupportAdvance.SharedKernel.ValueObjects.Audit;
-using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
+using SupportAdvance.SharedKernel.ValueObjects.Audit;
 
 namespace SupportAdvance.Contexts.Samples.CarPreferences.Domain.Entities;
 
