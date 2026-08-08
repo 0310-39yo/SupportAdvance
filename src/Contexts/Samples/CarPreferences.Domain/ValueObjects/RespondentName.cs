@@ -47,8 +47,16 @@ public sealed class RespondentName : PrimitiveValueObject<string>, IOptionalValu
     /// <returns>等価である場合は true、そうでない場合は false</returns>
     public bool Equals(RespondentName? other)
     {
-        if (other is null) return false;
-        if (ReferenceEquals(this, other)) return true;
+        if (other is null)
+        {
+            return false;
+        }
+
+        if (ReferenceEquals(this, other))
+        {
+            return true;
+        }
+
         return IsSet == other.IsSet && ValueField == other.ValueField;
     }
 

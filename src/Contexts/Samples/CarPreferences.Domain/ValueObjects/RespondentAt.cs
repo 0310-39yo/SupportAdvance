@@ -105,8 +105,6 @@ public sealed class RespondentAt : PrimitiveValueObject<LocalDateTime>,
     public static bool TryFrom(LocalDateTime input, IClock clock, out RespondentAt result)
         => TryFrom((LocalDateTime?)input, clock, out result);
 
-
-
     /// <summary>
     /// ビジネスロジック検証を実施する（Clock を使用）
     /// </summary>
@@ -125,6 +123,7 @@ public sealed class RespondentAt : PrimitiveValueObject<LocalDateTime>,
             throw new ArgumentException("RespondentAt cannot be in the future.", nameof(value));
         }
     }
+
     /// <summary>
     /// 保持する LocalDateTime 値を取得する
     /// </summary>
@@ -147,8 +146,16 @@ public sealed class RespondentAt : PrimitiveValueObject<LocalDateTime>,
     /// <returns>等価である場合は true、そうでない場合は false</returns>
     public bool Equals(RespondentAt? other)
     {
-        if (other is null) return false;
-        if (ReferenceEquals(this, other)) return true;
+        if (other is null)
+        {
+            return false;
+        }
+
+        if (ReferenceEquals(this, other))
+        {
+            return true;
+        }
+
         return IsSet == other.IsSet && (!IsSet || ValueField == other.ValueField);
     }
 
@@ -162,6 +169,7 @@ public sealed class RespondentAt : PrimitiveValueObject<LocalDateTime>,
         {
             return HashCode.Combine(false);
         }
+
         return HashCode.Combine(true, ValueField);
     }
 
@@ -196,7 +204,8 @@ public sealed class RespondentAt : PrimitiveValueObject<LocalDateTime>,
 
         if (normalized == LocalDateTime.MinValue || normalized == LocalDateTime.MaxValue)
         {
-            throw new ArgumentException($"RespondentAt must be a valid system timestamp, not {nameof(LocalDateTime.MinValue)} or {nameof(LocalDateTime.MaxValue)}.");
+            throw new ArgumentException(
+                $"RespondentAt must be a valid system timestamp, not {nameof(LocalDateTime.MinValue)} or {nameof(LocalDateTime.MaxValue)}.");
         }
     }
 }

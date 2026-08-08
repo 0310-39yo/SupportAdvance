@@ -111,8 +111,16 @@ public sealed class BodyType : IEquatable<BodyType>
     /// </summary>
     public static bool operator ==(BodyType? left, BodyType? right)
     {
-        if (left is null && right is null) return true;
-        if (left is null || right is null) return false;
+        if (left is null && right is null)
+        {
+            return true;
+        }
+
+        if (left is null || right is null)
+        {
+            return false;
+        }
+
         return left.Equals(right);
     }
 

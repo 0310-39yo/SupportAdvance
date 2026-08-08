@@ -99,14 +99,19 @@ public sealed class Money : IEquatable<Money>, IComparable<Money>
     /// <summary>
     /// 文字列表現（フォーマット: ¥1,234,567）
     /// </summary>
-    public override string ToString() => Amount.ToString("C0", System.Globalization.CultureInfo.GetCultureInfo("ja-JP"));
+    public override string ToString() =>
+        Amount.ToString("C0", System.Globalization.CultureInfo.GetCultureInfo("ja-JP"));
 
     /// <summary>
     /// 大小比較
     /// </summary>
     public int CompareTo(Money? other)
     {
-        if (other is null) return 1;
+        if (other is null)
+        {
+            return 1;
+        }
+
         return Amount.CompareTo(other.Amount);
     }
 
@@ -141,8 +146,16 @@ public sealed class Money : IEquatable<Money>, IComparable<Money>
     /// </summary>
     public static bool operator ==(Money? left, Money? right)
     {
-        if (left is null && right is null) return true;
-        if (left is null || right is null) return false;
+        if (left is null && right is null)
+        {
+            return true;
+        }
+
+        if (left is null || right is null)
+        {
+            return false;
+        }
+
         return left.Equals(right);
     }
 
@@ -157,7 +170,10 @@ public sealed class Money : IEquatable<Money>, IComparable<Money>
     public static bool operator <(Money? left, Money? right)
     {
         if (left is null || right is null)
+        {
             throw new ArgumentNullException(left is null ? nameof(left) : nameof(right));
+        }
+
         return left.Amount < right.Amount;
     }
 
@@ -167,7 +183,10 @@ public sealed class Money : IEquatable<Money>, IComparable<Money>
     public static bool operator >(Money? left, Money? right)
     {
         if (left is null || right is null)
+        {
             throw new ArgumentNullException(left is null ? nameof(left) : nameof(right));
+        }
+
         return left.Amount > right.Amount;
     }
 
@@ -177,7 +196,10 @@ public sealed class Money : IEquatable<Money>, IComparable<Money>
     public static bool operator <=(Money? left, Money? right)
     {
         if (left is null || right is null)
+        {
             throw new ArgumentNullException(left is null ? nameof(left) : nameof(right));
+        }
+
         return left.Amount <= right.Amount;
     }
 
@@ -187,7 +209,10 @@ public sealed class Money : IEquatable<Money>, IComparable<Money>
     public static bool operator >=(Money? left, Money? right)
     {
         if (left is null || right is null)
+        {
             throw new ArgumentNullException(left is null ? nameof(left) : nameof(right));
+        }
+
         return left.Amount >= right.Amount;
     }
 }

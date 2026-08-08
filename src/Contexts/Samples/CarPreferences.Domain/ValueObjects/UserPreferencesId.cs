@@ -13,7 +13,9 @@ public class UserPreferencesId : AggregateId
     /// <summary>
     /// コンストラクタ
     /// </summary>
-    public UserPreferencesId(Guid value) : base(value) { }
+    public UserPreferencesId(Guid value) : base(value)
+    {
+    }
 
     /// <summary>
     /// 新規 ID を生成
