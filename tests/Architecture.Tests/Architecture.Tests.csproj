@@ -33,12 +33,6 @@
     <ProjectReference Include="../../src/Contexts/Samples/CarPreferences.Domain/CarPreferences.Domain.csproj" />
     <ProjectReference Include="../../src/Contexts/Samples/CarPreferences.Application/CarPreferences.Application.csproj" />
     <ProjectReference Include="../../src/Contexts/Samples/CarPreferences.Infrastructure/CarPreferences.Infrastructure.csproj" />
-    <ProjectReference Include="../../src/Contexts/Auth/Identity.Domain/Identity.Domain.csproj" />
-    <ProjectReference Include="../../src/Contexts/Auth/Identity.Application/Identity.Application.csproj" />
-    <ProjectReference Include="../../src/Contexts/Auth/Identity.Infrastructure/Identity.Infrastructure.csproj" />
-    <ProjectReference Include="../../src/Contexts/Master/Employee.Domain/Employee.Domain.csproj" />
-    <ProjectReference Include="../../src/Contexts/Master/Employee.Application/Employee.Application.csproj" />
-    <ProjectReference Include="../../src/Contexts/Master/Employee.Infrastructure/Employee.Infrastructure.csproj" />
     <ProjectReference Include="../../src/Presentation/Shared/Shared.csproj" />
   </ItemGroup>
 
