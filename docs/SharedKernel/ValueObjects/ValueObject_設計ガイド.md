@@ -1974,10 +1974,10 @@ public sealed class CreateRespondentUseCase
 
 ## 参考資料
 
-- [ValueObject 技術仕様書](../Abstractions/ValueObject_技術仕様書.md)
-- [PrimitiveValueObject 技術仕様書](../Abstractions/PrimitiveValueObject_技術仕様書.md)
-- [EnumValueObject 技術仕様書](../Abstractions/EnumValueObject_技術仕様書.md)
-- [ValueObject コンポーネント正規化器 技術仕様書](../Abstractions/ValueObjectComponentNormalizer_技術仕様書.md)
+- [ValueObject 技術仕様書](../../SharedKernel/ValueObjects/Abstractions/ValueObject_技術仕様書.md)
+- [PrimitiveValueObject 技術仕様書](../../SharedKernel/ValueObjects/Abstractions/PrimitiveValueObject_技術仕様書.md)
+- [EnumValueObject 技術仕様書](../../SharedKernel/ValueObjects/Abstractions/EnumValueObject_技術仕様書.md)
+- [ValueObject コンポーネント正規化器 技術仕様書](../../SharedKernel/ValueObjects/Abstractions/ValueObjectComponentNormalizer_技術仕様書.md)
 
 ---
 

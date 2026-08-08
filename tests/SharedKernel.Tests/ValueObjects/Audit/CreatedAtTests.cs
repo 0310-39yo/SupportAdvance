@@ -20,24 +20,24 @@ public class CreatedAtTests
     public void From_WithValidDateTime_CreatesInstance(int year, int month, int day)
     {
         // Act
-        var createdAt = CreatedAt.From(new LocalDateTime(new DateTime(year, month, day)));
+        var date = new DateTime(year, month, day);
+        var createdAt = CreatedAt.From(new LocalDateTime(date));
 
         // Assert
         Assert.NotNull(createdAt);
-        Assert.Equal(new DateTime(year, month, day), createdAt.Value);
+        Assert.Equal(new LocalDateTime(date), createdAt.Value);
     }
 
     [Fact]
     public void From_WithUtcNow_CreatesInstance()
     {
         // Act
-        // 固定時刻を使用（LocalDateTime は DateTimeKind.Unspecified のみを許容）
         var fixedTime = new DateTime(2025, 1, 15, 10, 30, 0, DateTimeKind.Unspecified);
         var createdAt = CreatedAt.From(new LocalDateTime(fixedTime));
 
         // Assert
         Assert.NotNull(createdAt);
-        Assert.Equal(fixedTime, createdAt.Value);
+        Assert.Equal(new LocalDateTime(fixedTime), createdAt.Value);
     }
 
     [Fact]
@@ -58,22 +58,137 @@ public class CreatedAtTests
     public void From_WithMidnight_CreatesInstance()
     {
         // Act
-        var createdAt = CreatedAt.From(new LocalDateTime(new DateTime(2025, 1, 1, 0, 0, 0)));
+        var date = new DateTime(2025, 1, 1, 0, 0, 0);
+        var createdAt = CreatedAt.From(new LocalDateTime(date));
 
         // Assert
         Assert.NotNull(createdAt);
-        Assert.Equal(new DateTime(2025, 1, 1, 0, 0, 0), createdAt.Value);
+        Assert.Equal(new LocalDateTime(date), createdAt.Value);
     }
 
     [Fact]
     public void From_WithLastSecond_CreatesInstance()
     {
         // Act
-        var createdAt = CreatedAt.From(new LocalDateTime(new DateTime(2025, 1, 1, 23, 59, 59)));
+        var date = new DateTime(2025, 1, 1, 23, 59, 59);
+        var createdAt = CreatedAt.From(new LocalDateTime(date));
 
         // Assert
         Assert.NotNull(createdAt);
-        Assert.Equal(new DateTime(2025, 1, 1, 23, 59, 59), createdAt.Value);
+        Assert.Equal(new LocalDateTime(date), createdAt.Value);
+    }
+
+    #endregion
+
+    #region FromDbValueメソッドテスト
+
+    [Fact]
+    public void FromDbValue_WithValidDateTime_CreatesInstance()
+    {
+        // Arrange
+        var dbValue = new DateTime(2025, 1, 1, 10, 30, 0);
+
+        // Act
+        var createdAt = CreatedAt.FromDbValue(dbValue);
+
+        // Assert
+        Assert.NotNull(createdAt);
+        Assert.Equal(new LocalDateTime(dbValue), createdAt.Value);
+    }
+
+    [Theory]
+    [InlineData(2025, 1, 1)]
+    [InlineData(2000, 1, 1)]
+    public void FromDbValue_WithVariousDates_CreatesInstance(int year, int month, int day)
+    {
+        // Arrange
+        var dbValue = new DateTime(year, month, day);
+
+        // Act
+        var createdAt = CreatedAt.FromDbValue(dbValue);
+
+        // Assert
+        Assert.NotNull(createdAt);
+        Assert.Equal(new LocalDateTime(dbValue), createdAt.Value);
+    }
+
+    #endregion
+
+    #region ToDbValueメソッドテスト
+
+    [Fact]
+    public void ToDbValue_ShouldReturnDateTime()
+    {
+        // Arrange
+        var localDateTime = new LocalDateTime(new DateTime(2025, 1, 1, 10, 30, 0));
+        var createdAt = CreatedAt.From(localDateTime);
+
+        // Act
+        var result = createdAt.ToDbValue();
+
+        // Assert
+        Assert.IsType<DateTime>(result);
+        Assert.Equal(new DateTime(2025, 1, 1, 10, 30, 0), result);
+    }
+
+    [Fact]
+    public void ToDbValue_Roundtrip_PreservesValue()
+    {
+        // Arrange
+        var original = new DateTime(2025, 1, 1, 10, 30, 45);
+        var createdAt = CreatedAt.FromDbValue(original);
+
+        // Act
+        var result = createdAt.ToDbValue();
+
+        // Assert
+        Assert.Equal(original, result);
+    }
+
+    #endregion
+
+    #region TryFromDbValueメソッドテスト
+
+    [Fact]
+    public void TryFromDbValue_WithValidDateTime_ReturnsTrue()
+    {
+        // Arrange
+        var dbValue = new DateTime(2025, 1, 1, 10, 30, 0);
+
+        // Act
+        var success = CreatedAt.TryFromDbValue(dbValue, out var createdAt);
+
+        // Assert
+        Assert.True(success);
+        Assert.NotNull(createdAt);
+        Assert.Equal(new LocalDateTime(dbValue), createdAt.Value);
+    }
+
+    [Fact]
+    public void TryFromDbValue_WithNullValue_ReturnsFalse()
+    {
+        // Arrange
+        DateTime? dbValue = null;
+
+        // Act
+        var success = CreatedAt.TryFromDbValue(dbValue, out var createdAt);
+
+        // Assert
+        Assert.False(success);
+        Assert.Null(createdAt);
+    }
+
+    [Fact]
+    public void TryFromDbValue_WithValidDateTime_OutputNotNull()
+    {
+        // Arrange
+        var dbValue = new DateTime(2025, 1, 1);
+
+        // Act
+        CreatedAt.TryFromDbValue(dbValue, out var result);
+
+        // Assert
+        Assert.NotNull(result);
     }
 
     #endregion
@@ -87,26 +202,26 @@ public class CreatedAtTests
     public void TryFrom_WithValidDateTime_ReturnsTrue(int year, int month, int day)
     {
         // Act
-        bool success = CreatedAt.TryFrom(new LocalDateTime(new DateTime(year, month, day)), out var createdAt);
+        var date = new DateTime(year, month, day);
+        bool success = CreatedAt.TryFrom(new LocalDateTime(date), out var createdAt);
 
         // Assert
         Assert.True(success);
         Assert.NotNull(createdAt);
-        Assert.Equal(new DateTime(year, month, day), createdAt.Value);
+        Assert.Equal(new LocalDateTime(date), createdAt.Value);
     }
 
     [Fact]
     public void TryFrom_WithUtcNow_ReturnsTrue()
     {
         // Act
-        // 固定時刻を使用（LocalDateTime は DateTimeKind.Unspecified のみを許容）
         var fixedTime = new DateTime(2025, 1, 15, 10, 30, 0, DateTimeKind.Unspecified);
         bool success = CreatedAt.TryFrom(new LocalDateTime(fixedTime), out var createdAt);
 
         // Assert
         Assert.True(success);
         Assert.NotNull(createdAt);
-        Assert.Equal(fixedTime, createdAt.Value);
+        Assert.Equal(new LocalDateTime(fixedTime), createdAt.Value);
     }
 
     [Fact]
@@ -152,12 +267,13 @@ public class CreatedAtTests
     public void TryFrom_NonNullable_WithValidDateTime_ReturnsTrue(int year, int month, int day)
     {
         // Act
-        bool success = CreatedAt.TryFrom(new LocalDateTime(new DateTime(year, month, day)), out var createdAt);
+        var date = new DateTime(year, month, day);
+        bool success = CreatedAt.TryFrom(new LocalDateTime(date), out var createdAt);
 
         // Assert
         Assert.True(success);
         Assert.NotNull(createdAt);
-        Assert.Equal(new DateTime(year, month, day), createdAt.Value);
+        Assert.Equal(new LocalDateTime(date), createdAt.Value);
     }
 
     [Fact]
@@ -313,7 +429,7 @@ public class CreatedAtTests
         var set = new HashSet<CreatedAt> { createdAt1, createdAt2, createdAt3 };
 
         // Assert
-        Assert.Equal(2, set.Count);  // createdAt1とcreatedAt2は等価なため1つにまとめられる
+        Assert.Equal(2, set.Count);
     }
 
     [Fact]
@@ -345,14 +461,12 @@ public class CreatedAtTests
         Assert.NotNull(result);
         Assert.Contains("2025", result);
         Assert.Contains("01", result);
-        Assert.Contains("01", result);
     }
 
     [Fact]
     public void ToString_WithUtcNow_ReturnsValidString()
     {
         // Arrange
-        // 固定時刻を使用（LocalDateTime は DateTimeKind.Unspecified のみを許容）
         var fixedTime = new DateTime(2025, 1, 15, 10, 30, 0, DateTimeKind.Unspecified);
         var createdAt = CreatedAt.From(new LocalDateTime(fixedTime));
 
@@ -370,7 +484,7 @@ public class CreatedAtTests
     #region Valueプロパティテスト
 
     [Fact]
-    public void Value_WhenCreated_ReturnsOriginalDateTime()
+    public void Value_WhenCreated_ReturnsLocalDateTime()
     {
         // Arrange
         var date = new DateTime(2025, 1, 1, 10, 30, 45);
@@ -380,7 +494,7 @@ public class CreatedAtTests
         var value = createdAt.Value;
 
         // Assert
-        Assert.Equal(date, value);
+        Assert.Equal(new LocalDateTime(date), value);
     }
 
     [Fact]
@@ -410,9 +524,6 @@ public class CreatedAtTests
         var originalValue = createdAt.Value;
 
         // Act
-        // Valueプロパティはget-onlyなため、再代入は不可
-        // コンパイルエラーとなるため、ここでは値の変化がないことを確認
-
         // Assert
         Assert.Equal(originalValue, createdAt.Value);
     }
@@ -425,9 +536,8 @@ public class CreatedAtTests
         var createdAt2 = CreatedAt.From(new LocalDateTime(new DateTime(2025, 1, 1)));
 
         // Assert
-        // ValueFieldは同値だが、インスタンスは異なる
         Assert.NotSame(createdAt1, createdAt2);
-        Assert.Equal(createdAt1, createdAt2);  // ただし等価
+        Assert.Equal(createdAt1, createdAt2);
     }
 
     #endregion
@@ -438,57 +548,29 @@ public class CreatedAtTests
     public void From_JustAfterMinValue_CreatesInstance()
     {
         // Act
-        var createdAt = CreatedAt.From(new LocalDateTime(new DateTime(0001, 1, 1, 0, 0, 1)));
+        var date = new DateTime(0001, 1, 1, 0, 0, 1);
+        var createdAt = CreatedAt.From(new LocalDateTime(date));
 
         // Assert
         Assert.NotNull(createdAt);
-        Assert.Equal(new DateTime(0001, 1, 1, 0, 0, 1), createdAt.Value);
+        Assert.Equal(new LocalDateTime(date), createdAt.Value);
     }
 
     [Fact]
     public void From_JustBeforeMaxValue_CreatesInstance()
     {
         // Act
-        var createdAt = CreatedAt.From(new LocalDateTime(new DateTime(9999, 12, 31, 23, 59, 58)));
+        var date = new DateTime(9999, 12, 31, 23, 59, 58);
+        var createdAt = CreatedAt.From(new LocalDateTime(date));
 
         // Assert
         Assert.NotNull(createdAt);
-        Assert.Equal(new DateTime(9999, 12, 31, 23, 59, 58), createdAt.Value);
+        Assert.Equal(new LocalDateTime(date), createdAt.Value);
     }
 
     #endregion
 
     #region DateTimeKindテスト
-
-    [Fact]
-    public void From_WithUtcKind_CreatesInstance()
-    {
-        // Arrange
-        // LocalDateTime は DateTimeKind.Unspecified のみを許容するため、Unspecified で テスト
-        var unspecifiedDateTime = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
-
-        // Act
-        var createdAt = CreatedAt.From(new LocalDateTime(unspecifiedDateTime));
-
-        // Assert
-        Assert.NotNull(createdAt);
-        Assert.Equal(unspecifiedDateTime, createdAt.Value);
-    }
-
-    [Fact]
-    public void From_WithLocalKind_CreatesInstance()
-    {
-        // Arrange
-        // LocalDateTime は DateTimeKind.Unspecified のみを許容するため、Unspecified で テスト
-        var unspecifiedDateTime = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
-
-        // Act
-        var createdAt = CreatedAt.From(new LocalDateTime(unspecifiedDateTime));
-
-        // Assert
-        Assert.NotNull(createdAt);
-        Assert.Equal(unspecifiedDateTime, createdAt.Value);
-    }
 
     [Fact]
     public void From_WithUnspecifiedKind_CreatesInstance()
@@ -501,7 +583,7 @@ public class CreatedAtTests
 
         // Assert
         Assert.NotNull(createdAt);
-        Assert.Equal(unspecifiedDateTime, createdAt.Value);
+        Assert.Equal(new LocalDateTime(unspecifiedDateTime), createdAt.Value);
     }
 
     #endregion

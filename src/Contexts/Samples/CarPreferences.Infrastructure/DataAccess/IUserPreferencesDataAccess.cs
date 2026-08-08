@@ -34,12 +34,14 @@ public interface IUserPreferencesDataAccess
     Task<UserPreferencesDbModel?> GetByRowIdAsync(long rowId);
 
     /// <summary>
-    /// 新規プリファレンス�挿入
+    /// 新規プリファレンス挿入（採番された RowId を返す）
     ///
     /// 【SQL】INSERT INTO UserPreferences VALUES (...)
+    /// 【戻り値】採番された RowId（long）
     /// 【例外】制約違反時は ArgumentException をスロー
+    /// 【用途】DB の IDENTITY/Sequence で採番された RowId を Repository が Entity に反映
     /// </summary>
-    Task InsertAsync(UserPreferencesDbModel model);
+    Task<long> InsertAsync(UserPreferencesDbModel model);
 
     /// <summary>
     /// プリファレンス更新

@@ -95,7 +95,7 @@ public class CreateUserPreferencesUseCase
         return new CreateUserPreferencesResponse
         {
             UserId = userId.ToString(),
-            CreatedAt = new LocalDateTime(preferences.CreatedAt.Value)
+            CreatedAt = preferences.CreatedAt.Value
         };
     }
 }

@@ -27,11 +27,13 @@ public sealed class UserPreferencesTests
 
         // Assert
         Assert.NotNull(entity.CreatedAt);
-        Assert.Equal(clock.JstNow.Value, entity.CreatedAt.Value);
+        Assert.IsType<LocalDateTime>(entity.CreatedAt.Value);
+        Assert.Equal(clock.JstNow, entity.CreatedAt.Value);
 
         Assert.NotNull(entity.UpdatedAt);
         Assert.True(entity.UpdatedAt.HasUpdated);
-        Assert.Equal(clock.JstNow.Value, entity.UpdatedAt.Value!.Value);
+        Assert.IsType<LocalDateTime>(entity.UpdatedAt.Value);
+        Assert.Equal(clock.JstNow, entity.UpdatedAt.Value!.Value);
 
         Assert.NotNull(entity.DeletedAt);
         Assert.False(entity.DeletedAt.IsDeleted);
@@ -57,7 +59,8 @@ public sealed class UserPreferencesTests
 
         // Assert
         Assert.True(entity.UpdatedAt.HasUpdated);
-        Assert.Equal(clock2.JstNow.Value, entity.UpdatedAt.Value!.Value);
+        Assert.IsType<LocalDateTime>(entity.UpdatedAt.Value);
+        Assert.Equal(clock2.JstNow, entity.UpdatedAt.Value!.Value);
         Assert.NotEqual(initialUpdatedAt, entity.UpdatedAt.Value!.Value);
     }
 
@@ -81,7 +84,8 @@ public sealed class UserPreferencesTests
         Assert.True(result);
         Assert.True(entity.IsDeleted);
         Assert.True(entity.DeletedAt.IsDeleted);
-        Assert.Equal(clock2.JstNow.Value, entity.DeletedAt.Value!.Value);
+        Assert.IsType<LocalDateTime>(entity.DeletedAt.Value);
+        Assert.Equal(clock2.JstNow, entity.DeletedAt.Value!.Value);
     }
 
     /// <summary>
@@ -122,15 +126,19 @@ public sealed class UserPreferencesTests
         var updatedAt = UpdatedAt.From(updatedAtValue);
         var deletedAt = DeletedAt.From(deletedAtValue);
         var rowId = RowId.From(123);
+        var userPreferencesId = UserPreferencesId.From(new Guid("550e8400-e29b-41d4-a716-446655440000"));
 
         // Act
         var entity = UserPreferences.Reconstruct(
-            userId, respondedAt, createdAt, updatedAt, deletedAt, rowId,
+            userPreferencesId, userId, respondedAt, createdAt, updatedAt, deletedAt, rowId,
             null, null, true, null, null);
 
         // Assert
+        Assert.IsType<LocalDateTime>(entity.CreatedAt.Value);
         Assert.Equal(createdAt.Value, entity.CreatedAt.Value);
+        Assert.IsType<LocalDateTime>(entity.UpdatedAt.Value);
         Assert.Equal(updatedAt.Value!.Value, entity.UpdatedAt.Value!.Value);
+        Assert.IsType<LocalDateTime>(entity.DeletedAt.Value);
         Assert.Equal(deletedAt.Value!.Value, entity.DeletedAt.Value!.Value);
         Assert.True(entity.IsDeleted);
     }
@@ -150,15 +158,18 @@ public sealed class UserPreferencesTests
         var updatedAt = UpdatedAt.Unset();  // 未更新
         var deletedAt = DeletedAt.Unset();  // 未削除
         var rowId = RowId.From(123);
+        var userPreferencesId = UserPreferencesId.From(new Guid("660e8400-e29b-41d4-a716-446655440001"));
 
         // Act
         var entity = UserPreferences.Reconstruct(
-            userId, respondedAt, createdAt, updatedAt, deletedAt, rowId,
+            userPreferencesId, userId, respondedAt, createdAt, updatedAt, deletedAt, rowId,
             null, null, true, null, null);
 
         // Assert
         Assert.False(entity.UpdatedAt.HasUpdated);
+        Assert.Null(entity.UpdatedAt.Value);
         Assert.False(entity.DeletedAt.IsDeleted);
+        Assert.Null(entity.DeletedAt.Value);
         Assert.False(entity.IsDeleted);
     }
 }

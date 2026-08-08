@@ -51,8 +51,8 @@ public class GetUserPreferencesUseCase
             PrefersAutomatic = preferences.PrefersAutomatic,
             BudgetFrom = preferences.BudgetFrom?.Amount,
             BudgetTo = preferences.BudgetTo?.Amount,
-            CreatedAt = new LocalDateTime(preferences.CreatedAt.Value),
-            UpdatedAt = new LocalDateTime(preferences.UpdatedAt.Value!.Value)
+            CreatedAt = preferences.CreatedAt.Value,
+            UpdatedAt = preferences.UpdatedAt.Value ?? preferences.CreatedAt.Value
         };
     }
 }

@@ -52,16 +52,22 @@ public class UserPreferencesDataAccess : IUserPreferencesDataAccess
     }
 
     /// <summary>
-    /// 新規プリファレンス挿入
+    /// 新規プリファレンス挿入（採番された RowId を返す）
+    ///
+    /// 【責務】DB の IDENTITY/Sequence で採番された RowId を取得
+    /// 【戻り値】採番された RowId（long）
     /// </summary>
-    public async Task InsertAsync(UserPreferencesDbModel model)
+    public async Task<long> InsertAsync(UserPreferencesDbModel model)
     {
         ArgumentNullException.ThrowIfNull(model);
 
         using var connection = new SqlConnection(_connectionString);
         await connection.OpenAsync();
 
-        await connection.InsertAsync("t_UserPreferences", model);
+        // RepoDb の InsertAsync は採番値を返す（RowId は IDENTITY カラム）
+        var adoptedRowId = await connection.InsertAsync("t_UserPreferences", model);
+
+        return (long)adoptedRowId;
     }
 
     /// <summary>
@@ -101,7 +107,7 @@ public class UserPreferencesDataAccess : IUserPreferencesDataAccess
                 $"No record found or already deleted for user_id {userId}");
         }
 
-        record.DeletedAt = deletedAt;
+        record.DeletedAt = deletedAt.Value;  // LocalDateTime → DateTime 変換
         var result = await connection.UpdateAsync("t_UserPreferences", record);
 
         if (result == 0)

@@ -4,45 +4,62 @@ using SupportAdvance.SharedKernel.ValueObjects.Abstractions;
 namespace SupportAdvance.SharedKernel.ValueObjects.Audit;
 
 /// <summary>
-/// エンティティの論理削除日時を表すValueObject（null許容、IsSet で削除/未削除状態を表現）
+/// エンティティの論理削除日時を表すValueObject（LocalDateTime 保持、null許容、IsSet で削除/未削除状態を表現）
+/// 【設計】LocalDateTime を内部値として保持（Domain層での型安全性確保）
+/// 【用途】Domain/Application層: LocalDateTime で扱う、Infrastructure層: DateTime に変換
 /// </summary>
-public sealed class DeletedAt : PrimitiveValueObject<DateTime?>, IEquatable<DeletedAt>
+public sealed class DeletedAt : PrimitiveValueObject<LocalDateTime?>, IEquatable<DeletedAt>
 {
     /// <summary>
-    /// 指定された日時からDeletedAtのインスタンスを生成する
+    /// 指定された LocalDateTime からDeletedAtのインスタンスを生成する
     /// 【責務】指定された日時を持つDeletedAtを表現する
     /// </summary>
-    /// <param name="value">日時値</param>
+    /// <param name="value">LocalDateTime値</param>
     /// <param name="isSet">IsSet フラグ（デフォルト: true）</param>
     /// <returns>指定された日時を持つDeletedAtのインスタンス</returns>
     /// <remarks>Validate は、基礎クラスのコンストラクタで自動実行される</remarks>
-    private DeletedAt(DateTime? value, bool isSet = true) : base(value, isSet)
+    private DeletedAt(LocalDateTime? value, bool isSet = true) : base(value, isSet)
     {
     }
 
     /// <summary>
-    /// 指定された日時からDeletedAtのインスタンスを生成する（推奨: LocalDateTime で取得）
+    /// 指定された LocalDateTime からDeletedAtのインスタンスを生成する（推奨: Domain層での生成方式）
     /// 【責務】指定された日時を持つDeletedAtを表現する
     /// </summary>
     /// <param name="value">LocalDateTime値（IClock.JstNow から取得）</param>
     /// <returns>指定された日時を持つDeletedAtのインスタンス</returns>
-    public static DeletedAt From(LocalDateTime value) => new(value.Value, true);
+    public static DeletedAt From(LocalDateTime value) => new(value, true);
 
     /// <summary>
     /// 未削除状態のDeletedAtのインスタンスを生成する
-    /// 【責務】未削除状態を表現する
+    /// 【責務】未削除状態を表現する（IsSet=false）
+    /// 【設計】Value は常に LocalDateTime を保持（Domain層での型安全性確保）。IsSet=false で未削除状態を判定
     /// </summary>
     /// <returns>未削除状態のDeletedAtのインスタンス</returns>
-    public static DeletedAt Unset() => new(null, false);
+    public static DeletedAt Unset() => new(new LocalDateTime(DateTime.MinValue), false);
 
     /// <summary>
-    /// 指定された日時からDeletedAtのインスタンスを生成する（層間の型変換用）
-    /// null が来た場合は Unset() で変換（成功）
-    /// 【責務】null安全に DeletedAt を生成する
+    /// 指定された DateTime からDeletedAtのインスタンスを生成する（Infrastructure層での型変換用）
+    /// 【責務】DB から読み込んだ DateTime を LocalDateTime に変換して DeletedAt を生成
     /// </summary>
-    /// <param name="input">LocalDateTime? 値（DB からの読み込み値）</param>
+    /// <param name="value">DateTime値（DB読み込み値）</param>
+    /// <returns>指定された日時を持つDeletedAtのインスタンス</returns>
+    public static DeletedAt FromDbValue(DateTime value) => new(new LocalDateTime(value), true);
+
+    /// <summary>
+    /// DB値への変換（DateTime を取得）
+    /// 【責務】Mapper で Entity → DbModel への変換時に使用
+    /// </summary>
+    /// <returns>内部保持の LocalDateTime から DateTime を抽出（IsDeleted=true の場合のみ有効）</returns>
+    public DateTime ToDbValue() => IsSet && ValueField.HasValue ? ValueField.Value.Value : throw new InvalidOperationException("DeletedAt is not set.");
+
+    /// <summary>
+    /// 指定された LocalDateTime からDeletedAtのインスタンスの生成を試みる（型安全版）
+    /// 【責務】null安全に DeletedAt を生成する（Domain層での生成方式）
+    /// </summary>
+    /// <param name="input">LocalDateTime? 値</param>
     /// <param name="result">生成されたDeletedAtのインスタンス</param>
-    /// <returns>生成に成功した場合はtrue、失敗した場合はfalse</returns>
+    /// <returns>生成に成功した場合、または null 入力を Unset に変換した場合は true；検証失敗時は false</returns>
     public static bool TryFrom(LocalDateTime? input, out DeletedAt result)
     {
         if (input == null || !input.HasValue)
@@ -64,11 +81,38 @@ public sealed class DeletedAt : PrimitiveValueObject<DateTime?>, IEquatable<Dele
     }
 
     /// <summary>
-    /// 保持する値を取得する
+    /// 指定された DateTime からDeletedAtのインスタンスの生成を試みる（NULL安全版、Infrastructure層での型変換用）
+    /// 【責務】DB値から null安全に DeletedAt を生成する（NULL → Unset 状態に変換）
+    /// </summary>
+    /// <param name="input">DateTime? 値（DB読み込み値）</param>
+    /// <param name="result">生成されたDeletedAtのインスタンス</param>
+    /// <returns>生成に成功した場合、または null 入力を Unset に変換した場合は true；検証失敗時は false</returns>
+    public static bool TryFromDbValue(DateTime? input, out DeletedAt result)
+    {
+        if (input == null)
+        {
+            result = Unset(); // ← null → Unset() で成功
+            return true;
+        }
+
+        try
+        {
+            result = FromDbValue(input.Value);
+            return true;
+        }
+        catch (ArgumentException)
+        {
+            result = null!;
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// 保持する LocalDateTime? 値を取得する
     /// 【責務】保持する値を取得する（IsSet = true の時のみ有効）
     /// </summary>
     /// <returns>保持する日時値（null 許容）</returns>
-    public DateTime? Value => ValueField;
+    public LocalDateTime? Value => ValueField;
 
     /// <summary>
     /// 削除済み状態を判定する（IsSet の別名）
@@ -120,27 +164,28 @@ public sealed class DeletedAt : PrimitiveValueObject<DateTime?>, IEquatable<Dele
     /// <returns>ValueField を含むコンポーネント列</returns>
     protected override IEnumerable<object?> GetValueComponents()
     {
-        yield return ValueField; // DateTime? を返す
+        yield return ValueField; // LocalDateTime? を返す
     }
 
     /// <summary>
     /// 正規化済み値の検証を行う
     /// 【責務】業務ルールに基づく値の妥当性のチェック
     /// </summary>
-    /// <param name="normalized">正規化済みの値（null 許容）</param>
+    /// <param name="normalized">正規化済みの LocalDateTime? 値</param>
     /// <exception cref="ArgumentException">値が有効な日時でない場合にスローされる</exception>
-    public override void Validate(DateTime? normalized)
+    public override void Validate(LocalDateTime? normalized)
     {
         base.Validate(normalized);
 
         // null は許容（未削除状態を表現）
-        if (normalized == null)
+        if (normalized == null || !normalized.HasValue)
         {
             return;
         }
 
+        var value = normalized.Value;
         // DateTime.MinValue や DateTime.MaxValue は除外
-        if (normalized == DateTime.MinValue || normalized == DateTime.MaxValue)
+        if (value.Value == DateTime.MinValue || value.Value == DateTime.MaxValue)
         {
             throw new ArgumentException(
                 $"DeletedAt must be a valid system timestamp, not {nameof(DateTime.MinValue)} or {nameof(DateTime.MaxValue)}.");

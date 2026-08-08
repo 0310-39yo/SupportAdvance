@@ -273,6 +273,103 @@ public Employee ToDomainEntity(EmployeeDbModel dbModel, IClock clock)
 
 ---
 
+## 🚫 Domain層 null 厳格性原則
+
+### 基本原則
+
+Domain層では **「未設定状態を null ではなく型で表現」**（Option/Maybe パターン）を採用しています。
+
+これは、Haskell/Scala の Maybe 型の考え方をベースにしており、ビジネスロジックから不確実性（null の存在）を完全に排除することで、型安全性と可読性を確保するものです。
+
+### レイヤ別責務
+
+| 層 | 責務 | 例 |
+|----|------|-----|
+| **Domain層** | IsSet フラグで状態管理<br/>ビジネスロジックは null-free | `if (entity.UpdatedAt.HasUpdated)` |
+| **Application層** | 外部入力で null 許容<br/>TryFrom で自動変換 | `RespondentName.TryFrom(request.Name, out var name)` |
+| **Infrastructure層** | TryFromDbValue で DB null → Unset() に変換<br/>すべての ValueObject が null-free で Domain に渡す | Repository で TryFromDbValue を呼び出し |
+| **DB層** | DateTime / DateTime? ネイティブ型<br/>null が存在する可能性 | `updated_at DATETIME2 NULL` |
+
+### 3つの基本実装パターン
+
+#### 1. 必須ValueObject（CreatedAt パターン）
+
+入力必須。null は失敗を返す。
+
+```csharp
+public static bool TryFrom(LocalDateTime? input, out CreatedAt result)
+{
+    if (!input.HasValue) return false;  // ← null は失敗
+    try { result = From(input.Value); return true; }
+    catch { return false; }
+}
+```
+
+#### 2. オプションValueObject（RespondentName パターン）
+
+入力オプション。null は Unset に変換して成功を返す。
+
+```csharp
+public static bool TryFrom(string? input, out RespondentName result)
+{
+    if (input == null)
+    {
+        result = Unset();  // ← null は Unset で成功
+        return true;
+    }
+    try { result = From(input); return true; }
+    catch { return false; }
+}
+```
+
+#### 3. 監査ValueObjects（UpdatedAt/DeletedAt パターン）
+
+DB専用。DB の null を自動的に Unset() に変換。
+
+```csharp
+public static bool TryFromDbValue(DateTime? input, out UpdatedAt result)
+{
+    if (input == null)
+    {
+        result = Unset();  // ← DB null → Unset（未更新状態）
+        return true;
+    }
+    try { result = FromDbValue(input.Value); return true; }
+    catch { return false; }
+}
+```
+
+### Unset 状態の本質
+
+```csharp
+public static UpdatedAt Unset()
+    => new(new LocalDateTime(DateTime.MinValue), false);
+    //   ─────────────────────────────────────  ──────
+    //   Value は null ではなくデフォルト値     IsSet = false で「未設定」を表現
+```
+
+**重要**: Domain層には null が存在しない。すべての値が有効である。
+
+### よくあるエラー
+
+```csharp
+// ❌ 間違い
+if (entity.UpdatedAt == null) { ... }      // Domain では起こらない
+
+// ✅ 正しい
+if (!entity.UpdatedAt.HasUpdated) { ... }  // IsSet で状態判定
+```
+
+### 参考資料
+
+詳細は [**null 厳格性設計ガイド**](docs/Assistance/Guides/null厳格性設計ガイド.md) を参照してください。
+
+以下のドキュメントは本設計に統合されました（廃版）：
+- ❌ 監査ValueObject_null処理戦略.md
+- ❌ 監査ValueObject_null処理詳細設計.md
+
+---
+
 ## 🔧 開発時の注意点
 
 ### 新しい機能を実装する際

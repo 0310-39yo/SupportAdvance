@@ -17,12 +17,14 @@ namespace SupportAdvance.Contexts.Samples.CarPreferences.Infrastructure.Reposito
 ///
 /// 【責務】
 /// - Domain層の IUserPreferencesRepository インターフェースを実装
-/// - DbModel ↔ Domain Entity 相互変換（RowId ValueObject対応）
+/// - DbModel ↔ Domain Entity 相互変換（UserPreferencesId/RowId ValueObject対応）
 /// - 論理削除対応
+/// - RowId 採番管理（新規作成時の value=0 → value>0 への更新）
 /// 【汎用基底】RepositoryBase<TEntity, TDbModel, TId> を継承して監査情報を自動管理
+/// 【型パラメータ】TId = UserPreferencesId（集約のビジネスID）
 /// </summary>
 public class UserPreferencesRepository
-    : RepositoryBase<UserPreferences, UserPreferencesDbModel, RowId>,
+    : RepositoryBase<UserPreferences, UserPreferencesDbModel, UserPreferencesId>,
       IUserPreferencesRepository
 {
     private readonly IUserPreferencesDataAccess _dataAccess;
@@ -69,13 +71,23 @@ public class UserPreferencesRepository
 
     /// <summary>
     /// 新規プリファレンスを追加
+    ///
+    /// 【責務】
+    /// 1. Entity を DbModel に変換
+    /// 2. DB に INSERT（IDENTITY/Sequence で RowId を採番）
+    /// 3. 採番された RowId を Entity に反映
     /// </summary>
     public async Task AddAsync(UserPreferences preferences)
     {
         ArgumentNullException.ThrowIfNull(preferences);
 
         var dbModel = MapToDatabaseForInsert(preferences);
-        await _dataAccess.InsertAsync(dbModel);
+
+        // DB へ INSERT し、採番された RowId を取得
+        var adoptedRowId = await _dataAccess.InsertAsync(dbModel);
+
+        // Entity の RowId を採番値で更新（value=0 → value>0）
+        preferences.SetRowId(RowId.From(adoptedRowId));
     }
 
     /// <summary>

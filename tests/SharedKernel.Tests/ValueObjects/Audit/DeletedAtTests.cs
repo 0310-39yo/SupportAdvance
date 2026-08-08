@@ -5,7 +5,7 @@ using SupportAdvance.SharedKernel.ValueObjects.Audit;
 
 namespace SupportAdvance.SharedKernel.Tests.ValueObjects.Audit;
 
-public class UpdatedAtTests
+public class DeletedAtTests
 {
     #region From メソッドテスト
 
@@ -17,7 +17,7 @@ public class UpdatedAtTests
         var dateTime = new DateTime(2025, 1, 1, 10, 30, 0);
 
         // Act
-        var result = UpdatedAt.From(new LocalDateTime(dateTime));
+        var result = DeletedAt.From(new LocalDateTime(dateTime));
 
         // Assert
         Assert.NotNull(result);
@@ -31,7 +31,7 @@ public class UpdatedAtTests
         var dateTime = new DateTime(2000, 1, 1);
 
         // Act
-        var result = UpdatedAt.From(new LocalDateTime(dateTime));
+        var result = DeletedAt.From(new LocalDateTime(dateTime));
 
         // Assert
         Assert.NotNull(result);
@@ -46,7 +46,7 @@ public class UpdatedAtTests
         var fixedTime = new DateTime(2025, 1, 15, 10, 30, 0, DateTimeKind.Unspecified);
 
         // Act
-        var result = UpdatedAt.From(new LocalDateTime(fixedTime));
+        var result = DeletedAt.From(new LocalDateTime(fixedTime));
 
         // Assert
         Assert.NotNull(result);
@@ -61,7 +61,7 @@ public class UpdatedAtTests
         var fixedTime = new DateTime(2025, 1, 15, 10, 30, 0, DateTimeKind.Unspecified);
 
         // Act
-        var result = UpdatedAt.From(new LocalDateTime(fixedTime));
+        var result = DeletedAt.From(new LocalDateTime(fixedTime));
 
         // Assert
         Assert.NotNull(result);
@@ -75,7 +75,7 @@ public class UpdatedAtTests
         var dateTime = new DateTime(2025, 1, 1, 0, 0, 0);
 
         // Act
-        var result = UpdatedAt.From(new LocalDateTime(dateTime));
+        var result = DeletedAt.From(new LocalDateTime(dateTime));
 
         // Assert
         Assert.NotNull(result);
@@ -89,7 +89,7 @@ public class UpdatedAtTests
         var dateTime = new DateTime(2025, 1, 1, 23, 59, 59);
 
         // Act
-        var result = UpdatedAt.From(new LocalDateTime(dateTime));
+        var result = DeletedAt.From(new LocalDateTime(dateTime));
 
         // Assert
         Assert.NotNull(result);
@@ -101,14 +101,14 @@ public class UpdatedAtTests
     public void From_WithMinValue_ThrowsArgumentException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentException>(() => UpdatedAt.From(new LocalDateTime(DateTime.MinValue)));
+        Assert.Throws<ArgumentException>(() => DeletedAt.From(new LocalDateTime(DateTime.MinValue)));
     }
 
     [Fact]
     public void From_WithMaxValue_ThrowsArgumentException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentException>(() => UpdatedAt.From(new LocalDateTime(DateTime.MaxValue)));
+        Assert.Throws<ArgumentException>(() => DeletedAt.From(new LocalDateTime(DateTime.MaxValue)));
     }
 
     #endregion
@@ -123,12 +123,12 @@ public class UpdatedAtTests
         var dateTime = new DateTime(2025, 1, 1);
 
         // Act
-        var result = UpdatedAt.TryFrom(new LocalDateTime?(new LocalDateTime(dateTime)), out var updatedAt);
+        var result = DeletedAt.TryFrom(new LocalDateTime?(new LocalDateTime(dateTime)), out var deletedAt);
 
         // Assert
         Assert.True(result);
-        Assert.NotNull(updatedAt);
-        Assert.Equal(new LocalDateTime(dateTime), updatedAt.Value);
+        Assert.NotNull(deletedAt);
+        Assert.Equal(new LocalDateTime(dateTime), deletedAt.Value);
     }
 
     [Fact]
@@ -138,12 +138,12 @@ public class UpdatedAtTests
         var dateTime = new DateTime(2000, 1, 1);
 
         // Act
-        var result = UpdatedAt.TryFrom(new LocalDateTime?(new LocalDateTime(dateTime)), out var updatedAt);
+        var result = DeletedAt.TryFrom(new LocalDateTime?(new LocalDateTime(dateTime)), out var deletedAt);
 
         // Assert
         Assert.True(result);
-        Assert.NotNull(updatedAt);
-        Assert.Equal(new LocalDateTime(dateTime), updatedAt.Value);
+        Assert.NotNull(deletedAt);
+        Assert.Equal(new LocalDateTime(dateTime), deletedAt.Value);
     }
 
     [Fact]
@@ -154,12 +154,12 @@ public class UpdatedAtTests
         var dateTime = new DateTime(2025, 1, 15, 10, 30, 0, DateTimeKind.Unspecified);
 
         // Act
-        var result = UpdatedAt.TryFrom(new LocalDateTime?(new LocalDateTime(dateTime)), out var updatedAt);
+        var result = DeletedAt.TryFrom(new LocalDateTime?(new LocalDateTime(dateTime)), out var deletedAt);
 
         // Assert
         Assert.True(result);
-        Assert.NotNull(updatedAt);
-        Assert.Equal(new LocalDateTime(dateTime), updatedAt.Value);
+        Assert.NotNull(deletedAt);
+        Assert.Equal(new LocalDateTime(dateTime), deletedAt.Value);
     }
 
     // Null 入力
@@ -167,12 +167,12 @@ public class UpdatedAtTests
     public void TryFrom_Nullable_WithNull_ReturnsTrue()
     {
         // Act
-        var result = UpdatedAt.TryFrom((LocalDateTime?)null, out var updatedAt);
+        var result = DeletedAt.TryFrom((LocalDateTime?)null, out var deletedAt);
 
         // Assert
         Assert.True(result);  // null → Unset() で成功
-        Assert.NotNull(updatedAt);
-        Assert.False(updatedAt.HasUpdated);  // 未更新状態
+        Assert.NotNull(deletedAt);
+        Assert.False(deletedAt.IsDeleted);  // 未削除状態
     }
 
     // 異常系
@@ -180,33 +180,33 @@ public class UpdatedAtTests
     public void TryFrom_Nullable_WithMinValue_ReturnsFalse()
     {
         // Act
-        var result = UpdatedAt.TryFrom(new LocalDateTime(DateTime.MinValue), out var updatedAt);
+        var result = DeletedAt.TryFrom(new LocalDateTime(DateTime.MinValue), out var deletedAt);
 
         // Assert
         Assert.False(result);
-        Assert.Null(updatedAt);
+        Assert.Null(deletedAt);
     }
 
     [Fact]
     public void TryFrom_Nullable_WithMaxValue_ReturnsFalse()
     {
         // Act
-        var result = UpdatedAt.TryFrom(new LocalDateTime(DateTime.MaxValue), out var updatedAt);
+        var result = DeletedAt.TryFrom(new LocalDateTime(DateTime.MaxValue), out var deletedAt);
 
         // Assert
         Assert.False(result);
-        Assert.Null(updatedAt);
+        Assert.Null(deletedAt);
     }
 
     [Fact]
     public void TryFrom_Nullable_WithInvalidDateTime_ReturnsFalse()
     {
         // Act
-        var result = UpdatedAt.TryFrom(new LocalDateTime(DateTime.MinValue), out var updatedAt);
+        var result = DeletedAt.TryFrom(new LocalDateTime(DateTime.MinValue), out var deletedAt);
 
         // Assert
         Assert.False(result);
-        Assert.Null(updatedAt);
+        Assert.Null(deletedAt);
     }
 
     #endregion
@@ -220,34 +220,34 @@ public class UpdatedAtTests
         var dateTime = new DateTime(2025, 1, 1);
 
         // Act
-        var result = UpdatedAt.TryFrom(new LocalDateTime(dateTime), out var updatedAt);
+        var result = DeletedAt.TryFrom(new LocalDateTime(dateTime), out var deletedAt);
 
         // Assert
         Assert.True(result);
-        Assert.NotNull(updatedAt);
-        Assert.Equal(new LocalDateTime(dateTime), updatedAt.Value);
+        Assert.NotNull(deletedAt);
+        Assert.Equal(new LocalDateTime(dateTime), deletedAt.Value);
     }
 
     [Fact]
     public void TryFrom_NonNullable_WithMinValue_ReturnsFalse()
     {
         // Act
-        var result = UpdatedAt.TryFrom(new LocalDateTime(DateTime.MinValue), out var updatedAt);
+        var result = DeletedAt.TryFrom(new LocalDateTime(DateTime.MinValue), out var deletedAt);
 
         // Assert
         Assert.False(result);
-        Assert.Null(updatedAt);
+        Assert.Null(deletedAt);
     }
 
     [Fact]
     public void TryFrom_NonNullable_WithMaxValue_ReturnsFalse()
     {
         // Act
-        var result = UpdatedAt.TryFrom(new LocalDateTime(DateTime.MaxValue), out var updatedAt);
+        var result = DeletedAt.TryFrom(new LocalDateTime(DateTime.MaxValue), out var deletedAt);
 
         // Assert
         Assert.False(result);
-        Assert.Null(updatedAt);
+        Assert.Null(deletedAt);
     }
 
     #endregion
@@ -259,11 +259,11 @@ public class UpdatedAtTests
     {
         // Arrange
         var dateTime = new DateTime(2025, 1, 1);
-        var updated1 = UpdatedAt.From(new LocalDateTime(dateTime));
-        var updated2 = UpdatedAt.From(new LocalDateTime(dateTime));
+        var deleted1 = DeletedAt.From(new LocalDateTime(dateTime));
+        var deleted2 = DeletedAt.From(new LocalDateTime(dateTime));
 
         // Act
-        var result = updated1.Equals((object)updated2);
+        var result = deleted1.Equals((object)deleted2);
 
         // Assert
         Assert.True(result);
@@ -273,11 +273,11 @@ public class UpdatedAtTests
     public void Equals_Object_WithDifferentDateTime_ReturnsFalse()
     {
         // Arrange
-        var updated1 = UpdatedAt.From(new LocalDateTime(new DateTime(2025, 1, 1)));
-        var updated2 = UpdatedAt.From(new LocalDateTime(new DateTime(2025, 1, 2)));
+        var deleted1 = DeletedAt.From(new LocalDateTime(new DateTime(2025, 1, 1)));
+        var deleted2 = DeletedAt.From(new LocalDateTime(new DateTime(2025, 1, 2)));
 
         // Act
-        var result = updated1.Equals((object)updated2);
+        var result = deleted1.Equals((object)deleted2);
 
         // Assert
         Assert.False(result);
@@ -287,10 +287,10 @@ public class UpdatedAtTests
     public void Equals_Object_WithNull_ReturnsFalse()
     {
         // Arrange
-        var updated = UpdatedAt.From(new LocalDateTime(new DateTime(2025, 1, 1)));
+        var deleted = DeletedAt.From(new LocalDateTime(new DateTime(2025, 1, 1)));
 
         // Act
-        var result = updated.Equals((object?)null);
+        var result = deleted.Equals((object?)null);
 
         // Assert
         Assert.False(result);
@@ -300,10 +300,10 @@ public class UpdatedAtTests
     public void Equals_Object_WithDifferentType_ReturnsFalse()
     {
         // Arrange
-        var updated = UpdatedAt.From(new LocalDateTime(new DateTime(2025, 1, 1)));
+        var deleted = DeletedAt.From(new LocalDateTime(new DateTime(2025, 1, 1)));
 
         // Act
-        var result = updated.Equals((object)"2025-01-01");
+        var result = deleted.Equals((object)"2025-01-01");
 
         // Assert
         Assert.False(result);
@@ -311,45 +311,45 @@ public class UpdatedAtTests
 
     #endregion
 
-    #region Equals (UpdatedAt?) メソッドテスト
+    #region Equals (DeletedAt?) メソッドテスト
 
     [Fact]
-    public void Equals_UpdatedAt_WithSameDateTime_ReturnsTrue()
+    public void Equals_DeletedAt_WithSameDateTime_ReturnsTrue()
     {
         // Arrange
         var dateTime = new DateTime(2025, 1, 1);
-        var updated1 = UpdatedAt.From(new LocalDateTime(dateTime));
-        var updated2 = UpdatedAt.From(new LocalDateTime(dateTime));
+        var deleted1 = DeletedAt.From(new LocalDateTime(dateTime));
+        var deleted2 = DeletedAt.From(new LocalDateTime(dateTime));
 
         // Act
-        var result = updated1.Equals(updated2);
+        var result = deleted1.Equals(deleted2);
 
         // Assert
         Assert.True(result);
     }
 
     [Fact]
-    public void Equals_UpdatedAt_WithDifferentDateTime_ReturnsFalse()
+    public void Equals_DeletedAt_WithDifferentDateTime_ReturnsFalse()
     {
         // Arrange
-        var updated1 = UpdatedAt.From(new LocalDateTime(new DateTime(2025, 1, 1)));
-        var updated2 = UpdatedAt.From(new LocalDateTime(new DateTime(2025, 1, 2)));
+        var deleted1 = DeletedAt.From(new LocalDateTime(new DateTime(2025, 1, 1)));
+        var deleted2 = DeletedAt.From(new LocalDateTime(new DateTime(2025, 1, 2)));
 
         // Act
-        var result = updated1.Equals(updated2);
+        var result = deleted1.Equals(deleted2);
 
         // Assert
         Assert.False(result);
     }
 
     [Fact]
-    public void Equals_UpdatedAt_WithNull_ReturnsFalse()
+    public void Equals_DeletedAt_WithNull_ReturnsFalse()
     {
         // Arrange
-        var updated = UpdatedAt.From(new LocalDateTime(new DateTime(2025, 1, 1)));
+        var deleted = DeletedAt.From(new LocalDateTime(new DateTime(2025, 1, 1)));
 
         // Act
-        var result = updated.Equals((UpdatedAt?)null);
+        var result = deleted.Equals((DeletedAt?)null);
 
         // Assert
         Assert.False(result);
@@ -359,11 +359,11 @@ public class UpdatedAtTests
     public void Equals_SameReference_ReturnsTrue()
     {
         // Arrange
-        var updated1 = UpdatedAt.From(new LocalDateTime(new DateTime(2025, 1, 1)));
-        var updated2 = updated1;
+        var deleted1 = DeletedAt.From(new LocalDateTime(new DateTime(2025, 1, 1)));
+        var deleted2 = deleted1;
 
         // Act
-        var result = updated1.Equals(updated2);
+        var result = deleted1.Equals(deleted2);
 
         // Assert
         Assert.True(result);
@@ -378,12 +378,12 @@ public class UpdatedAtTests
     {
         // Arrange
         var dateTime = new DateTime(2025, 1, 1);
-        var updated1 = UpdatedAt.From(new LocalDateTime(dateTime));
-        var updated2 = UpdatedAt.From(new LocalDateTime(dateTime));
+        var deleted1 = DeletedAt.From(new LocalDateTime(dateTime));
+        var deleted2 = DeletedAt.From(new LocalDateTime(dateTime));
 
         // Act
-        var hash1 = updated1.GetHashCode();
-        var hash2 = updated2.GetHashCode();
+        var hash1 = deleted1.GetHashCode();
+        var hash2 = deleted2.GetHashCode();
 
         // Assert
         Assert.Equal(hash1, hash2);
@@ -393,13 +393,13 @@ public class UpdatedAtTests
     public void GetHashCode_CanBeUsedInDictionary()
     {
         // Arrange
-        var updated1 = UpdatedAt.From(new LocalDateTime(new DateTime(2025, 1, 1)));
-        var updated2 = UpdatedAt.From(new LocalDateTime(new DateTime(2025, 1, 1)));
-        var dict = new Dictionary<UpdatedAt, string>();
+        var deleted1 = DeletedAt.From(new LocalDateTime(new DateTime(2025, 1, 1)));
+        var deleted2 = DeletedAt.From(new LocalDateTime(new DateTime(2025, 1, 1)));
+        var dict = new Dictionary<DeletedAt, string>();
 
         // Act
-        dict.Add(updated1, "first");
-        var exists = dict.ContainsKey(updated2);
+        dict.Add(deleted1, "first");
+        var exists = dict.ContainsKey(deleted2);
 
         // Assert
         Assert.True(exists);
@@ -409,12 +409,12 @@ public class UpdatedAtTests
     public void GetHashCode_CanBeUsedInHashSet()
     {
         // Arrange
-        var updated1 = UpdatedAt.From(new LocalDateTime(new DateTime(2025, 1, 1)));
-        var updated2 = UpdatedAt.From(new LocalDateTime(new DateTime(2025, 1, 1)));
-        var hashSet = new HashSet<UpdatedAt> { updated1 };
+        var deleted1 = DeletedAt.From(new LocalDateTime(new DateTime(2025, 1, 1)));
+        var deleted2 = DeletedAt.From(new LocalDateTime(new DateTime(2025, 1, 1)));
+        var hashSet = new HashSet<DeletedAt> { deleted1 };
 
         // Act
-        var added = hashSet.Add(updated2);
+        var added = hashSet.Add(deleted2);
 
         // Assert
         Assert.False(added); // 同じ値なので追加されない
@@ -425,12 +425,12 @@ public class UpdatedAtTests
     public void GetHashCode_WithMultipleDates_DifferentHashes()
     {
         // Arrange
-        var updated1 = UpdatedAt.From(new LocalDateTime(new DateTime(2025, 1, 1)));
-        var updated2 = UpdatedAt.From(new LocalDateTime(new DateTime(2025, 1, 2)));
+        var deleted1 = DeletedAt.From(new LocalDateTime(new DateTime(2025, 1, 1)));
+        var deleted2 = DeletedAt.From(new LocalDateTime(new DateTime(2025, 1, 2)));
 
         // Act
-        var hash1 = updated1.GetHashCode();
-        var hash2 = updated2.GetHashCode();
+        var hash1 = deleted1.GetHashCode();
+        var hash2 = deleted2.GetHashCode();
 
         // Assert
         Assert.NotEqual(hash1, hash2);
@@ -445,10 +445,10 @@ public class UpdatedAtTests
     {
         // Arrange
         var dateTime = new DateTime(2025, 1, 1, 10, 30, 0);
-        var updated = UpdatedAt.From(new LocalDateTime(dateTime));
+        var deleted = DeletedAt.From(new LocalDateTime(dateTime));
 
         // Act
-        var result = updated.ToString();
+        var result = deleted.ToString();
 
         // Assert
         Assert.NotNull(result);
@@ -461,10 +461,10 @@ public class UpdatedAtTests
         // Arrange
         // 固定時刻を使用（LocalDateTime は DateTimeKind.Unspecified のみを許容）
         var fixedTime = new DateTime(2025, 1, 15, 10, 30, 0, DateTimeKind.Unspecified);
-        var updated = UpdatedAt.From(new LocalDateTime(fixedTime));
+        var deleted = DeletedAt.From(new LocalDateTime(fixedTime));
 
         // Act
-        var result = updated.ToString();
+        var result = deleted.ToString();
 
         // Assert
         Assert.NotNull(result);
@@ -481,10 +481,10 @@ public class UpdatedAtTests
     {
         // Arrange
         var dateTime = new DateTime(2025, 1, 1, 10, 30, 45);
-        var updated = UpdatedAt.From(new LocalDateTime(dateTime));
+        var deleted = DeletedAt.From(new LocalDateTime(dateTime));
 
         // Act
-        var value = updated.Value;
+        var value = deleted.Value;
 
         // Assert
         Assert.Equal(new LocalDateTime(dateTime), value);
@@ -494,12 +494,12 @@ public class UpdatedAtTests
     public void Value_IsReadOnly()
     {
         // Arrange
-        var updated = UpdatedAt.From(new LocalDateTime(new DateTime(2025, 1, 1)));
+        var deleted = DeletedAt.From(new LocalDateTime(new DateTime(2025, 1, 1)));
 
         // Act & Assert
         // Value プロパティは get-only なので、再代入はコンパイルエラーになる
         // ここではプロパティが存在することを確認
-        Assert.NotNull(updated.Value);
+        Assert.NotNull(deleted.Value);
     }
 
     #endregion
@@ -511,15 +511,15 @@ public class UpdatedAtTests
     {
         // Arrange
         var dateTime = new DateTime(2025, 1, 1);
-        var updated = UpdatedAt.From(new LocalDateTime(dateTime));
-        var originalValue = updated.Value;
+        var deleted = DeletedAt.From(new LocalDateTime(dateTime));
+        var originalValue = deleted.Value;
 
         // Act
-        // UpdatedAt インスタンスを操作しても
+        // DeletedAt インスタンスを操作しても
         // Value プロパティは変わらない
 
         // Assert
-        Assert.Equal(new LocalDateTime(dateTime), updated.Value);
+        Assert.Equal(new LocalDateTime(dateTime), deleted.Value);
     }
 
     #endregion
@@ -533,14 +533,14 @@ public class UpdatedAtTests
         var dateTime = new DateTime(2025, 1, 1);
 
         // Act
-        var updated1 = UpdatedAt.From(new LocalDateTime(dateTime));
-        var updated2 = UpdatedAt.From(new LocalDateTime(dateTime));
+        var deleted1 = DeletedAt.From(new LocalDateTime(dateTime));
+        var deleted2 = DeletedAt.From(new LocalDateTime(dateTime));
 
         // Assert
-        Assert.NotSame(updated1, updated2); // 異なるインスタンス
-        Assert.Equal(new LocalDateTime(dateTime), updated1.Value); // 値は同じ
-        Assert.Equal(new LocalDateTime(dateTime), updated2.Value);
-        Assert.Equal(updated1, updated2); // ValueObject として等価
+        Assert.NotSame(deleted1, deleted2); // 異なるインスタンス
+        Assert.Equal(new LocalDateTime(dateTime), deleted1.Value); // 値は同じ
+        Assert.Equal(new LocalDateTime(dateTime), deleted2.Value);
+        Assert.Equal(deleted1, deleted2); // ValueObject として等価
     }
 
     #endregion
@@ -554,7 +554,7 @@ public class UpdatedAtTests
         var dateTime = new DateTime(0001, 1, 1, 0, 0, 1);
 
         // Act
-        var result = UpdatedAt.From(new LocalDateTime(dateTime));
+        var result = DeletedAt.From(new LocalDateTime(dateTime));
 
         // Assert
         Assert.NotNull(result);
@@ -568,7 +568,7 @@ public class UpdatedAtTests
         var dateTime = new DateTime(9999, 12, 31, 23, 59, 58);
 
         // Act
-        var result = UpdatedAt.From(new LocalDateTime(dateTime));
+        var result = DeletedAt.From(new LocalDateTime(dateTime));
 
         // Assert
         Assert.NotNull(result);
@@ -587,7 +587,7 @@ public class UpdatedAtTests
         var dateTime = new DateTime(2025, 1, 1, 10, 30, 0, DateTimeKind.Unspecified);
 
         // Act
-        var result = UpdatedAt.From(new LocalDateTime(dateTime));
+        var result = DeletedAt.From(new LocalDateTime(dateTime));
 
         // Assert
         Assert.NotNull(result);
@@ -604,7 +604,7 @@ public class UpdatedAtTests
         var dateTime = new DateTime(2025, 1, 1, 10, 30, 0, DateTimeKind.Unspecified);
 
         // Act
-        var result = UpdatedAt.From(new LocalDateTime(dateTime));
+        var result = DeletedAt.From(new LocalDateTime(dateTime));
 
         // Assert
         Assert.NotNull(result);
@@ -620,7 +620,7 @@ public class UpdatedAtTests
         var dateTime = new DateTime(2025, 1, 1, 10, 30, 0, DateTimeKind.Unspecified);
 
         // Act
-        var result = UpdatedAt.From(new LocalDateTime(dateTime));
+        var result = DeletedAt.From(new LocalDateTime(dateTime));
 
         // Assert
         Assert.NotNull(result);
@@ -637,20 +637,20 @@ public class UpdatedAtTests
     public void Unset_CreatesUnsetInstance()
     {
         // Act
-        var result = UpdatedAt.Unset();
+        var result = DeletedAt.Unset();
 
         // Assert
         Assert.NotNull(result);
         Assert.Null(result.Value);
-        Assert.False(result.HasUpdated);
+        Assert.False(result.IsDeleted);
     }
 
     [Fact]
     public void Unset_InstancesAreEqual()
     {
         // Act
-        var unset1 = UpdatedAt.Unset();
-        var unset2 = UpdatedAt.Unset();
+        var unset1 = DeletedAt.Unset();
+        var unset2 = DeletedAt.Unset();
 
         // Assert
         Assert.Equal(unset1, unset2);
@@ -667,12 +667,12 @@ public class UpdatedAtTests
         var dbDateTime = new DateTime(2025, 1, 1, 10, 30, 0);
 
         // Act
-        var result = UpdatedAt.FromDbValue(dbDateTime);
+        var result = DeletedAt.FromDbValue(dbDateTime);
 
         // Assert
         Assert.NotNull(result);
         Assert.Equal(new LocalDateTime(dbDateTime), result.Value);
-        Assert.True(result.HasUpdated);
+        Assert.True(result.IsDeleted);
     }
 
     [Fact]
@@ -682,26 +682,26 @@ public class UpdatedAtTests
         var dbDateTime = new DateTime(2000, 1, 1, 12, 0, 0);
 
         // Act
-        var result = UpdatedAt.FromDbValue(dbDateTime);
+        var result = DeletedAt.FromDbValue(dbDateTime);
 
         // Assert
         Assert.NotNull(result);
         Assert.Equal(new LocalDateTime(dbDateTime), result.Value);
-        Assert.True(result.HasUpdated);
+        Assert.True(result.IsDeleted);
     }
 
     [Fact]
     public void FromDbValue_WithMinValue_ThrowsArgumentException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentException>(() => UpdatedAt.FromDbValue(DateTime.MinValue));
+        Assert.Throws<ArgumentException>(() => DeletedAt.FromDbValue(DateTime.MinValue));
     }
 
     [Fact]
     public void FromDbValue_WithMaxValue_ThrowsArgumentException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentException>(() => UpdatedAt.FromDbValue(DateTime.MaxValue));
+        Assert.Throws<ArgumentException>(() => DeletedAt.FromDbValue(DateTime.MaxValue));
     }
 
     #endregion
@@ -713,10 +713,10 @@ public class UpdatedAtTests
     {
         // Arrange
         var dateTime = new DateTime(2025, 1, 1, 10, 30, 0);
-        var updated = UpdatedAt.From(new LocalDateTime(dateTime));
+        var deleted = DeletedAt.From(new LocalDateTime(dateTime));
 
         // Act
-        var result = updated.ToDbValue();
+        var result = deleted.ToDbValue();
 
         // Assert
         Assert.Equal(dateTime, result);
@@ -726,7 +726,7 @@ public class UpdatedAtTests
     public void ToDbValue_WithUnsetInstance_ThrowsInvalidOperationException()
     {
         // Arrange
-        var unset = UpdatedAt.Unset();
+        var unset = DeletedAt.Unset();
 
         // Act & Assert
         Assert.Throws<InvalidOperationException>(() => unset.ToDbValue());
@@ -739,7 +739,7 @@ public class UpdatedAtTests
         var originalDbDateTime = new DateTime(2025, 6, 15, 14, 30, 45);
 
         // Act
-        var fromDb = UpdatedAt.FromDbValue(originalDbDateTime);
+        var fromDb = DeletedAt.FromDbValue(originalDbDateTime);
         var toDb = fromDb.ToDbValue();
 
         // Assert
@@ -757,48 +757,48 @@ public class UpdatedAtTests
         var dbDateTime = new DateTime(2025, 1, 1, 10, 30, 0);
 
         // Act
-        var result = UpdatedAt.TryFromDbValue(dbDateTime, out var updated);
+        var result = DeletedAt.TryFromDbValue(dbDateTime, out var deleted);
 
         // Assert
         Assert.True(result);
-        Assert.NotNull(updated);
-        Assert.Equal(new LocalDateTime(dbDateTime), updated.Value);
-        Assert.True(updated.HasUpdated);
+        Assert.NotNull(deleted);
+        Assert.Equal(new LocalDateTime(dbDateTime), deleted.Value);
+        Assert.True(deleted.IsDeleted);
     }
 
     [Fact]
     public void TryFromDbValue_WithNull_ReturnsTrue_And_Unset()
     {
         // Act
-        var result = UpdatedAt.TryFromDbValue(null, out var updated);
+        var result = DeletedAt.TryFromDbValue(null, out var deleted);
 
         // Assert
         Assert.True(result);  // null → Unset で成功
-        Assert.NotNull(updated);
-        Assert.Null(updated.Value);
-        Assert.False(updated.HasUpdated);  // 未更新状態
+        Assert.NotNull(deleted);
+        Assert.Null(deleted.Value);
+        Assert.False(deleted.IsDeleted);  // 未削除状態
     }
 
     [Fact]
     public void TryFromDbValue_WithMinValue_ReturnsFalse()
     {
         // Act
-        var result = UpdatedAt.TryFromDbValue(DateTime.MinValue, out var updated);
+        var result = DeletedAt.TryFromDbValue(DateTime.MinValue, out var deleted);
 
         // Assert
         Assert.False(result);
-        Assert.Null(updated);
+        Assert.Null(deleted);
     }
 
     [Fact]
     public void TryFromDbValue_WithMaxValue_ReturnsFalse()
     {
         // Act
-        var result = UpdatedAt.TryFromDbValue(DateTime.MaxValue, out var updated);
+        var result = DeletedAt.TryFromDbValue(DateTime.MaxValue, out var deleted);
 
         // Assert
         Assert.False(result);
-        Assert.Null(updated);
+        Assert.Null(deleted);
     }
 
     [Fact]
@@ -808,12 +808,12 @@ public class UpdatedAtTests
         var dbDateTime = new DateTime(2000, 1, 1, 0, 0, 0);
 
         // Act
-        var result = UpdatedAt.TryFromDbValue(dbDateTime, out var updated);
+        var result = DeletedAt.TryFromDbValue(dbDateTime, out var deleted);
 
         // Assert
         Assert.True(result);
-        Assert.NotNull(updated);
-        Assert.Equal(new LocalDateTime(dbDateTime), updated.Value);
+        Assert.NotNull(deleted);
+        Assert.Equal(new LocalDateTime(dbDateTime), deleted.Value);
     }
 
     #endregion

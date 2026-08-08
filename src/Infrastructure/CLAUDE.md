@@ -25,6 +25,43 @@ public class UserRepository : IUserRepository { }
 private readonly CreateUserUseCase _useCase; // 禁止
 ```
 
+## 🚫 Infrastructure層での null 処理（層間フィルター）
+
+Infrastructure層は DB の null を Domain の Unset() に変換する責務があります。すべての ValueObject を null-free 状態で Domain に渡す必要があります。
+
+### 実装パターン
+
+```csharp
+public class UserPreferencesRepository : IUserPreferencesRepository
+{
+    public async Task<UserPreferences?> GetAsync(UserId userId)
+    {
+        var dbModel = await _context.UserPreferences.FindAsync(userId.Value);
+        if (dbModel == null) return null;
+        
+        // ============ 層間フィルター ============
+        // DB の null を Unset() に変換（TryFromDbValue を呼び出し）
+        
+        CreatedAt.TryFromDbValue(dbModel.CreatedAtDb, out var createdAt);
+        UpdatedAt.TryFromDbValue(dbModel.UpdatedAtDb, out var updatedAt);
+        DeletedAt.TryFromDbValue(dbModel.DeletedAtDb, out var deletedAt);
+        
+        // すべて null-free 状態で Domain に渡す
+        return UserPreferences.Reconstruct(userId, createdAt, updatedAt, deletedAt, ...);
+    }
+}
+```
+
+### 責務
+
+- **TryFromDbValue の呼び出し**: DB の null を自動的に Unset() に変換
+- **例外投げ**: CreatedAt など必須フィールドが null の場合は例外投げ（DB整合性エラー）
+- **null-free保証**: Domain に渡すすべての ValueObject が null を含まないこと
+
+### 参考
+
+詳細は [null 厳格性設計ガイド](../../docs/Assistance/Guides/null厳格性設計ガイド.md) — セクション 2.3 Infrastructure層
+
 ## その他
 - Domain / Application が定義したインターフェース（Repository など）の実装を置く場所。技術的な詳細（DB接続、ORM、外部API呼び出し）はここに隠蔽し、上位層に漏らさない
 - Bounded Context 別の Infrastructure（`src/Contexts/*/Infrastructure`）は同一Context の Domain と、この汎用 `Infrastructure` プロジェクトのみ参照する

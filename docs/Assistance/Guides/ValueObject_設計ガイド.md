@@ -19,8 +19,9 @@
 8. [ファクトリメソッド設計](#8-ファクトリメソッド設計)
 9. [等価性判定の設計](#9-等価性判定の設計)
 10. [検証・正規化の責務分離](#10-検証正規化の責務分離)
-11. [ValueObject パターン別ガイド](#11-valueobject-パターン別ガイド) 【新規】
+11. [ValueObject パターン別ガイド](#11-valueobject-パターン別ガイド)
 12. [レイヤ制約](#12-レイヤ制約)
+13. [チェックリスト](#13-チェックリスト-新しい-valueobject-を実装するとき)
 
 ---
 
@@ -338,36 +339,34 @@ Assert.IsFalse(unset.TryGetValue(out _));
 
 ValueObject は実装パターンによって状態管理方法が異なります。以下 3パターンの特徴と使い分けを理解することが重要です。
 
-### 4.1 【PrimitiveValueObject 向け】IsSet フラグによる未設定状態管理（オプション項目）
+### 4.1 【PrimitiveValueObject 向け】IsSet フラグによる未設定状態管理
 
 **概要:**
-- IsSet フラグで "値あり" / "未設定" を区別
-- オプション項目で Unset 状態が自然（例：フォーム未入力）
+- `IsSet` フラグで "値あり" / "未設定" を区別
+- ビジネス属性（名前、年齢など）で使用
 - Unset() メソッドで未設定インスタンスを生成
 
-**IsSet = true — 値を保持している状態**
+**IsSet の動作:**
+
+**IsSet = true** — 値を保持している状態
 ```csharp
 var name = RespondentName.From("山田太郎");
 Assert.IsTrue(name.IsSet);
 Assert.AreEqual("山田太郎", name.Value);
 ```
 
-**IsSet = false — 未設定状態（値を保持していない）**
+**IsSet = false** — 未設定状態（値を保持していない）
 ```csharp
 var unset = RespondentName.Unset();
 Assert.IsFalse(unset.IsSet);
-Assert.IsNull(unset.Value);  // 参照型 → null、値型 → default(T)
+Assert.IsNull(unset.Value);  // Value は null
 Assert.IsFalse(unset.TryGetValue(out _));  // 取得失敗
 ```
 
-**【重要】Value プロパティの動作**
-- IsSet=true：実際の値を返す
-- IsSet=false：その型のデフォルト値
-  - string/DateTime? → null
-  - int → 0
-  - DateTime → DateTime.MinValue
-
 **等価性判定:**
+- IsSet が等価性に含まれるため、Unset 同士は等価
+- IsSet=true と IsSet=false は異なる
+
 ```csharp
 var unset1 = RespondentName.Unset();
 var unset2 = RespondentName.Unset();
@@ -379,142 +378,77 @@ Assert.AreNotEqual(unset1, value);   // true（状態が異なる）
 
 ---
 
-### 4.2 【PrimitiveValueObject 向け】IsSet=true のみ（入力必須）
+### 4.2 【RowId 向け】value=0 による未採番状態管理
 
-**対象パターン:** CreatedAt（作成日時）、DeletedAt（削除日時）
+**概要:**
+- `IsSet` フラグなし
+- `value=0` で DB 採番前（未採番状態）を表現
+- テーブル物理キーの管理
+- 常に値を持つ（値は 0 以上）
 
-**実装例：CreatedAt**
+**未採番状態:**
 ```csharp
-public sealed class CreatedAt : PrimitiveValueObject<DateTime>, IEquatable<CreatedAt>
-{
-    private CreatedAt(DateTime value) : base(value, true)  // isSet は常に true
-    {
-    }
-
-    public static CreatedAt From(LocalDateTime value) => new(value.Value);
-    public static CreatedAt From(DateTime value) => new(value);
-    
-    // 【注意】Unset() メソッドなし ← 入力必須を表現
-
-    public DateTime Value => ValueField;
-
-    public override void Validate(DateTime normalized)
-    {
-        if (normalized == DateTime.MinValue || normalized == DateTime.MaxValue)
-            throw new ArgumentException("有効な日時ではありません。");
-    }
-
-    protected override IEnumerable<object?> GetValueComponents()
-    {
-        yield return ValueField;  // IsSet=true のみなので、常に yield
-    }
-}
+var rowId = RowId.New();  // value=0 で初期化
+Assert.AreEqual(0L, rowId.Value);
+// DB に INSERT される前の状態
 ```
 
-**CreatedAt と UpdatedAt の比較:**
+**採番後の状態:**
+```csharp
+var rowId = RowId.From(12345);  // DB から読み込まれた value
+Assert.AreEqual(12345L, rowId.Value);
+```
 
-| 項目 | CreatedAt | UpdatedAt |
-|---|---|---|
-| 基底クラス | PrimitiveValueObject<DateTime> | PrimitiveValueObject<DateTime?> |
-| TValue | DateTime | DateTime? |
-| IsSet | 常に true | true/false |
-| Unset() メソッド | ❌ 無 | ✅ 有 |
-| 役割 | 作成日時（不変） | 更新日時（変更可能） |
-| ビジネス意味 | 作成時に必ず設定 | 初回作成後は null、初回更新で DateTime に |
-| 永続化時 | 値をそのまま渡す | IsSet 確認後に値を渡す |
+**特徴:**
+- IsSet フラグなし（常に有効な状態）
+- Unset() メソッドなし
+- value=0 と value>0 で状態を区別
+- 等価性判定は value のみ
 
 ---
 
-### 4.3 【ValueObject 直接継承】RowId パターン（DB物理キー）
+### 4.3 【AggregateId 向け】GUID 必須（Unset 状態なし）
 
-**対象パターン:** RowId（DB物理キー）
+**概要:**
+- `IsSet` フラグなし
+- Unset 状態なし（常に Guid 値を持つ）
+- Guid.Empty は許可されない（コンストラクタで検証）
+- 集約の論理的識別子
 
-**RowId のライフサイクル:**
-
-| フェーズ | value | 永続化時の処理 | 用途 |
-|---|---|---|---|
-| Entity 新規作成 | 0 | INSERT: DB へ値を渡さない | 未採番状態 |
-| DB 採番後 | >0 | — | 採番済み |
-| UPDATE/DELETE | >0 | WHERE rowid = @rowid | WHERE 条件値として使用 |
-| 以降永続化 | >0（不変） | WHERE rowid = @rowid | RowId は変わらない |
-
-**【重要】value=0 と value>0 の意味の違い**
-- value=0：未採番（INSERT 時、DB が採番）
-- value>0：採番済み（UPDATE/DELETE で WHERE 条件に使用）
-- 一度採番されると不変（Entity の更新時に RowId は変わらない）
-
-**実装例：RowId**
+**生成:**
 ```csharp
-public sealed class RowId : ValueObject, IEquatable<RowId>
-{
-    private readonly long _value;
+// 新規 ID を生成
+var userId = UserId.New();  // Guid.NewGuid()
 
-    private RowId(long value)
-    {
-        if (value < 0)
-            throw new ArgumentException("RowId must be non-negative.", nameof(value));
-        _value = value;
-        IsSet = true;  // 常に true
-    }
+// 既存 ID から生成（DB 読み込み時）
+var userId = UserId.From(new Guid("12345678-1234-1234-1234-123456789012"));
 
-    /// <summary>未採番状態のRowIdを生成（value=0）</summary>
-    public static RowId New() => new(0);
-
-    /// <summary>DB から読み込まれた値から RowId を生成</summary>
-    public static RowId From(long value) => new(value);
-
-    public long Value => _value;
-
-    protected override IEnumerable<object?> GetValueComponents()
-    {
-        yield return _value;
-    }
-}
+// Guid.Empty は許可されない
+// UserId.From(Guid.Empty);  // ← ArgumentException
 ```
 
-**永続化側での処理分岐（リポジトリ層）:**
-```csharp
-public async Task SaveAsync(Entity entity)
-{
-    if (entity.RowId.Value == 0)
-    {
-        // INSERT フロー：RowId=0 なので、DB へ値を渡さない
-        var generatedId = await _database.InsertAsync(
-            tableName: "t_Entity",
-            columns: new[] { "column1", "column2", ... },
-            values: new[] { val1, val2, ... }
-            // rowid は含めない ← DB が自動採番
-        );
-        
-        // 採番後に Entity を再構成
-        entity.SetRowId(RowId.From(generatedId));
-    }
-    else
-    {
-        // UPDATE フロー：RowId>0 なので、WHERE 条件に使用
-        await _database.UpdateAsync(
-            tableName: "t_Entity",
-            setClause: "column1 = @val1, column2 = @val2, ...",
-            whereClause: "rowid = @rowid",
-            parameters: new { val1, val2, ..., rowid = entity.RowId.Value }
-        );
-    }
-}
-```
+**特徴:**
+- IsSet フラグなし（常に値を持つ）
+- Unset() / Unset 状態なし（必須フィールド）
+- Guid は内部構造化済みなので Normalize / Validate 不要
+- 型安全性により異なる集約 ID を区別
 
 ---
 
 ### 4.4 状態管理パターン別比較表
 
-| 特性 | PrimitiveValueObject<T>（IsSet両方） | PrimitiveValueObject<T>（IsSetTrue） | RowId（ValueObject） |
-|---|---|---|---|
-| **例** | UpdatedAt, RespondentName | CreatedAt, DeletedAt | RowId |
-| **基底クラス** | PrimitiveValueObject<TValue> | PrimitiveValueObject<TValue> | ValueObject |
-| **IsSet フラグ** | ✅ 有 | ✅ 有 | ❌ 無 |
-| **Unset 状態** | ✅ IsSet=false | ❌ 常に IsSet=true | ❌ value=0で未採番 |
-| **Unset() メソッド** | ✅ 有 | ❌ 無 | ❌ 無 |
-| **用途** | ビジネス属性（オプション） | 監査情報（必須） | DB物理キー |
-| **永続化時** | IsSet確認 → 値を渡す | 値をそのまま渡す | value=0→採番フロー、value>0→WHERE条件 |
+| 特性 | PrimitiveValueObject | RowId | AggregateId |
+|-----|------------------|-------|------------|
+| **IsSet フラグ** | ✅ 有 | ❌ 無 | ❌ 無 |
+| **Unset 状態** | ✅ IsSet=false | ❌ value=0で未採番 | ❌ 常に値を持つ |
+| **Unset() メソッド** | ✅ 有（未設定インスタンス） | ❌ 無 | ❌ 無 |
+| **New() メソッド** | ❌ 無 | ✅ 有（value=0） | ✅ 有（Guid.NewGuid） |
+| **Value 型** | TValue（string, int など） | long（0以上） | Guid（非Empty） |
+| **Value null許容** | ✅ IsSet で制御（null可能） | ❌ 常に long | ❌ 常に Guid |
+| **Normalize 必須** | ✅ 通常必須 | ❌ 不要 | ❌ 不要 |
+| **Validate 必須** | ✅ 通常必須 | ❌ 最小限 | ❌ Guid.Empty チェックのみ |
+| **用途** | ビジネス属性（名前など） | DB行の物理キー | 集約の論理的ID |
+| **使用例** | RespondentName | Entity._rowId | Entity.Id |
 
 ---
 
@@ -1158,45 +1092,57 @@ public sealed class CreatedAt : PrimitiveValueObject<DateTime>, IEquatable<Creat
 }
 ```
 
-#### 7.3.1 CreatedAt と UpdatedAt の詳細比較
+**層間での Value カプセル化の詳細**
 
-**状態の遷移:**
-- CreatedAt：作成時に DateTime → 以降変わらない（不変）
-- UpdatedAt：作成時は null → 初回更新で DateTime → 更新のたびに変わる
+各層における ValueObject の役割と型処理の違いをまとめています。
 
-| 特性 | CreatedAt | UpdatedAt |
-|---|---|---|
-| **基底クラス** | PrimitiveValueObject<DateTime> | PrimitiveValueObject<DateTime?> |
-| **TValue** | DateTime | DateTime? |
-| **IsSet** | 常に true（入力必須） | true/false（オプション） |
-| **初期値** | 作成時に設定（必須） | null / 未設定 |
-| **変更** | 不変（作成後は変わらない） | 更新のたびに値が変わる |
-| **Unset() メソッド** | ❌ 無 | ✅ 有 |
-| **用途** | Entity 作成日時の記録 | Entity 最終更新日時の記録 |
-| **ビジネス意味** | "いつ作成されたか" | "最後にいつ更新されたか" |
-| **永続化時** | 値をそのまま渡す（INSERT/UPDATE 共通） | IsSet で分岐（NULL か値か）|
-| **テーブルの NOT NULL** | YES（NOT NULL 制約） | NO（NULL 許容） |
+| 特性 | Infrastructure層 | Application層 | Domain層 |
+|-----|-----------------|-------------|---------|
+| **内部型** | DateTime（プリミティブ） | LocalDateTime | LocalDateTime |
+| **ValueObject の型** | DbModel（型なし、プリミティブのみ） | ValueObject（型安全） | ValueObject（型安全） |
+| **型安全性** | 低（文字列、long など） | ✅ 高（型チェック） | ✅ 高（型チェック） |
+| **責務** | 型変換のみ | 検証・正規化 | ビジネスロジック |
+| **null 処理方針** | null チェック（プリミティブ） | IsSet フラグ | IsSet フラグ |
+| **Normalize** | 不要（DbModel はプリミティブ） | ✅ 正規化ロジック | ✅ 正規化ロジック |
+| **Validate** | 不要（ORM任せ） | ✅ 検証ロジック | ✅ 検証ロジック |
+| **使用例** | `UserDbModel.CreatedAt: DateTime` | `CreateUserRequest.Name: string` → `RespondentName` | `User.Name: RespondentName` |
 
-**永続化時の処理例:**
+**層間の責務分離:**
 
-```csharp
-// CreatedAt：値をそのまま渡す
-INSERT INTO t_user (created_at, updated_at, ...)
-VALUES (@createdAt, @updatedAt, ...)
+1. **Infrastructure 層（DbModel）**
+   - DateTime / DateTime? など OS ネイティブ型を直接保持
+   - null で未設定を表現
+   - type-safe でない（string, long など共存）
 
-// WHERE 条件では、変わらない値として使用可能
-SELECT * FROM t_user WHERE created_at >= @minDate;
+2. **Application 層（Use Case）**
+   - 入力値を ValueObject に変換（TryFrom で null 安全に）
+   - Application → Domain への受け渡しで型安全性を確保
+   - 検証・正規化は ValueObject が実施
 
-// UpdatedAt：IsSet で分岐（NULL vs 値）
-if (entity.UpdatedAt.IsSet)
-{
-    UPDATE t_user SET updated_at = @updatedAt WHERE rowid = @rowid;
-}
-else
-{
-    UPDATE t_user SET updated_at = NULL WHERE rowid = @rowid;
-}
+3. **Domain 層（Entity）**
+   - ValueObject を型安全に扱う（型レベルの検証）
+   - IsSet フラグで未設定状態を管理（null-free）
+   - ビジネスロジックに集中
+
+**重要：DateTime ↔ LocalDateTime 変換の流れ**
+
 ```
+【DB ← → Entity の往路】
+DbModel.CreatedAt (DateTime)
+    ↓ [Mapper.ToDomainEntity]
+Entity.CreatedAt (CreatedAt: LocalDateTime)
+    ↓ [ビジネスロジック内で使用]
+Domain Logic uses: LocalDateTime（型安全）
+
+【Entity → DB への復路】
+Entity.CreatedAt (CreatedAt: LocalDateTime)
+    ↓ [Mapper.ToDbModel]
+DbModel.CreatedAt (DateTime)
+    ↓ [ORM / DataAccess]
+DB stored as: datetime2(7)
+```
+
+---
 
 ### 7.4 選択肢型 — 列挙値
 
@@ -1665,47 +1611,83 @@ public override string ToString()
 
 ### 10.4 実行順序
 
-**【PrimitiveValueObject のコンストラクタでの処理フロー】**
+**フローチャート**
 
 ```
-isSet = true か？
-    ├─ YES → Normalize → Validate → ValueField 格納 → IsSet=true
-    └─ NO → ValueField = default! → IsSet=false
+┌──────────────────────────────────────────┐
+│    ValueObject のインスタンス化         │
+│   From(value) / new() / TryFrom()       │
+└────────────────┬─────────────────────────┘
+                 │
+                 ↓
+        ┌───────────────────┐
+        │  Normalize(value)  │
+        │ （値を標準形に変換）│
+        └────────┬──────────┘
+                 │
+                 ↓
+        ┌─────────────────────┐
+        │ Validate(normalized) │
+        │ （ビジネスルール検証）│
+        └────────┬────────────┘
+                 │
+         ┌───────┴──────────┐
+         │                  │
+    成功 ↓              失敗 ↓
+         │                  └─→ ArgumentException スロー
+         │
+    ┌─────────────┐      失敗時の処理:
+    │ ValueField  │      - From() は例外をスロー
+    │ に値を格納  │      - TryFrom() は false を返す
+    └────┬────────┘
+         │
+         ↓
+    ┌─────────────┐
+    │ IsSet を設定 │
+    │ IsSet=true  │
+    └────┬────────┘
+         │
+         ↓
+    ┌─────────────────────┐
+    │インスタンスを返却     │
+    │（有効な ValueObject）│
+    └─────────────────────┘
 ```
 
-**詳細な実行フロー:**
+**各ステップの詳細**
 
+| ステップ | 処理 | 例 | 例外時 |
+|---------|------|-----|--------|
+| **Normalize** | 入力値を業務ルールに基づき標準化 | `"  山田太郎  "` → `"山田太郎"` | スキップ（前処理なし） |
+| **Validate** | 正規化済み値がビジネスルール違反していないか確認 | 名前の長さが 0 文字か 100 文字超か | ArgumentException をスロー |
+| **格納** | 正規化・検証済み値を ValueField に格納 | ValueField = `"山田太郎"` | - |
+| **IsSet 設定** | IsSet フラグを true に設定（設定済み状態を表現） | IsSet = true | - |
+
+**From() vs TryFrom() の使い分け**
+
+```csharp
+// From() — 検証失敗時は例外
+try
+{
+    var name = RespondentName.From(input);  // 検証失敗 → ArgumentException
+}
+catch (ArgumentException ex)
+{
+    // エラー処理
+}
+
+// TryFrom() — 検証失敗時は false を返す
+if (RespondentName.TryFrom(input, out var name))
+{
+    // 成功時のみ処理
+    ProcessName(name);
+}
+else
+{
+    // null 入力は Unset() に変換される（失敗ではない）
+    // または検証失敗時は false が返される
+}
 ```
-コンストラクタ呼び出し
-    ↓
-isSet フラグの確認
-    ├─ isSet = true の場合：
-    │   ├─ Normalize(value) 実行 → 正規化済み値を取得
-    │   ├─ Validate(正規化済み値) 実行 → 検証（例外あり得る）
-    │   ├─ ValueField に正規化済み値を格納
-    │   └─ IsSet = true に設定
-    │
-    └─ isSet = false の場合：
-        ├─ Normalize スキップ
-        ├─ Validate スキップ
-        ├─ ValueField = default! で初期化（型のデフォルト値）
-        └─ IsSet = false に設定
-    ↓
-インスタンス返却
-```
-
-**【IsSet=false の場合の ValueField 初期化】**
-
-| 型 | default 値 |
-|---|---|
-| string | null |
-| DateTime | DateTime.MinValue |
-| DateTime? | null |
-| int | 0 |
-| long | 0 |
-| decimal | 0.0m |
-
-**重要:** IsSet=false の場合、Normalize と Validate はスキップされます。これは未設定状態が「有効な状態」であることを表します。
 
 ---
 
@@ -1715,30 +1697,29 @@ isSet フラグの確認
 
 ### 11.1 PrimitiveValueObject を使うべき場合
 
-**判定基準（2つのケース）:**
-
-#### ケース A: Unset 状態が自然（オプション項目）
-
-**対象:**
-- ✅ 例：UpdatedAt, RespondentName, RespondentAge
-- ✅ Unset() メソッド実装あり
-- ✅ IsSet = true/false 両方が存在
+**判定基準:**
+- ✅ スカラ値（単一フィールド）
+- ✅ ビジネス属性（名前、価格、年齢など）
+- ✅ 入力値のバリデーション・正規化が必要
+- ✅ Unset 状態が自然である（オプション項目）
 
 **具体例:**
-- RespondentName（文字列：回答者名 — フォーム未入力）
-- RespondentAge（数値：年齢 — オプション）
-- UpdatedAt（日時：更新日時 — 初回作成時は null）
+- RespondentName（文字列：回答者名）
+- RespondentAge（数値：年齢）
+- CreatedAt / UpdatedAt / DeletedAt（日時：監査）
+- Price（金額：商品価格）
+- EmailAddress（文字列：メールアドレス）
 
 **実装パターン:**
 ```csharp
 public sealed class RespondentName : PrimitiveValueObject<string>, IEquatable<RespondentName>
 {
-    private RespondentName(string value, bool isSet) : base(value, isSet) { }
+    private RespondentName(string value) : base(value, true) { }
 
-    public static RespondentName From(string value) => new(value, true);
-    public static RespondentName Unset() => new(default!, false);
+    public static RespondentName From(string value) => new(value);
+    public static RespondentName Unset() => new(false);
 
-    public string? Value => IsSet ? ValueField : null;
+    public string Value => ValueField;
 
     protected override string Normalize(string input) => input.Trim();
 
@@ -1755,59 +1736,18 @@ public sealed class RespondentName : PrimitiveValueObject<string>, IEquatable<Re
 }
 ```
 
----
-
-#### ケース B: Unset 状態が不自然（入力必須）
-
-**対象:**
-- ✅ 例：CreatedAt, DeletedAt
-- ✅ Unset() メソッド実装なし
-- ✅ IsSet = true のみ（フラグはあるが常に true）
-
-**具体例:**
-- CreatedAt（日時：作成日時 — 常に必須）
-- DeletedAt（日時：削除日時 — 削除時は必ず設定）
-
-**実装パターン:**
-```csharp
-public sealed class CreatedAt : PrimitiveValueObject<DateTime>, IEquatable<CreatedAt>
-{
-    private CreatedAt(DateTime value) : base(value, true) { }  // isSet = true 固定
-
-    public static CreatedAt From(LocalDateTime value) => new(value.Value);
-    public static CreatedAt From(DateTime value) => new(value);
-    
-    // 【注意】Unset() メソッドなし ← 入力必須を表現
-
-    public DateTime Value => ValueField;
-
-    public override void Validate(DateTime normalized)
-    {
-        if (normalized == DateTime.MinValue || normalized == DateTime.MaxValue)
-            throw new ArgumentException("有効な日時ではありません。");
-    }
-
-    protected override IEnumerable<object?> GetValueComponents()
-    {
-        yield return ValueField;  // IsSet=true のみなので、常に yield
-    }
-}
-```
-
----
-
-**PrimitiveValueObject 選択のチェックリスト（使用前に確認）:**
+**チェックリスト（使用前に確認）:**
 - [ ] 単一フィールド（スカラ値）か
 - [ ] ビジネス属性の値を表すか
 - [ ] Normalize() で正規化ロジックがあるか
 - [ ] Validate() で検証ロジックがあるか
-- [ ] IsSet フラグで Unset 状態を表現するか（ケース A）**または** Unset 状態が不要か（ケース B）
+- [ ] IsSet フラグで Unset 状態を表現するか
 - [ ] TryGetValue() で安全なアクセスを提供しているか
 - [ ] null 許容性が明確か
 
 ---
 
-### 10.2 AggregateId を使うべき場合
+### 11.2 AggregateId を使うべき場合
 
 **判定基準:**
 - ✅ Entity の識別子（GUID ベース）
@@ -1869,72 +1809,6 @@ public class User : AggregateRoot<UserId>  // ← TId = UserId
 - Employee エンティティの _rowId
 - Role エンティティの _rowId
 
-**RowId のライフサイクル（完全版）:**
-
-**【Phase 1】Entity 新規作成**
-- `RowId.New()` → value=0（未採番）
-- DB へ永続化される前の状態
-- この段階では、Entity はまだ DB に存在しない
-
-```csharp
-var user = new User(UserId.New(), "太郎");  // RowId.New() で value=0
-Assert.AreEqual(0L, user.RowId.Value);
-```
-
-**【Phase 2】初回永続化（INSERT）**
-- リポジトリが `value=0` を検知
-- DB へ rowid を渡さない（DB が自動採番）
-- Sequence で採番された値を取得
-
-```csharp
-// リポジトリ層での処理
-if (entity.RowId.Value == 0)
-{
-    var generatedId = await _database.InsertAsync(...);  // rowid 列は指定しない
-    // 採番後の RowId を取得
-}
-```
-
-**【Phase 3】Entity 再構成（Mapper）**
-- DB から読み込んだ rowId 値を使用
-- `RowId.From(dbModel.RowId)` で再構成
-- value>0 になる（採番済み状態）
-
-```csharp
-public User ToDomainEntity(UserDbModel dbModel, IClock clock)
-{
-    var userId = UserId.From(dbModel.UserId);
-    var rowId = RowId.From(dbModel.RowId);  // DB から取得した rowid
-
-    return new User(id: userId, name: dbModel.Name, rowId: rowId);
-}
-
-// この段階で value>0
-Assert.IsTrue(user.RowId.Value > 0);
-```
-
-**【Phase 4】以降の永続化（UPDATE/DELETE）**
-- `WHERE rowid = @rowid` の条件値として使用
-- RowId は変わらない（不変）
-- 複数回の UPDATE でも value は変わらない
-
-```csharp
-// リポジトリ層での処理
-else
-{
-    await _database.UpdateAsync(
-        whereClause: "rowid = @rowid",
-        parameters: new { rowid = entity.RowId.Value }
-    );
-}
-
-// DELETE でも同じ
-await _database.DeleteAsync(
-    whereClause: "rowid = @rowid",
-    parameters: new { rowid = entity.RowId.Value }
-);
-```
-
 **実装パターン:**
 ```csharp
 // RowId はプライベート属性
@@ -1968,11 +1842,147 @@ public UserDbModel ToDbModel(User entity)
 - [ ] public プロパティで読み取りのみ公開するか
 - [ ] Mapper で DbModel のマッピングに使用するか
 
+#### 11.3.2 RowId のライフサイクル
+
+RowId の状態遷移は3段階です。
+
+**段階1：新規作成時（値が未採番状態）**
+```csharp
+// Entity 新規作成時
+var user = new User(
+    id: UserId.NewId(),
+    name: "Taro Yamada",
+    rowId: null  // または省略 → RowId.New() で value=0 に初期化
+);
+
+// この時点で user._rowId は value=0（未採番）
+```
+
+**段階2：DB 採番後（value > 0 に更新）**
+```csharp
+// Repository の Create メソッド内で採番
+public async Task CreateAsync(User entity)
+{
+    // INSERT 実行（DB側で IDENTITY/Sequence で自動採番）
+    var dbModel = _mapper.ToDbModel(entity);
+    var rowId = await _dataAccess.InsertAsync(dbModel);  // 採番された rowId を取得
+    
+    // Entity 内部の _rowId を更新（value=0 → value=採番値）
+    entity.UpdateRowId(rowId);  // または内部メソッドで更新
+}
+```
+
+**段階3：Entity 再構築時（既存値から復元）**
+```csharp
+// Repository の Get メソッド内
+public async Task<User?> GetAsync(UserId userId)
+{
+    var dbModel = await _dataAccess.GetAsync(userId);
+    if (dbModel == null) return null;
+    
+    // Mapper で DbModel → Entity に変換時、既存の rowId を復元
+    return _mapper.ToDomainEntity(dbModel);
+    // この時点で entity._rowId は value=既存採番値（value > 0）
+}
+```
+
+#### 11.3.3 Mapper での RowId 取得と変換
+
+**ToDbModel（Entity → DbModel）**
+```csharp
+public UserDbModel ToDbModel(User entity)
+{
+    return new UserDbModel
+    {
+        RowId = entity.RowId.Value,  // ← Entity の _rowId から取得（値を直接抽出）
+        UserId = entity.Id.Value,
+        Name = entity.Name.Value,
+        CreatedAt = entity.CreatedAt.Value.Value,  // LocalDateTime → DateTime
+        UpdatedAt = entity.UpdatedAt.HasUpdated 
+            ? entity.UpdatedAt.Value.Value 
+            : (DateTime?)null,
+    };
+}
+```
+
+**ToDomainEntity（DbModel → Entity）**
+```csharp
+public User ToDomainEntity(UserDbModel dbModel, IClock clock)
+{
+    // DbModel の RowId から RowId ValueObject を復元
+    var rowId = RowId.From(dbModel.RowId);  // value > 0 の既存値
+    
+    return new User(
+        id: UserId.From(dbModel.UserId),
+        name: RespondentName.From(dbModel.Name),
+        rowId: rowId  // ← 既存の rowId を復元
+    );
+}
+```
+
+**重要:** 
+- ToDbModel では Entity.RowId.Value で long 値を抽出
+- ToDomainEntity では DbModel.RowId から RowId.From() で復元
+- new 時に rowId パラメータを省略すると RowId.New() で value=0 に初期化される
+
+#### 11.3.4 Repository での RowId 管理
+
+**新規作成時**
+```csharp
+public async Task CreateAsync(User entity)
+{
+    // Entity は value=0 の RowId を持つ
+    var dbModel = _mapper.ToDbModel(entity);
+    // DbModel.RowId = 0
+    
+    // INSERT 実行（DB が IDENTITY で自動採番）
+    // SQL: INSERT INTO t_users (name, ...) VALUES (...)
+    //      → DB が RowId を採番（e.g., 1001）
+    
+    var adoptedRowId = await _dataAccess.InsertAsync(dbModel);
+    
+    // Entity 内部の _rowId を採番値で更新（内部メソッド）
+    entity._rowId = RowId.From(adoptedRowId);
+    // この後、entity.RowId.Value は 1001
+}
+```
+
+**既存レコード読み込み時**
+```csharp
+public async Task<User?> GetAsync(UserId userId)
+{
+    // SELECT: RowId は既に採番済み（e.g., 1001）
+    var dbModel = await _dataAccess.GetAsync(userId);
+    
+    if (dbModel == null) return null;
+    
+    // Mapper は DbModel.RowId から RowId.From() で復元
+    return _mapper.ToDomainEntity(dbModel);
+    // 戻り値の Entity は value=1001 の RowId を持つ
+}
+```
+
+**delete（論理削除）時**
+```csharp
+public async Task DeleteAsync(User entity)
+{
+    // Entity は value > 0 の RowId を持つ
+    var dbModel = _mapper.ToDbModel(entity);
+    
+    // UPDATE: RowId は変わらない（value > 0 のまま）
+    // SQL: UPDATE t_users SET deleted_at = ..., deleted_by = ... WHERE row_id = ?
+    await _dataAccess.UpdateAsync(dbModel);
+}
+```
+
+**ガイドライン:**
+- 新規作成後の Entity は Repository によって RowId が更新される責務がある
+- Mapper は RowId の変換（RowId ↔ long）のみに専念
+- Repository は DB 採番値の取得と Entity への反映の両責務を持つ
+
 ---
 
 ### 11.4 パターン選択フローチャート
-
-**【ValueObject パターン選択フロー】**
 
 ```
 【ValueObject を設計する】
@@ -1981,56 +1991,32 @@ public UserDbModel ToDbModel(User entity)
           │   YES → AggregateId 継承
           │   
           ├─ DB テーブル行の物理キー？
-          │   YES → RowId パターン（ValueObject 直接継承）
+          │   YES → RowId パターン
           │   
-          └─ スカラ値（単一フィールド）かつビジネス属性？
-              YES → PrimitiveValueObject 継承
-                  ├─ Unset 状態が必要か？
-                  │   YES → IsSet=true/false 両方（ケース A: オプション項目）
-                  │   NO → IsSet=true のみ（ケース B: 入力必須）
-                  │
-                  └─ 選択肢型（固定値集合）？
-                      YES → EnumValueObject 継承
+          ├─ スカラ値（単一フィールド）かつビジネス属性？
+          │   YES → PrimitiveValueObject 継承
+          │       ├─ 選択肢型（固定値集合）？
+          │       │   YES → EnumValueObject 継承
+          │       │   NO → PrimitiveValueObject 継承
+          │   
+          └─ 複合型（複数フィールド）？
+              YES → ValueObject を直接継承
 ```
 
-**フローの詳細解説:**
+**フローの解説:**
 
-**1. 最初の判定：何を識別するのか？**
-- **集約の識別子** → AggregateId（GUID ベース、Unset 状態なし）
-  - 例：UserId, EmployeeId, RoleId
-  - 特徴：常に Guid 値を持つ、型安全性が重要
-  
-- **DB テーブル行** → RowId（value=0 で未採番、value>0 で採番済み）
-  - 例：Entity._rowId
-  - 特徴：Entity のプライベート属性、value で状態を表現
-  
-- **上記以外（ビジネス属性）** → 次の判定へ
+1. **最初の判定：集約ID か物理キー か？**
+   - 集約の識別子 → AggregateId
+   - DB テーブル行 → RowId
+   - 上記以外 → 次の判定へ
 
----
+2. **第二の判定：スカラ値 か複合型 か？**
+   - スカラ値 → PrimitiveValueObject / EnumValueObject
+   - 複合型（FirstName + LastName など） → ValueObject 直接継承
 
-**2. 第二の判定：Unset 状態の必要性**
-
-- **Unset 状態が自然（ケース A: オプション項目）** → IsSet=true/false 両方
-  - 例：UpdatedAt（初回作成時は null）、RespondentName（フォーム未入力）
-  - Unset() メソッド実装あり
-  - `TryFrom()` で null を Unset に変換
-  
-- **Unset 状態が不自然（ケース B: 入力必須）** → IsSet=true のみ
-  - 例：CreatedAt（常に必須）、DeletedAt（削除時に必須）
-  - Unset() メソッド実装なし
-  - from() で値を受け取ったら即座に検証
-
----
-
-**3. 第三の判定（スカラ値の場合）：選択肢型か？**
-
-- **選択肢型（固定値集合）** → EnumValueObject 継承
-  - 例：Status（1|2|3）、Priority（HIGH|MEDIUM|LOW）
-  - 特徴：選択肢が限定される、シングルトン化可能
-  
-- **スカラ値（無限の可能性）** → PrimitiveValueObject 継承
-  - 例：名前、年齢、価格
-  - 特徴：Normalize/Validate で入力値の正規化・検証
+3. **第三の判定（スカラ値の場合）：選択肢型 か？**
+   - 固定選択肢（Status=1|2|3） → EnumValueObject
+   - スカラ値（名前、年齢など） → PrimitiveValueObject
 
 ---
 
@@ -2198,7 +2184,7 @@ public sealed class CreateRespondentUseCase
 
 ---
 
-## 12. チェックリスト — 新しい ValueObject を実装するとき
+## 13. チェックリスト — 新しい ValueObject を実装するとき
 
 実装前に以下を確認：
 
@@ -2254,6 +2240,5 @@ public sealed class CreateRespondentUseCase
 
 | 版 | 日付 | 作成者 | 変更内容 |
 |----|------|--------|---------|
+| 2.0 | 2026-08-08 | Claude Code | 大規模リファクタ — セクション 11.3 RowId ライフサイクル詳細化、セクション 7.3 層間比較表追加、セクション 10.4 フローチャート図追加 |
 | 1.0 | 2026-07-07 | Claude Code | 初版作成 — 現在の実装に基づくガイド |
-| 2.0 | 2026-08-08 | Claude Code | セクション 4 を3分割（4.1/4.2/4.3）、セクション 10 の重複を解消（旧10.1～10.6 → 新11.1～11.6、旧11「レイヤ制約」→ 新12）、RowId のライフサイクル詳細化（Phase 1～4）、実装例を修正内容に反映、CreatedAt/UpdatedAt 比較表を 7.3.1 に追加、PrimitiveValueObject 選択フローを「ケース A（オプション）/ ケース B（必須）」に分類 |
-

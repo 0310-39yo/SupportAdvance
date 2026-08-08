@@ -18,11 +18,14 @@ namespace SupportAdvance.Contexts.Samples.CarPreferences.Domain.Entities;
 /// 【ライフサイクル】ユーザー登録～退会まで
 ///
 /// 【識別子設計】
-/// - Entity.Id: RowId（row_id ValueObject、DB主キー、SQL Serverシーケンス）
+/// - Entity.Id: UserPreferencesId（集約のビジネスID、GUID、型安全）
+/// - RowId: テーブルの物理キー（プライベート属性、DB主キー、SQL Serverシーケンス）
 /// - UserId: ユーザーID（ビジネス識別子、1000～9999）
 /// </summary>
-public class UserPreferences : AggregateRoot<RowId>
+public class UserPreferences : AggregateRoot<UserPreferencesId>
 {
+    /// <summary>DB テーブル行を一意識別（プライベート属性）</summary>
+    private RowId _rowId = null!;
     /// <summary>ユーザーID（ビジネス識別子、1000～9999）</summary>
     private RespondentPersonId _userId = null!;
 
@@ -55,6 +58,9 @@ public class UserPreferences : AggregateRoot<RowId>
 
     // 公開プロパティ（読み取り専用）
 
+    /// <summary>DB テーブル行の物理キー</summary>
+    public RowId RowId => _rowId;
+
     /// <summary>ユーザーID（ビジネス識別子）</summary>
     public RespondentPersonId UserId => _userId;
 
@@ -86,27 +92,26 @@ public class UserPreferences : AggregateRoot<RowId>
     public DeletedAt DeletedAt => _deletedAt;
 
     /// <summary>
-    /// UserPreferences を生成
+    /// UserPreferences を生成（新規作成用）
     ///
     /// 【責務】Entity の初期化
-    /// 【新規作成】rowId = RowId.New()（value=0、DB挿入後に採番される）
-    /// 【既存読み込み】rowId を指定
+    /// 【新規作成】id と rowId は自動生成
+    /// 【既存読み込み】Reconstruct() を使用
     /// </summary>
     /// <param name="userId">ユーザーID（ビジネス識別子）</param>
     /// <param name="respondedAt">回答日時</param>
     /// <param name="clock">現在時刻取得用</param>
-    /// <param name="rowId">row_id ValueObject（DB主キー、デフォルト=RowId.New()）</param>
     public UserPreferences(
         RespondentPersonId userId,
         RespondentAt respondedAt,
-        IClock clock,
-        RowId? rowId = null)
+        IClock clock)
     {
         ArgumentNullException.ThrowIfNull(userId);
         ArgumentNullException.ThrowIfNull(respondedAt);
         ArgumentNullException.ThrowIfNull(clock);
 
-        Id = rowId ?? RowId.New();
+        Id = UserPreferencesId.New();  // 集約ID を新規生成
+        _rowId = RowId.New();  // DB物理キーを新規生成（value=0）
         _userId = userId;
         _respondedAt = respondedAt;
         _createdAt = CreatedAt.From(clock.JstNow);
@@ -122,6 +127,7 @@ public class UserPreferences : AggregateRoot<RowId>
     /// 【用途】MapToDomain() → Reconstruct() の流れで使用
     /// </summary>
     public static UserPreferences Reconstruct(
+        UserPreferencesId id,
         RespondentPersonId userId,
         RespondentAt respondedAt,
         CreatedAt createdAt,
@@ -134,6 +140,7 @@ public class UserPreferences : AggregateRoot<RowId>
         Money? budgetFrom = null,
         Money? budgetTo = null)
     {
+        ArgumentNullException.ThrowIfNull(id);
         ArgumentNullException.ThrowIfNull(userId);
         ArgumentNullException.ThrowIfNull(respondedAt);
         ArgumentNullException.ThrowIfNull(createdAt);
@@ -142,9 +149,11 @@ public class UserPreferences : AggregateRoot<RowId>
         ArgumentNullException.ThrowIfNull(rowId);
 
         // ダミーの Clock で一時的に Entity を構築（フィールドはすぐ上書き）
-        var entity = new UserPreferences(userId, respondedAt, new SystemClock(), rowId);
+        var entity = new UserPreferences(userId, respondedAt, new SystemClock());
 
-        // DB値で監査フィールドと ビジネスプロパティを上書き
+        // DB値で ID と監査フィールドと ビジネスプロパティを上書き
+        entity.Id = id;
+        entity._rowId = rowId;
         entity._createdAt = createdAt;
         entity._updatedAt = updatedAt;
         entity._deletedAt = deletedAt;
@@ -174,7 +183,7 @@ public class UserPreferences : AggregateRoot<RowId>
             PreferenceChangeType.ModelUpdated,
             oldModel?.ToString() ?? "未設定",
             model.ToString(),
-            new LocalDateTime(_updatedAt.Value!.Value)));
+            _updatedAt.Value!.Value));  // LocalDateTime? から LocalDateTime を抽出
     }
 
     /// <summary>
@@ -204,7 +213,7 @@ public class UserPreferences : AggregateRoot<RowId>
             DomainEventId.New(),  // イベント ID（GUID）
             oldFrom, oldTo,
             from, to,
-            new LocalDateTime(_updatedAt.Value!.Value)));
+            _updatedAt.Value!.Value));  // LocalDateTime? から LocalDateTime を抽出
     }
 
     /// <summary>
@@ -228,7 +237,7 @@ public class UserPreferences : AggregateRoot<RowId>
             DomainEventId.New(),  // イベント ID（GUID）
             oldBodyType,
             bodyType,
-            new LocalDateTime(_updatedAt.Value!.Value)));
+            _updatedAt.Value!.Value));  // LocalDateTime? から LocalDateTime を抽出
     }
 
     /// <summary>
@@ -251,7 +260,7 @@ public class UserPreferences : AggregateRoot<RowId>
             DomainEventId.New(),  // イベント ID（GUID）
             oldPreference,
             prefersAutomatic,
-            new LocalDateTime(_updatedAt.Value!.Value)));
+            _updatedAt.Value!.Value));  // LocalDateTime? から LocalDateTime を抽出
     }
 
     /// <summary>
@@ -315,4 +324,17 @@ public class UserPreferences : AggregateRoot<RowId>
     /// 削除状態を判定
     /// </summary>
     public bool IsDeleted => _deletedAt.IsDeleted;
+
+    /// <summary>
+    /// RowId を更新（Repository 用、DB採番後に呼び出される）
+    ///
+    /// 【責務】DB 採番後の RowId（value>0）を Entity に反映
+    /// 【用途】Repository.AddAsync で新規作成直後に呼び出し
+    /// 【設計】public だが、Repository のみが呼び出すべき
+    /// </summary>
+    public void SetRowId(RowId rowId)
+    {
+        ArgumentNullException.ThrowIfNull(rowId);
+        _rowId = rowId;
+    }
 }

@@ -1,5 +1,3 @@
-using SupportAdvance.Common.Clocks;
-
 namespace SupportAdvance.Contexts.Samples.CarPreferences.Infrastructure.DataAccess.Models;
 
 /// <summary>
@@ -15,7 +13,8 @@ namespace SupportAdvance.Contexts.Samples.CarPreferences.Infrastructure.DataAcce
 /// - created_at/created_by: 作成者・日時
 /// - updated_at/updated_by: 更新者・日時
 /// - deleted_at/deleted_by: 削除者・日時（論理削除）
-/// 【タイムゾーン】LocalDateTime（JST）を使用して一貫性を保証
+/// 【型】DateTime プリミティブ型のみ（Infrastructure層の責務）
+/// 【注意】Domain層の LocalDateTime は Mapper で DateTime に変換
 /// </summary>
 public class UserPreferencesDbModel
 {
@@ -25,7 +24,13 @@ public class UserPreferencesDbModel
     public long RowId { get; set; }
 
     /// <summary>
-    /// Entity識別子（回答者ユーザーID、1000～9999）
+    /// 集約のビジネスID（UserPreferencesId、GUID）
+    /// 【用途】Domain Entity.Id の識別子
+    /// </summary>
+    public Guid UserPreferencesId { get; set; }
+
+    /// <summary>
+    /// ユーザーID（回答者ユーザーID、1000～9999）
     /// </summary>
     public int UserId { get; set; }
 
@@ -35,9 +40,9 @@ public class UserPreferencesDbModel
     public byte[] RowVersion { get; set; } = null!;
 
     /// <summary>
-    /// 作成日時（LocalDateTime, JST）
+    /// 作成日時（DateTime, JST、ORM マッピング用プリミティブ型）
     /// </summary>
-    public LocalDateTime CreatedAt { get; set; }
+    public DateTime CreatedAt { get; set; }
 
     /// <summary>
     /// 作成者（m_persons.row_id）
@@ -45,9 +50,9 @@ public class UserPreferencesDbModel
     public long CreatedBy { get; set; }
 
     /// <summary>
-    /// 更新日時（LocalDateTime, JST）
+    /// 更新日時（DateTime?, JST、ORM マッピング用プリミティブ型）
     /// </summary>
-    public LocalDateTime? UpdatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
 
     /// <summary>
     /// 更新者（m_persons.row_id）
@@ -55,9 +60,9 @@ public class UserPreferencesDbModel
     public long? UpdatedBy { get; set; }
 
     /// <summary>
-    /// 削除日時（LocalDateTime, JST）
+    /// 削除日時（DateTime?, JST、ORM マッピング用プリミティブ型）
     /// </summary>
-    public LocalDateTime? DeletedAt { get; set; }
+    public DateTime? DeletedAt { get; set; }
 
     /// <summary>
     /// 削除者（m_persons.row_id）
