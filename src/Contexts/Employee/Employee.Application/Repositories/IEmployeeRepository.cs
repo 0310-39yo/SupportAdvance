@@ -1,9 +1,8 @@
-namespace SupportAdvance.Application.Repositories;
+namespace SupportAdvance.Contexts.Employee.Application.Repositories;
 
 using SupportAdvance.Contexts.Employee.Domain.Entities;
 using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
 using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
-using SupportAdvance.Common.Clocks;
 
 /// <summary>
 /// Employee 集約の Repository インターフェース

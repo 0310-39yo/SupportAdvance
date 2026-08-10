@@ -1,12 +1,11 @@
 namespace SupportAdvance.Contexts.Employee.Infrastructure.Repositories;
 
-using SupportAdvance.Application.Repositories;
+using SupportAdvance.Contexts.Employee.Application.Repositories;
 using SupportAdvance.Common.Clocks;
 using SupportAdvance.Contexts.Employee.Domain.Entities;
 using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
 using SupportAdvance.Contexts.Employee.Infrastructure.Mappers;
 using SupportAdvance.Contexts.Employee.Infrastructure.Models;
-using SupportAdvance.SharedKernel.ValueObjects.Audit;
 using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 /// <summary>

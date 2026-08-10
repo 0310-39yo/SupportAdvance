@@ -1,6 +1,6 @@
 namespace SupportAdvance.Contexts.Employee.Infrastructure.Tests.Repositories;
 
-using SupportAdvance.Application.Repositories;
+using SupportAdvance.Contexts.Employee.Application.Repositories;
 using SupportAdvance.Common.Clocks;
 using SupportAdvance.Contexts.Employee.Domain.Entities;
 using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
