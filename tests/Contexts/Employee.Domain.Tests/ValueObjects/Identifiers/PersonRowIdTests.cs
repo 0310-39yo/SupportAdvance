@@ -1,6 +1,7 @@
-using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
+namespace SupportAdvance.Contexts.Employee.Domain.Tests.ValueObjects.Identifiers;
 
-namespace SupportAdvance.Tests.SharedKernel.Tests.ValueObjects.Identifiers;
+using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Identifiers;
+using Xunit;
 
 /// <summary>
 /// PersonRowId ValueObject の単体テスト

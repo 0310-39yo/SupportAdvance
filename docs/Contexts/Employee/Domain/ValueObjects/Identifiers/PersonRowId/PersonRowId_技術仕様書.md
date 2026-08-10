@@ -12,7 +12,7 @@
 PersonRowId は、データベース上の人物レコードの行ID（rowId）を表現する ValueObject です。
 
 - **何を実装するのか**: DB の `m_persons.row_id` を型安全に管理
-- **どこに実装するのか**: `src/SharedKernel/ValueObjects/Identifiers/PersonRowId.cs`
+- **どこに実装するのか**: `src/Contexts/Employee/Employee.Domain/ValueObjects/Identifiers/PersonRowId.cs`
 - **誰が使うのか**: Employee Entity の構成要素、給与マスタなど
 
 ---
