@@ -2,6 +2,7 @@ namespace SupportAdvance.Contexts.Employee.Domain.Tests.Entities;
 
 using SupportAdvance.Common.Clocks;
 using SupportAdvance.Contexts.Employee.Domain.Entities;
+using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Identifiers;
 using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 using Xunit;
 

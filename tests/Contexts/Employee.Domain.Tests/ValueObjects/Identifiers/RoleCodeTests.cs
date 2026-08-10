@@ -1,6 +1,6 @@
-namespace SupportAdvance.SharedKernel.Tests.ValueObjects.Identifiers;
+namespace SupportAdvance.Contexts.Employee.Domain.Tests.ValueObjects.Identifiers;
 
-using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
+using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Identifiers;
 using Xunit;
 
 public class RoleCodeTests
@@ -142,3 +142,5 @@ public class RoleCodeTests
         Assert.Equal("ADMIN", code.ToString());
     }
 }
+
+

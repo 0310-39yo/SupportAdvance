@@ -1,47 +1,47 @@
-namespace SupportAdvance.SharedKernel.ValueObjects.Identifiers;
+namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Identifiers;
 
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using SupportAdvance.SharedKernel.ValueObjects.Abstractions;
 
 /// <summary>
-/// 権限コードを表す ValueObject
+/// ロールコードを表す ValueObject
 ///
 /// 責務：
-/// - 権限コードを型安全に保持
-/// - 値の検証（1-100文字、英数字と一部特殊文字）
+/// - ロールコードを型安全に保持
+/// - 値の検証（1-50文字、英数字と一部特殊文字）
 /// - 等価性判定とハッシュコード計算
 /// </summary>
-public sealed class PermissionCode : PrimitiveValueObject<string>, IEquatable<PermissionCode>
+public sealed class RoleCode : PrimitiveValueObject<string>, IEquatable<RoleCode>
 {
     /// <summary>
-    /// 権限コードの値を取得する
+    /// ロールコードの値を取得する
     /// </summary>
     public string Value => ValueField;
 
     /// <summary>
-    /// 指定された権限コードから PermissionCode を生成する（プライベートコンストラクタ）
+    /// 指定されたロールコードから RoleCode を生成する（プライベートコンストラクタ）
     /// </summary>
-    /// <param name="value">権限コード</param>
-    private PermissionCode(string value) : base(value, true)
+    /// <param name="value">ロールコード</param>
+    private RoleCode(string value) : base(value, true)
     {
     }
 
     /// <summary>
-    /// 指定された権限コードから PermissionCode を生成する
+    /// 指定されたロールコードから RoleCode を生成する
     /// </summary>
-    /// <param name="value">権限コード（1-100文字、英数字、_、.のみ）</param>
-    /// <returns>生成された PermissionCode インスタンス</returns>
+    /// <param name="value">ロールコード（1-50文字、英数字、_、.のみ）</param>
+    /// <returns>生成された RoleCode インスタンス</returns>
     /// <exception cref="ArgumentException">値が不正な場合</exception>
-    public static PermissionCode From(string value) => new(value);
+    public static RoleCode From(string value) => new(value);
 
     /// <summary>
-    /// 指定された権限コードから PermissionCode の生成を試みる（型安全版）
+    /// 指定されたロールコードから RoleCode の生成を試みる（型安全版）
     /// </summary>
-    /// <param name="input">権限コード（null許容）</param>
+    /// <param name="input">ロールコード（null許容）</param>
     /// <param name="result">生成されたインスタンス</param>
     /// <returns>成功時 true、失敗時 false（例外なし）</returns>
-    public static bool TryFrom(string? input, out PermissionCode result)
+    public static bool TryFrom(string? input, out RoleCode result)
     {
         result = null!;
 
@@ -64,10 +64,10 @@ public sealed class PermissionCode : PrimitiveValueObject<string>, IEquatable<Pe
     /// <summary>
     /// DB値からの変換
     /// </summary>
-    /// <param name="input">DB から読み込んだ権限コード（null許容）</param>
-    /// <param name="result">生成された PermissionCode インスタンス</param>
+    /// <param name="input">DB から読み込んだロールコード（null許容）</param>
+    /// <param name="result">生成された RoleCode インスタンス</param>
     /// <returns>成功時 true、失敗時 false</returns>
-    public static bool TryFromDbValue(string? input, out PermissionCode result)
+    public static bool TryFromDbValue(string? input, out RoleCode result)
     {
         result = null!;
 
@@ -90,12 +90,12 @@ public sealed class PermissionCode : PrimitiveValueObject<string>, IEquatable<Pe
     /// <summary>
     /// オブジェクト等価性を判定する
     /// </summary>
-    public override bool Equals(object? obj) => Equals(obj as PermissionCode);
+    public override bool Equals(object? obj) => Equals(obj as RoleCode);
 
     /// <summary>
-    /// PermissionCode 間の等価性を判定する
+    /// RoleCode 間の等価性を判定する
     /// </summary>
-    public bool Equals(PermissionCode? other)
+    public bool Equals(RoleCode? other)
     {
         if (other is null)
         {
@@ -140,19 +140,20 @@ public sealed class PermissionCode : PrimitiveValueObject<string>, IEquatable<Pe
         // null/空文字列チェック
         if (string.IsNullOrEmpty(normalized))
         {
-            throw new ArgumentException("PermissionCode must not be null or empty.", nameof(normalized));
+            throw new ArgumentException("RoleCode must not be null or empty.", nameof(normalized));
         }
 
-        // 長さチェック（1-100文字）
-        if (normalized.Length > 100)
+        // 長さチェック（1-50文字）
+        if (normalized.Length > 50)
         {
-            throw new ArgumentException("PermissionCode must be 100 characters or less.", nameof(normalized));
+            throw new ArgumentException("RoleCode must be 50 characters or less.", nameof(normalized));
         }
 
         // 文字種チェック（英数字、_、.のみ）
         if (!Regex.IsMatch(normalized, @"^[A-Za-z0-9_.]+$"))
         {
-            throw new ArgumentException("PermissionCode must contain only alphanumeric characters, underscores, and dots.", nameof(normalized));
+            throw new ArgumentException("RoleCode must contain only alphanumeric characters, underscores, and dots.", nameof(normalized));
         }
     }
 }
+

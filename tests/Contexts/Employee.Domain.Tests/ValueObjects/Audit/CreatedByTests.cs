@@ -1,6 +1,6 @@
-namespace SupportAdvance.SharedKernel.Tests.ValueObjects.Audit;
+namespace SupportAdvance.Contexts.Employee.Domain.Tests.ValueObjects.Audit;
 
-using SupportAdvance.SharedKernel.ValueObjects.Audit;
+using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Audit;
 using Xunit;
 
 /// <summary>
@@ -189,3 +189,5 @@ public class CreatedByTests
         Assert.False(createdBy.Equals(null));
     }
 }
+
+

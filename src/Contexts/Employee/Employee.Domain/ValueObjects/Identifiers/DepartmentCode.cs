@@ -1,4 +1,4 @@
-namespace SupportAdvance.SharedKernel.ValueObjects.Identifiers;
+namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Identifiers;
 
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
@@ -157,3 +157,4 @@ public sealed class DepartmentCode : PrimitiveValueObject<string>, IEquatable<De
         }
     }
 }
+

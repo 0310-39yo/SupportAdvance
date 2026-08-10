@@ -1,12 +1,13 @@
-namespace SupportAdvance.SharedKernel.Tests.ValueObjects.Audit;
+namespace SupportAdvance.Contexts.Employee.Domain.Tests.ValueObjects.Audit;
 
-using SupportAdvance.SharedKernel.ValueObjects.Audit;
+using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Audit;
 using Xunit;
 
 /// <summary>
-/// UpdatedBy（更新者ID） 単体テスト
+/// DeletedBy（削除者ID） 単体テスト
 ///
 /// オプション ValueObject パターン：null は Unset に変換して成功を返す
+/// 論理削除用：未削除状態を Unset で表現
 ///
 /// テスト観点：
 /// - VO-01: From(正の数) は IsSet=true のインスタンスを生成
@@ -14,25 +15,23 @@ using Xunit;
 /// - VO-04: Unset() は IsSet=false のインスタンスを返す
 /// - VO-05: TryFrom(null) は true と Unset を返す（null吸収）
 /// - VO-06: TryFrom(正の数) は true と インスタンスを返す
-/// - VO-07: TryFrom(無効値) は false と Unset を返す
-/// - VO-13: Unset 同士は等価
-/// - VO-15: HasUpdated で更新済み/未更新を判定
+/// - VO-15: IsDeleted で削除済み/未削除を判定
 /// </summary>
-public class UpdatedByTests
+public class DeletedByTests
 {
     /// <summary>From(正の数) は IsSet=true のインスタンスを生成</summary>
     [Theory]
     [InlineData(1L)]
-    [InlineData(1002L)]
+    [InlineData(1003L)]
     public void From_WithValidValue_ReturnsInstanceWithIsSetTrue(long validValue)
     {
         // Act
-        var updatedBy = UpdatedBy.From(validValue);
+        var deletedBy = DeletedBy.From(validValue);
 
         // Assert
-        Assert.NotNull(updatedBy);
-        Assert.True(updatedBy.IsSet);
-        Assert.Equal(validValue, updatedBy.Value);
+        Assert.NotNull(deletedBy);
+        Assert.True(deletedBy.IsSet);
+        Assert.Equal(validValue, deletedBy.Value);
     }
 
     /// <summary>From(0) は ArgumentException を投げる</summary>
@@ -40,7 +39,7 @@ public class UpdatedByTests
     public void From_WithZero_ThrowsArgumentException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentException>(() => UpdatedBy.From(0L));
+        Assert.Throws<ArgumentException>(() => DeletedBy.From(0L));
     }
 
     /// <summary>From(負の数) は ArgumentException を投げる</summary>
@@ -48,15 +47,15 @@ public class UpdatedByTests
     public void From_WithNegativeValue_ThrowsArgumentException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentException>(() => UpdatedBy.From(-1L));
+        Assert.Throws<ArgumentException>(() => DeletedBy.From(-1L));
     }
 
-    /// <summary>Unset() は IsSet=false のインスタンスを返す</summary>
+    /// <summary>Unset() は IsSet=false のインスタンスを返す（未削除状態）</summary>
     [Fact]
     public void Unset_ReturnsInstanceWithIsSetFalse()
     {
         // Act
-        var unset = UpdatedBy.Unset();
+        var unset = DeletedBy.Unset();
 
         // Assert
         Assert.NotNull(unset);
@@ -64,19 +63,19 @@ public class UpdatedByTests
         Assert.Null(unset.Value);
     }
 
-    /// <summary>TryFrom(null) は true と Unset を返す（null吸収）</summary>
+    /// <summary>TryFrom(null) は true と Unset を返す（null吸収、未削除）</summary>
     [Fact]
     public void TryFrom_WithNull_ReturnsTrueAndUnset()
     {
         // Act
-        var result = UpdatedBy.TryFrom(null, out var updatedBy);
+        var result = DeletedBy.TryFrom(null, out var deletedBy);
 
         // Assert
         Assert.True(result);  // ← 重要：true を返す（失敗ではない）
-        Assert.NotNull(updatedBy);
-        Assert.False(updatedBy.IsSet);
-        Assert.Null(updatedBy.Value);
-        Assert.Equal(UpdatedBy.Unset(), updatedBy);
+        Assert.NotNull(deletedBy);
+        Assert.False(deletedBy.IsSet);
+        Assert.Null(deletedBy.Value);
+        Assert.Equal(DeletedBy.Unset(), deletedBy);
     }
 
     /// <summary>TryFrom(正の数) は true と インスタンスを返す</summary>
@@ -84,13 +83,13 @@ public class UpdatedByTests
     public void TryFrom_WithValidValue_ReturnsTrueAndInstance()
     {
         // Act
-        var result = UpdatedBy.TryFrom(1002L, out var updatedBy);
+        var result = DeletedBy.TryFrom(1003L, out var deletedBy);
 
         // Assert
         Assert.True(result);
-        Assert.NotNull(updatedBy);
-        Assert.True(updatedBy.IsSet);
-        Assert.Equal(1002L, updatedBy.Value);
+        Assert.NotNull(deletedBy);
+        Assert.True(deletedBy.IsSet);
+        Assert.Equal(1003L, deletedBy.Value);
     }
 
     /// <summary>TryFrom(無効値) は false と Unset を返す</summary>
@@ -100,12 +99,12 @@ public class UpdatedByTests
     public void TryFrom_WithInvalidValue_ReturnsFalseAndUnset(long invalidValue)
     {
         // Act
-        var result = UpdatedBy.TryFrom(invalidValue, out var updatedBy);
+        var result = DeletedBy.TryFrom(invalidValue, out var deletedBy);
 
         // Assert
         Assert.False(result);
-        Assert.NotNull(updatedBy);
-        Assert.False(updatedBy.IsSet);
+        Assert.NotNull(deletedBy);
+        Assert.False(deletedBy.IsSet);
     }
 
     /// <summary>Unset 同士は等価</summary>
@@ -113,8 +112,8 @@ public class UpdatedByTests
     public void Equals_WithBothUnset_ReturnsTrue()
     {
         // Arrange
-        var unset1 = UpdatedBy.Unset();
-        var unset2 = UpdatedBy.Unset();
+        var unset1 = DeletedBy.Unset();
+        var unset2 = DeletedBy.Unset();
 
         // Act & Assert
         Assert.Equal(unset1, unset2);
@@ -126,12 +125,12 @@ public class UpdatedByTests
     public void Equals_WithDifferentIsSet_ReturnsFalse()
     {
         // Arrange
-        var updated = UpdatedBy.From(1002L);
-        var unset = UpdatedBy.Unset();
+        var deleted = DeletedBy.From(1003L);
+        var unset = DeletedBy.Unset();
 
         // Act & Assert
-        Assert.NotEqual(updated, unset);
-        Assert.False(updated == unset);
+        Assert.NotEqual(deleted, unset);
+        Assert.False(deleted == unset);
     }
 
     /// <summary>同じ値で IsSet が同じ場合は等価</summary>
@@ -139,25 +138,25 @@ public class UpdatedByTests
     public void Equals_WithSameValueAndIsSet_ReturnsTrue()
     {
         // Arrange
-        var updated1 = UpdatedBy.From(1002L);
-        var updated2 = UpdatedBy.From(1002L);
+        var deleted1 = DeletedBy.From(1003L);
+        var deleted2 = DeletedBy.From(1003L);
 
         // Act & Assert
-        Assert.Equal(updated1, updated2);
-        Assert.True(updated1 == updated2);
+        Assert.Equal(deleted1, deleted2);
+        Assert.True(deleted1 == deleted2);
     }
 
-    /// <summary>HasUpdated で更新済み/未更新を判定</summary>
+    /// <summary>IsDeleted で削除済み/未削除を判定</summary>
     [Fact]
-    public void HasUpdated_ReturnsCorrectState()
+    public void IsDeleted_ReturnsCorrectState()
     {
         // Arrange
-        var updated = UpdatedBy.From(1002L);
-        var unset = UpdatedBy.Unset();
+        var deleted = DeletedBy.From(1003L);
+        var unset = DeletedBy.Unset();
 
         // Act & Assert
-        Assert.True(updated.HasUpdated);
-        Assert.False(unset.HasUpdated);
+        Assert.True(deleted.IsDeleted);
+        Assert.False(unset.IsDeleted);
     }
 
     /// <summary>TryFromDbValue で DB NULL が Unset に変換される</summary>
@@ -165,11 +164,11 @@ public class UpdatedByTests
     public void TryFromDbValue_WithNull_ReturnsTrueAndUnset()
     {
         // Act
-        var result = UpdatedBy.TryFromDbValue(null, out var updatedBy);
+        var result = DeletedBy.TryFromDbValue(null, out var deletedBy);
 
         // Assert
         Assert.True(result);
-        Assert.False(updatedBy.IsSet);
+        Assert.False(deletedBy.IsSet);
     }
 
     /// <summary>ToString は IsSet=false で "Unset" を返す</summary>
@@ -177,7 +176,7 @@ public class UpdatedByTests
     public void ToString_WithUnset_ReturnsUnset()
     {
         // Arrange
-        var unset = UpdatedBy.Unset();
+        var unset = DeletedBy.Unset();
 
         // Act
         var result = unset.ToString();
@@ -191,12 +190,14 @@ public class UpdatedByTests
     public void ToString_WithValue_ReturnsStringRepresentation()
     {
         // Arrange
-        var updated = UpdatedBy.From(1002L);
+        var deleted = DeletedBy.From(1003L);
 
         // Act
-        var result = updated.ToString();
+        var result = deleted.ToString();
 
         // Assert
-        Assert.Equal("1002", result);
+        Assert.Equal("1003", result);
     }
 }
+
+

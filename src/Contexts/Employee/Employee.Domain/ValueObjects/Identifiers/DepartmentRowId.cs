@@ -1,4 +1,4 @@
-namespace SupportAdvance.SharedKernel.ValueObjects.Identifiers;
+namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Identifiers;
 
 using SupportAdvance.SharedKernel.ValueObjects.Abstractions;
 
@@ -137,3 +137,4 @@ public sealed class DepartmentRowId : PrimitiveValueObject<long>, IEquatable<Dep
         }
     }
 }
+

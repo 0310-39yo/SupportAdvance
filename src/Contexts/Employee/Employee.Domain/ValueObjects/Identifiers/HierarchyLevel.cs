@@ -1,4 +1,4 @@
-namespace SupportAdvance.SharedKernel.ValueObjects.Identifiers;
+﻿namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Identifiers;
 
 using SupportAdvance.SharedKernel.ValueObjects.Abstractions;
 
@@ -163,3 +163,4 @@ public sealed class HierarchyLevel : EnumValueObject<int>, IEquatable<HierarchyL
         };
     }
 }
+
