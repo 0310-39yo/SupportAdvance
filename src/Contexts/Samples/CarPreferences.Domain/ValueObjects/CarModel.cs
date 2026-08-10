@@ -2,8 +2,6 @@ using SupportAdvance.SharedKernel.ValueObjects;
 using SupportAdvance.SharedKernel.ValueObjects.Abstractions;
 
 namespace SupportAdvance.Contexts.Samples.CarPreferences.Domain.ValueObjects;
-using SupportAdvance.SharedKernel.ValueObjects.Audit;
-
 /// <summary>
 /// 車のモデルを表すValueObject
 /// 内部値を int で管理し、定義済みインスタンスを静的フィールドで提供する

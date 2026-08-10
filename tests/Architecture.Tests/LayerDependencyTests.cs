@@ -1,7 +1,7 @@
 using NetArchTest.Rules;
 using Xunit;
 
-namespace Architecture.Tests;
+namespace SupportAdvance.Tests.Architecture.Tests;
 
 /// <summary>
 /// Clean Architecture の層間依存ルールを検証

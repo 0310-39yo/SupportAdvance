@@ -1,7 +1,7 @@
 using NetArchTest.Rules;
 using Xunit;
 
-namespace Architecture.Tests;
+namespace SupportAdvance.Tests.Architecture.Tests;
 
 /// <summary>
 /// アーキテクチャ依存関係ルールの検証テスト

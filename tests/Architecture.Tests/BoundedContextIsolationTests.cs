@@ -1,7 +1,7 @@
 using NetArchTest.Rules;
 using Xunit;
 
-namespace Architecture.Tests;
+namespace SupportAdvance.Tests.Architecture.Tests;
 
 /// <summary>
 /// Bounded Context 間の依存関係を検証

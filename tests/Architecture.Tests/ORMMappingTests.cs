@@ -1,13 +1,12 @@
 using System.Data;
 using Dapper;
-using RepoDb;
 using SupportAdvance.Common.Clocks;
 using SupportAdvance.Infrastructure.ORM.Dapper;
 using SupportAdvance.Infrastructure.ORM.RepoDB;
 using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 using Xunit;
 
-namespace Architecture.Tests;
+namespace SupportAdvance.Tests.Architecture.Tests;
 
 /// <summary>
 /// ORM（Dapper・RepoDb）の型マッピング検証

@@ -1,7 +1,6 @@
 using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
-using Xunit;
 
-namespace SupportAdvance.SharedKernel.Tests.ValueObjects.Identifiers;
+namespace SupportAdvance.Tests.SharedKernel.Tests.ValueObjects.Identifiers;
 
 public class RowIdTests
 {
