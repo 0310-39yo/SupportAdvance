@@ -18,6 +18,7 @@
   </Folder>
   <Folder Name="/src/Contexts/" />
   <Folder Name="/src/Contexts/Employee/">
+    <Project Path="src/Contexts/Employee/Employee.Application/Employee.Application.csproj" />
     <Project Path="src/Contexts/Employee/Employee.Domain/Employee.Domain.csproj" />
     <Project Path="src/Contexts/Employee/Employee.Infrastructure/Employee.Infrastructure.csproj" />
   </Folder>
