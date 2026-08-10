@@ -1,4 +1,7 @@
-namespace SupportAdvance.SharedKernel.ValueObjects.Identifiers;
+namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Identifiers;
+
+using SupportAdvance.SharedKernel.ValueObjects;
+using SupportAdvance.SharedKernel.ValueObjects.Abstractions;
 
 /// <summary>
 /// 従業員コードを表すValueObject（従業員区分+従業員番号の複合値）
@@ -248,3 +251,5 @@ public sealed class EmployeeCode : ValueObject, IEquatable<EmployeeCode>
         }
     }
 }
+
+

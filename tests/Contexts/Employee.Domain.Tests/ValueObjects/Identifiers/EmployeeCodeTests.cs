@@ -1,7 +1,7 @@
 namespace SupportAdvance.Tests.SharedKernel.ValueObjects.Identifiers;
 
 using Xunit;
-using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
+using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Identifiers;
 
 /// <summary>
 /// EmployeeCode ValueObject の単体テスト
@@ -645,3 +645,4 @@ public class EmployeeCodeTests
         Assert.Equal(shouldSucceed, success);
     }
 }
+

@@ -1,6 +1,9 @@
-namespace SupportAdvance.SharedKernel.ValueObjects.Identifiers;
+namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Identifiers;
 
+using SupportAdvance.SharedKernel.ValueObjects;
 using SupportAdvance.SharedKernel.ValueObjects.Abstractions;
+
+
 
 /// <summary>
 /// 従業員を一意に識別するビジネスID（Guid ベース）を表すValueObject
@@ -142,3 +145,5 @@ public sealed class EmployeeId : PrimitiveValueObject<Guid>, IEquatable<Employee
         }
     }
 }
+
+

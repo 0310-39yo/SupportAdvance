@@ -96,3 +96,4 @@ public sealed class Employee : Entity<EmployeeId>
     /// <returns>Employee の説明文字列（例："Employee(Id=..., Code=M1234)"）</returns>
     public override string ToString() => $"Employee(Id={Id.Value}, Code={Code})";
 }
+

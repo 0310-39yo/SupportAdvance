@@ -3,6 +3,8 @@ namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Identifiers;
 using SupportAdvance.SharedKernel.ValueObjects;
 using SupportAdvance.SharedKernel.ValueObjects.Abstractions;
 
+
+
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
@@ -159,6 +161,7 @@ public sealed class PermissionCode : PrimitiveValueObject<string>, IEquatable<Pe
         }
     }
 }
+
 
 
 

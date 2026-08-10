@@ -1,7 +1,10 @@
 namespace SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
-using System.Collections.Generic;
+using SupportAdvance.SharedKernel.ValueObjects;
 using SupportAdvance.SharedKernel.ValueObjects.Abstractions;
+
+using System.Collections.Generic;
+
 
 /// <summary>
 /// 部署メンバーシップ識別子を表す ValueObject（GUID ベース）
@@ -123,3 +126,4 @@ public sealed class DepartmentMembershipId : PrimitiveValueObject<Guid>, IEquata
         }
     }
 }
+

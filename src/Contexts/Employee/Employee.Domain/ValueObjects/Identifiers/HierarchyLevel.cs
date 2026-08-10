@@ -5,6 +5,8 @@ using SupportAdvance.SharedKernel.ValueObjects.Abstractions;
 
 
 
+
+
 /// <summary>
 /// 部署の階層レベルを表す ValueObject
 ///
@@ -166,6 +168,7 @@ public sealed class HierarchyLevel : EnumValueObject<int>, IEquatable<HierarchyL
         };
     }
 }
+
 
 
 

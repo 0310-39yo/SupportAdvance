@@ -3,6 +3,8 @@ namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Identifiers;
 using SupportAdvance.SharedKernel.ValueObjects;
 using SupportAdvance.SharedKernel.ValueObjects.Abstractions;
 
+
+
 using System.Collections.Generic;
 
 
@@ -169,6 +171,7 @@ public sealed class ManagerEmployeeRowId : PrimitiveValueObject<long?>, IEquatab
         }
     }
 }
+
 
 
 

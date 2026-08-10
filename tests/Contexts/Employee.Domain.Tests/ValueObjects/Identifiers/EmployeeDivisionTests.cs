@@ -1,7 +1,7 @@
 namespace SupportAdvance.Tests.SharedKernel.ValueObjects.Identifiers;
 
 using Xunit;
-using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
+using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Identifiers;
 
 /// <summary>
 /// EmployeeDivision ValueObject の単体テスト
@@ -513,3 +513,4 @@ public class EmployeeDivisionTests
         Assert.Throws<ArgumentOutOfRangeException>(() => EmployeeDivision.From(input));
     }
 }
+

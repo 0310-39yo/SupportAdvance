@@ -112,3 +112,4 @@ public sealed class DepartmentMembership : Entity<DepartmentMembershipId>
     public override string ToString()
         => $"DepartmentMembership(Id={Id.Value}, Code={DepartmentCode}, Primary={IsPrimary})";
 }
+
