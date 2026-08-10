@@ -2,6 +2,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SupportAdvance.Common.Clocks;
 using SupportAdvance.Common.Configuration;
+using SupportAdvance.Infrastructure.ORM.Dapper;
+using SupportAdvance.Infrastructure.ORM.RepoDB;
 
 namespace SupportAdvance.Infrastructure;
 
@@ -13,8 +15,11 @@ public static class DependencyInjection
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configuration);
 
-        // ステップ0: Dapper初期化（起動時の一度だけ）
+        // ステップ0a: Dapper初期化（起動時の一度だけ）
         DapperTypeHandlerRegistration.Register();
+
+        // ステップ0b: RepoDb初期化（起動時の一度だけ）
+        RepoDbTypeMapperRegistration.Register();
 
         // ステップ1: appsettings.json から統合設定からバインド
         var appSettings = configuration
@@ -38,7 +43,7 @@ public static class DependencyInjection
                             ?? throw new InvalidOperationException("ClockSettings が見つかりません。");
 
         var clockInstance = ClockFactory.CreateClock(clockSettings);
-        services.AddSingleton(clockInstance);
+        services.AddSingleton<IClock>(clockInstance); // ← インターフェース型で登録
 
         return services;
     }

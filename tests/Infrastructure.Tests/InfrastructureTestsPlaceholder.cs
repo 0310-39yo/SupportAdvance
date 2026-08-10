@@ -1,4 +1,4 @@
-namespace SupportAdvance.Tests.Infrastructure;
+namespace SupportAdvance.Tests.Infrastructure.Tests;
 
 public class InfrastructureTestsPlaceholder
 {

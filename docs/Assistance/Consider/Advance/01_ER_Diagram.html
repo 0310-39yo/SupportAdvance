@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ER図 - Advance データベース</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #222;
+            border-bottom: 3px solid #0066cc;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #0066cc;
+            margin-top: 30px;
+        }
+        .info {
+            background: #f0f8ff;
+            padding: 15px;
+            border-left: 4px solid #0066cc;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .mermaid {
+            display: flex;
+            justify-content: center;
+            background: #fafafa;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        table th, table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        table th {
+            background: #0066cc;
+            color: white;
+            font-weight: 600;
+        }
+        table tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+        .note {
+            background: #fffacd;
+            padding: 15px;
+            border-left: 4px solid #ffa500;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .diagram-title {
+            font-weight: 600;
+            color: #0066cc;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ER図 - Advance データベース</h1>
+
+        <div class="info">
+            <strong>バージョン:</strong> 1.0 |
+            <strong>作成日:</strong> 2026-07-19 |
+            <strong>データベース名:</strong> Advance
+        </div>
+
+        <h2>📊 主要なテーブル関係</h2>
+        <div style="background: #f0f8ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <pre style="margin: 0; font-size: 14px; line-height: 1.8;">
+<strong>m_persons</strong> (すべての人：従業員 + 非従業員)
+    ↓ 1:0..1 (1対0または1)
+<strong>m_employees</strong> (従業員のみ、person_row_id NOT NULL)
+    ├─→ 1:N → <strong>m_employee_department</strong> (従業員所属)
+    ├─→ 1:N → <strong>m_login_credentials</strong> (ログイン認証)
+    └─→ N:1 → <strong>m_department</strong> (部長管理)
+
+<strong>m_department</strong> (部署マスタ)
+    ├─→ 1:N → <strong>m_employee_department</strong>
+    └─→ self-join (親部署参照)
+            </pre>
+        </div>
+
+        <h2>🗂️ テーブル関係図</h2>
+        <div class="diagram-title">人 → 従業員 → 部門 の関連</div>
+        <div class="mermaid">
+            graph TD
+                A["m_persons<br/>(人名マスタ)"] -->|1:0..1| B["m_employees<br/>(従業員マスタ)"]
+                B -->|1:N| C["m_employee_department<br/>(従業員所属)"]
+                D["m_department<br/>(部署マスタ)"] -->|N:1| C
+        </div>
+
+        <div class="diagram-title">ログイン認証の流れ</div>
+        <div class="mermaid">
+            graph TD
+                A["Windows ログイン<br/>M + 従業員コード"] --> B{"m_employees<br/>で見つかる？"}
+                B -->|Yes| C["✅ 自動ログイン<br/>(ダイアログなし)"]
+                B -->|No| D["ログインダイアログ表示"]
+                D --> E["m_login_credentials<br/>ID/パスワード認証"]
+                E --> F["employee_row_id を特定"]
+        </div>
+
+        <div class="diagram-title">部署の階層構造</div>
+        <div class="mermaid">
+            graph TD
+                A["hierarchy_level: 0<br/>トップ"] -->|parent| B["hierarchy_level: 1<br/>本部"]
+                B -->|parent| C["hierarchy_level: 2<br/>部"]
+                C -->|parent| D["hierarchy_level: 3<br/>グループ・課"]
+                D -->|parent| E["hierarchy_level: 4<br/>係・チーム"]
+        </div>
+
+        <h2>📋 テーブル一覧</h2>
+        <table>
+            <tr>
+                <th>テーブル名</th>
+                <th>説明</th>
+                <th>主な用途</th>
+            </tr>
+            <tr>
+                <td><code>m_persons</code></td>
+                <td>人名マスタ</td>
+                <td>すべての人（従業員 + 非従業員）の個人情報</td>
+            </tr>
+            <tr>
+                <td><code>m_employees</code></td>
+                <td>従業員マスタ</td>
+                <td>従業員コード、勤続情報</td>
+            </tr>
+            <tr>
+                <td><code>m_login_credentials</code></td>
+                <td>ログイン認証情報</td>
+                <td>ID/パスワード認証、ログイン履歴</td>
+            </tr>
+            <tr>
+                <td><code>m_department</code></td>
+                <td>部署マスタ（階層構造）</td>
+                <td>組織構造、部長管理</td>
+            </tr>
+            <tr>
+                <td><code>m_employee_department</code></td>
+                <td>従業員所属（複数所属対応）</td>
+                <td>従業員の部門配置、兼務管理</td>
+            </tr>
+        </table>
+
+        <h2>🔑 外部キー（FK）構成</h2>
+        <table>
+            <tr>
+                <th>テーブル</th>
+                <th>カラム</th>
+                <th>参照先</th>
+                <th>説明</th>
+            </tr>
+            <tr>
+                <td rowspan="3"><code>m_persons</code></td>
+                <td><code>inserted_by</code></td>
+                <td><code>m_employees.row_id</code></td>
+                <td>作成者</td>
+            </tr>
+            <tr>
+                <td><code>updated_by</code></td>
+                <td><code>m_employees.row_id</code></td>
+                <td>更新者（NULL許容）</td>
+            </tr>
+            <tr>
+                <td><code>deleted_by</code></td>
+                <td><code>m_employees.row_id</code></td>
+                <td>削除者（NULL許容）</td>
+            </tr>
+            <tr>
+                <td><code>m_employees</code></td>
+                <td><code>person_row_id</code></td>
+                <td><code>m_persons.row_id</code></td>
+                <td>人名情報参照（NOT NULL）</td>
+            </tr>
+            <tr>
+                <td><code>m_login_credentials</code></td>
+                <td><code>employee_row_id</code></td>
+                <td><code>m_employees.row_id</code></td>
+                <td>ログイン対象従業員</td>
+            </tr>
+            <tr>
+                <td rowspan="2"><code>m_department</code></td>
+                <td><code>manager_employee_row_id</code></td>
+                <td><code>m_employees.row_id</code></td>
+                <td>部長（NULL許容）</td>
+            </tr>
+            <tr>
+                <td><code>parent_department_row_id</code></td>
+                <td><code>m_department.row_id</code></td>
+                <td>親部署（自己参照、NULL許容）</td>
+            </tr>
+            <tr>
+                <td rowspan="2"><code>m_employee_department</code></td>
+                <td><code>employee_row_id</code></td>
+                <td><code>m_employees.row_id</code></td>
+                <td>従業員参照</td>
+            </tr>
+            <tr>
+                <td><code>department_row_id</code></td>
+                <td><code>m_department.row_id</code></td>
+                <td>部署参照</td>
+            </tr>
+        </table>
+
+        <h2>⚙️ 監査情報（すべてのテーブル共通）</h2>
+        <table>
+            <tr>
+                <th>カラム名</th>
+                <th>型</th>
+                <th>説明</th>
+            </tr>
+            <tr>
+                <td><code>row_id</code></td>
+                <td><code>bigint</code></td>
+                <td>主キー（シーケンスNo）</td>
+            </tr>
+            <tr>
+                <td><code>row_version</code></td>
+                <td><code>timestamp</code></td>
+                <td>楽観的ロック用タイムスタンプ</td>
+            </tr>
+            <tr>
+                <td><code>inserted_at</code></td>
+                <td><code>datetime2</code></td>
+                <td>作成日時</td>
+            </tr>
+            <tr>
+                <td><code>inserted_by</code></td>
+                <td><code>bigint</code></td>
+                <td>作成者（m_employees.row_id）</td>
+            </tr>
+            <tr>
+                <td><code>updated_at</code></td>
+                <td><code>datetime2 (NULL許容)</code></td>
+                <td>更新日時（新規時はNULL）</td>
+            </tr>
+            <tr>
+                <td><code>updated_by</code></td>
+                <td><code>bigint (NULL許容)</code></td>
+                <td>更新者（m_employees.row_id）</td>
+            </tr>
+            <tr>
+                <td><code>deleted_at</code></td>
+                <td><code>datetime2 (NULL許容)</code></td>
+                <td>削除日時（NULL=有効）</td>
+            </tr>
+            <tr>
+                <td><code>deleted_by</code></td>
+                <td><code>bigint (NULL許容)</code></td>
+                <td>削除者（m_employees.row_id）</td>
+            </tr>
+        </table>
+
+        <div class="note">
+            <strong>💡 重要:</strong> すべての <code>*_by</code> カラムは <code>m_employees.row_id</code> を参照し、
+            ユーザーの操作追跡を可能にします。System 管理者（employee_code=1000）が初期値として登録されます。
+        </div>
+
+        <h2>✅ 設計ポイント</h2>
+        <ul>
+            <li><strong>row_id:</strong> C# では <code>long</code> 型（int型 は使わない）</li>
+            <li><strong>updated_at = NULL:</strong> 新規レコード判定に使用</li>
+            <li><strong>deleted_at = NULL:</strong> 有効なレコード、<strong>deleted_at IS NOT NULL:</strong> 論理削除済みレコード</li>
+            <li><strong>is_primary:</strong> 従業員の主たる所属部門を管理</li>
+            <li><strong>abolished_on:</strong> 部署廃止日（deleted_at との使い分け）</li>
+            <li><strong>hierarchy_level:</strong> 部署の階層レベル（0～4）</li>
+        </ul>
+    </div>
+
+    <script>
+        mermaid.initialize({ startOnLoad: true, theme: 'default' });
+        mermaid.contentLoaded();
+    </script>
+</body>
+</html>

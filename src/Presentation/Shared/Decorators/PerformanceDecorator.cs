@@ -54,14 +54,14 @@ public sealed class PerformanceDecorator<TRequest, TResponse> : IUseCase<TReques
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var startTime = DateTime.UtcNow;
+        var startTime = _clock.JstNow.Value;
         try
         {
             return await _innerUseCase.ExecuteAsync(request);
         }
         finally
         {
-            var endTime = DateTime.UtcNow;
+            var endTime = _clock.JstNow.Value;
             var elapsedMs = (int)(endTime - startTime).TotalMilliseconds;
             var correlationId = _correlationContext.GetOrCreate();
 

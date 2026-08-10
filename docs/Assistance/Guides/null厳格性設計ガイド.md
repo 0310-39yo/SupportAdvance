@@ -1,0 +1,1063 @@
+# Domain層 null 厳格性設計ガイド
+— Option/Maybe パターンの C# 実装
+
+**版:** 1.0  
+**作成日:** 2026-08-08  
+**対象:** SharedKernel, Domain, Application, Infrastructure 全層
+
+---
+
+## 📋 目次
+
+1. [根本原則](#1-根本原則)
+2. [レイヤ別責務](#2-レイヤ別責務)
+3. [実装パターン（3つの基本型）](#3-実装パターン3つの基本型)
+4. [3段階フロー](#4-3段階フロー)
+5. [別名関係と表現統一](#5-別名関係と表現統一)
+6. [実装ガイド](#6-実装ガイド)
+7. [Mapper での双方向変換](#7-mapper-での双方向変換)
+8. [よくあるエラーと修正](#8-よくあるエラーと修正)
+9. [Q&A](#9-qa)
+10. [参考資料](#10-参考資料)
+11. [廃版化ドキュメント](#11-廃版化ドキュメント)
+
+---
+
+## 1. 根本原則
+
+### 1.1 理論的背景：Option<T> パターン
+
+Domain層での null 禁止原則は、関数型プログラミングの **Option<T> パターン**（Haskell/Scala の Maybe 型）に独立して設計されたが、その考え方によく似ている。
+
+#### Haskell での Maybe パターン
+
+```haskell
+-- Haskell の Maybe 型
+data Maybe a = Just a | Nothing
+
+-- 使用方法
+case value of
+  Just x -> use(x)          -- 値が存在
+  Nothing -> handle_absent  -- 値が存在しない
+```
+
+#### SupportAdvance の C# 実装
+
+```csharp
+// IsSet フラグで状態を表現
+var value = RespondentName.From("太郎");
+
+if (value.IsSet)
+    use(value.Value);           -- 値が存在
+else
+    handle_absent();            -- 値が存在しない（Unset状態）
+```
+
+**相違点（C# の制約による）：**
+- Haskell/Scala: Nothing は値を持たない
+- SupportAdvance: Unset() も「型のデフォルト値を保持」（C# にはJavaの null を代替する言語レベルの「何も持たない状態」がない）
+
+### 1.2 なぜ null は禁止か
+
+#### ❌ null の問題点
+
+| 問題 | 例 | 影響 |
+|-----|---|----|
+| **予測不可能性** | `string? name = null` の場合、呼び出し側が null チェックを忘れる | NullReferenceException |
+| **ドメイン曖昧性** | `null` が「未設定」か「エラー」かが不明確 | ビジネスロジックの不確実性 |
+| **型安全性の喪失** | `DateTime? date` は DateTime と同じ型に見える | コンパイラが強制できない |
+| **制御フローの複雑化** | null チェックが散在 | コード可読性低下 |
+
+#### ✅ IsSet パターンの利点
+
+| 利点 | 方法 | 効果 |
+|-----|------|--------|
+| **明示的な状態表現** | `if (value.IsSet)` で状態を判定 | ドメイン意図が明確 |
+| **型安全性の確保** | 型システムで null を許さない | Domain層での完全な型安全性 |
+| **状態の完全性** | Unset も有効なインスタンス | 値が常に決定される |
+| **可読性** | `HasUpdated`, `IsDeleted` という意図的な別名 | ビジネスロジックが自己説明的 |
+
+### 1.3 Unset 状態の本質
+
+#### IsSet フラグの役割
+
+```csharp
+public sealed class RespondentName : PrimitiveValueObject<string>
+{
+    // Value: 常に string を保持（null ではない）
+    // IsSet: false = 未設定状態を表現
+    
+    public static RespondentName Unset() 
+        => new(string.Empty, false);  // Value = "" (デフォルト), IsSet = false
+    
+    public static RespondentName From(string value)
+        => new(value, true);          // Value = 値, IsSet = true
+}
+```
+
+#### 監査ValueObjects での例
+
+```csharp
+public sealed class UpdatedAt : PrimitiveValueObject<LocalDateTime?>
+{
+    // Value: 常に LocalDateTime を保持（null ではない）
+    // IsSet: false = 未更新状態
+    
+    public static UpdatedAt Unset()
+        => new(LocalDateTime.MinValue, false);
+    
+    public bool HasUpdated => IsSet;  // IsSet の別名
+}
+```
+
+**重要な保証:**
+- ✅ Value は常に型のデフォルト値以上
+- ✅ null は存在しない（Domain層のすべてが有効な値）
+- ✅ IsSet フラグで「存在/非存在」を表現
+
+---
+
+## 2. レイヤ別責務（完全な分離）
+
+### 2.1 Domain層：null-free 保証
+
+#### null-free の定義
+
+**null-free = Domain層での null 禁止原則**
+
+Domain層が null を完全に排除すること。
+すべての値は型で完全に決定され、IsSet フラグで状態を管理する。
+
+#### 原則
+
+```
+Domain層は完全に null-free。
+すべての値は型で完全に決定される。
+ビジネスロジックは IsSet フラグで状態を判定、null チェック不要。
+```
+
+#### 実装例
+
+```csharp
+public class UserPreferences : Entity
+{
+    public UpdatedAt UpdatedAt { get; private set; }
+    
+    // ❌ 間違い：null チェック
+    public bool IsRecent()
+    {
+        if (UpdatedAt == null)  // ← Domain では起こらない
+            return false;
+        return UpdatedAt.Value > threshold;
+    }
+    
+    // ✅ 正しい：IsSet で判定
+    public bool IsRecent()
+    {
+        if (!UpdatedAt.HasUpdated)  // HasUpdated は IsSet の別名
+            return false;
+        return UpdatedAt.Value > threshold;
+    }
+}
+```
+
+#### 保証される安全性
+- `entity.UpdatedAt.Value` を安全に呼べる（null-safe）
+- ビジネスロジックが null-free のため、可読性が高い
+- コードレビューで null チェック漏れが発生しない
+
+### 2.2 Application層：入力境界での変換
+
+#### 原則
+
+```
+Application層は Domain への入口。
+外部入力（JSON/UI/API）で null を許容し、
+TryFrom で自動的に Unset() に変換してから Domain に渡す。
+```
+
+#### 実装例
+
+```csharp
+public class CreateUserPreferencesUseCase
+{
+    public async Task<Response> ExecuteAsync(CreateRequest request)
+    {
+        // 外部入力で null を許容（TryFrom で Unset に自動変換）
+        if (!RespondentName.TryFrom(request.Name, out var name))
+            throw new ArgumentException("Invalid name format");  // 形式エラーのみ
+        
+        // name は Set（値あり）または Unset（値なし）の状態
+        var preferences = new UserPreferences(name, ...);
+        
+        // 以降、Domain層では name の IsSet で状態判定
+        if (name.IsSet)
+            ProcessName(name.Value);
+    }
+}
+```
+
+#### IOptionalValueObject インターフェース
+
+```csharp
+public interface IOptionalValueObject<TSelf> where TSelf : class
+{
+    // null を許容し、Unset に変換して成功を返す
+    static abstract bool TryFrom(string? input, out TSelf result);
+}
+```
+
+### 2.3 Infrastructure層：DB層との変換（層間フィルター）
+
+#### 原則
+
+```
+Infrastructure層は「汚い外界（DB）」と「clean な Domain」の境界。
+TryFromDbValue で DB の null を自動変換して、
+Domain に渡す前にすべての値を null-free にする。
+```
+
+#### 3段階フロー
+
+```
+DB値（nullable DateTime/DateTime?）
+    ↓
+Repository の TryFromDbValue 呼び出し
+    ├─ 必須フィールド: null → false（例外投げ）
+    └─ オプション/監査: null → Unset()（成功）
+    ↓
+Domain層へ渡す
+    → すべての ValueObject が null-free 状態
+```
+
+#### 実装例
+
+```csharp
+public class UserPreferencesRepository
+{
+    public async Task<UserPreferences?> GetAsync(UserId userId)
+    {
+        var dbModel = await _context.UserPreferences
+            .FirstOrDefaultAsync(x => x.UserId == userId.Value);
+        
+        // DbModel が存在しない場合は null を返す（層間の境界）
+        if (dbModel == null) return null;
+        
+        // ============ 層間の境界 ============
+        // すべての値を null → Unset に変換（フィルター）
+        
+        // createdAt: DB NOT NULL だが、TryFromDbValue で検証
+        if (!CreatedAt.TryFromDbValue(dbModel.CreatedAtDb, out var createdAt))
+            throw new InvalidOperationException("DB integrity error: CreatedAt is null");
+        
+        // updatedAt: DB NULL OK、null → Unset()
+        if (!UpdatedAt.TryFromDbValue(dbModel.UpdatedAtDb, out var updatedAt))
+            throw new InvalidOperationException("Invalid UpdatedAt in DB");
+        
+        // deletedAt: DB NULL OK、null → Unset()（未削除状態）
+        if (!DeletedAt.TryFromDbValue(dbModel.DeletedAtDb, out var deletedAt))
+            throw new InvalidOperationException("Invalid DeletedAt in DB");
+        
+        // ============ Domain層へ渡す ============
+        // すべての ValueObject が null-free 状態
+        return UserPreferences.Reconstruct(userId, createdAt, updatedAt, deletedAt, ...);
+    }
+}
+```
+
+### 2.4 DB層：ネイティブな null
+
+#### スコープ限定
+
+【対象】DateTime? のみ（DB ネイティブ型と Domain層 LocalDateTime の境界）  
+【対象外】int?, bool?, string? などの値型・参照型（Application層の Input/DTO で別途処理）
+
+#### 原則
+
+```
+DB層（スキーマ・DbModel）は DateTime/DateTime? を使用。
+ORM マッピングで LocalDateTime に自動変換（逆変換は Mapper が担当）。
+```
+
+#### スキーマ例
+
+```sql
+CREATE TABLE t_UserPreferences (
+    row_id BIGINT PRIMARY KEY,
+    created_at DATETIME2(7) NOT NULL,    -- CreatedAt（必須）
+    updated_at DATETIME2(7) NULL,        -- UpdatedAt（NULL許容 → Unset）
+    deleted_at DATETIME2(7) NULL,        -- DeletedAt（NULL許容 → 未削除）
+);
+```
+
+#### DbModel例
+
+```csharp
+public class UserPreferencesDbModel
+{
+    public DateTime CreatedAtDb { get; set; }      // DB NOT NULL
+    public DateTime? UpdatedAtDb { get; set; }     // DB NULL OK
+    public DateTime? DeletedAtDb { get; set; }     // DB NULL OK
+}
+```
+
+---
+
+## 3. 実装パターン（3つの基本型）
+
+### 3.1 必須ValueObject（入力必須）
+
+#### パターン：CreatedAt
+
+```csharp
+public sealed class CreatedAt : PrimitiveValueObject<LocalDateTime>
+{
+    private CreatedAt(LocalDateTime value) : base(value, true) { }
+    
+    public static CreatedAt From(LocalDateTime value) => new(value);
+    
+    // TryFrom: null は失敗（入力必須）
+    public static bool TryFrom(LocalDateTime? input, out CreatedAt result)
+    {
+        result = default!;
+        
+        if (!input.HasValue)
+            return false;  // ← null は無効な入力
+        
+        try
+        {
+            result = From(input.Value);
+            return true;
+        }
+        catch (ArgumentException)
+        {
+            return false;
+        }
+    }
+    
+    // TryFromDbValue: DB null も失敗（NOT NULL制約）
+    public static bool TryFromDbValue(DateTime? input, out CreatedAt result)
+    {
+        result = default!;
+        
+        if (input == null)
+            return false;  // ← DB null は DB制約違反
+        
+        try
+        {
+            result = From(new LocalDateTime(input.Value));
+            return true;
+        }
+        catch (ArgumentException)
+        {
+            return false;
+        }
+    }
+    
+    public LocalDateTime Value => ValueField;
+}
+```
+
+#### 特徴
+- **用途**: システム管理フィールド（作成日時、最終更新者など）
+- **DB**: NOT NULL
+- **Unset 状態**: なし（常に値を持つ）
+- **TryFrom(null)**: false（失敗）
+- **TryFromDbValue(null)**: false（失敗）
+
+### 3.2 オプションValueObject（入力オプション）
+
+#### パターン：RespondentName（IOptionalValueObject 実装）
+
+```csharp
+public sealed class RespondentName : PrimitiveValueObject<string>, 
+    IOptionalValueObject<RespondentName, string>
+{
+    private RespondentName(bool isSet) : base(isSet) { }
+    private RespondentName(string value, bool isSet) : base(value, isSet) { }
+    
+    public static RespondentName Unset() => new(false);
+    public static RespondentName From(string value) => new(value, true);
+    
+    // TryFrom: null は Unset（オプション入力）
+    public static bool TryFrom(string? input, out RespondentName result)
+    {
+        if (input is null)
+        {
+            result = Unset();  // ← null は「未設定」として成功
+            return true;
+        }
+        
+        try
+        {
+            result = From(input);
+            return true;
+        }
+        catch (ArgumentException)
+        {
+            result = Unset();
+            return false;
+        }
+    }
+    
+    public string? Value => IsSet ? ValueField : null;
+}
+```
+
+#### 特徴
+- **用途**: ユーザー入力フィールド（名前、メールアドレスなど）
+- **DB**: NULL OK（入力がない場合）
+- **Unset 状態**: あり（IsSet=false で表現）
+- **TryFrom(null)**: true（成功、Unset 状態）
+
+### 3.3 監査ValueObjects（DB → Domain 変換専用）
+
+#### パターン：UpdatedAt, DeletedAt
+
+```csharp
+public sealed class UpdatedAt : PrimitiveValueObject<LocalDateTime?>
+{
+    private UpdatedAt(LocalDateTime? value, bool isSet) : base(value, isSet) { }
+    
+    public static UpdatedAt Unset() 
+        => new(LocalDateTime.MinValue, false);
+    
+    public static UpdatedAt From(LocalDateTime value) 
+        => new(value, true);
+    
+    // TryFromDbValue: DB の null を Unset に変換（Infrastructure専用）
+    public static bool TryFromDbValue(DateTime? input, out UpdatedAt result)
+    {
+        if (input == null)
+        {
+            result = Unset();  // DB null → Unset（未更新状態）
+            return true;
+        }
+        
+        try
+        {
+            result = From(new LocalDateTime(input.Value));
+            return true;
+        }
+        catch (ArgumentException)
+        {
+            result = Unset();
+            return false;
+        }
+    }
+    
+    // TryFrom: LocalDateTime? null → Unset
+    public static bool TryFrom(LocalDateTime? input, out UpdatedAt result)
+    {
+        if (input == null || !input.HasValue)
+        {
+            result = Unset();  // null → Unset（成功）
+            return true;
+        }
+        
+        try
+        {
+            result = From(input.Value);
+            return true;
+        }
+        catch (ArgumentException)
+        {
+            result = Unset();
+            return false;
+        }
+    }
+    
+    public LocalDateTime? Value => ValueField;  // IsSet=false の場合も ValueField = LocalDateTime.MinValue を保持
+    public bool HasUpdated => IsSet;  // IsSet の別名
+}
+```
+
+```csharp
+public sealed class DeletedAt : PrimitiveValueObject<LocalDateTime?>
+{
+    private DeletedAt(LocalDateTime? value, bool isSet) : base(value, isSet) { }
+    
+    public static DeletedAt Unset() 
+        => new(LocalDateTime.MinValue, false);
+    
+    public static DeletedAt From(LocalDateTime value) 
+        => new(value, true);
+    
+    // TryFromDbValue: DB の null を Unset に変換
+    public static bool TryFromDbValue(DateTime? input, out DeletedAt result)
+    {
+        if (input == null)
+        {
+            result = Unset();  // DB null → Unset（未削除状態）
+            return true;
+        }
+        
+        try
+        {
+            result = From(new LocalDateTime(input.Value));
+            return true;
+        }
+        catch (ArgumentException)
+        {
+            result = Unset();
+            return false;
+        }
+    }
+    
+    // TryFrom: LocalDateTime? null → Unset
+    public static bool TryFrom(LocalDateTime? input, out DeletedAt result)
+    {
+        if (input == null || !input.HasValue)
+        {
+            result = Unset();  // null → Unset（成功）
+            return true;
+        }
+        
+        try
+        {
+            result = From(input.Value);
+            return true;
+        }
+        catch (ArgumentException)
+        {
+            result = Unset();
+            return false;
+        }
+    }
+    
+    public LocalDateTime? Value => ValueField;  // IsSet=false の場合も ValueField = LocalDateTime.MinValue を保持
+    public bool IsDeleted => IsSet;  // IsSet の別名
+}
+```
+
+#### 特徴
+- **用途**: 監査フィールド（最終更新日、削除日）
+- **DB**: NULL OK（未更新/未削除の場合）
+- **Unset 状態**: あり（IsSet=false で表現）
+- **TryFromDbValue(null)**: true（成功、Unset 状態）
+- **別名**: HasUpdated（UpdatedAt）, IsDeleted（DeletedAt）
+
+---
+
+## 4. 3段階フロー
+
+### 概念図
+
+```
+┌─────────────────────────────────────────────────────┐
+│ Stage 1: DB層（永続化層）                            │
+│ - DateTime / DateTime? ネイティブ型                  │
+│ - NULL が存在する可能性                              │
+└──────────────────────┬────────────────────────────┘
+                       ↓
+┌─────────────────────────────────────────────────────┐
+│ Stage 2: TryFromDbValue（層間フィルター）            │
+│ - Repository で呼び出し                             │
+│ - 必須: null → false（例外）                        │
+│ - オプション/監査: null → Unset()                   │
+└──────────────────────┬────────────────────────────┘
+                       ↓
+┌─────────────────────────────────────────────────────┐
+│ Stage 3: Domain層（ビジネスロジック）                │
+│ - LocalDateTime / LocalDateTime? のみ              │
+│ - null なし（IsSet フラグで状態管理）               │
+│ - ビジネスロジック内で null チェック不要            │
+└─────────────────────────────────────────────────────┘
+```
+
+### 流れ（UpdatedAt の例）
+
+```
+DB: updated_at = NULL（未更新を示す）
+  ↓
+Repository: UpdatedAt.TryFromDbValue(null)
+  ↓
+Unset()に変換: new(LocalDateTime.MinValue, false)
+  ↓
+Domain: UpdatedAt.HasUpdated = false
+  → ビジネスロジック: if (!entity.UpdatedAt.HasUpdated) ...
+```
+
+---
+
+## 5. 別名関係と表現統一
+
+### フラグ別名の統一表
+
+| 用途 | フィールド名 | プロパティ名 | 使用例 | ValueObject |
+|-----|-----------|----------|-------|-----------|
+| 設定状態の判定 | IsSet | IsSet | `if (value.IsSet)` | すべて |
+| 更新状態の判定 | IsSet | HasUpdated | `if (entity.UpdatedAt.HasUpdated)` | UpdatedAt |
+| 削除状態の判定 | IsSet | IsDeleted | `if (entity.DeletedAt.IsDeleted)` | DeletedAt |
+
+#### 重要な注意
+
+```
+- IsSet, HasUpdated, IsDeleted はすべて同じ意図（IsSet フラグ）の別名
+- 混在してもOK（むしろビジネス意図を明確にするため）
+- 実装時の一貫性よりも「可読性」を重視
+```
+
+#### 別名の選択基準
+
+```csharp
+// ✅ 一般的な ValueObject
+if (respondentName.IsSet) { ... }
+
+// ✅ 更新履歴を表現する
+if (entity.UpdatedAt.HasUpdated) { ... }
+
+// ✅ 論理削除を表現する
+if (entity.IsDeleted) { return; }
+
+// ✅ 別名の混在も許容（意図が明確なら）
+if (entity.CreatedAt.IsSet && entity.UpdatedAt.HasUpdated) { ... }
+```
+
+---
+
+## 6. 実装ガイド
+
+### 6.1 新しい ValueObject を実装するとき
+
+#### チェックリスト
+
+**設計段階**
+- [ ] ビジネス概念を正確に反映した名前か？（例：RespondentName は「回答者の名前」）
+- [ ] ValueObject で表現すべきか（Entity ではなく）を確認
+- [ ] Unset 状態が必要か？(入力が必須か必須でないか)
+  - YES（必須でない） → IOptionalValueObject を実装
+  - NO（必須） → Unset() は不要（常に値を持つ）
+- [ ] 入力パターンは？
+  - **必須**: CreatedAt パターン（入力必須、null → false）
+  - **オプション**: RespondentName パターン（入力オプション、null → Unset）
+  - **監査**: UpdatedAt パターン（DB専用、TryFromDbValue で自動変換）
+
+**実装段階**
+- [ ] コンストラクタは `private` 
+- [ ] フィールドは `readonly`
+- [ ] `From()` static メソッド（値を持つ状態）
+- [ ] `Unset()` static メソッド（未設定状態、不要な場合は省略）
+- [ ] `TryFrom()` または `TryFromDbValue()` メソッド
+- [ ] `Value` プロパティ（IsSet に応じた値）
+- [ ] `Normalize()` メソッド（入力を正規化、必要に応じて）
+- [ ] `Validate()` メソッド（ビジネスルール検証）
+- [ ] `GetValueComponents()` メソッド（等価性判定）
+
+**テスト段階**
+- [ ] 正常系：正規化・検証が期待通り
+- [ ] 異常系：不正な値で例外
+- [ ] Unset：未設定状態が正しく表現される
+- [ ] IsSet フラグ：IsSet に応じた Value の動作
+- [ ] 等価性：同じ値は等価、異なる値は非等価
+
+### 6.2 実装テンプレート
+
+#### 必須ValueObject
+
+```csharp
+public sealed class YourValueObject : PrimitiveValueObject<TValue>
+{
+    private YourValueObject(TValue value) : base(value, true) { }
+    
+    public static YourValueObject From(TValue value) => new(value);
+    
+    public static bool TryFrom(TValue? input, out YourValueObject result)
+    {
+        result = default!;
+        
+        if (input == null)
+            return false;  // ← null は失敗
+        
+        try
+        {
+            result = From(input);
+            return true;
+        }
+        catch (ArgumentException)
+        {
+            return false;
+        }
+    }
+    
+    public TValue Value => ValueField;
+    
+    protected override TValue Normalize(TValue input) => input;
+    
+    public override void Validate(TValue normalized)
+    {
+        // ビジネスルール検証
+    }
+    
+    protected override IEnumerable<object?> GetValueComponents()
+    {
+        yield return ValueField;
+    }
+}
+```
+
+#### オプションValueObject
+
+```csharp
+public sealed class YourOptionalValueObject : PrimitiveValueObject<TValue>, 
+    IOptionalValueObject<YourOptionalValueObject, TValue>
+{
+    private YourOptionalValueObject(bool isSet) : base(isSet) { }
+    private YourOptionalValueObject(TValue value, bool isSet) : base(value, isSet) { }
+    
+    public static YourOptionalValueObject Unset() => new(false);
+    
+    public static YourOptionalValueObject From(TValue value) => new(value, true);
+    
+    public static bool TryFrom(TValue? input, out YourOptionalValueObject result)
+    {
+        if (input == null)
+        {
+            result = Unset();  // ← null は Unset に変換
+            return true;
+        }
+        
+        try
+        {
+            result = From(input);
+            return true;
+        }
+        catch (ArgumentException)
+        {
+            result = Unset();
+            return false;
+        }
+    }
+    
+    public TValue? Value => IsSet ? ValueField : null;
+    
+    protected override TValue Normalize(TValue input) => input;
+    
+    public override void Validate(TValue normalized)
+    {
+        // ビジネスルール検証
+    }
+    
+    protected override IEnumerable<object?> GetValueComponents()
+    {
+        if (IsSet) yield return ValueField;
+    }
+}
+```
+
+#### 監査ValueObject（UpdatedAt/DeletedAt パターン）
+
+```csharp
+public sealed class YourAuditValueObject : PrimitiveValueObject<LocalDateTime?>
+{
+    private YourAuditValueObject(LocalDateTime? value, bool isSet) : base(value, isSet) { }
+    
+    public static YourAuditValueObject Unset() 
+        => new(LocalDateTime.MinValue, false);
+    
+    public static YourAuditValueObject From(LocalDateTime value) 
+        => new(value, true);
+    
+    // TryFromDbValue: DB の null を Unset に変換（Infrastructure専用）
+    public static bool TryFromDbValue(DateTime? input, out YourAuditValueObject result)
+    {
+        if (input == null)
+        {
+            result = Unset();  // DB null → Unset
+            return true;
+        }
+        
+        try
+        {
+            result = From(new LocalDateTime(input.Value));
+            return true;
+        }
+        catch (ArgumentException)
+        {
+            result = Unset();
+            return false;
+        }
+    }
+    
+    // TryFrom: LocalDateTime? null → Unset
+    public static bool TryFrom(LocalDateTime? input, out YourAuditValueObject result)
+    {
+        if (input == null || !input.HasValue)
+        {
+            result = Unset();
+            return true;
+        }
+        
+        try
+        {
+            result = From(input.Value);
+            return true;
+        }
+        catch (ArgumentException)
+        {
+            result = Unset();
+            return false;
+        }
+    }
+    
+    public LocalDateTime? Value => ValueField;  // IsSet=false の場合も LocalDateTime.MinValue を保持
+    
+    protected override LocalDateTime? Normalize(LocalDateTime? input) => input;
+    
+    public override void Validate(LocalDateTime? normalized) { }
+    
+    protected override IEnumerable<object?> GetValueComponents()
+    {
+        if (IsSet) yield return ValueField;
+    }
+}
+```
+
+---
+
+## 7. Mapper での双方向変換
+
+### 7.1 ToDbModel：Entity → DbModel（LocalDateTime → DateTime）
+
+```csharp
+public DbModel ToDbModel(Entity entity)
+{
+    return new DbModel
+    {
+        // CreatedAt: 常に値がある（必須）
+        CreatedAtDb = entity.CreatedAt.ToDbValue(),
+        
+        // UpdatedAt: IsSet に基づいて null/値を決定
+        UpdatedAtDb = entity.UpdatedAt.IsSet
+            ? entity.UpdatedAt.ToDbValue()
+            : (DateTime?)null,
+        
+        // DeletedAt: IsDeleted に基づいて null/値を決定
+        DeletedAtDb = entity.DeletedAt.IsDeleted
+            ? entity.DeletedAt.ToDbValue()
+            : (DateTime?)null,
+    };
+}
+```
+
+### 7.2 ToDomainEntity：DbModel → Entity（DateTime → LocalDateTime）
+
+```csharp
+public Entity ToDomainEntity(DbModel dbModel)
+{
+    // TryFromDbValue で自動的に null → Unset() に変換
+    if (!CreatedAt.TryFromDbValue(dbModel.CreatedAtDb, out var createdAt))
+        throw new InvalidOperationException("Invalid CreatedAt from DB");
+    
+    if (!UpdatedAt.TryFromDbValue(dbModel.UpdatedAtDb, out var updatedAt))
+        throw new InvalidOperationException("Invalid UpdatedAt from DB");
+    
+    if (!DeletedAt.TryFromDbValue(dbModel.DeletedAtDb, out var deletedAt))
+        throw new InvalidOperationException("Invalid DeletedAt from DB");
+    
+    // すべて null-free 状態で Domain に渡す
+    return Entity.Reconstruct(createdAt, updatedAt, deletedAt, ...);
+}
+```
+
+### 7.3 重要な責務分離
+
+```
+ToDbValue/FromDbValue: LocalDateTime ↔ DateTime の型変換のみ
+TryFromDbValue: 型変換 + null 処理
+Mapper: Entity ↔ DbModel の完全なマッピング
+```
+
+---
+
+## 8. よくあるエラーと修正
+
+### 表：間違い → 理由 → 正しい
+
+| 間違い | 理由 | 正しい |
+|------|------|--------|
+| `if (value != null)` | Domain は null を含まない | `if (value.IsSet)` |
+| `value.Value?? fallback` | Value は常に値を保持 | 不要 |
+| `new LocalDateTime(dbValue)` | 型変換の責務分離 | `TryFromDbValue()` |
+| `entity.UpdatedAt.Value!` | Domain では !（null-forced）不要 | `entity.UpdatedAt.Value`（安全） |
+| Application での `if (value == null)` | 型チェック後に処理 | TryFrom で事前に Unset に変換 |
+
+### エラー事例と修正
+
+#### ❌ 間違い：Domain での null チェック
+
+```csharp
+public class UserPreferences
+{
+    public void Update()
+    {
+        // ❌ Domain層では起こらない（null は来ない）
+        if (UpdatedAt == null)
+            return;
+        
+        if (UpdatedAt.Value > threshold)
+            DoSomething();
+    }
+}
+```
+
+#### ✅ 正しい：IsSet で判定
+
+```csharp
+public class UserPreferences
+{
+    public void Update()
+    {
+        // ✅ null ではなく IsSet で判定
+        if (!UpdatedAt.HasUpdated)
+            return;
+        
+        if (UpdatedAt.Value > threshold)
+            DoSomething();
+    }
+}
+```
+
+#### ❌ 間違い：Mapper での型変換ミス
+
+```csharp
+public DbModel ToDbModel(Entity entity)
+{
+    // ❌ LocalDateTime は DateTime ではない
+    return new DbModel
+    {
+        CreatedAtDb = entity.CreatedAt.Value,  // ← 型が合わない
+    };
+}
+```
+
+#### ✅ 正しい：ToDbValue で明示的変換
+
+```csharp
+public DbModel ToDbModel(Entity entity)
+{
+    // ✅ ToDbValue で LocalDateTime → DateTime 変換
+    return new DbModel
+    {
+        CreatedAtDb = entity.CreatedAt.ToDbValue(),
+    };
+}
+```
+
+#### ❌ 間違い：Repository での null 変換漏れ
+
+```csharp
+public async Task<Car?> GetByIdAsync(CarId carId)
+{
+    var dbModel = await _context.Cars.FindAsync(carId.Value);
+    if (dbModel == null) return null;
+    
+    // ❌ TryFromDbValue を呼ばず、直接コンストラクタに渡す
+    var updatedAt = new UpdatedAt(dbModel.UpdatedAtDb);  // ← db値をそのまま使用
+    
+    return Car.Reconstruct(..., updatedAt, ...);
+}
+```
+
+#### ✅ 正しい：TryFromDbValue で変換
+
+```csharp
+public async Task<Car?> GetByIdAsync(CarId carId)
+{
+    var dbModel = await _context.Cars.FindAsync(carId.Value);
+    if (dbModel == null) return null;
+    
+    // ✅ TryFromDbValue で null を自動的に Unset に変換
+    if (!UpdatedAt.TryFromDbValue(dbModel.UpdatedAtDb, out var updatedAt))
+        throw new InvalidOperationException("Invalid UpdatedAt");
+    
+    return Car.Reconstruct(..., updatedAt, ...);
+}
+```
+
+---
+
+## 9. Q&A
+
+### Q1: Value が常にデフォルト値を持つのはなぜ？
+
+C# には Haskell/Scala の `Nothing` のような「何も持たない状態」が言語レベルでない。代わりに、IsSet フラグで「存在するが無視」という状態を表現している。
+
+### Q2: Option/Maybe パターンとの違いは？
+
+| 項目 | Option/Maybe | SupportAdvance |
+|-----|-----------|------------|
+| **理論** | 同じ（未設定を型で表現） | 同じ |
+| **実装** | Nothing は値なし | Unset() はデフォルト値を保持 |
+| **理由** | 言語設計の違い | C# の制約 |
+
+### Q3: Domain で IsSet チェックするのは、null チェック と同じでは？
+
+異なる意図：
+- **null チェック**：「防御的プログラミング」（予期しない null に備える）
+- **IsSet チェック**：「状態判定」（ビジネス意図を明確にする）
+
+Domain層の IsSet チェックは、「このエンティティが更新されているか？」「このエンティティは削除されているか？」というビジネス状態を判定する。
+
+### Q4: なぜ Unset() は null ではなくデフォルト値を返すのか？
+
+型安全性のため：
+
+```csharp
+// ❌ null の場合、Value を呼ぶと NullReferenceException
+public LocalDateTime? Value => IsSet ? ValueField : null;
+
+// ✅ デフォルト値の場合、常に LocalDateTime を返す
+public LocalDateTime Value => ValueField;
+```
+
+Domain層が null を含まないことを**型システムで保証**するため。
+
+### Q5: TryFrom と TryFromDbValue の違いは？
+
+| メソッド | 入力型 | null 処理 | 用途 |
+|---------|--------|---------|------|
+| **TryFrom** | LocalDateTime? | LocalDateTime? null → Unset | Application層（型変換） |
+| **TryFromDbValue** | DateTime? | DateTime null → Unset | Infrastructure層（DB値変換） |
+
+---
+
+## 10. 参考資料
+
+- [Option パターン（Haskell）](https://wiki.haskell.org/Maybe)
+- [Scala Option<T>](https://www.scala-lang.org/api/2.13.0/scala/Option.html)
+- [C# Nullable Reference Types](https://docs.microsoft.com/en-us/dotnet/csharp/nullable-references)
+- [ValueObject_設計ガイド.md](ValueObject_設計ガイド.md)（セクション 12: レイヤ制約）
+- [Clean Architecture - Robert C. Martin](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
+- [CLAUDE.md - LocalDateTime使用規則](../../CLAUDE.md)
+
+---
+
+## 11. 廃版化ドキュメント
+
+以下のドキュメントは本ガイドに統合されました。参照不要です：
+
+- ❌ `docs/Assistance/Guides/監査ValueObject_null処理戦略.md`（廃版）
+- ❌ `docs/SharedKernel/ValueObjects/Audit/監査ValueObject_null処理詳細設計.md`（廃版）
+
+これら2つのドキュメント内容は、本ガイドの以下のセクションに統合されています：
+
+| 元ドキュメント | 統合先セクション | 内容 |
+|-------------|-------------|------|
+| 戦略.md | [2. レイヤ別責務](#2-レイヤ別責務) | Domain層の null-free保証、Infrastructure層での変換 |
+| 戦略.md | [4. 3段階フロー](#4-3段階フロー) | DB → ValueObject → Domain の変換フロー |
+| 詳細設計.md | [3. 実装パターン](#3-実装パターン3つの基本型) | CreatedAt/UpdatedAt/DeletedAt の実装パターン |
+| 詳細設計.md | [7. Mapper での双方向変換](#7-mapper-での双方向変換) | Entity ↔ DbModel マッピング |
+| 両文書 | [8. よくあるエラーと修正](#8-よくあるエラーと修正) | 実装時の一般的なミスと修正方法 |
+
+**今後の参照:**
+本ガイド `null厳格性設計ガイド.md` を唯一の真実のドキュメント（SSOT）として使用してください。
+
+---
+
+## 更新履歴
+
+| 版 | 日付 | 内容 |
+|---|------|------|
+| 1.0 | 2026-08-08 | 初版：Option/Maybe パターン理論、3段階フロー、レイヤ別責務の統一的記述。既存2つのドキュメントを統合。 |
+

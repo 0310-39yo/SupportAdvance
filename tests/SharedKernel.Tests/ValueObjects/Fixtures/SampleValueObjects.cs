@@ -1,28 +1,7 @@
-namespace SupportAdvance.SharedKernel.Tests.ValueObjects.Fixtures;
-
 using SupportAdvance.SharedKernel.ValueObjects;
-using System.Reflection;
+using SupportAdvance.SharedKernel.ValueObjects.Abstractions;
 
-/// <summary>
-/// ValueObject の protected init プロパティを設定するヘルパー
-/// </summary>
-internal static class ValueObjectHelper
-{
-    /// <summary>
-    /// リフレクションを使用して ValueObject の IsSet プロパティを設定する
-    /// </summary>
-    internal static void SetIsSet(ValueObject obj, bool isSet)
-    {
-        var field = typeof(ValueObject).GetField(
-            "<IsSet>k__BackingField",
-            BindingFlags.NonPublic | BindingFlags.Instance);
-
-        if (field != null)
-        {
-            field.SetValue(obj, isSet);
-        }
-    }
-}
+namespace SupportAdvance.Tests.SharedKernel.Tests.ValueObjects.Fixtures;
 
 /// <summary>
 /// 単一コンポーネントを持つサンプルValueObject
@@ -32,25 +11,23 @@ public class OrderId : ValueObject
 {
     public string Value { get; }
 
-    private OrderId(string value)
+    private OrderId(string value, bool isSet = true)
     {
         Value = value;
+        IsSet = isSet;
     }
 
     /// <summary>
     /// OrderId を作成するファクトリメソッド
-    /// IsSet の状態を指定できる
     /// </summary>
-    public static OrderId Create(string value, bool isSet = true)
-    {
-        var result = new OrderId(value);
-        ValueObjectHelper.SetIsSet(result, isSet);
-        return result;
-    }
+    public static OrderId Create(string value, bool isSet = true) => new(value, isSet);
 
-    protected override IEnumerable<object?> GetEqualityComponents()
+    protected override IEnumerable<object?> GetValueComponents()
     {
-        yield return Value;
+        if (IsSet)
+        {
+            yield return Value;
+        }
     }
 }
 
@@ -63,27 +40,132 @@ public class ProductPrice : ValueObject
     public decimal Amount { get; }
     public string Currency { get; }
 
-    private ProductPrice(decimal amount, string currency)
+    private ProductPrice(decimal amount, string currency, bool isSet = true)
     {
         Amount = amount;
         Currency = currency;
+        IsSet = isSet;
     }
 
     /// <summary>
     /// ProductPrice を作成するファクトリメソッド
-    /// IsSet の状態を指定できる
     /// </summary>
     public static ProductPrice Create(decimal amount, string currency, bool isSet = true)
+        => new(amount, currency, isSet);
+
+    protected override IEnumerable<object?> GetValueComponents()
     {
-        var result = new ProductPrice(amount, currency);
-        ValueObjectHelper.SetIsSet(result, isSet);
-        return result;
+        if (IsSet)
+        {
+            yield return Amount;
+            yield return Currency;
+        }
+    }
+}
+
+/// <summary>
+/// PrimitiveValueObject（スカラ値）のテスト用実装
+/// TestStringValue（文字列値）- トリムと正規化をテスト
+/// </summary>
+public sealed class TestStringValue : PrimitiveValueObject<string>
+{
+    private TestStringValue(string value, bool isSet) : base(value, isSet) { }
+
+    public static TestStringValue Create(string value, bool isSet = true) => new(value, isSet);
+    public static TestStringValue CreateUnset() => new(string.Empty, false);
+
+    public string? Value => IsSet ? ValueField : null;
+
+    /// <summary>
+    /// トリム処理を実装
+    /// </summary>
+    protected override string Normalize(string input) => input.Trim();
+
+    /// <summary>
+    /// 空文字列は無効
+    /// </summary>
+    public override void Validate(string normalized)
+    {
+        if (string.IsNullOrEmpty(normalized))
+            throw new ArgumentException("Value cannot be empty", nameof(normalized));
+        if (normalized.Length > 50)
+            throw new ArgumentException("Value must be 50 characters or less", nameof(normalized));
     }
 
-    protected override IEnumerable<object?> GetEqualityComponents()
+    /// <summary>
+    /// カスタムフォーマット：値を括弧で囲む
+    /// </summary>
+    protected override string Format(string value) => $"[{value}]";
+
+    protected override IEnumerable<object?> GetValueComponents()
     {
-        yield return Amount;
-        yield return Currency;
+        if (IsSet) yield return ValueField;
+    }
+}
+
+/// <summary>
+/// PrimitiveValueObject（スカラ値）のテスト用実装
+/// TestIntValue（整数値）- 範囲検証をテスト
+/// </summary>
+public sealed class TestIntValue : PrimitiveValueObject<int>
+{
+    private TestIntValue(int value, bool isSet) : base(value, isSet) { }
+
+    public static TestIntValue Create(int value, bool isSet = true) => new(value, isSet);
+    public static TestIntValue CreateUnset() => new(0, false);
+
+    public int? Value => IsSet ? (int?)ValueField : null;
+
+    /// <summary>
+    /// 範囲は 0 ～ 100
+    /// </summary>
+    public override void Validate(int normalized)
+    {
+        if (normalized < 0 || normalized > 100)
+            throw new ArgumentOutOfRangeException(nameof(normalized), "Value must be between 0 and 100");
+    }
+
+    protected override IEnumerable<object?> GetValueComponents()
+    {
+        if (IsSet) yield return ValueField;
+    }
+}
+
+/// <summary>
+/// PrimitiveValueObject（スカラ値）のテスト用実装
+/// TestDecimalValue（小数値）- フォーマット処理をテスト
+/// </summary>
+public sealed class TestDecimalValue : PrimitiveValueObject<decimal>
+{
+    private TestDecimalValue(decimal value, bool isSet) : base(value, isSet) { }
+
+    public static TestDecimalValue Create(decimal value, bool isSet = true) => new(value, isSet);
+    public static TestDecimalValue CreateUnset() => new(0m, false);
+
+    public decimal? Value => IsSet ? (decimal?)ValueField : null;
+
+    /// <summary>
+    /// 負の値は無効
+    /// </summary>
+    public override void Validate(decimal normalized)
+    {
+        if (normalized < 0)
+            throw new ArgumentException("Value cannot be negative", nameof(normalized));
+    }
+
+    /// <summary>
+    /// 小数点以下2桁で丸める
+    /// </summary>
+    protected override decimal Normalize(decimal input) => Math.Round(input, 2);
+
+    /// <summary>
+    /// 通貨形式でフォーマット
+    /// </summary>
+    protected override string Format(decimal value) => $"¥{value:F2}";
+
+    protected override IEnumerable<object?> GetValueComponents()
+    {
+        if (IsSet) yield return ValueField;
     }
 }
 
@@ -133,7 +215,7 @@ public sealed class OrderStatus : EnumValueObject<int>
     /// <summary>
     /// 選択肢の妥当性をチェック（1～3）
     /// </summary>
-    protected override void Validate(int value)
+    public override void Validate(int value)
     {
         if (value is < 1 or > 3)
         {

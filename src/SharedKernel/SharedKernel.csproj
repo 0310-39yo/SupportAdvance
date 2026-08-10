@@ -19,8 +19,4 @@
     <Folder Include="Entities\" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Include="ValueObjects\IClockValueObject.cs" />
-  </ItemGroup>
-
 </Project>

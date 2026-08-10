@@ -1,4 +1,5 @@
 using SupportAdvance.Application.UseCases;
+using SupportAdvance.Common.Clocks;
 
 namespace SupportAdvance.Contexts.Samples.CarPreferences.Application.UseCases;
 
@@ -15,7 +16,7 @@ public class CarPreferencesResponse : IResponse
     /// <summary>
     /// 処理の実行時刻
     /// </summary>
-    public DateTime ExecutedAt { get; set; }
+    public LocalDateTime ExecutedAt { get; set; }
 
     /// <summary>
     /// 処理が成功したか

@@ -268,11 +268,14 @@ cat1.Equals(cat2);  // true
 ```csharp
 public abstract class DomainEvent
 {
-    public DateTime OccurredOn { get; }
+    public LocalDateTime OccurredOn { get; }
     
-    public DomainEvent()
+    // ⚠️ 注意: Domain層では IClock 経由で日時を取得
+    // DomainEvent を発行する Entity が IClock を注入され、
+    // Entity から DomainEvent へ日時を渡す設計が推奨
+    public DomainEvent(LocalDateTime occurredOn)
     {
-        OccurredOn = DateTime.UtcNow;
+        OccurredOn = occurredOn;
     }
 }
 ```
