@@ -1,9 +1,8 @@
 namespace SupportAdvance.Contexts.Employee.Domain.Entities;
 
 using SupportAdvance.Common.Clocks;
-using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Identifiers;
+using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
 using SupportAdvance.SharedKernel.Entities;
-using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 /// <summary>
 /// 部署メンバーシップエンティティ（部署への属性関連付け）

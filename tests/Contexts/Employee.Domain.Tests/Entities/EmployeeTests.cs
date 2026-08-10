@@ -1,8 +1,7 @@
 namespace SupportAdvance.Tests.Contexts.Employee.Domain.Entities;
 
 using SupportAdvance.Contexts.Employee.Domain.Entities;
-using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Identifiers;
-using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
+using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
 using Xunit;
 
 /// <summary>

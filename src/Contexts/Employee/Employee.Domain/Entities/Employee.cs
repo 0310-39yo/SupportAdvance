@@ -1,8 +1,7 @@
 namespace SupportAdvance.Contexts.Employee.Domain.Entities;
 
-using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Identifiers;
+using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
 using SupportAdvance.SharedKernel.Entities;
-using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 /// <summary>
 /// 従業員を表すドメインエンティティ（集約根）
