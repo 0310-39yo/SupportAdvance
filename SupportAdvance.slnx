@@ -17,6 +17,10 @@
     <Project Path="src/SharedKernel/SharedKernel.csproj" Id="bf2067f5-628a-4063-9d7b-cd4caf033931" />
   </Folder>
   <Folder Name="/src/Contexts/" />
+  <Folder Name="/src/Contexts/Employee/">
+    <Project Path="src/Contexts/Employee/Employee.Domain/Employee.Domain.csproj" />
+    <Project Path="src/Contexts/Employee/Employee.Infrastructure/Employee.Infrastructure.csproj" />
+  </Folder>
   <Folder Name="/src/Contexts/Samples/">
     <Project Path="src/Contexts/Samples/CarPreferences.Application/CarPreferences.Application.csproj" Id="2f307dc3-ae81-4f4d-b44c-de4e33d1aecc" />
     <Project Path="src/Contexts/Samples/CarPreferences.Domain/CarPreferences.Domain.csproj" Id="eb5f522b-1a50-4496-a07e-f7ffc1b1a476" />
@@ -36,10 +40,10 @@
       </Folder>
     </Folder>
     <Folder Name="/tests/Presentation/" />
+    <Project Path="tests/Architecture.Tests/Architecture.Tests.csproj" Id="c1c2d3e4-f5a6-47b8-9c0d-3e4f5a6b7c8d" />
     <Project Path="tests/Common.Tests/Common.Tests.csproj" Id="f1a2b3c4-d5e6-47f8-9a0b-1c2d3e4f5a6b" />
     <Project Path="tests/Crosscutting.Tests/Crosscutting.Tests.csproj" Id="a1b2c3d4-e5f6-47a8-9b0c-2d3e4f5a6b7c" />
     <Project Path="tests/Infrastructure.Tests/Infrastructure.Tests.csproj" Id="f1f2a3b4-c5d6-47f8-9f0a-6b7c8d9e0f1b" />
     <Project Path="tests/SharedKernel.Tests/SharedKernel.Tests.csproj" Id="b1c2d3e4-f5a6-47b8-9c0d-3e4f5a6b7c8d" />
-    <Project Path="tests/Architecture.Tests/Architecture.Tests.csproj" Id="c1c2d3e4-f5a6-47b8-9c0d-3e4f5a6b7c8d" />
   </Folder>
 </Solution>

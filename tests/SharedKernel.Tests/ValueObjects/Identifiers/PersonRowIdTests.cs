@@ -13,7 +13,7 @@ public class PersonRowIdTests
     [Fact]
     public void TestPRGEN01_FromMin1ReturnsValidRowId()
     {
-        var result = EmployeeRowId.From(1L);
+        var result = PersonRowId.From(1L);
         Assert.NotNull(result);
         Assert.Equal(1L, result.Value);
     }

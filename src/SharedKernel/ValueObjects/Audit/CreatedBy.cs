@@ -1,4 +1,4 @@
-namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Audit;
+namespace SupportAdvance.SharedKernel.ValueObjects.Audit;
 
 using SupportAdvance.SharedKernel.ValueObjects;
 using SupportAdvance.SharedKernel.ValueObjects.Abstractions;
@@ -154,6 +154,7 @@ public sealed class CreatedBy : PrimitiveValueObject<long>, IEquatable<CreatedBy
         }
     }
 }
+
 
 
 
