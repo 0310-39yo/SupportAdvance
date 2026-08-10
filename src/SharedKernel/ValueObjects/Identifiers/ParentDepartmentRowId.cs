@@ -1,66 +1,71 @@
-namespace SupportAdvance.SharedKernel.ValueObjects.Audit;
+namespace SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 using System.Collections.Generic;
 using SupportAdvance.SharedKernel.ValueObjects.Abstractions;
 
 /// <summary>
-/// 削除者の従業員行IDを表すオプション ValueObject（論理削除用）
+/// 親部署の行IDを表すオプション ValueObject
 ///
 /// 責務：
-/// - 削除者の行IDを型安全に保持（オプション）
-/// - 値が 0 より大きいことを検証
+/// - 親部署行ID（1以上）をオプション型で型安全に保持
+/// - 値の検証（正の整数）
 /// - null を Unset に変換（IOptionalValueObject パターン）
-/// - 論理削除状態を管理（未削除=Unset, 削除済み=値を保持）
 /// - 等価性判定とハッシュコード計算
 /// </summary>
-public sealed class DeletedBy : PrimitiveValueObject<long?>, IEquatable<DeletedBy>
+public sealed class ParentDepartmentRowId : PrimitiveValueObject<long?>, IEquatable<ParentDepartmentRowId>
 {
     /// <summary>
-    /// 指定された従業員行IDから DeletedBy を生成する（プライベートコンストラクタ）
+    /// 親部署行IDの値を取得する（IsSet=false の場合は null）
     /// </summary>
-    /// <param name="value">従業員行ID</param>
-    /// <param name="isSet">削除済みフラグ</param>
-    private DeletedBy(long? value, bool isSet) : base(value, isSet)
+    public long? Value => ValueField;
+
+    /// <summary>
+    /// 指定された親部署行IDから ParentDepartmentRowId を生成する（プライベートコンストラクタ）
+    /// </summary>
+    /// <param name="value">親部署行ID</param>
+    /// <param name="isSet">設定済みフラグ</param>
+    /// <remarks>Validate は、基礎クラスのコンストラクタで自動実行される</remarks>
+    private ParentDepartmentRowId(long? value, bool isSet) : base(value, isSet)
     {
     }
 
     /// <summary>
-    /// 未削除状態の DeletedBy を生成する
+    /// ルート部署（親なし）を表す Unset インスタンスを生成する
     /// </summary>
     /// <returns>IsSet=false のインスタンス</returns>
-    public static DeletedBy Unset()
+    public static ParentDepartmentRowId Unset()
     {
         return new(null, false);
     }
 
     /// <summary>
-    /// 指定された従業員行IDから DeletedBy を生成する
+    /// 指定された親部署行IDから ParentDepartmentRowId を生成する
     /// </summary>
-    /// <param name="value">従業員行ID（1以上）</param>
-    /// <returns>生成された DeletedBy インスタンス</returns>
+    /// <param name="value">親部署行ID（1以上）</param>
+    /// <returns>生成された ParentDepartmentRowId インスタンス</returns>
     /// <exception cref="ArgumentException">値が 0 以下の場合</exception>
-    public static DeletedBy From(long value)
+    public static ParentDepartmentRowId From(long value)
     {
         if (value <= 0)
         {
-            throw new ArgumentException("DeletedBy must be greater than 0.", nameof(value));
+            throw new ArgumentException("ParentDepartmentRowId must be greater than 0.", nameof(value));
         }
 
         return new(value, true);
     }
 
     /// <summary>
-    /// 指定された従業員行IDから DeletedBy の生成を試みる（型安全版）
+    /// 指定された親部署行IDから ParentDepartmentRowId の生成を試みる（型安全版）
     /// null は Unset に変換して成功を返す（IOptionalValueObject パターン）
     /// </summary>
-    /// <param name="input">従業員行ID（null許容）</param>
+    /// <param name="input">親部署行ID（null許容）</param>
     /// <param name="result">生成されたインスタンス</param>
     /// <returns>成功時 true、検証失敗時 false（例外なし）</returns>
-    public static bool TryFrom(long? input, out DeletedBy result)
+    public static bool TryFrom(long? input, out ParentDepartmentRowId result)
     {
         if (!input.HasValue)
         {
-            result = Unset();  // null は Unset に変換して成功（未削除）
+            result = Unset();  // null は Unset に変換して成功（親なし）
             return true;
         }
 
@@ -82,11 +87,11 @@ public sealed class DeletedBy : PrimitiveValueObject<long?>, IEquatable<DeletedB
     /// <param name="input">DB から読み込んだ行ID（null許容）</param>
     /// <param name="result">生成されたインスタンス</param>
     /// <returns>成功時 true、検証失敗時 false</returns>
-    public static bool TryFromDbValue(long? input, out DeletedBy result)
+    public static bool TryFromDbValue(long? input, out ParentDepartmentRowId result)
     {
         if (!input.HasValue)
         {
-            result = Unset();  // DB NULL は Unset に変換（未削除）
+            result = Unset();  // DB NULL は Unset に変換（親なし）
             return true;
         }
 
@@ -103,24 +108,19 @@ public sealed class DeletedBy : PrimitiveValueObject<long?>, IEquatable<DeletedB
     }
 
     /// <summary>
-    /// 従業員行IDを取得する（IsSet=false の場合は null）
+    /// 親部署があるかどうかを判定する（IsSet の別名）
     /// </summary>
-    public long? Value => ValueField;
-
-    /// <summary>
-    /// 削除済みかどうかを判定する（IsSet の別名）
-    /// </summary>
-    public bool IsDeleted => IsSet;
+    public bool HasParent => IsSet;
 
     /// <summary>
     /// オブジェクト等価性を判定する
     /// </summary>
-    public override bool Equals(object? obj) => Equals(obj as DeletedBy);
+    public override bool Equals(object? obj) => Equals(obj as ParentDepartmentRowId);
 
     /// <summary>
-    /// DeletedBy 間の等価性を判定する
+    /// ParentDepartmentRowId 間の等価性を判定する
     /// </summary>
-    public bool Equals(DeletedBy? other)
+    public bool Equals(ParentDepartmentRowId? other)
     {
         if (other is null)
         {
@@ -163,7 +163,7 @@ public sealed class DeletedBy : PrimitiveValueObject<long?>, IEquatable<DeletedB
 
         if (normalized.HasValue && normalized.Value <= 0)
         {
-            throw new ArgumentException("DeletedBy must be greater than 0.", nameof(normalized));
+            throw new ArgumentException("ParentDepartmentRowId must be greater than 0.", nameof(normalized));
         }
     }
 }
