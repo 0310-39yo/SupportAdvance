@@ -1,8 +1,11 @@
 namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Identifiers;
 
+using SupportAdvance.SharedKernel.ValueObjects;
+using SupportAdvance.SharedKernel.ValueObjects.Abstractions;
+
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using SupportAdvance.SharedKernel.ValueObjects.Abstractions;
+
 
 /// <summary>
 /// 部署コードを表す ValueObject
@@ -157,4 +160,7 @@ public sealed class DepartmentCode : PrimitiveValueObject<string>, IEquatable<De
         }
     }
 }
+
+
+
 

@@ -1,8 +1,11 @@
 namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Identifiers;
 
+using SupportAdvance.SharedKernel.ValueObjects;
+using SupportAdvance.SharedKernel.ValueObjects.Abstractions;
+
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using SupportAdvance.SharedKernel.ValueObjects.Abstractions;
+
 
 /// <summary>
 /// ロールコードを表す ValueObject
@@ -156,4 +159,7 @@ public sealed class RoleCode : PrimitiveValueObject<string>, IEquatable<RoleCode
         }
     }
 }
+
+
+
 

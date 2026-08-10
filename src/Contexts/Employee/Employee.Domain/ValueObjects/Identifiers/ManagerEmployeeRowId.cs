@@ -1,7 +1,10 @@
 namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Identifiers;
 
-using System.Collections.Generic;
+using SupportAdvance.SharedKernel.ValueObjects;
 using SupportAdvance.SharedKernel.ValueObjects.Abstractions;
+
+using System.Collections.Generic;
+
 
 /// <summary>
 /// 部署の管理者（従業員）の行IDを表すオプション ValueObject
@@ -166,4 +169,7 @@ public sealed class ManagerEmployeeRowId : PrimitiveValueObject<long?>, IEquatab
         }
     }
 }
+
+
+
 

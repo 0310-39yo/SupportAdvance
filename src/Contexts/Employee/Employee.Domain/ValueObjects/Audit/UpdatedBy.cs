@@ -1,7 +1,12 @@
 namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Audit;
 
-using System.Collections.Generic;
+using SupportAdvance.SharedKernel.ValueObjects;
 using SupportAdvance.SharedKernel.ValueObjects.Abstractions;
+
+
+
+using System.Collections.Generic;
+
 
 /// <summary>
 /// 更新者の従業員行IDを表すオプション ValueObject
@@ -166,4 +171,6 @@ public sealed class UpdatedBy : PrimitiveValueObject<long?>, IEquatable<UpdatedB
         }
     }
 }
+
+
 

@@ -1,6 +1,9 @@
 namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Identifiers;
 
+using SupportAdvance.SharedKernel.ValueObjects;
 using SupportAdvance.SharedKernel.ValueObjects.Abstractions;
+
+
 
 /// <summary>
 /// データベース上の部署レコードの行ID（rowId）を表す ValueObject
@@ -137,4 +140,7 @@ public sealed class DepartmentRowId : PrimitiveValueObject<long>, IEquatable<Dep
         }
     }
 }
+
+
+
 

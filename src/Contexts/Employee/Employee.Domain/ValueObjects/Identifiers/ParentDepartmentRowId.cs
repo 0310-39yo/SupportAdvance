@@ -1,7 +1,10 @@
 namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Identifiers;
 
-using System.Collections.Generic;
+using SupportAdvance.SharedKernel.ValueObjects;
 using SupportAdvance.SharedKernel.ValueObjects.Abstractions;
+
+using System.Collections.Generic;
+
 
 /// <summary>
 /// 親部署の行IDを表すオプション ValueObject
@@ -167,4 +170,7 @@ public sealed class ParentDepartmentRowId : PrimitiveValueObject<long?>, IEquata
         }
     }
 }
+
+
+
 

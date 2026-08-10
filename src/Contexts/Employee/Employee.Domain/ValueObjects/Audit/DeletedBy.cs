@@ -1,7 +1,12 @@
 namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Audit;
 
-using System.Collections.Generic;
+using SupportAdvance.SharedKernel.ValueObjects;
 using SupportAdvance.SharedKernel.ValueObjects.Abstractions;
+
+
+
+using System.Collections.Generic;
+
 
 /// <summary>
 /// 削除者の従業員行IDを表すオプション ValueObject（論理削除用）
@@ -167,4 +172,6 @@ public sealed class DeletedBy : PrimitiveValueObject<long?>, IEquatable<DeletedB
         }
     }
 }
+
+
 
