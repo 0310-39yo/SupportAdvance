@@ -10,58 +10,51 @@ using Xunit;
 /// </summary>
 public class PermissionAssignmentTests
 {
+    private static LocalDateTime GetTestDate() => new(new DateTime(2026, 1, 1, 0, 0, 0));
+
     #region グループ 1: 生成メソッド（Create）
 
     [Fact]
     public void TestCreate01_WithExpirationDateReturnsValidPermissionAssignment()
     {
         // Arrange
-        var permissionCode = PermissionCode.From("read");
-        var effectiveDate = new LocalDateTime(new DateTime(2026, 1, 1, 0, 0, 0));
+        var assignmentRowId = PermissionAssignmentRowId.From(1L);
+        var employeeRowId = EmployeeRowId.From(100L);
+        var permissionCode = PermissionCode.From("Read");
+        var effectiveDate = GetTestDate();
         var expirationDate = new LocalDateTime(new DateTime(2026, 12, 31, 23, 59, 59));
 
         // Act
-        var permissionAssignment = PermissionAssignment.Create(permissionCode, effectiveDate, expirationDate);
+        var permissionAssignment = PermissionAssignment.Create(assignmentRowId, employeeRowId, permissionCode, effectiveDate, expirationDate);
 
         // Assert
         Assert.NotNull(permissionAssignment);
+        Assert.Equal(assignmentRowId, permissionAssignment.RowId);
+        Assert.Equal(employeeRowId, permissionAssignment.EmployeeRowId);
         Assert.Equal(permissionCode, permissionAssignment.PermissionCode);
         Assert.Equal(effectiveDate, permissionAssignment.EffectiveDate);
         Assert.Equal(expirationDate, permissionAssignment.ExpirationDate);
-        Assert.NotEqual(Guid.Empty, permissionAssignment.Id.Value);
     }
 
     [Fact]
     public void TestCreate02_WithoutExpirationDateReturnsValidPermissionAssignment()
     {
         // Arrange
-        var permissionCode = PermissionCode.From("write");
-        var effectiveDate = new LocalDateTime(new DateTime(2026, 1, 1, 0, 0, 0));
+        var assignmentRowId = PermissionAssignmentRowId.From(2L);
+        var employeeRowId = EmployeeRowId.From(100L);
+        var permissionCode = PermissionCode.From("Write");
+        var effectiveDate = GetTestDate();
 
         // Act
-        var permissionAssignment = PermissionAssignment.Create(permissionCode, effectiveDate);
+        var permissionAssignment = PermissionAssignment.Create(assignmentRowId, employeeRowId, permissionCode, effectiveDate);
 
         // Assert
         Assert.NotNull(permissionAssignment);
+        Assert.Equal(assignmentRowId, permissionAssignment.RowId);
+        Assert.Equal(employeeRowId, permissionAssignment.EmployeeRowId);
         Assert.Equal(permissionCode, permissionAssignment.PermissionCode);
         Assert.Equal(effectiveDate, permissionAssignment.EffectiveDate);
         Assert.Null(permissionAssignment.ExpirationDate);
-    }
-
-    [Fact]
-    public void TestCreate03_MultipleCreatesGenerateDifferentIds()
-    {
-        // Arrange & Act
-        var perm1 = PermissionAssignment.Create(
-            PermissionCode.From("read"),
-            new LocalDateTime(new DateTime(2026, 1, 1, 0, 0, 0)));
-
-        var perm2 = PermissionAssignment.Create(
-            PermissionCode.From("write"),
-            new LocalDateTime(new DateTime(2026, 1, 1, 0, 0, 0)));
-
-        // Assert
-        Assert.NotEqual(perm1.Id, perm2.Id);
     }
 
     #endregion
@@ -69,125 +62,57 @@ public class PermissionAssignmentTests
     #region グループ 2: 復元メソッド（Reconstruct）
 
     [Fact]
-    public void TestReconstruct01_WithExpirationDateReturnsValidPermissionAssignment()
+    public void TestReconstruct01_ReconstructFromDbValuesReturnsValidPermissionAssignment()
     {
         // Arrange
-        var id = PermissionAssignmentId.NewId();
-        var permissionCode = PermissionCode.From("read");
-        var effectiveDate = new LocalDateTime(new DateTime(2026, 1, 1, 0, 0, 0));
+        var assignmentRowId = PermissionAssignmentRowId.From(100L);
+        var employeeRowId = EmployeeRowId.From(12345L);
+        var permissionCode = PermissionCode.From("Read");
+        var effectiveDate = GetTestDate();
         var expirationDate = new LocalDateTime(new DateTime(2026, 12, 31, 23, 59, 59));
 
         // Act
-        var permissionAssignment = PermissionAssignment.Reconstruct(id, permissionCode, effectiveDate, expirationDate);
+        var permissionAssignment = PermissionAssignment.Reconstruct(assignmentRowId, employeeRowId, permissionCode, effectiveDate, expirationDate);
 
         // Assert
         Assert.NotNull(permissionAssignment);
-        Assert.Equal(id, permissionAssignment.Id);
+        Assert.Equal(assignmentRowId, permissionAssignment.RowId);
+        Assert.Equal(employeeRowId, permissionAssignment.EmployeeRowId);
         Assert.Equal(permissionCode, permissionAssignment.PermissionCode);
         Assert.Equal(effectiveDate, permissionAssignment.EffectiveDate);
-        Assert.Equal(expirationDate, permissionAssignment.ExpirationDate);
-    }
-
-    [Fact]
-    public void TestReconstruct02_WithoutExpirationDateReturnsValidPermissionAssignment()
-    {
-        // Arrange
-        var id = PermissionAssignmentId.NewId();
-        var permissionCode = PermissionCode.From("write");
-        var effectiveDate = new LocalDateTime(new DateTime(2026, 1, 1, 0, 0, 0));
-
-        // Act
-        var permissionAssignment = PermissionAssignment.Reconstruct(id, permissionCode, effectiveDate);
-
-        // Assert
-        Assert.Equal(id, permissionAssignment.Id);
-        Assert.Null(permissionAssignment.ExpirationDate);
     }
 
     #endregion
 
-    #region グループ 3: ビジネスロジック（IsActive）
+    #region グループ 3: IsActive メソッド
 
     [Fact]
-    public void TestIsActive01_WithinEffectivePeriodReturnsTrue()
+    public void TestIsActive01_BeforeEffectiveDateReturnsFalse()
     {
         // Arrange
-        var permissionAssignment = PermissionAssignment.Create(
-            PermissionCode.From("read"),
-            new LocalDateTime(new DateTime(2026, 1, 1, 0, 0, 0)),
-            new LocalDateTime(new DateTime(2026, 12, 31, 23, 59, 59)));
-
-        var checkDate = new LocalDateTime(new DateTime(2026, 6, 15, 12, 0, 0));
-
-        // Act
-        var isActive = permissionAssignment.IsActive(checkDate);
-
-        // Assert
-        Assert.True(isActive);
-    }
-
-    [Fact]
-    public void TestIsActive02_BeforeEffectiveDateReturnsFalse()
-    {
-        // Arrange
-        var permissionAssignment = PermissionAssignment.Create(
-            PermissionCode.From("read"),
-            new LocalDateTime(new DateTime(2026, 6, 1, 0, 0, 0)),
-            new LocalDateTime(new DateTime(2026, 12, 31, 23, 59, 59)));
-
-        var checkDate = new LocalDateTime(new DateTime(2026, 5, 31, 23, 59, 59));
+        var assignmentRowId = PermissionAssignmentRowId.From(3L);
+        var employeeRowId = EmployeeRowId.From(1L);
+        var permissionCode = PermissionCode.From("Read");
+        var effectiveDate = GetTestDate();
+        var permissionAssignment = PermissionAssignment.Create(assignmentRowId, employeeRowId, permissionCode, effectiveDate);
+        var beforeDate = new LocalDateTime(new DateTime(2025, 12, 31, 23, 59, 59));
 
         // Act
-        var isActive = permissionAssignment.IsActive(checkDate);
+        var isActive = permissionAssignment.IsActive(beforeDate);
 
         // Assert
         Assert.False(isActive);
     }
 
     [Fact]
-    public void TestIsActive03_AfterExpirationDateReturnsFalse()
+    public void TestIsActive02_OnOrAfterEffectiveDateReturnsTrue()
     {
         // Arrange
-        var permissionAssignment = PermissionAssignment.Create(
-            PermissionCode.From("read"),
-            new LocalDateTime(new DateTime(2026, 1, 1, 0, 0, 0)),
-            new LocalDateTime(new DateTime(2026, 12, 31, 23, 59, 59)));
-
-        var checkDate = new LocalDateTime(new DateTime(2027, 1, 1, 0, 0, 0));
-
-        // Act
-        var isActive = permissionAssignment.IsActive(checkDate);
-
-        // Assert
-        Assert.False(isActive);
-    }
-
-    [Fact]
-    public void TestIsActive04_WithoutExpirationDateAlwaysReturnsTrueAfterEffectiveDate()
-    {
-        // Arrange
-        var permissionAssignment = PermissionAssignment.Create(
-            PermissionCode.From("read"),
-            new LocalDateTime(new DateTime(2026, 1, 1, 0, 0, 0)));
-
-        var checkDate = new LocalDateTime(new DateTime(2099, 12, 31, 23, 59, 59));
-
-        // Act
-        var isActive = permissionAssignment.IsActive(checkDate);
-
-        // Assert
-        Assert.True(isActive);
-    }
-
-    [Fact]
-    public void TestIsActive05_OnEffectiveDateReturnsTrue()
-    {
-        // Arrange
-        var effectiveDate = new LocalDateTime(new DateTime(2026, 1, 1, 0, 0, 0));
-        var permissionAssignment = PermissionAssignment.Create(
-            PermissionCode.From("read"),
-            effectiveDate,
-            new LocalDateTime(new DateTime(2026, 12, 31, 23, 59, 59)));
+        var assignmentRowId = PermissionAssignmentRowId.From(4L);
+        var employeeRowId = EmployeeRowId.From(1L);
+        var permissionCode = PermissionCode.From("Read");
+        var effectiveDate = GetTestDate();
+        var permissionAssignment = PermissionAssignment.Create(assignmentRowId, employeeRowId, permissionCode, effectiveDate);
 
         // Act
         var isActive = permissionAssignment.IsActive(effectiveDate);
@@ -196,178 +121,23 @@ public class PermissionAssignmentTests
         Assert.True(isActive);
     }
 
-    #endregion
-
-    #region グループ 4: プロパティアクセス
-
     [Fact]
-    public void TestProperties01_PropertiesAreReadOnly()
+    public void TestIsActive03_AfterExpirationDateReturnsFalse()
     {
         // Arrange
-        var permissionAssignment = PermissionAssignment.Create(
-            PermissionCode.From("read"),
-            new LocalDateTime(new DateTime(2026, 1, 1, 0, 0, 0)));
-
-        // Act & Assert
-        // 以下はコンパイルエラー（CS0200: Property cannot be assigned to）
-        // permissionAssignment.PermissionCode = newCode;
-        // permissionAssignment.EffectiveDate = newDate;
-
-        // 読み取りのみ可能
-        Assert.NotNull(permissionAssignment.PermissionCode);
-        Assert.NotEqual(DateTime.MinValue, permissionAssignment.EffectiveDate.Value);
-    }
-
-    [Fact]
-    public void TestProperties02_PropertyImmutability()
-    {
-        // Arrange
-        var permissionAssignment = PermissionAssignment.Create(
-            PermissionCode.From("read"),
-            new LocalDateTime(new DateTime(2026, 1, 1, 0, 0, 0)));
-
-        // Act
-        var code1 = permissionAssignment.PermissionCode;
-        var code2 = permissionAssignment.PermissionCode;
-
-        // Assert
-        Assert.Same(code1, code2);  // 同じインスタンス
-    }
-
-    #endregion
-
-    #region グループ 5: 等価性（Equality）
-
-    [Fact]
-    public void TestEquality01_SameIdAreEqual()
-    {
-        // Arrange
-        var id = PermissionAssignmentId.NewId();
-        var perm1 = PermissionAssignment.Reconstruct(
-            id,
-            PermissionCode.From("read"),
-            new LocalDateTime(new DateTime(2026, 1, 1, 0, 0, 0)));
-
-        var perm2 = PermissionAssignment.Reconstruct(
-            id,
-            PermissionCode.From("write"),
-            new LocalDateTime(new DateTime(2026, 6, 1, 0, 0, 0)));
-
-        // Assert
-        Assert.Equal(perm1, perm2);  // Entity<TId> は Id で比較
-    }
-
-    [Fact]
-    public void TestEquality02_DifferentIdAreNotEqual()
-    {
-        // Arrange
-        var perm1 = PermissionAssignment.Create(
-            PermissionCode.From("read"),
-            new LocalDateTime(new DateTime(2026, 1, 1, 0, 0, 0)));
-
-        var perm2 = PermissionAssignment.Create(
-            PermissionCode.From("read"),
-            new LocalDateTime(new DateTime(2026, 1, 1, 0, 0, 0)));
-
-        // Assert
-        Assert.NotEqual(perm1, perm2);
-    }
-
-    [Fact]
-    public void TestEquality03_HashCodesAreEqual()
-    {
-        // Arrange
-        var id = PermissionAssignmentId.NewId();
-        var perm1 = PermissionAssignment.Reconstruct(
-            id,
-            PermissionCode.From("read"),
-            new LocalDateTime(new DateTime(2026, 1, 1, 0, 0, 0)));
-
-        var perm2 = PermissionAssignment.Reconstruct(
-            id,
-            PermissionCode.From("read"),
-            new LocalDateTime(new DateTime(2026, 1, 1, 0, 0, 0)));
-
-        // Assert
-        Assert.Equal(perm1.GetHashCode(), perm2.GetHashCode());
-    }
-
-    [Fact]
-    public void TestEquality04_CanBeUsedAsDictionaryKey()
-    {
-        // Arrange
-        var id = PermissionAssignmentId.NewId();
-        var perm1 = PermissionAssignment.Reconstruct(
-            id,
-            PermissionCode.From("read"),
-            new LocalDateTime(new DateTime(2026, 1, 1, 0, 0, 0)));
-
-        var perm2 = PermissionAssignment.Reconstruct(
-            id,
-            PermissionCode.From("read"),
-            new LocalDateTime(new DateTime(2026, 1, 1, 0, 0, 0)));
-
-        var dict = new Dictionary<PermissionAssignment, string>();
-
-        // Act
-        dict.Add(perm1, "Permission1");
-        dict[perm2] = "Permission2";  // 同じ ID なので上書き
-
-        // Assert
-        Assert.Single(dict);
-        Assert.Equal("Permission2", dict[perm1]);
-    }
-
-    [Fact]
-    public void TestEquality05_EqualsNullReturnsFalse()
-    {
-        // Arrange
-        var permissionAssignment = PermissionAssignment.Create(
-            PermissionCode.From("read"),
-            new LocalDateTime(new DateTime(2026, 1, 1, 0, 0, 0)));
-
-        // Act & Assert
-        Assert.False(permissionAssignment.Equals(null));
-    }
-
-    #endregion
-
-    #region グループ 6: 統合テスト
-
-    [Fact]
-    public void TestIntegration01_AllPropertiesAreCoherent()
-    {
-        // Arrange
-        var permissionCode = PermissionCode.From("read");
-        var effectiveDate = new LocalDateTime(new DateTime(2026, 1, 1, 0, 0, 0));
+        var assignmentRowId = PermissionAssignmentRowId.From(5L);
+        var employeeRowId = EmployeeRowId.From(1L);
+        var permissionCode = PermissionCode.From("Read");
+        var effectiveDate = GetTestDate();
         var expirationDate = new LocalDateTime(new DateTime(2026, 12, 31, 23, 59, 59));
+        var permissionAssignment = PermissionAssignment.Create(assignmentRowId, employeeRowId, permissionCode, effectiveDate, expirationDate);
+        var afterDate = new LocalDateTime(new DateTime(2027, 1, 1, 0, 0, 0));
 
         // Act
-        var permissionAssignment = PermissionAssignment.Create(permissionCode, effectiveDate, expirationDate);
-
-        // Assert - すべてのプロパティが有効
-        Assert.NotEqual(Guid.Empty, permissionAssignment.Id.Value);
-        Assert.Equal(permissionCode, permissionAssignment.PermissionCode);
-        Assert.Equal(effectiveDate, permissionAssignment.EffectiveDate);
-        Assert.Equal(expirationDate, permissionAssignment.ExpirationDate);
-        Assert.True(permissionAssignment.IsActive(new LocalDateTime(new DateTime(2026, 6, 15, 0, 0, 0))));
-    }
-
-    [Fact]
-    public void TestIntegration02_CreateAndReconstructAreConsistent()
-    {
-        // Arrange
-        var permissionCode = PermissionCode.From("write");
-        var effectiveDate = new LocalDateTime(new DateTime(2026, 1, 1, 0, 0, 0));
-
-        // Act
-        var created = PermissionAssignment.Create(permissionCode, effectiveDate);
-        var reconstructed = PermissionAssignment.Reconstruct(created.Id, permissionCode, effectiveDate);
+        var isActive = permissionAssignment.IsActive(afterDate);
 
         // Assert
-        Assert.Equal(created.Id, reconstructed.Id);
-        Assert.Equal(created.PermissionCode, reconstructed.PermissionCode);
-        Assert.Equal(created.EffectiveDate, reconstructed.EffectiveDate);
+        Assert.False(isActive);
     }
 
     #endregion

@@ -1,5 +1,6 @@
 using SupportAdvance.Common.Clocks;
 using SupportAdvance.SharedKernel.Entities;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 namespace SupportAdvance.Infrastructure.Mappers;
 
@@ -13,14 +14,14 @@ namespace SupportAdvance.Infrastructure.Mappers;
 /// 【監査情報】createdBy, updatedBy は Repository 層で設定
 ///
 /// 【型パラメータ】
-/// - TEntity: Entity<TId>（ID型をサポート）
+/// - TEntity: Entity<TId>（RowId型に限定）
 /// - TDbModel: データベースモデル
-/// - TId: Entity の ID 型（ValueObject など）
+/// - TId: Entity の ID 型（RowId を継承する型）
 /// </summary>
 public interface IEntityMapper<TEntity, TDbModel, TId>
     where TEntity : Entity<TId>
     where TDbModel : class
-    where TId : notnull
+    where TId : notnull, RowId
 {
     /// <summary>
     /// Domain Entity → DbModel（保存用）

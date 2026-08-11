@@ -21,17 +21,19 @@ public class GetEmployeesByPersonRowIdUseCaseTests
     {
         // Arrange
         var (useCase, repository) = CreateUseCase();
-        var personRowId = 1L;
+        var personRowId = 100L;
         var employee1 = Employee.Create(
-            EmployeeId.NewId(),
-            EmployeeRowId.From(1),
-            EmployeeCode.From(EmployeeDivision.RegularEmployee(), EmployeeNumber.From(1001)),
+            EmployeeRowId.From(1L),
+            EmployeeTypeDivision.From("M"),
+            EmployeeBizId.From(1001),
+            EmployeeBizCode.From("EMP001"),
             PersonRowId.From(personRowId)
         );
         var employee2 = Employee.Create(
-            EmployeeId.NewId(),
-            EmployeeRowId.From(2),
-            EmployeeCode.From(EmployeeDivision.Dispatched(), EmployeeNumber.From(7502)),
+            EmployeeRowId.From(2L),
+            EmployeeTypeDivision.From("T"),
+            EmployeeBizId.From(7502),
+            EmployeeBizCode.From("EMP002"),
             PersonRowId.From(personRowId)
         );
         await repository.AddAsync(employee1);

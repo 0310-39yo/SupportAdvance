@@ -2,6 +2,7 @@ using SupportAdvance.Common.Clocks;
 using SupportAdvance.Infrastructure.Mappers;
 using SupportAdvance.Infrastructure.Services;
 using SupportAdvance.SharedKernel.Entities;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 namespace SupportAdvance.Infrastructure.Repositories;
 
@@ -16,14 +17,14 @@ namespace SupportAdvance.Infrastructure.Repositories;
 /// 【使用方法】BC固有の Repository が継承して、DB操作を実装
 ///
 /// 【型パラメータ】
-/// - TEntity: Entity<TId>（ID型をサポート）
+/// - TEntity: Entity<TId>（RowId型に限定）
 /// - TDbModel: データベースモデル
-/// - TId: Entity の ID 型（ValueObject など）
+/// - TId: Entity の ID 型（RowId を継承する型）
 /// </summary>
 public abstract class RepositoryBase<TEntity, TDbModel, TId>
     where TEntity : Entity<TId>
     where TDbModel : class
-    where TId : notnull
+    where TId : notnull, RowId
 {
     protected IEntityMapper<TEntity, TDbModel, TId> Mapper { get; }
     protected ICurrentUserService CurrentUser { get; }

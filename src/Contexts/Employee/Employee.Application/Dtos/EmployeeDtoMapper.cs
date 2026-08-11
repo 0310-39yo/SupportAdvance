@@ -14,11 +14,11 @@ public static class EmployeeDtoMapper
     {
         return new EmployeeDto
         {
-            Id = employee.Id.Value,
             RowId = employee.RowId.Value,
-            Code = employee.Code.ToString(),
-            PersonRowId = employee.PersonRowId.Value,
-            CreatedAt = DateTime.UtcNow  // TODO: Entity に CreatedAt を追加
+            TypeDivision = employee.TypeDivision.ToString(),
+            BizId = employee.BizId.ToString(),
+            BizCode = employee.BizCode.ToString(),
+            PersonRowId = employee.PersonRowId.Value
         };
     }
 }

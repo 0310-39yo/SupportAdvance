@@ -21,21 +21,22 @@ public class GetEmployeeByIdUseCaseTests
     {
         // Arrange
         var (useCase, repository) = CreateUseCase();
-        var id = EmployeeId.NewId();
+        var rowId = EmployeeRowId.From(1L);
         var employee = Employee.Create(
-            id,
-            EmployeeRowId.From(1),
-            EmployeeCode.From(EmployeeDivision.RegularEmployee(), EmployeeNumber.From(1001)),
-            PersonRowId.From(1)
+            rowId,
+            EmployeeTypeDivision.From("M"),
+            EmployeeBizId.From(1001),
+            EmployeeBizCode.From("EMP001"),
+            PersonRowId.From(100L)
         );
         await repository.AddAsync(employee);
 
         // Act
-        var result = await useCase.ExecuteAsync(id.Value);
+        var result = await useCase.ExecuteAsync(rowId.Value);
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(id.Value, result.Id);
+        Assert.Equal(rowId.Value, result.RowId);
     }
 
     #endregion
@@ -47,23 +48,23 @@ public class GetEmployeeByIdUseCaseTests
     {
         // Arrange
         var (useCase, _) = CreateUseCase();
-        var nonExistentId = EmployeeId.NewId();
+        var nonExistentRowId = 99999L;
 
         // Act
-        var result = await useCase.ExecuteAsync(nonExistentId.Value);
+        var result = await useCase.ExecuteAsync(nonExistentRowId);
 
         // Assert
         Assert.Null(result);
     }
 
     [Fact]
-    public async Task Test2_2_GetEmployeeById_WithEmptyGuid_ThrowsException()
+    public async Task Test2_2_GetEmployeeById_WithZeroId_ThrowsException()
     {
         // Arrange
         var (useCase, _) = CreateUseCase();
 
         // Act & Assert
-        await Assert.ThrowsAsync<ArgumentException>(() => useCase.ExecuteAsync(Guid.Empty));
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => useCase.ExecuteAsync(0L));
     }
 
     #endregion

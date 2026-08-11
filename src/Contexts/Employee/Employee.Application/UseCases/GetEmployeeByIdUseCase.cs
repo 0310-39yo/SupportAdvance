@@ -19,12 +19,12 @@ public class GetEmployeeByIdUseCase
     /// <summary>
     /// 従業員を ID で検索
     /// </summary>
-    public async Task<EmployeeDto?> ExecuteAsync(Guid employeeId)
+    public async Task<EmployeeDto?> ExecuteAsync(long employeeRowId)
     {
-        if (employeeId == Guid.Empty)
-            throw new ArgumentException("Invalid EmployeeId", nameof(employeeId));
+        if (employeeRowId <= 0)
+            throw new ArgumentException("Invalid EmployeeRowId", nameof(employeeRowId));
 
-        var id = EmployeeId.From(employeeId);
+        var id = EmployeeRowId.From(employeeRowId);
         var employee = await _repository.GetByIdAsync(id);
 
         return employee?.ToDto();

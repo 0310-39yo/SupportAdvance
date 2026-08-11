@@ -8,11 +8,11 @@ namespace SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 /// 【責務】
 /// - long 型の行ID を型安全に管理
 /// - 派生クラスごとに MinValue（最小有効値）を定義
-/// - 派生クラスごとに Validate()（検証ルール）を実装
+/// - 派生クラスごとに Validate（検証ルール）を実装
 ///
 /// 【継承パターン】
-/// - 必須型（MinValue ≥ 1）: PersonRowId, DepartmentRowId, EmployeeRowId
-/// - オプション型（null許容）: ManagerEmployeeRowId, ParentDepartmentRowId
+/// - 必須型（MinValue 大于等于 1）: PersonRowId, DepartmentRowId, EmployeeRowId
+/// - オプション型（IsSetフラグで未設定表現）: ManagerEmployeeRowId, ParentDepartmentRowId
 ///
 /// 【使用例】
 /// public sealed class PersonRowId : RowId
@@ -25,7 +25,7 @@ namespace SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 ///
 ///     public override void Validate(long normalized)
 ///     {
-///         if (normalized < MinValue)
+///         if (normalized &lt; MinValue)
 ///             throw new ArgumentOutOfRangeException(...);
 ///     }
 /// }
@@ -66,6 +66,12 @@ public abstract class RowId : PrimitiveValueObject<long>, IEquatable<RowId>
     /// </summary>
     /// <param name="normalized">検証対象の値</param>
     public abstract override void Validate(long normalized);
+
+    /// <summary>
+    /// 派生クラスで From() static メソッドを実装してください
+    /// 【実装例】
+    /// public static PersonRowId From(long value) => new PersonRowId(value);
+    /// </summary>
 
     /// <summary>
     /// 文字列表現を返す

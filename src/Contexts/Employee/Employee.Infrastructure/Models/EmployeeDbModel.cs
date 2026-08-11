@@ -15,11 +15,6 @@ public class EmployeeDbModel
     /// </summary>
     public long RowId { get; set; }
 
-    /// <summary>
-    /// Employee 集約根ID（GUID ベース、一意制約）
-    /// 【対応カラム】employee_id
-    /// </summary>
-    public Guid EmployeeId { get; set; }
 
     /// <summary>
     /// 従業員コード区分（M/T/C のいずれか）
@@ -82,6 +77,13 @@ public class EmployeeDbModel
     /// 【制約】NULL許可、FK → m_persons
     /// </summary>
     public long? DeletedBy { get; set; }
+
+    /// <summary>
+    /// 退職日（論理削除ではなく、在職状況を示す）
+    /// 【対応カラム】retired_on
+    /// 【制約】NULL許可（現職時は NULL）
+    /// </summary>
+    public DateTime? RetiredOn { get; set; }
 
     /// <summary>
     /// 楽観ロック用タイムスタンプ

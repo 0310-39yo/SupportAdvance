@@ -1,5 +1,4 @@
 using SupportAdvance.Common.Clocks;
-using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 namespace SupportAdvance.SharedKernel.Entities;
 
@@ -9,19 +8,21 @@ namespace SupportAdvance.SharedKernel.Entities;
 /// Domain層で発生した重要な事象を表現し、Application層への通知を可能にする。
 /// 各ドメインイベント型はこのインターフェースを実装する必要がある。
 ///
+/// 【識別方法】RowId事前採番により、イベント発行時にAggregateRootId（RowId）が確定
 /// 【タイムゾーン】すべてのイベント発生時刻は JST（日本標準時）
 /// 【不変性】イベントは発行後に変更されない前提
 /// </summary>
 public interface IDomainEvent
 {
     /// <summary>
-    /// イベント一意識別子（GUID ValueObject）
+    /// 集約ルートの行ID（RowId）
     ///
-    /// 【用途】各ドメインイベントを一意に識別
-    /// 【型】DomainEventId（GUID ValueObject）
+    /// 【用途】ドメインイベントを発行した集約を一意に識別
+    /// 【型】long（RowId の値）
+    /// 【重要】RowId事前採番により、Entity生成時点でこの値は確定
     /// 【必須】すべてのイベント実装で必ず値を持つこと
     /// </summary>
-    DomainEventId EventId { get; }
+    long AggregateRootId { get; }
 
     /// <summary>
     /// イベント発生時刻（JST）

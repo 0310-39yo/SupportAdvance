@@ -14,6 +14,14 @@ namespace SupportAdvance.Tests.Architecture.Tests;
 /// </summary>
 public class ORMMappingTests
 {
+    /// <summary>テスト用RowId実装</summary>
+    private sealed class TestRowId : RowId
+    {
+        private TestRowId(long value) : base(value, true) { }
+        public static TestRowId From(long value) => new(value);
+        public override void Validate(long normalized) { }
+    }
+
     [Fact]
     public void Dapper_RowId_ShouldMapToInt64()
     {
@@ -53,7 +61,7 @@ public class ORMMappingTests
     public void RowId_ValueObject_ShouldHaveCorrectImplementation()
     {
         // Arrange
-        var rowId = RowId.From(123);
+        var rowId = TestRowId.From(123);
 
         // Act
         var value = rowId.Value;

@@ -1,3 +1,5 @@
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
+
 namespace SupportAdvance.SharedKernel.Entities;
 
 /// <summary>
@@ -15,9 +17,9 @@ namespace SupportAdvance.SharedKernel.Entities;
 /// 【将来拡張】
 /// - AggregateRoot 固有の機能（例：子Entity管理）は将来追加予定
 /// </summary>
-/// <typeparam name="TId">集約ルート ID の型</typeparam>
+/// <typeparam name="TId">集約ルート ID の型（RowId ベース）</typeparam>
 public abstract class AggregateRoot<TId> : Entity<TId>
-    where TId : notnull
+    where TId : notnull, RowId
 {
     // Entity<TId> を継承
     // 現在は固有の実装なし

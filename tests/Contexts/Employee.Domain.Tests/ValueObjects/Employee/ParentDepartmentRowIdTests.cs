@@ -32,20 +32,20 @@ public class ParentDepartmentRowIdTests
         Assert.Equal(validValue, parentRowId.Value);
     }
 
-    /// <summary>From(0) は ArgumentException を投げる</summary>
+    /// <summary>From(0) は ArgumentOutOfRangeException を投げる</summary>
     [Fact]
     public void From_WithZero_ThrowsArgumentException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentException>(() => ParentDepartmentRowId.From(0L));
+        Assert.Throws<ArgumentOutOfRangeException>(() => ParentDepartmentRowId.From(0L));
     }
 
-    /// <summary>From(負の数) は ArgumentException を投げる</summary>
+    /// <summary>From(負の数) は ArgumentOutOfRangeException を投げる</summary>
     [Fact]
     public void From_WithNegativeValue_ThrowsArgumentException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentException>(() => ParentDepartmentRowId.From(-1L));
+        Assert.Throws<ArgumentOutOfRangeException>(() => ParentDepartmentRowId.From(-1L));
     }
 
     /// <summary>Unset() は IsSet=false のインスタンスを返す（ルート部署）</summary>
@@ -58,7 +58,7 @@ public class ParentDepartmentRowIdTests
         // Assert
         Assert.NotNull(unset);
         Assert.False(unset.IsSet);
-        Assert.Null(unset.Value);
+        Assert.Equal(0L, unset.Value);
     }
 
     /// <summary>TryFrom(1以上) は true と インスタンスを返す</summary>
@@ -86,7 +86,7 @@ public class ParentDepartmentRowIdTests
         Assert.True(result);  // ← 重要：true を返す（失敗ではない）
         Assert.NotNull(parentRowId);
         Assert.False(parentRowId.IsSet);
-        Assert.Null(parentRowId.Value);
+        Assert.Equal(0L, parentRowId.Value);
         Assert.Equal(ParentDepartmentRowId.Unset(), parentRowId);
     }
 
@@ -235,7 +235,7 @@ public class ParentDepartmentRowIdTests
         Assert.NotEqual(parentRowId.GetHashCode(), unset.GetHashCode());
     }
 
-    /// <summary>ToString は IsSet=false で "Unset" を返す</summary>
+    /// <summary>ToString は IsSet=false で "0" を返す</summary>
     [Fact]
     public void ToString_WithUnset_ReturnsUnset()
     {
@@ -246,7 +246,7 @@ public class ParentDepartmentRowIdTests
         var result = unset.ToString();
 
         // Assert
-        Assert.Equal("Unset", result);
+        Assert.Equal("0", result);
     }
 
     /// <summary>ToString は IsSet=true で 値の文字列表現を返す</summary>

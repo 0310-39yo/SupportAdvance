@@ -18,12 +18,12 @@ public class DeleteEmployeeUseCase
     /// <summary>
     /// 従業員を論理削除
     /// </summary>
-    public async Task ExecuteAsync(Guid employeeId)
+    public async Task ExecuteAsync(long employeeRowId)
     {
-        if (employeeId == Guid.Empty)
-            throw new ArgumentException("Invalid EmployeeId", nameof(employeeId));
+        if (employeeRowId <= 0)
+            throw new ArgumentException("Invalid EmployeeRowId", nameof(employeeRowId));
 
-        var id = EmployeeId.From(employeeId);
+        var id = EmployeeRowId.From(employeeRowId);
 
         // 存在確認
         var employee = await _repository.GetByIdAsync(id);

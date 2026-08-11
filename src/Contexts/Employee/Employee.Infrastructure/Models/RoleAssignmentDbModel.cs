@@ -15,12 +15,6 @@ public class RoleAssignmentDbModel
     public long RowId { get; set; }
 
     /// <summary>
-    /// ロール割り当て集約根ID（GUID）
-    /// 【対応カラム】role_assignment_id
-    /// </summary>
-    public Guid RoleAssignmentId { get; set; }
-
-    /// <summary>
     /// 従業員行ID（外部参照）
     /// 【対応カラム】employee_row_id
     /// 【制約】FK → t_employees

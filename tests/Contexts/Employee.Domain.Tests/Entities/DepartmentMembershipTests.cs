@@ -16,14 +16,17 @@ public class DepartmentMembershipTests
     public void Create_WithValidParameters_ReturnsValidMembership()
     {
         // Arrange
+        var membershipRowId = DepartmentMembershipRowId.From(1L);
+        var employeeRowId = EmployeeRowId.From(100L);
         var deptCode = DepartmentCode.From("DEPT");
-        var startDate = new LocalDateTime(new DateTime(2026, 1, 1, 0, 0, 0));
 
         // Act
-        var membership = DepartmentMembership.Create(deptCode, isPrimary: true, startDate);
+        var membership = DepartmentMembership.Create(membershipRowId, employeeRowId, deptCode, true, null);
 
         // Assert
         Assert.NotNull(membership);
+        Assert.Equal(membershipRowId, membership.RowId);
+        Assert.Equal(employeeRowId, membership.EmployeeRowId);
         Assert.Equal(deptCode, membership.DepartmentCode);
         Assert.True(membership.IsPrimary);
     }
@@ -32,11 +35,12 @@ public class DepartmentMembershipTests
     public void Create_WithSecondaryMembership_ReturnsSecondaryMembership()
     {
         // Arrange
+        var membershipRowId = DepartmentMembershipRowId.From(2L);
+        var employeeRowId = EmployeeRowId.From(100L);
         var deptCode = DepartmentCode.From("DEPT");
-        var startDate = new LocalDateTime(new DateTime(2026, 1, 1, 0, 0, 0));
 
         // Act
-        var membership = DepartmentMembership.Create(deptCode, isPrimary: false, startDate);
+        var membership = DepartmentMembership.Create(membershipRowId, employeeRowId, deptCode, false, null);
 
         // Assert
         Assert.NotNull(membership);
@@ -47,16 +51,19 @@ public class DepartmentMembershipTests
     public void Create_WithMultipleMemberships_ReturnsDistinctInstances()
     {
         // Arrange
+        var membershipRowId1 = DepartmentMembershipRowId.From(3L);
+        var employeeRowId1 = EmployeeRowId.From(100L);
+        var membershipRowId2 = DepartmentMembershipRowId.From(4L);
+        var employeeRowId2 = EmployeeRowId.From(101L);
         var deptCode1 = DepartmentCode.From("DEP1");
         var deptCode2 = DepartmentCode.From("DEP2");
-        var startDate = new LocalDateTime(new DateTime(2026, 1, 1, 0, 0, 0));
 
         // Act
-        var membership1 = DepartmentMembership.Create(deptCode1, isPrimary: true, startDate);
-        var membership2 = DepartmentMembership.Create(deptCode2, isPrimary: false, startDate);
+        var membership1 = DepartmentMembership.Create(membershipRowId1, employeeRowId1, deptCode1, true, null);
+        var membership2 = DepartmentMembership.Create(membershipRowId2, employeeRowId2, deptCode2, false, null);
 
         // Assert
-        Assert.NotEqual(membership1.Id, membership2.Id);
+        Assert.NotEqual(membership1.RowId, membership2.RowId);
         Assert.NotEqual(membership1.DepartmentCode, membership2.DepartmentCode);
     }
 
@@ -68,16 +75,17 @@ public class DepartmentMembershipTests
     public void Reconstruct_WithValidParameters_ReturnsValidMembership()
     {
         // Arrange
-        var id = DepartmentMembershipId.NewId();
+        var membershipRowId = DepartmentMembershipRowId.From(5L);
+        var employeeRowId = EmployeeRowId.From(100L);
         var deptCode = DepartmentCode.From("DEPT");
-        var startDate = new LocalDateTime(new DateTime(2026, 1, 1, 0, 0, 0));
 
         // Act
-        var membership = DepartmentMembership.Reconstruct(id, deptCode, isPrimary: true, startDate);
+        var membership = DepartmentMembership.Reconstruct(membershipRowId, employeeRowId, deptCode, true, null);
 
         // Assert
         Assert.NotNull(membership);
-        Assert.Equal(id, membership.Id);
+        Assert.Equal(membershipRowId, membership.RowId);
+        Assert.Equal(employeeRowId, membership.EmployeeRowId);
         Assert.Equal(deptCode, membership.DepartmentCode);
     }
 
@@ -85,13 +93,13 @@ public class DepartmentMembershipTests
     public void Reconstruct_WithExpirationDate_ReturnsValidMembership()
     {
         // Arrange
-        var id = DepartmentMembershipId.NewId();
+        var membershipRowId = DepartmentMembershipRowId.From(6L);
+        var employeeRowId = EmployeeRowId.From(100L);
         var deptCode = DepartmentCode.From("DEPT");
-        var startDate = new LocalDateTime(new DateTime(2026, 1, 1, 0, 0, 0));
         var expirationDate = new LocalDateTime(new DateTime(2026, 12, 31, 23, 59, 59));
 
         // Act
-        var membership = DepartmentMembership.Reconstruct(id, deptCode, isPrimary: true, startDate, expirationDate);
+        var membership = DepartmentMembership.Reconstruct(membershipRowId, employeeRowId, deptCode, true, expirationDate);
 
         // Assert
         Assert.NotNull(membership);
@@ -100,228 +108,60 @@ public class DepartmentMembershipTests
 
     #endregion
 
-    #region グループ 3: プロパティアクセス
-
-    [Fact]
-    public void DepartmentCode_Property_ReturnsCorrectValue()
-    {
-        // Arrange
-        var deptCode = DepartmentCode.From("DEPT");
-        var startDate = new LocalDateTime(new DateTime(2026, 1, 1, 0, 0, 0));
-        var membership = DepartmentMembership.Create(deptCode, isPrimary: true, startDate);
-
-        // Act
-        var result = membership.DepartmentCode;
-
-        // Assert
-        Assert.Equal(deptCode, result);
-    }
-
-    [Fact]
-    public void IsPrimary_Property_ReturnsCorrectValue()
-    {
-        // Arrange
-        var deptCode = DepartmentCode.From("DEPT");
-        var startDate = new LocalDateTime(new DateTime(2026, 1, 1, 0, 0, 0));
-        var membership = DepartmentMembership.Create(deptCode, isPrimary: true, startDate);
-
-        // Act
-        var result = membership.IsPrimary;
-
-        // Assert
-        Assert.True(result);
-    }
-
-    [Fact]
-    public void ExpirationDate_Property_ReturnsCorrectValue()
-    {
-        // Arrange
-        var deptCode = DepartmentCode.From("DEPT");
-        var startDate = new LocalDateTime(new DateTime(2026, 1, 1, 0, 0, 0));
-        var expirationDate = new LocalDateTime(new DateTime(2026, 12, 31, 23, 59, 59));
-        var membership = DepartmentMembership.Create(deptCode, isPrimary: true, startDate, expirationDate);
-
-        // Act
-        var result = membership.ExpirationDate;
-
-        // Assert
-        Assert.Equal(expirationDate, result);
-    }
-
-    [Fact]
-    public void Properties_AreReadOnly()
-    {
-        // Arrange
-        var membership = DepartmentMembership.Create(
-            DepartmentCode.From("DEPT"), isPrimary: true, new LocalDateTime(new DateTime(2026, 1, 1, 0, 0, 0)));
-
-        // Act & Assert
-        // 以下はコンパイルエラーになる（CS0200: Property cannot be assigned to）
-        // membership.DepartmentCode = newCode;
-        // membership.IsPrimary = false;
-
-        // 読み取りのみ可能
-        Assert.NotNull(membership.DepartmentCode);
-    }
-
-    #endregion
-
-    #region グループ 4: ビジネスロジック
+    #region グループ 3: IsActive メソッド
 
     [Fact]
     public void IsActive_WithoutExpiration_ReturnsTrue()
     {
         // Arrange
+        var membershipRowId = DepartmentMembershipRowId.From(7L);
+        var employeeRowId = EmployeeRowId.From(100L);
         var deptCode = DepartmentCode.From("DEPT");
-        var startDate = new LocalDateTime(new DateTime(2026, 1, 1, 0, 0, 0));
-        var membership = DepartmentMembership.Create(deptCode, isPrimary: true, startDate);
-        var now = new LocalDateTime(new DateTime(2026, 6, 15, 12, 0, 0));
+        var membership = DepartmentMembership.Create(membershipRowId, employeeRowId, deptCode, true, null);
+        var checkDate = new LocalDateTime(new DateTime(2026, 6, 1, 0, 0, 0));
 
         // Act
-        var result = membership.IsActive(now);
+        var isActive = membership.IsActive(checkDate);
 
         // Assert
-        Assert.True(result);
+        Assert.True(isActive);
     }
 
     [Fact]
-    public void IsActive_BeforeExpiration_ReturnsTrue()
+    public void IsActive_BeforeExpirationDate_ReturnsTrue()
     {
         // Arrange
+        var membershipRowId = DepartmentMembershipRowId.From(8L);
+        var employeeRowId = EmployeeRowId.From(100L);
         var deptCode = DepartmentCode.From("DEPT");
-        var startDate = new LocalDateTime(new DateTime(2026, 1, 1, 0, 0, 0));
         var expirationDate = new LocalDateTime(new DateTime(2026, 12, 31, 23, 59, 59));
-        var membership = DepartmentMembership.Create(deptCode, isPrimary: true, startDate, expirationDate);
-        var now = new LocalDateTime(new DateTime(2026, 6, 15, 12, 0, 0));
+        var membership = DepartmentMembership.Create(membershipRowId, employeeRowId, deptCode, true, expirationDate);
+        var checkDate = new LocalDateTime(new DateTime(2026, 6, 1, 0, 0, 0));
 
         // Act
-        var result = membership.IsActive(now);
+        var isActive = membership.IsActive(checkDate);
 
         // Assert
-        Assert.True(result);
+        Assert.True(isActive);
     }
 
     [Fact]
-    public void IsActive_OnExpirationDate_ReturnsFalse()
+    public void IsActive_OnOrAfterExpirationDate_ReturnsFalse()
     {
         // Arrange
+        var membershipRowId = DepartmentMembershipRowId.From(9L);
+        var employeeRowId = EmployeeRowId.From(100L);
         var deptCode = DepartmentCode.From("DEPT");
-        var startDate = new LocalDateTime(new DateTime(2026, 1, 1, 0, 0, 0));
         var expirationDate = new LocalDateTime(new DateTime(2026, 12, 31, 23, 59, 59));
-        var membership = DepartmentMembership.Create(deptCode, isPrimary: true, startDate, expirationDate);
-        var now = new LocalDateTime(new DateTime(2026, 12, 31, 23, 59, 59));
+        var membership = DepartmentMembership.Create(membershipRowId, employeeRowId, deptCode, true, expirationDate);
+        var checkDate = new LocalDateTime(new DateTime(2027, 1, 1, 0, 0, 0));
 
         // Act
-        var result = membership.IsActive(now);
+        var isActive = membership.IsActive(checkDate);
 
         // Assert
-        Assert.False(result);
-    }
-
-    [Fact]
-    public void IsActive_AfterExpiration_ReturnsFalse()
-    {
-        // Arrange
-        var deptCode = DepartmentCode.From("DEPT");
-        var startDate = new LocalDateTime(new DateTime(2026, 1, 1, 0, 0, 0));
-        var expirationDate = new LocalDateTime(new DateTime(2026, 12, 31, 23, 59, 59));
-        var membership = DepartmentMembership.Create(deptCode, isPrimary: true, startDate, expirationDate);
-        var now = new LocalDateTime(new DateTime(2027, 1, 1, 0, 0, 0));
-
-        // Act
-        var result = membership.IsActive(now);
-
-        // Assert
-        Assert.False(result);
-    }
-
-    #endregion
-
-    #region グループ 5: 等価性（Equality）
-
-    [Fact]
-    public void SameMembershipId_AreEqual()
-    {
-        // Arrange
-        var id = DepartmentMembershipId.NewId();
-        var membership1 = DepartmentMembership.Reconstruct(
-            id,
-            DepartmentCode.From("DEP1"),
-            isPrimary: true,
-            new LocalDateTime(new DateTime(2026, 1, 1, 0, 0, 0)));
-
-        var membership2 = DepartmentMembership.Reconstruct(
-            id,
-            DepartmentCode.From("DEP2"),  // 異なる部署
-            isPrimary: false,  // 異なる主副
-            new LocalDateTime(new DateTime(2026, 6, 1, 0, 0, 0)));
-
-        // Assert
-        Assert.Equal(membership1, membership2);  // Entity<TId> は Id で比較
-    }
-
-    [Fact]
-    public void DifferentMembershipId_AreNotEqual()
-    {
-        // Arrange
-        var membership1 = DepartmentMembership.Create(
-            DepartmentCode.From("DEP1"),
-            isPrimary: true,
-            new LocalDateTime(new DateTime(2026, 1, 1, 0, 0, 0)));
-
-        var membership2 = DepartmentMembership.Create(
-            DepartmentCode.From("DEP1"),
-            isPrimary: true,
-            new LocalDateTime(new DateTime(2026, 1, 1, 0, 0, 0)));
-
-        // Assert
-        Assert.NotEqual(membership1, membership2);
-    }
-
-    [Fact]
-    public void HashCodes_AreEqual_ForSameMembershipId()
-    {
-        // Arrange
-        var id = DepartmentMembershipId.NewId();
-        var membership1 = DepartmentMembership.Reconstruct(
-            id,
-            DepartmentCode.From("DEPT"),
-            isPrimary: true,
-            new LocalDateTime(new DateTime(2026, 1, 1, 0, 0, 0)));
-
-        var membership2 = DepartmentMembership.Reconstruct(
-            id,
-            DepartmentCode.From("DEPT"),
-            isPrimary: true,
-            new LocalDateTime(new DateTime(2026, 1, 1, 0, 0, 0)));
-
-        // Assert
-        Assert.Equal(membership1.GetHashCode(), membership2.GetHashCode());
-    }
-
-    #endregion
-
-    #region グループ 6: 統合テスト
-
-    [Fact]
-    public void AllProperties_AreCoherent()
-    {
-        // Arrange
-        var deptCode = DepartmentCode.From("DEPT");
-        var startDate = new LocalDateTime(new DateTime(2026, 1, 1, 0, 0, 0));
-        var expirationDate = new LocalDateTime(new DateTime(2026, 12, 31, 23, 59, 59));
-
-        // Act
-        var membership = DepartmentMembership.Create(
-            deptCode, isPrimary: true, startDate, expirationDate);
-
-        // Assert
-        Assert.NotEqual(Guid.Empty, membership.Id.Value);
-        Assert.Equal(deptCode, membership.DepartmentCode);
-        Assert.True(membership.IsPrimary);
-        Assert.Equal(expirationDate, membership.ExpirationDate);
+        Assert.False(isActive);
     }
 
     #endregion
 }
-

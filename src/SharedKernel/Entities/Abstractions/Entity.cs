@@ -1,3 +1,6 @@
+using SupportAdvance.SharedKernel.ValueObjects;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
+
 namespace SupportAdvance.SharedKernel.Entities;
 
 /// <summary>
@@ -21,15 +24,15 @@ namespace SupportAdvance.SharedKernel.Entities;
 /// エンティティ ID の型
 ///
 /// 【制約】
-/// - ValueObject など不変値オブジェクトであること
+/// - RowId を継承する型（DB行ID ベース）
 /// - notnull（null 許容不可）
 /// - Equals / GetHashCode をオーバーライドしていること
 /// </typeparam>
 public abstract class Entity<TId> : IEquatable<Entity<TId>>
-    where TId : notnull
+    where TId : notnull, RowId
 {
     /// <summary>
-    /// Entity の識別子
+    /// Entity の行識別子（RowId）
     ///
     /// 【アクセス】protected set（派生クラスでのみ設定可能）
     /// 【不変性】設定後の変更は推奨されない（ただし強制しない）
@@ -37,7 +40,7 @@ public abstract class Entity<TId> : IEquatable<Entity<TId>>
     /// 【責務】派生クラスが必ず値を設定する
     /// </summary>
 #pragma warning disable CS8618
-    public TId Id { get; protected set; }
+    public TId RowId { get; protected set; }
 #pragma warning restore CS8618
 
     /// <summary>
@@ -71,7 +74,7 @@ public abstract class Entity<TId> : IEquatable<Entity<TId>>
     /// {
     ///     _status = newStatus;
     ///     this.RaiseDomainEvent(new StatusChangedEvent(
-    ///         this.Id,
+    ///         this.RowId,
     ///         newStatus,
     ///         clock.JstNow
     ///     ));
@@ -135,23 +138,23 @@ public abstract class Entity<TId> : IEquatable<Entity<TId>>
     {
         if (other is null) return false;
         if (ReferenceEquals(this, other)) return true;
-        return Id.Equals(other.Id);
+        return RowId.Equals(other.RowId);
     }
 
     /// <summary>
-    /// ハッシュコード取得（ID ベース）
+    /// ハッシュコード取得（RowId ベース）
     ///
     /// 【用途】HashSet, Dictionary など集合型での使用
-    /// 【実装】Id.GetHashCode() をそのまま返す
+    /// 【実装】RowId.GetHashCode() をそのまま返す
     /// 【注記】Equals をオーバーライドしたので必ず実装
     /// </summary>
-    public override int GetHashCode() => Id.GetHashCode();
+    public override int GetHashCode() => RowId.GetHashCode();
 
     /// <summary>
     /// Entity の文字列表現
     ///
-    /// 【形式】"{ClassName} {{ Id = {Id} }}"
+    /// 【形式】"{ClassName} {{ RowId = {RowId} }}"
     /// 【用途】デバッグ時の表示
     /// </summary>
-    public override string ToString() => $"{GetType().Name} {{ Id = {Id} }}";
+    public override string ToString() => $"{GetType().Name} {{ RowId = {RowId} }}";
 }

@@ -23,7 +23,7 @@ public class EmployeeRepository : IEmployeeRepository
     private readonly IClock _clock;
 
     /// メモリ内ストア（テスト用）
-    private readonly Dictionary<Guid, EmployeeDbModel> _employees = [];
+    private readonly Dictionary<long, EmployeeDbModel> _employees = [];
     private readonly object _lock = new object();
     private long _nextRowId = 1;
 
@@ -34,9 +34,9 @@ public class EmployeeRepository : IEmployeeRepository
     }
 
     /// <summary>
-    /// 集約根ID（GUID）で Employee を検索する
+    /// 集約根ID（EmployeeRowId）で Employee を検索する
     /// </summary>
-    public async Task<Employee?> GetByIdAsync(EmployeeId id)
+    public async Task<Employee?> GetByIdAsync(EmployeeRowId id)
     {
         return await Task.Run(() =>
         {
@@ -111,7 +111,7 @@ public class EmployeeRepository : IEmployeeRepository
                 dbModel.DeletedBy = null;
                 dbModel.RowVersion = [];
 
-                _employees[employee.Id.Value] = dbModel;
+                _employees[employee.RowId.Value] = dbModel;
             }
         });
     }
@@ -125,8 +125,8 @@ public class EmployeeRepository : IEmployeeRepository
         {
             lock (_lock)
             {
-                if (!_employees.TryGetValue(employee.Id.Value, out var existingDbModel))
-                    throw new InvalidOperationException($"Employee not found: {employee.Id}");
+                if (!_employees.TryGetValue(employee.RowId.Value, out var existingDbModel))
+                    throw new InvalidOperationException($"Employee not found: {employee.RowId}");
 
                 var updatedDbModel = _mapper.ToDbModel(employee);
 
@@ -143,7 +143,7 @@ public class EmployeeRepository : IEmployeeRepository
                 updatedDbModel.DeletedBy = existingDbModel.DeletedBy;
                 updatedDbModel.RowVersion = [];
 
-                _employees[employee.Id.Value] = updatedDbModel;
+                _employees[employee.RowId.Value] = updatedDbModel;
             }
         });
     }
@@ -151,7 +151,7 @@ public class EmployeeRepository : IEmployeeRepository
     /// <summary>
     /// Employee を論理削除する
     /// </summary>
-    public async Task DeleteAsync(EmployeeId id)
+    public async Task DeleteAsync(EmployeeRowId id)
     {
         await Task.Run(() =>
         {

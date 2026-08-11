@@ -1,6 +1,7 @@
 namespace SupportAdvance.Contexts.Employee.Infrastructure.Mappers;
 
 using Domain.Entities;
+using SupportAdvance.Common.Clocks;
 using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
 using Models;
 
@@ -22,67 +23,76 @@ public class EmployeeMapper
     /// <returns>ドメイン Entity</returns>
     public Employee ToDomainEntity(EmployeeDbModel dbModel)
     {
-        // 部署区分の文字列から Enum に変換
-        var division = dbModel.EmployeeCodeDivision switch
+        // 従業員種別区分の文字列から Enum に変換
+        var typeDivision = dbModel.EmployeeCodeDivision switch
         {
-            "M" => EmployeeDivision.RegularEmployee(),
-            "T" => EmployeeDivision.Dispatched(),
-            "C" => EmployeeDivision.Contractor(),
+            "M" => EmployeeTypeDivision.RegularEmployee(),
+            "T" => EmployeeTypeDivision.Dispatched(),
+            "C" => EmployeeTypeDivision.Contractor(),
             _ => throw new InvalidOperationException(
                 $"Invalid employee division: {dbModel.EmployeeCodeDivision}")
         };
 
-        var number = EmployeeNumber.From(dbModel.EmployeeCodeNumber);
-        var code = EmployeeCode.From(division, number);
+        var bizId = EmployeeBizId.From(dbModel.EmployeeCodeNumber);
+        var bizCode = EmployeeBizCode.From(typeDivision, bizId);
+        var personRowId = PersonRowId.From(dbModel.PersonRowId);
 
-        return Employee.Reconstruct(
-            EmployeeId.From(dbModel.EmployeeId),
+        RetiredOn? retiredOn = null;
+        if (dbModel.RetiredOn.HasValue)
+        {
+            retiredOn = RetiredOn.From(new LocalDateTime(dbModel.RetiredOn.Value));
+        }
+
+        return Employee.Create(
             EmployeeRowId.From(dbModel.RowId),
-            code,
-            PersonRowId.From(dbModel.PersonRowId)
+            typeDivision,
+            bizId,
+            bizCode,
+            personRowId,
+            retiredOn
         );
     }
 
     /// <summary>
-    /// Domain Entity から DbModel に変換（Insert 用）
+    /// Domain Entity から DbModel に変換（Insert/Update 用）
     /// </summary>
     /// <param name="entity">ドメイン Entity</param>
-    /// <returns>DB 挿入用モデル</returns>
+    /// <returns>DB 挿入/更新用モデル</returns>
     /// <remarks>
-    /// Insert 時には監査カラムを Repository で設定するため、ここでは設定しない
+    /// 監査カラム（CreatedAt, CreatedBy, UpdatedAt, UpdatedBy, DeletedAt, DeletedBy）は
+    /// Repository で設定するため、ここでは設定しない
     /// </remarks>
     public EmployeeDbModel ToDbModel(Employee entity)
     {
-        var divisionCode = ConvertDivisionToCode(entity.Code.Division);
+        var divisionCode = ConvertDivisionToCode(entity.TypeDivision);
 
         return new EmployeeDbModel
         {
-            EmployeeId = entity.Id.Value,
             RowId = entity.RowId.Value,
             EmployeeCodeDivision = divisionCode,
-            EmployeeCodeNumber = entity.Code.Number.Value,
-            PersonRowId = entity.PersonRowId.Value
-            // 監査カラムは Repository で設定
+            EmployeeCodeNumber = entity.BizId.Value,
+            PersonRowId = entity.PersonRowId.Value,
+            RetiredOn = entity.RetiredOn?.IsSet == true ? entity.RetiredOn.Value.Value : null
         };
     }
 
-    private string ConvertDivisionToCode(EmployeeDivision division)
+    private string ConvertDivisionToCode(EmployeeTypeDivision typeDivision)
     {
-        if (division.IsRegularEmployee)
+        if (typeDivision.IsRegularEmployee)
         {
             return "M";
         }
 
-        if (division.IsDispatched)
+        if (typeDivision.IsDispatched)
         {
             return "T";
         }
 
-        if (division.IsContractor)
+        if (typeDivision.IsContractor)
         {
             return "C";
         }
 
-        throw new InvalidOperationException($"Invalid division: {division}");
+        throw new InvalidOperationException($"Invalid division: {typeDivision}");
     }
 }

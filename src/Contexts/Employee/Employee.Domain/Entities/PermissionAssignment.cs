@@ -7,12 +7,15 @@ using SupportAdvance.SharedKernel.Entities;
 /// <summary>
 /// 権限割り当てエンティティ（権限有効期間管理）
 ///
-/// 【集約根ID】PermissionAssignmentId（GUID ベース）、Entity&lt;TId&gt;.Id で公開
-/// 【公開プロパティ】PermissionCode（権限）、EffectiveDate（開始日）、ExpirationDate（終了日）
+/// 【ID型】PermissionAssignmentRowId（独立した Entity ID）
+/// 【親参照】EmployeeRowId（所属する従業員）
 /// 【責務】従業員の権限割り当てと有効期間を管理、有効期限チェック
 /// </summary>
-public sealed class PermissionAssignment : Entity<PermissionAssignmentId>
+public sealed class PermissionAssignment : Entity<PermissionAssignmentRowId>
 {
+    /// <summary>所属従業員の ID</summary>
+    public EmployeeRowId EmployeeRowId { get; private set; }
+
     /// <summary>
     /// 権限コードを取得する
     /// </summary>
@@ -31,18 +34,20 @@ public sealed class PermissionAssignment : Entity<PermissionAssignmentId>
     /// <summary>
     /// 指定されたプロパティから PermissionAssignment を生成する（プライベートコンストラクタ）
     /// </summary>
-    /// <param name="id">権限割り当てID</param>
+    /// <param name="assignmentRowId">権限割り当て行ID</param>
+    /// <param name="employeeRowId">従業員行ID</param>
     /// <param name="permissionCode">権限コード</param>
     /// <param name="effectiveDate">有効開始日時</param>
     /// <param name="expirationDate">有効終了日時（null許可）</param>
-    /// <remarks>Validate は、基礎クラスのコンストラクタで自動実行される</remarks>
     private PermissionAssignment(
-        PermissionAssignmentId id,
+        PermissionAssignmentRowId assignmentRowId,
+        EmployeeRowId employeeRowId,
         PermissionCode permissionCode,
         LocalDateTime effectiveDate,
         LocalDateTime? expirationDate = null)
     {
-        Id = id;
+        RowId = assignmentRowId;
+        EmployeeRowId = employeeRowId;
         PermissionCode = permissionCode;
         EffectiveDate = effectiveDate;
         ExpirationDate = expirationDate;
@@ -51,44 +56,27 @@ public sealed class PermissionAssignment : Entity<PermissionAssignmentId>
     /// <summary>
     /// 新しい PermissionAssignment を生成する（ファクトリメソッド）
     /// </summary>
-    /// <param name="permissionCode">権限コード</param>
-    /// <param name="effectiveDate">有効開始日時</param>
-    /// <param name="expirationDate">有効終了日時（null許可）</param>
-    /// <returns>生成された PermissionAssignment インスタンス</returns>
-    /// <remarks>
-    /// パラメータはすべて検証済みの ValueObject として渡される。
-    /// PermissionAssignment レベルでの追加検証は不要。
-    /// </remarks>
     public static PermissionAssignment Create(
+        PermissionAssignmentRowId assignmentRowId,
+        EmployeeRowId employeeRowId,
         PermissionCode permissionCode,
         LocalDateTime effectiveDate,
         LocalDateTime? expirationDate = null)
     {
-        return new(
-            PermissionAssignmentId.NewId(),
-            permissionCode,
-            effectiveDate,
-            expirationDate);
+        return new(assignmentRowId, employeeRowId, permissionCode, effectiveDate, expirationDate);
     }
 
     /// <summary>
     /// DB から読み込んだ値から PermissionAssignment を復元する（ファクトリメソッド）
     /// </summary>
-    /// <param name="id">権限割り当てID</param>
-    /// <param name="permissionCode">権限コード</param>
-    /// <param name="effectiveDate">有効開始日時</param>
-    /// <param name="expirationDate">有効終了日時（null許可）</param>
-    /// <returns>復元された PermissionAssignment インスタンス</returns>
-    /// <remarks>
-    /// DB 値は既に検証済みと仮定。検証なしで復元。
-    /// </remarks>
     public static PermissionAssignment Reconstruct(
-        PermissionAssignmentId id,
+        PermissionAssignmentRowId assignmentRowId,
+        EmployeeRowId employeeRowId,
         PermissionCode permissionCode,
         LocalDateTime effectiveDate,
         LocalDateTime? expirationDate = null)
     {
-        return new(id, permissionCode, effectiveDate, expirationDate);
+        return new(assignmentRowId, employeeRowId, permissionCode, effectiveDate, expirationDate);
     }
 
     /// <summary>
@@ -117,7 +105,6 @@ public sealed class PermissionAssignment : Entity<PermissionAssignmentId>
     /// <summary>
     /// PermissionAssignment の文字列表現を取得する
     /// </summary>
-    /// <returns>権限割り当ての説明文字列</returns>
     public override string ToString()
-        => $"PermissionAssignment(Id={Id.Value}, Code={PermissionCode}, Effective={EffectiveDate}, Expiration={ExpirationDate})";
+        => $"PermissionAssignment(RowId={RowId.Value}, Code={PermissionCode}, Effective={EffectiveDate}, Expiration={ExpirationDate})";
 }

@@ -13,11 +13,11 @@ using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 public interface IEmployeeRepository
 {
     /// <summary>
-    /// 集約根ID（GUID）で Employee を検索する
+    /// 集約根ID（EmployeeRowId）で Employee を検索する
     /// </summary>
     /// <param name="id">Employee の集約根ID</param>
     /// <returns>見つかった Employee インスタンス、または null</returns>
-    Task<Employee?> GetByIdAsync(EmployeeId id);
+    Task<Employee?> GetByIdAsync(EmployeeRowId id);
 
     /// <summary>
     /// DB行ID で Employee を検索する
@@ -56,10 +56,10 @@ public interface IEmployeeRepository
     /// <summary>
     /// Employee を論理削除する
     /// </summary>
-    /// <param name="id">削除対象の Employee ID</param>
+    /// <param name="id">削除対象の Employee ID（EmployeeRowId）</param>
     /// <remarks>
     /// 物理削除ではなく、deleted_at, deleted_by を設定して論理削除。
     /// 楽観ロック（row_version）による競合検出。
     /// </remarks>
-    Task DeleteAsync(EmployeeId id);
+    Task DeleteAsync(EmployeeRowId id);
 }

@@ -7,12 +7,15 @@ using SupportAdvance.SharedKernel.Entities;
 /// <summary>
 /// ロール割り当てエンティティ（ロール有効期間管理）
 ///
-/// 【集約根ID】RoleAssignmentId（GUID ベース）、Entity&lt;TId&gt;.Id で公開
-/// 【公開プロパティ】RoleCode（ロール）、EffectiveDate（開始日）、ExpirationDate（終了日）
+/// 【ID型】RoleAssignmentRowId（独立した Entity ID）
+/// 【親参照】EmployeeRowId（所属する従業員）
 /// 【責務】従業員のロール割り当てと有効期間を管理、有効期限チェック
 /// </summary>
-public sealed class RoleAssignment : Entity<RoleAssignmentId>
+public sealed class RoleAssignment : Entity<RoleAssignmentRowId>
 {
+    /// <summary>所属従業員の ID</summary>
+    public EmployeeRowId EmployeeRowId { get; private set; }
+
     /// <summary>
     /// ロールコードを取得する
     /// </summary>
@@ -31,18 +34,20 @@ public sealed class RoleAssignment : Entity<RoleAssignmentId>
     /// <summary>
     /// 指定されたプロパティから RoleAssignment を生成する（プライベートコンストラクタ）
     /// </summary>
-    /// <param name="id">ロール割り当てID</param>
+    /// <param name="assignmentRowId">ロール割り当て行ID</param>
+    /// <param name="employeeRowId">従業員行ID</param>
     /// <param name="roleCode">ロールコード</param>
     /// <param name="effectiveDate">有効開始日時</param>
     /// <param name="expirationDate">有効終了日時（null許可）</param>
-    /// <remarks>Validate は、基礎クラスのコンストラクタで自動実行される</remarks>
     private RoleAssignment(
-        RoleAssignmentId id,
+        RoleAssignmentRowId assignmentRowId,
+        EmployeeRowId employeeRowId,
         RoleCode roleCode,
         LocalDateTime effectiveDate,
         LocalDateTime? expirationDate = null)
     {
-        Id = id;
+        RowId = assignmentRowId;
+        EmployeeRowId = employeeRowId;
         RoleCode = roleCode;
         EffectiveDate = effectiveDate;
         ExpirationDate = expirationDate;
@@ -51,44 +56,27 @@ public sealed class RoleAssignment : Entity<RoleAssignmentId>
     /// <summary>
     /// 新しい RoleAssignment を生成する（ファクトリメソッド）
     /// </summary>
-    /// <param name="roleCode">ロールコード</param>
-    /// <param name="effectiveDate">有効開始日時</param>
-    /// <param name="expirationDate">有効終了日時（null許可）</param>
-    /// <returns>生成された RoleAssignment インスタンス</returns>
-    /// <remarks>
-    /// パラメータはすべて検証済みの ValueObject として渡される。
-    /// RoleAssignment レベルでの追加検証は不要。
-    /// </remarks>
     public static RoleAssignment Create(
+        RoleAssignmentRowId assignmentRowId,
+        EmployeeRowId employeeRowId,
         RoleCode roleCode,
         LocalDateTime effectiveDate,
         LocalDateTime? expirationDate = null)
     {
-        return new(
-            RoleAssignmentId.NewId(),
-            roleCode,
-            effectiveDate,
-            expirationDate);
+        return new(assignmentRowId, employeeRowId, roleCode, effectiveDate, expirationDate);
     }
 
     /// <summary>
     /// DB から読み込んだ値から RoleAssignment を復元する（ファクトリメソッド）
     /// </summary>
-    /// <param name="id">ロール割り当てID</param>
-    /// <param name="roleCode">ロールコード</param>
-    /// <param name="effectiveDate">有効開始日時</param>
-    /// <param name="expirationDate">有効終了日時（null許可）</param>
-    /// <returns>復元された RoleAssignment インスタンス</returns>
-    /// <remarks>
-    /// DB 値は既に検証済みと仮定。検証なしで復元。
-    /// </remarks>
     public static RoleAssignment Reconstruct(
-        RoleAssignmentId id,
+        RoleAssignmentRowId assignmentRowId,
+        EmployeeRowId employeeRowId,
         RoleCode roleCode,
         LocalDateTime effectiveDate,
         LocalDateTime? expirationDate = null)
     {
-        return new(id, roleCode, effectiveDate, expirationDate);
+        return new(assignmentRowId, employeeRowId, roleCode, effectiveDate, expirationDate);
     }
 
     /// <summary>
@@ -117,7 +105,6 @@ public sealed class RoleAssignment : Entity<RoleAssignmentId>
     /// <summary>
     /// RoleAssignment の文字列表現を取得する
     /// </summary>
-    /// <returns>ロール割り当ての説明文字列</returns>
     public override string ToString()
-        => $"RoleAssignment(Id={Id.Value}, Code={RoleCode}, Effective={EffectiveDate}, Expiration={ExpirationDate})";
+        => $"RoleAssignment(RowId={RowId.Value}, Code={RoleCode}, Effective={EffectiveDate}, Expiration={ExpirationDate})";
 }

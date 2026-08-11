@@ -1,4 +1,4 @@
-using SupportAdvance.SharedKernel.ValueObjects.Abstractions;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
 
@@ -7,7 +7,7 @@ namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
 /// 【範囲】1以上（long.MaxValue以下）
 /// 【責務】t_employees.row_id の管理と検証
 /// </summary>
-public sealed class EmployeeRowId : PrimitiveValueObject<long>, IEquatable<EmployeeRowId>
+public sealed class EmployeeRowId : RowId, IEquatable<EmployeeRowId>
 {
     /// <summary>
     /// 従業員行IDの最小有効値

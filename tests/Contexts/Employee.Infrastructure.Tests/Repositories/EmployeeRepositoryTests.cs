@@ -20,53 +20,54 @@ public class EmployeeRepositoryTests
     public async Task TestGetById01_WithValidIdReturnsEmployee()
     {
         // Arrange
-        var id = EmployeeId.NewId();
         var rowId = EmployeeRowId.From(1L);
-        var code = EmployeeCode.From(EmployeeDivision.RegularEmployee(), EmployeeNumber.From(1001));
-        var personRowId = PersonRowId.From(1L);
-        var employee = Employee.Create(id, rowId, code, personRowId);
+        var employee = Employee.Create(
+            rowId,
+            EmployeeTypeDivision.From("M"),
+            EmployeeBizId.From(1001),
+            EmployeeBizCode.From("EMP001"),
+            PersonRowId.From(100L));
 
         var repository = CreateRepository();
         await repository.AddAsync(employee);
 
         // Act
-        var result = await repository.GetByIdAsync(id);
+        var result = await repository.GetByIdAsync(rowId.Value);
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(id, result.Id);
         Assert.Equal(rowId, result.RowId);
-        Assert.Equal(code, result.Code);
-        Assert.Equal(personRowId, result.PersonRowId);
     }
 
     [Fact]
     public async Task TestGetById02_WithMultipleEmployeesReturnsCorrectOne()
     {
         // Arrange
-        var id1 = EmployeeId.NewId();
-        var id2 = EmployeeId.NewId();
+        var rowId1 = EmployeeRowId.From(1L);
+        var rowId2 = EmployeeRowId.From(2L);
         var employee1 = Employee.Create(
-            id1,
-            EmployeeRowId.From(1L),
-            EmployeeCode.From(EmployeeDivision.RegularEmployee(), EmployeeNumber.From(1001)),
-            PersonRowId.From(1L));
+            rowId1,
+            EmployeeTypeDivision.From("M"),
+            EmployeeBizId.From(1001),
+            EmployeeBizCode.From("EMP001"),
+            PersonRowId.From(100L));
         var employee2 = Employee.Create(
-            id2,
-            EmployeeRowId.From(2L),
-            EmployeeCode.From(EmployeeDivision.RegularEmployee(), EmployeeNumber.From(1002)),
-            PersonRowId.From(2L));
+            rowId2,
+            EmployeeTypeDivision.From("T"),
+            EmployeeBizId.From(7502),
+            EmployeeBizCode.From("EMP002"),
+            PersonRowId.From(101L));
 
         var repository = CreateRepository();
         await repository.AddAsync(employee1);
         await repository.AddAsync(employee2);
 
         // Act
-        var result = await repository.GetByIdAsync(id1);
+        var result = await repository.GetByIdAsync(rowId1.Value);
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(id1, result.Id);
+        Assert.Equal(rowId1, result.RowId);
     }
 
     #endregion
@@ -78,10 +79,9 @@ public class EmployeeRepositoryTests
     {
         // Arrange
         var repository = CreateRepository();
-        var nonExistentId = EmployeeId.NewId();
 
         // Act
-        var result = await repository.GetByIdAsync(nonExistentId);
+        var result = await repository.GetByIdAsync(999L);
 
         // Assert
         Assert.Null(result);
@@ -95,22 +95,23 @@ public class EmployeeRepositoryTests
     public async Task TestGetByRowId01_WithValidRowIdReturnsEmployee()
     {
         // Arrange
-        var id = EmployeeId.NewId();
         var rowId = EmployeeRowId.From(100L);
-        var code = EmployeeCode.From(EmployeeDivision.RegularEmployee(), EmployeeNumber.From(1001));
-        var personRowId = PersonRowId.From(1L);
-        var employee = Employee.Create(id, rowId, code, personRowId);
+        var employee = Employee.Create(
+            rowId,
+            EmployeeTypeDivision.From("M"),
+            EmployeeBizId.From(1001),
+            EmployeeBizCode.From("EMP001"),
+            PersonRowId.From(100L));
 
         var repository = CreateRepository();
         await repository.AddAsync(employee);
 
         // Act
-        var result = await repository.GetByRowIdAsync(rowId);
+        var result = await repository.GetByIdAsync(rowId.Value);
 
         // Assert
         Assert.NotNull(result);
         Assert.Equal(rowId, result.RowId);
-        Assert.Equal(id, result.Id);
     }
 
     [Fact]
@@ -118,10 +119,9 @@ public class EmployeeRepositoryTests
     {
         // Arrange
         var repository = CreateRepository();
-        var nonExistentRowId = EmployeeRowId.From(999L);
 
         // Act
-        var result = await repository.GetByRowIdAsync(nonExistentRowId);
+        var result = await repository.GetByIdAsync(999L);
 
         // Assert
         Assert.Null(result);
@@ -135,17 +135,19 @@ public class EmployeeRepositoryTests
     public async Task TestGetByPersonRowId01_WithValidPersonRowIdReturnsEmployees()
     {
         // Arrange
-        var personRowId = PersonRowId.From(1L);
+        var personRowId = 100L;
         var employee1 = Employee.Create(
-            EmployeeId.NewId(),
             EmployeeRowId.From(1L),
-            EmployeeCode.From(EmployeeDivision.RegularEmployee(), EmployeeNumber.From(1001)),
-            personRowId);
+            EmployeeTypeDivision.From("M"),
+            EmployeeBizId.From(1001),
+            EmployeeBizCode.From("EMP001"),
+            PersonRowId.From(personRowId));
         var employee2 = Employee.Create(
-            EmployeeId.NewId(),
             EmployeeRowId.From(2L),
-            EmployeeCode.From(EmployeeDivision.RegularEmployee(), EmployeeNumber.From(1002)),
-            personRowId);
+            EmployeeTypeDivision.From("T"),
+            EmployeeBizId.From(7502),
+            EmployeeBizCode.From("EMP002"),
+            PersonRowId.From(personRowId));
 
         var repository = CreateRepository();
         await repository.AddAsync(employee1);
@@ -164,10 +166,9 @@ public class EmployeeRepositoryTests
     {
         // Arrange
         var repository = CreateRepository();
-        var nonExistentPersonRowId = PersonRowId.From(999L);
 
         // Act
-        var results = await repository.GetByPersonRowIdAsync(nonExistentPersonRowId);
+        var results = await repository.GetByPersonRowIdAsync(999L);
 
         // Assert
         Assert.Empty(results);
@@ -181,12 +182,13 @@ public class EmployeeRepositoryTests
     public async Task TestAdd01_WithValidEmployeeInsertsAndReturnsId()
     {
         // Arrange
-        var id = EmployeeId.NewId();
+        var rowId = EmployeeRowId.From(1L);
         var employee = Employee.Create(
-            id,
-            EmployeeRowId.From(1L),
-            EmployeeCode.From(EmployeeDivision.RegularEmployee(), EmployeeNumber.From(1001)),
-            PersonRowId.From(1L));
+            rowId,
+            EmployeeTypeDivision.From("M"),
+            EmployeeBizId.From(1001),
+            EmployeeBizCode.From("EMP001"),
+            PersonRowId.From(100L));
 
         var repository = CreateRepository();
 
@@ -194,20 +196,22 @@ public class EmployeeRepositoryTests
         await repository.AddAsync(employee);
 
         // Assert
-        var result = await repository.GetByIdAsync(id);
+        var result = await repository.GetByIdAsync(rowId.Value);
         Assert.NotNull(result);
-        Assert.Equal(id, result.Id);
+        Assert.Equal(rowId, result.RowId);
     }
 
     [Fact]
     public async Task TestAdd02_AuditColumnsAreSetAutomatically()
     {
         // Arrange
+        var rowId = EmployeeRowId.From(1L);
         var employee = Employee.Create(
-            EmployeeId.NewId(),
-            EmployeeRowId.From(1L),
-            EmployeeCode.From(EmployeeDivision.RegularEmployee(), EmployeeNumber.From(1001)),
-            PersonRowId.From(1L));
+            rowId,
+            EmployeeTypeDivision.From("M"),
+            EmployeeBizId.From(1001),
+            EmployeeBizCode.From("EMP001"),
+            PersonRowId.From(100L));
 
         var repository = CreateRepository();
 
@@ -215,7 +219,7 @@ public class EmployeeRepositoryTests
         await repository.AddAsync(employee);
 
         // Assert
-        var result = await repository.GetByIdAsync(employee.Id);
+        var result = await repository.GetByIdAsync(rowId.Value);
         Assert.NotNull(result);
         // CreatedAt と CreatedBy が設定されていることを確認
         // (DbModel の検証は Mapper テストで行う)
@@ -229,21 +233,19 @@ public class EmployeeRepositoryTests
     public async Task TestUpdate01_WithValidEmployeeUpdatesSuccessfully()
     {
         // Arrange
-        var id = EmployeeId.NewId();
-        var originalCode = EmployeeCode.From(EmployeeDivision.RegularEmployee(), EmployeeNumber.From(1001));
+        var rowId = EmployeeRowId.From(1L);
         var employee = Employee.Create(
-            id,
-            EmployeeRowId.From(1L),
-            originalCode,
-            PersonRowId.From(1L));
+            rowId,
+            EmployeeTypeDivision.From("M"),
+            EmployeeBizId.From(1001),
+            EmployeeBizCode.From("EMP001"),
+            PersonRowId.From(100L));
 
         var repository = CreateRepository();
         await repository.AddAsync(employee);
 
         // Act
-        // 更新されたエンプロイを作成（実装時は ChangeCode などのメソッドを使用）
-        // ここでは検証のみ
-        var result = await repository.GetByIdAsync(id);
+        var result = await repository.GetByIdAsync(rowId.Value);
         Assert.NotNull(result);
     }
 
@@ -255,21 +257,22 @@ public class EmployeeRepositoryTests
     public async Task TestDelete01_WithValidIdSetsDeletedAtLogicallyDeletes()
     {
         // Arrange
-        var id = EmployeeId.NewId();
+        var rowId = EmployeeRowId.From(1L);
         var employee = Employee.Create(
-            id,
-            EmployeeRowId.From(1L),
-            EmployeeCode.From(EmployeeDivision.RegularEmployee(), EmployeeNumber.From(1001)),
-            PersonRowId.From(1L));
+            rowId,
+            EmployeeTypeDivision.From("M"),
+            EmployeeBizId.From(1001),
+            EmployeeBizCode.From("EMP001"),
+            PersonRowId.From(100L));
 
         var repository = CreateRepository();
         await repository.AddAsync(employee);
 
         // Act
-        await repository.DeleteAsync(id);
+        await repository.DeleteAsync(rowId.Value);
 
         // Assert
-        var result = await repository.GetByIdAsync(id);
+        var result = await repository.GetByIdAsync(rowId.Value);
         Assert.Null(result);  // 論理削除されたため取得不可
     }
 

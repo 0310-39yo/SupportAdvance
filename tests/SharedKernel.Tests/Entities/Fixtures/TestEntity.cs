@@ -1,6 +1,5 @@
 using SupportAdvance.Common.Clocks;
 using SupportAdvance.SharedKernel.Entities;
-using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 namespace SupportAdvance.SharedKernel.Tests.Entities.Fixtures;
 
@@ -13,14 +12,15 @@ public sealed class TestEntity : Entity<TestId>
 
     public TestEntity(TestId id, string name = "Test")
     {
-        Id = id;
+        RowId = id;
         Name = name;
     }
 
     public void UpdateName(string newName, IClock clock)
     {
         Name = newName;
-        this.RaiseDomainEvent(new TestDomainEvent(DomainEventId.New(), this.Id, newName, clock.JstNow));
+        // AggregateRootId（RowId）は 1 にハードコード（テスト用）
+        this.RaiseDomainEvent(new TestDomainEvent(1L, this.RowId, newName, clock.JstNow));
     }
 
     public IReadOnlyList<IDomainEvent> GetDomainEvents() => this.DomainEvents;

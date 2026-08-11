@@ -15,12 +15,6 @@ public class PermissionAssignmentDbModel
     public long RowId { get; set; }
 
     /// <summary>
-    /// 権限割り当て集約根ID（GUID）
-    /// 【対応カラム】permission_assignment_id
-    /// </summary>
-    public Guid PermissionAssignmentId { get; set; }
-
-    /// <summary>
     /// 従業員行ID（外部参照）
     /// 【対応カラム】employee_row_id
     /// 【制約】FK → t_employees

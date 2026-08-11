@@ -1,16 +1,13 @@
-using SupportAdvance.SharedKernel.ValueObjects.Abstractions;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
 
 /// <summary>
 /// データベース上の部署レコードの行ID（rowId）を表す ValueObject
-///
-/// 責務：
-/// - 部署行ID（1以上）を型安全に保持
-/// - 値の検証（正の整数）
-/// - 等価性判定とハッシュコード計算
+/// 【範囲】1以上（long.MaxValue以下）
+/// 【責務】t_departments.row_id の管理と検証
 /// </summary>
-public sealed class DepartmentRowId : PrimitiveValueObject<long>, IEquatable<DepartmentRowId>
+public sealed class DepartmentRowId : RowId, IEquatable<DepartmentRowId>
 {
     /// <summary>
     /// 部署行IDの最小有効値
@@ -27,9 +24,7 @@ public sealed class DepartmentRowId : PrimitiveValueObject<long>, IEquatable<Dep
     /// </summary>
     /// <param name="value">部署行ID（1以上）</param>
     /// <remarks>Validate は、基礎クラスのコンストラクタで自動実行される</remarks>
-    private DepartmentRowId(long value) : base(value, true)
-    {
-    }
+    private DepartmentRowId(long value) : base(value, true) { }
 
     /// <summary>
     /// 指定された部署行IDから DepartmentRowId を生成する

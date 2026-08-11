@@ -24,13 +24,13 @@ public class ManagerEmployeeRowIdTests
     [Fact]
     public void From_WithZero_ThrowsArgumentException()
     {
-        Assert.Throws<ArgumentException>(() => ManagerEmployeeRowId.From(0L));
+        Assert.Throws<ArgumentOutOfRangeException>(() => ManagerEmployeeRowId.From(0L));
     }
 
     [Fact]
     public void From_WithNegativeValue_ThrowsArgumentException()
     {
-        Assert.Throws<ArgumentException>(() => ManagerEmployeeRowId.From(-1L));
+        Assert.Throws<ArgumentOutOfRangeException>(() => ManagerEmployeeRowId.From(-1L));
     }
 
     [Fact]
@@ -38,7 +38,7 @@ public class ManagerEmployeeRowIdTests
     {
         var unset = ManagerEmployeeRowId.Unset();
         Assert.False(unset.IsSet);
-        Assert.Null(unset.Value);
+        Assert.Equal(0L, unset.Value);
     }
 
     [Fact]
@@ -163,7 +163,7 @@ public class ManagerEmployeeRowIdTests
     public void ToString_WithUnset_ReturnsUnset()
     {
         var unset = ManagerEmployeeRowId.Unset();
-        Assert.Equal("Unset", unset.ToString());
+        Assert.Equal("0", unset.ToString());
     }
 }
 

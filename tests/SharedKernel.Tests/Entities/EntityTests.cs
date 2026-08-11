@@ -25,7 +25,7 @@ public class EntityTests
     public void RaiseDomainEvent_WithValidEvent_ShouldAddEventToDomainEvents()
     {
         // Arrange
-        var entityId = new TestId("entity-001");
+        var entityId = TestId.From(1L);
         var entity = new TestEntity(entityId);
 
         // Act
@@ -45,7 +45,7 @@ public class EntityTests
     public void RaiseDomainEvent_WithNullEvent_ShouldThrowArgumentNullException()
     {
         // Arrange
-        var entity = new TestEntity(new TestId("entity-001"));
+        var entity = new TestEntity(TestId.From(1L));
 
         // Act & Assert
         // リフレクションでの呼び出しはTargetInvocationExceptionでラップされる
@@ -72,7 +72,7 @@ public class EntityTests
     public void DomainEvents_WithMultipleRaisedEvents_ShouldContainAllEvents()
     {
         // Arrange
-        var entityId = new TestId("entity-001");
+        var entityId = TestId.From(1L);
         var entity = new TestEntity(entityId);
 
         // Act - 複数回イベント発行
@@ -96,7 +96,7 @@ public class EntityTests
     public void DomainEvents_IsReadOnlyList_CannotModify()
     {
         // Arrange
-        var entity = new TestEntity(new TestId("entity-001"));
+        var entity = new TestEntity(TestId.From(1L));
         entity.UpdateName("Name", _clock);
         var domainEvents = entity.DomainEvents;
 
@@ -114,7 +114,7 @@ public class EntityTests
     public void DomainEvents_WithoutRaisingEvents_ShouldReturnEmptyList()
     {
         // Arrange
-        var entity = new TestEntity(new TestId("entity-001"));
+        var entity = new TestEntity(TestId.From(1L));
 
         // Act & Assert
         Assert.Empty(entity.DomainEvents);
@@ -132,7 +132,7 @@ public class EntityTests
     public void ClearDomainEvents_AfterEvents_ShouldClearAll()
     {
         // Arrange
-        var entity = new TestEntity(new TestId("entity-001"));
+        var entity = new TestEntity(TestId.From(1L));
         entity.UpdateName("Name1", _clock);
         entity.UpdateName("Name2", _clock);
         Assert.Equal(2, entity.DomainEvents.Count);
@@ -155,7 +155,7 @@ public class EntityTests
     public void Equals_WithSameId_ShouldReturnTrue()
     {
         // Arrange
-        var testId = new TestId("entity-001");
+        var testId = TestId.From(1L);
         var entity1 = new TestEntity(testId, "Name1");
         var entity2 = new TestEntity(testId, "Name2");  // 同じ ID、異なる Name
 
@@ -171,8 +171,8 @@ public class EntityTests
     public void Equals_WithDifferentId_ShouldReturnFalse()
     {
         // Arrange
-        var entity1 = new TestEntity(new TestId("entity-001"));
-        var entity2 = new TestEntity(new TestId("entity-002"));
+        var entity1 = new TestEntity(TestId.From(1L));
+        var entity2 = new TestEntity(TestId.From(2L));
 
         // Act & Assert
         Assert.False(entity1.Equals(entity2));
@@ -186,7 +186,7 @@ public class EntityTests
     public void Equals_WithNull_ShouldReturnFalse()
     {
         // Arrange
-        var entity = new TestEntity(new TestId("entity-001"));
+        var entity = new TestEntity(TestId.From(1L));
 
         // Act & Assert
         Assert.False(entity.Equals(null));
@@ -200,7 +200,7 @@ public class EntityTests
     public void Equals_WithSameReference_ShouldReturnTrue()
     {
         // Arrange
-        var entity = new TestEntity(new TestId("entity-001"));
+        var entity = new TestEntity(TestId.From(1L));
 
         // Act & Assert
         Assert.True(entity.Equals(entity));
@@ -217,7 +217,7 @@ public class EntityTests
     public void GetHashCode_WithSameId_ShouldReturnSameHashCode()
     {
         // Arrange
-        var testId = new TestId("entity-001");
+        var testId = TestId.From(1L);
         var entity1 = new TestEntity(testId);
         var entity2 = new TestEntity(testId);
 
@@ -236,7 +236,7 @@ public class EntityTests
     public void GetHashCode_InHashSet_ShouldDeduplicate()
     {
         // Arrange
-        var testId = new TestId("entity-001");
+        var testId = TestId.From(1L);
         var entity1 = new TestEntity(testId);
         var entity2 = new TestEntity(testId);
         var hashSet = new HashSet<Entity<TestId>>();

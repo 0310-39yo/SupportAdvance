@@ -21,10 +21,10 @@ public class UpdateEmployeeUseCase
     /// </summary>
     public async Task<EmployeeDto> ExecuteAsync(UpdateEmployeeRequest request)
     {
-        if (request.EmployeeId == Guid.Empty)
-            throw new ArgumentException("Invalid EmployeeId", nameof(request.EmployeeId));
+        if (request.EmployeeRowId <= 0)
+            throw new ArgumentException("Invalid EmployeeRowId", nameof(request.EmployeeRowId));
 
-        var id = EmployeeId.From(request.EmployeeId);
+        var id = EmployeeRowId.From(request.EmployeeRowId);
 
         // 既存 Entity を取得
         var employee = await _repository.GetByIdAsync(id);
@@ -40,9 +40,9 @@ public class UpdateEmployeeUseCase
             if (request.EmployeeNumber.Value < 1001 || request.EmployeeNumber.Value > 9999)
                 throw new ArgumentException("EmployeeNumber must be between 1001 and 9999", nameof(request.EmployeeNumber));
 
-            var division = ConvertToDivision(request.DivisionCode);
-            var number = EmployeeNumber.From(request.EmployeeNumber.Value);
-            var newCode = EmployeeCode.From(division, number);
+            var typeDivision = ConvertToDivision(request.DivisionCode);
+            var bizId = EmployeeBizId.From(request.EmployeeNumber.Value);
+            var bizCode = EmployeeBizCode.From(typeDivision, bizId);
             // TODO: employee.ChangeCode(newCode) メソッドを呼び出し
         }
 
@@ -57,13 +57,13 @@ public class UpdateEmployeeUseCase
         return code is "M" or "T" or "C";
     }
 
-    private EmployeeDivision ConvertToDivision(string code)
+    private EmployeeTypeDivision ConvertToDivision(string code)
     {
         return code switch
         {
-            "M" => EmployeeDivision.RegularEmployee(),
-            "T" => EmployeeDivision.Dispatched(),
-            "C" => EmployeeDivision.Contractor(),
+            "M" => EmployeeTypeDivision.RegularEmployee(),
+            "T" => EmployeeTypeDivision.Dispatched(),
+            "C" => EmployeeTypeDivision.Contractor(),
             _ => throw new ArgumentException($"Invalid division code: {code}")
         };
     }
