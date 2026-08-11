@@ -1,10 +1,6 @@
-namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
-
-using SupportAdvance.SharedKernel.ValueObjects;
 using SupportAdvance.SharedKernel.ValueObjects.Abstractions;
 
-using System.Collections.Generic;
-
+namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
 
 /// <summary>
 /// 部署メンバーシップ識別子を表す ValueObject（GUID ベース）

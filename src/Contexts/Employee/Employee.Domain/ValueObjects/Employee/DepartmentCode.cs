@@ -1,13 +1,7 @@
-namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
-
-using SupportAdvance.SharedKernel.ValueObjects;
+using System.Text.RegularExpressions;
 using SupportAdvance.SharedKernel.ValueObjects.Abstractions;
 
-
-
-using System.Collections.Generic;
-using System.Text.RegularExpressions;
-
+namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
 
 /// <summary>
 /// 部署コードを表す ValueObject

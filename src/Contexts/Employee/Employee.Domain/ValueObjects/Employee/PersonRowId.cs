@@ -1,14 +1,13 @@
-namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
-using SupportAdvance.SharedKernel.ValueObjects;
-using SupportAdvance.SharedKernel.ValueObjects.Abstractions;
+namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
 
 /// <summary>
 /// データベース上の人物レコードの行ID（rowId）を表すValueObject
 /// 【範囲】1以上（long.MaxValue以下）
 /// 【責務】m_persons.row_id の管理と検証
 /// </summary>
-public sealed class PersonRowId : PrimitiveValueObject<long>, IEquatable<PersonRowId>
+public sealed class PersonRowId : RowId, IEquatable<PersonRowId>
 {
     /// <summary>
     /// 人物行IDの最小有効値
@@ -141,4 +140,3 @@ public sealed class PersonRowId : PrimitiveValueObject<long>, IEquatable<PersonR
         }
     }
 }
-

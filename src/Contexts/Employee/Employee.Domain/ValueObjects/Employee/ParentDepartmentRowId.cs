@@ -1,12 +1,6 @@
-namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
-
-using SupportAdvance.SharedKernel.ValueObjects;
 using SupportAdvance.SharedKernel.ValueObjects.Abstractions;
 
-
-
-using System.Collections.Generic;
-
+namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
 
 /// <summary>
 /// 親部署の行IDを表すオプション ValueObject
@@ -38,10 +32,7 @@ public sealed class ParentDepartmentRowId : PrimitiveValueObject<long?>, IEquata
     /// ルート部署（親なし）を表す Unset インスタンスを生成する
     /// </summary>
     /// <returns>IsSet=false のインスタンス</returns>
-    public static ParentDepartmentRowId Unset()
-    {
-        return new(null, false);
-    }
+    public static ParentDepartmentRowId Unset() => new(null, false);
 
     /// <summary>
     /// 指定された親部署行IDから ParentDepartmentRowId を生成する
@@ -56,7 +47,7 @@ public sealed class ParentDepartmentRowId : PrimitiveValueObject<long?>, IEquata
             throw new ArgumentException("ParentDepartmentRowId must be greater than 0.", nameof(value));
         }
 
-        return new(value, true);
+        return new ParentDepartmentRowId(value, true);
     }
 
     /// <summary>
@@ -70,7 +61,7 @@ public sealed class ParentDepartmentRowId : PrimitiveValueObject<long?>, IEquata
     {
         if (!input.HasValue)
         {
-            result = Unset();  // null は Unset に変換して成功（親なし）
+            result = Unset(); // null は Unset に変換して成功（親なし）
             return true;
         }
 
@@ -96,7 +87,7 @@ public sealed class ParentDepartmentRowId : PrimitiveValueObject<long?>, IEquata
     {
         if (!input.HasValue)
         {
-            result = Unset();  // DB NULL は Unset に変換（親なし）
+            result = Unset(); // DB NULL は Unset に変換（親なし）
             return true;
         }
 
@@ -172,9 +163,3 @@ public sealed class ParentDepartmentRowId : PrimitiveValueObject<long?>, IEquata
         }
     }
 }
-
-
-
-
-
-

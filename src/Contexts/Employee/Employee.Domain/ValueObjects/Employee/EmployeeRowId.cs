@@ -1,9 +1,6 @@
-namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
-
-using SupportAdvance.SharedKernel.ValueObjects;
 using SupportAdvance.SharedKernel.ValueObjects.Abstractions;
 
-
+namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
 
 /// <summary>
 /// データベース上の従業員レコードの行ID（rowId）を表すValueObject
@@ -143,6 +140,3 @@ public sealed class EmployeeRowId : PrimitiveValueObject<long>, IEquatable<Emplo
         }
     }
 }
-
-
-

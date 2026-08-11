@@ -1,11 +1,6 @@
-namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
-
 using SupportAdvance.SharedKernel.ValueObjects;
-using SupportAdvance.SharedKernel.ValueObjects.Abstractions;
 
-
-
-
+namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
 
 /// <summary>
 /// 部署の階層レベルを表す ValueObject
@@ -168,9 +163,3 @@ public sealed class HierarchyLevel : EnumValueObject<int>, IEquatable<HierarchyL
         };
     }
 }
-
-
-
-
-
-

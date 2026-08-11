@@ -1,5 +1,0 @@
-<Project>
-  <PropertyGroup>
-    <RootNamespace>SupportAdvance.Contexts.Employee.$(MSBuildProjectName)</RootNamespace>
-  </PropertyGroup>
-</Project>

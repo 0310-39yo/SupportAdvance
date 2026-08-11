@@ -1,9 +1,6 @@
-namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
-
-using SupportAdvance.SharedKernel.ValueObjects;
 using SupportAdvance.SharedKernel.ValueObjects.Abstractions;
 
-
+namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
 
 /// <summary>
 /// 従業員の通し番号を表すValueObject
@@ -191,6 +188,3 @@ public sealed class EmployeeNumber : PrimitiveValueObject<int>, IEquatable<Emplo
         }
     }
 }
-
-
-

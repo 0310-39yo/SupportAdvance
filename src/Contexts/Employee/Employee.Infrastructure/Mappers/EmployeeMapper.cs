@@ -1,9 +1,8 @@
 namespace SupportAdvance.Contexts.Employee.Infrastructure.Mappers;
 
-using SupportAdvance.Contexts.Employee.Domain.Entities;
+using Domain.Entities;
 using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
-using SupportAdvance.Contexts.Employee.Infrastructure.Models;
-using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
+using Models;
 
 /// <summary>
 /// Employee ドメインモデル ↔ EmployeeDbModel のマッピング
@@ -62,7 +61,7 @@ public class EmployeeMapper
             RowId = entity.RowId.Value,
             EmployeeCodeDivision = divisionCode,
             EmployeeCodeNumber = entity.Code.Number.Value,
-            PersonRowId = entity.PersonRowId.Value,
+            PersonRowId = entity.PersonRowId.Value
             // 監査カラムは Repository で設定
         };
     }
@@ -70,11 +69,20 @@ public class EmployeeMapper
     private string ConvertDivisionToCode(EmployeeDivision division)
     {
         if (division.IsRegularEmployee)
+        {
             return "M";
+        }
+
         if (division.IsDispatched)
+        {
             return "T";
+        }
+
         if (division.IsContractor)
+        {
             return "C";
+        }
+
         throw new InvalidOperationException($"Invalid division: {division}");
     }
 }

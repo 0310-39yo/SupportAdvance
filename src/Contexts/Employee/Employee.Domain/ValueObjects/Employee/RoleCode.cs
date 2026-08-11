@@ -1,13 +1,7 @@
-namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
-
-using SupportAdvance.SharedKernel.ValueObjects;
 using SupportAdvance.SharedKernel.ValueObjects.Abstractions;
-
-
-
-using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
+namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
 
 /// <summary>
 /// ロールコードを表す ValueObject
@@ -112,7 +106,7 @@ public sealed class RoleCode : PrimitiveValueObject<string>, IEquatable<RoleCode
             return true;
         }
 
-        return Value == other.Value;  // 大文字小文字区別
+        return Value == other.Value; // 大文字小文字区別
     }
 
     /// <summary>
@@ -157,13 +151,8 @@ public sealed class RoleCode : PrimitiveValueObject<string>, IEquatable<RoleCode
         // 文字種チェック（英数字、_、.のみ）
         if (!Regex.IsMatch(normalized, @"^[A-Za-z0-9_.]+$"))
         {
-            throw new ArgumentException("RoleCode must contain only alphanumeric characters, underscores, and dots.", nameof(normalized));
+            throw new ArgumentException("RoleCode must contain only alphanumeric characters, underscores, and dots.",
+                nameof(normalized));
         }
     }
 }
-
-
-
-
-
-

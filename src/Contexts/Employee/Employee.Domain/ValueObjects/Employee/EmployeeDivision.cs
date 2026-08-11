@@ -1,7 +1,6 @@
-namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
-
 using SupportAdvance.SharedKernel.ValueObjects;
-using SupportAdvance.SharedKernel.ValueObjects.Abstractions;
+
+namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
 
 /// <summary>
 /// 従業員区分を表すValueObject
@@ -223,6 +222,3 @@ public sealed class EmployeeDivision : EnumValueObject<char>, IEquatable<Employe
         };
     }
 }
-
-
-

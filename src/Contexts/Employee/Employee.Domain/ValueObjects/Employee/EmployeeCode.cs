@@ -1,7 +1,6 @@
-namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
-
 using SupportAdvance.SharedKernel.ValueObjects;
-using SupportAdvance.SharedKernel.ValueObjects.Abstractions;
+
+namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
 
 /// <summary>
 /// 従業員コードを表すValueObject（従業員区分+従業員番号の複合値）
@@ -43,7 +42,7 @@ public sealed class EmployeeCode : ValueObject, IEquatable<EmployeeCode>
     public static EmployeeCode From(EmployeeDivision division, EmployeeNumber number)
     {
         ValidateDivisionAndNumber(division, number);
-        return new(division, number);
+        return new EmployeeCode(division, number);
     }
 
     /// <summary>
@@ -94,8 +93,8 @@ public sealed class EmployeeCode : ValueObject, IEquatable<EmployeeCode>
         try
         {
             // 最初の文字が区分
-            char divisionChar = input[0];
-            string numberStr = input[1..];
+            var divisionChar = input[0];
+            var numberStr = input[1..];
 
             // Division を復元
             if (!EmployeeDivision.TryFromDbValue(divisionChar.ToString(), out var division))
@@ -104,7 +103,7 @@ public sealed class EmployeeCode : ValueObject, IEquatable<EmployeeCode>
             }
 
             // Number を復元
-            if (!int.TryParse(numberStr, out int numberInt))
+            if (!int.TryParse(numberStr, out var numberInt))
             {
                 return false;
             }
@@ -220,7 +219,7 @@ public sealed class EmployeeCode : ValueObject, IEquatable<EmployeeCode>
     /// <exception cref="ArgumentException">無効な組み合わせ（範囲外）</exception>
     private static void ValidateDivisionAndNumber(EmployeeDivision division, EmployeeNumber number)
     {
-        int num = number.Value;
+        var num = number.Value;
 
         if (division.IsRegularEmployee)
         {
@@ -251,6 +250,3 @@ public sealed class EmployeeCode : ValueObject, IEquatable<EmployeeCode>
         }
     }
 }
-
-
-

@@ -1,12 +1,6 @@
-namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
-
-using SupportAdvance.SharedKernel.ValueObjects;
 using SupportAdvance.SharedKernel.ValueObjects.Abstractions;
 
-
-
-using System.Collections.Generic;
-
+namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
 
 /// <summary>
 /// 部署の管理者（従業員）の行IDを表すオプション ValueObject
@@ -37,10 +31,7 @@ public sealed class ManagerEmployeeRowId : PrimitiveValueObject<long?>, IEquatab
     /// 管理者がいない部署を表す Unset インスタンスを生成する
     /// </summary>
     /// <returns>IsSet=false のインスタンス</returns>
-    public static ManagerEmployeeRowId Unset()
-    {
-        return new(null, false);
-    }
+    public static ManagerEmployeeRowId Unset() => new(null, false);
 
     /// <summary>
     /// 指定された管理者従業員行IDから ManagerEmployeeRowId を生成する
@@ -55,7 +46,7 @@ public sealed class ManagerEmployeeRowId : PrimitiveValueObject<long?>, IEquatab
             throw new ArgumentException("ManagerEmployeeRowId must be greater than 0.", nameof(value));
         }
 
-        return new(value, true);
+        return new ManagerEmployeeRowId(value, true);
     }
 
     /// <summary>
@@ -69,7 +60,7 @@ public sealed class ManagerEmployeeRowId : PrimitiveValueObject<long?>, IEquatab
     {
         if (!input.HasValue)
         {
-            result = Unset();  // null は Unset に変換して成功（管理者なし）
+            result = Unset(); // null は Unset に変換して成功（管理者なし）
             return true;
         }
 
@@ -95,7 +86,7 @@ public sealed class ManagerEmployeeRowId : PrimitiveValueObject<long?>, IEquatab
     {
         if (!input.HasValue)
         {
-            result = Unset();  // DB NULL は Unset に変換（管理者なし）
+            result = Unset(); // DB NULL は Unset に変換（管理者なし）
             return true;
         }
 
@@ -171,9 +162,3 @@ public sealed class ManagerEmployeeRowId : PrimitiveValueObject<long?>, IEquatab
         }
     }
 }
-
-
-
-
-
-
