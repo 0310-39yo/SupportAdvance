@@ -29,4 +29,24 @@ public record EmployeeDto
     /// 人事マスタ行ID
     /// </summary>
     public required long PersonRowId { get; init; }
+
+    /// <summary>
+    /// 姓
+    /// </summary>
+    public required string PersonLastName { get; init; }
+
+    /// <summary>
+    /// 名
+    /// </summary>
+    public required string PersonFirstName { get; init; }
+
+    /// <summary>
+    /// 姓（カナ）
+    /// </summary>
+    public required string PersonLastNameKana { get; init; }
+
+    /// <summary>
+    /// 名（カナ）
+    /// </summary>
+    public required string PersonFirstNameKana { get; init; }
 }

@@ -18,17 +18,17 @@ public class DepartmentMembershipTests
         // Arrange
         var membershipRowId = DepartmentMembershipRowId.From(1L);
         var employeeRowId = EmployeeRowId.From(100L);
-        var deptCode = DepartmentCode.From("DEPT");
+        var deptRowId = DepartmentRowId.From(1L);
 
         // Act
-        var membership = DepartmentMembership.Create(membershipRowId, employeeRowId, deptCode, true, null);
+        var membership = DepartmentMembership.Create(membershipRowId, employeeRowId, deptRowId, IsPrimary.Primary());
 
         // Assert
         Assert.NotNull(membership);
         Assert.Equal(membershipRowId, membership.RowId);
         Assert.Equal(employeeRowId, membership.EmployeeRowId);
-        Assert.Equal(deptCode, membership.DepartmentCode);
-        Assert.True(membership.IsPrimary);
+        Assert.Equal(deptRowId, membership.DepartmentRowId);
+        Assert.True(membership.IsPrimary.Value);
     }
 
     [Fact]
@@ -37,14 +37,14 @@ public class DepartmentMembershipTests
         // Arrange
         var membershipRowId = DepartmentMembershipRowId.From(2L);
         var employeeRowId = EmployeeRowId.From(100L);
-        var deptCode = DepartmentCode.From("DEPT");
+        var deptRowId = DepartmentRowId.From(1L);
 
         // Act
-        var membership = DepartmentMembership.Create(membershipRowId, employeeRowId, deptCode, false, null);
+        var membership = DepartmentMembership.Create(membershipRowId, employeeRowId, deptRowId, IsPrimary.Secondary());
 
         // Assert
         Assert.NotNull(membership);
-        Assert.False(membership.IsPrimary);
+        Assert.False(membership.IsPrimary.Value);
     }
 
     [Fact]
@@ -55,16 +55,16 @@ public class DepartmentMembershipTests
         var employeeRowId1 = EmployeeRowId.From(100L);
         var membershipRowId2 = DepartmentMembershipRowId.From(4L);
         var employeeRowId2 = EmployeeRowId.From(101L);
-        var deptCode1 = DepartmentCode.From("DEP1");
-        var deptCode2 = DepartmentCode.From("DEP2");
+        var deptRowId1 = DepartmentRowId.From(1L);
+        var deptRowId2 = DepartmentRowId.From(2L);
 
         // Act
-        var membership1 = DepartmentMembership.Create(membershipRowId1, employeeRowId1, deptCode1, true, null);
-        var membership2 = DepartmentMembership.Create(membershipRowId2, employeeRowId2, deptCode2, false, null);
+        var membership1 = DepartmentMembership.Create(membershipRowId1, employeeRowId1, deptRowId1, IsPrimary.Primary());
+        var membership2 = DepartmentMembership.Create(membershipRowId2, employeeRowId2, deptRowId2, IsPrimary.Secondary());
 
         // Assert
         Assert.NotEqual(membership1.RowId, membership2.RowId);
-        Assert.NotEqual(membership1.DepartmentCode, membership2.DepartmentCode);
+        Assert.NotEqual(membership1.DepartmentRowId, membership2.DepartmentRowId);
     }
 
     #endregion
@@ -77,16 +77,16 @@ public class DepartmentMembershipTests
         // Arrange
         var membershipRowId = DepartmentMembershipRowId.From(5L);
         var employeeRowId = EmployeeRowId.From(100L);
-        var deptCode = DepartmentCode.From("DEPT");
+        var deptRowId = DepartmentRowId.From(1L);
 
         // Act
-        var membership = DepartmentMembership.Reconstruct(membershipRowId, employeeRowId, deptCode, true, null);
+        var membership = DepartmentMembership.Reconstruct(membershipRowId, employeeRowId, deptRowId, IsPrimary.Primary(), EndOn.Unlimited);
 
         // Assert
         Assert.NotNull(membership);
         Assert.Equal(membershipRowId, membership.RowId);
         Assert.Equal(employeeRowId, membership.EmployeeRowId);
-        Assert.Equal(deptCode, membership.DepartmentCode);
+        Assert.Equal(deptRowId, membership.DepartmentRowId);
     }
 
     [Fact]
@@ -95,15 +95,15 @@ public class DepartmentMembershipTests
         // Arrange
         var membershipRowId = DepartmentMembershipRowId.From(6L);
         var employeeRowId = EmployeeRowId.From(100L);
-        var deptCode = DepartmentCode.From("DEPT");
+        var deptRowId = DepartmentRowId.From(1L);
         var expirationDate = new LocalDateTime(new DateTime(2026, 12, 31, 23, 59, 59));
 
         // Act
-        var membership = DepartmentMembership.Reconstruct(membershipRowId, employeeRowId, deptCode, true, expirationDate);
+        var membership = DepartmentMembership.Reconstruct(membershipRowId, employeeRowId, deptRowId, IsPrimary.Primary(), EndOn.From(expirationDate));
 
         // Assert
         Assert.NotNull(membership);
-        Assert.Equal(expirationDate, membership.ExpirationDate);
+        Assert.Equal(expirationDate, membership.EndOn.Value);
     }
 
     #endregion
@@ -116,8 +116,8 @@ public class DepartmentMembershipTests
         // Arrange
         var membershipRowId = DepartmentMembershipRowId.From(7L);
         var employeeRowId = EmployeeRowId.From(100L);
-        var deptCode = DepartmentCode.From("DEPT");
-        var membership = DepartmentMembership.Create(membershipRowId, employeeRowId, deptCode, true, null);
+        var deptRowId = DepartmentRowId.From(1L);
+        var membership = DepartmentMembership.Create(membershipRowId, employeeRowId, deptRowId, IsPrimary.Primary());
         var checkDate = new LocalDateTime(new DateTime(2026, 6, 1, 0, 0, 0));
 
         // Act
@@ -133,9 +133,9 @@ public class DepartmentMembershipTests
         // Arrange
         var membershipRowId = DepartmentMembershipRowId.From(8L);
         var employeeRowId = EmployeeRowId.From(100L);
-        var deptCode = DepartmentCode.From("DEPT");
+        var deptRowId = DepartmentRowId.From(1L);
         var expirationDate = new LocalDateTime(new DateTime(2026, 12, 31, 23, 59, 59));
-        var membership = DepartmentMembership.Create(membershipRowId, employeeRowId, deptCode, true, expirationDate);
+        var membership = DepartmentMembership.Create(membershipRowId, employeeRowId, deptRowId, IsPrimary.Primary(), EndOn.From(expirationDate));
         var checkDate = new LocalDateTime(new DateTime(2026, 6, 1, 0, 0, 0));
 
         // Act
@@ -151,9 +151,9 @@ public class DepartmentMembershipTests
         // Arrange
         var membershipRowId = DepartmentMembershipRowId.From(9L);
         var employeeRowId = EmployeeRowId.From(100L);
-        var deptCode = DepartmentCode.From("DEPT");
+        var deptRowId = DepartmentRowId.From(1L);
         var expirationDate = new LocalDateTime(new DateTime(2026, 12, 31, 23, 59, 59));
-        var membership = DepartmentMembership.Create(membershipRowId, employeeRowId, deptCode, true, expirationDate);
+        var membership = DepartmentMembership.Create(membershipRowId, employeeRowId, deptRowId, IsPrimary.Primary(), EndOn.From(expirationDate));
         var checkDate = new LocalDateTime(new DateTime(2027, 1, 1, 0, 0, 0));
 
         // Act

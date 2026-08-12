@@ -23,6 +23,7 @@
   </Folder>
   <Folder Name="/src/Presentation/">
     <Project Path="src/Presentation/Shared/Shared.csproj" Id="d8f895c2-bee1-42bf-a71e-c35cbe78ff0c" />
+    <Project Path="src/Presentation/WinTrial/WinTrial.csproj" />
     <Project Path="src/Presentation/WpfTrial/WpfTrial.csproj" Id="4af8dc1e-20a5-492f-b7c0-006246a22ce9" />
   </Folder>
   <Folder Name="/tests/">

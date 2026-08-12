@@ -16,12 +16,19 @@ using Models;
 /// </summary>
 public class EmployeeMapper
 {
+    private readonly IClock _clock;
+
+    public EmployeeMapper(IClock clock)
+    {
+        _clock = clock ?? throw new ArgumentNullException(nameof(clock));
+    }
+
     /// <summary>
     /// DbModel から Domain Entity に変換（読み込み用）
     /// </summary>
     /// <param name="dbModel">データベースモデル</param>
     /// <returns>ドメイン Entity</returns>
-    public Employee ToDomainEntity(EmployeeDbModel dbModel)
+    public Employee ToDomainEntity(EmployeeDbModel dbModel, Person person)
     {
         // 従業員種別区分の文字列から Enum に変換
         var typeDivision = dbModel.EmployeeCodeDivision switch
@@ -35,21 +42,21 @@ public class EmployeeMapper
 
         var bizId = EmployeeBizId.From(dbModel.EmployeeCodeNumber);
         var bizCode = EmployeeBizCode.From(typeDivision, bizId);
-        var personRowId = PersonRowId.From(dbModel.PersonRowId);
 
-        RetiredOn? retiredOn = null;
+        RetiredOn retiredOn = RetiredOn.Unset;
         if (dbModel.RetiredOn.HasValue)
         {
             retiredOn = RetiredOn.From(new LocalDateTime(dbModel.RetiredOn.Value));
         }
 
-        return Employee.Create(
+        return Employee.Reconstruct(
             EmployeeRowId.From(dbModel.RowId),
             typeDivision,
             bizId,
             bizCode,
-            personRowId,
-            retiredOn
+            retiredOn,
+            person,
+            new List<DepartmentMembership>()
         );
     }
 
@@ -71,8 +78,8 @@ public class EmployeeMapper
             RowId = entity.RowId.Value,
             EmployeeCodeDivision = divisionCode,
             EmployeeCodeNumber = entity.BizId.Value,
-            PersonRowId = entity.PersonRowId.Value,
-            RetiredOn = entity.RetiredOn?.IsSet == true ? entity.RetiredOn.Value.Value : null
+            PersonRowId = entity.Person.RowId.Value,
+            RetiredOn = entity.RetiredOn.IsSet ? entity.RetiredOn.Value.Value : null
         };
     }
 

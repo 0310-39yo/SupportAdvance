@@ -18,7 +18,11 @@ public static class EmployeeDtoMapper
             TypeDivision = employee.TypeDivision.ToString(),
             BizId = employee.BizId.ToString(),
             BizCode = employee.BizCode.ToString(),
-            PersonRowId = employee.PersonRowId.Value
+            PersonRowId = employee.Person.RowId.Value,
+            PersonLastName = employee.Person.LastName.Value,
+            PersonFirstName = employee.Person.FirstName.Value,
+            PersonLastNameKana = employee.Person.LastNameKana.Value,
+            PersonFirstNameKana = employee.Person.FirstNameKana.Value
         };
     }
 }

@@ -19,4 +19,24 @@ public record CreateEmployeeRequest
     /// 従業員番号（必須、1001-9999）
     /// </summary>
     public required int EmployeeNumber { get; init; }
+
+    /// <summary>
+    /// 姓（必須）
+    /// </summary>
+    public required string PersonLastName { get; init; }
+
+    /// <summary>
+    /// 名（必須）
+    /// </summary>
+    public required string PersonFirstName { get; init; }
+
+    /// <summary>
+    /// 姓（カナ）（必須）
+    /// </summary>
+    public required string PersonLastNameKana { get; init; }
+
+    /// <summary>
+    /// 名（カナ）（必須）
+    /// </summary>
+    public required string PersonFirstNameKana { get; init; }
 }

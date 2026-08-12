@@ -22,11 +22,12 @@ public partial class Form1 : Form
         _viewModel = viewModel;
         _appSettings = settings;
 
+        // Syncfusion SfButton に ViewModel のコマンドをバインド
+        sfButton1.Command = _viewModel.ExecuteSampleUseCaseCommand;
+
         _logger.LogInformation("Form1 initialized.");
         _logger.LogInformation("情報");
         _logger.LogWarning("警告");
         _logger.LogInformation(_appSettings?.ApplicationBuildType ?? "Unknown");
-
-        sfButton1.Command = _viewModel.ExecuteSampleUseCaseCommand;
     }
 }

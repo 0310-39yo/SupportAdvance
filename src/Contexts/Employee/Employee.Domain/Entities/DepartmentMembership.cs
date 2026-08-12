@@ -9,36 +9,39 @@ using SupportAdvance.SharedKernel.Entities;
 ///
 /// 【ID型】DepartmentMembershipRowId（独立した Entity ID）
 /// 【親参照】EmployeeRowId（所属する従業員）
-/// 【責務】従業員の部署所属管理、有効期限チェック
+/// 【責務】配属期間の管理
 /// 【コレクション構造】従業員が複数部署に所属可能
+/// 【独立性】EndOn（配属終了日）は Employee.RetiredOn（雇用終了）と独立
+/// - 配置転換時：前部署の EndOn を更新、Employee.RetiredOn は変わらない
+/// - 退職時：Employee.RetiredOn は設定、各部署の EndOn は別途管理
 /// </summary>
 public sealed class DepartmentMembership : Entity<DepartmentMembershipRowId>
 {
     /// <summary>所属従業員の ID</summary>
     public EmployeeRowId EmployeeRowId { get; private set; }
 
-    /// <summary>部署コード</summary>
-    public DepartmentCode DepartmentCode { get; private set; }
+    /// <summary>所属部署の ID</summary>
+    public DepartmentRowId DepartmentRowId { get; private set; }
 
-    /// <summary>主部署フラグ（true で従業員の主所属）</summary>
-    public bool IsPrimary { get; private set; }
+    /// <summary>主部署フラグ（Primary で従業員の主所属）</summary>
+    public IsPrimary IsPrimary { get; private set; }
 
-    /// <summary>メンバーシップの有効期限（null で無期限）</summary>
-    public LocalDateTime? ExpirationDate { get; private set; }
+    /// <summary>異動終了日（null なら無期限・継続中）</summary>
+    public EndOn EndOn { get; private set; }
 
     /// <summary>プライベートコンストラクタ</summary>
     private DepartmentMembership(
         DepartmentMembershipRowId membershipRowId,
         EmployeeRowId employeeRowId,
-        DepartmentCode departmentCode,
-        bool isPrimary,
-        LocalDateTime? expirationDate = null)
+        DepartmentRowId departmentRowId,
+        IsPrimary isPrimary,
+        EndOn endOn)
     {
         RowId = membershipRowId;
         EmployeeRowId = employeeRowId;
-        DepartmentCode = departmentCode;
+        DepartmentRowId = departmentRowId;
         IsPrimary = isPrimary;
-        ExpirationDate = expirationDate;
+        EndOn = endOn;
     }
 
     /// <summary>
@@ -47,11 +50,11 @@ public sealed class DepartmentMembership : Entity<DepartmentMembershipRowId>
     public static DepartmentMembership Create(
         DepartmentMembershipRowId membershipRowId,
         EmployeeRowId employeeRowId,
-        DepartmentCode departmentCode,
-        bool isPrimary,
-        LocalDateTime? expirationDate = null)
+        DepartmentRowId departmentRowId,
+        IsPrimary isPrimary,
+        EndOn? endOn = null)
     {
-        return new(membershipRowId, employeeRowId, departmentCode, isPrimary, expirationDate);
+        return new(membershipRowId, employeeRowId, departmentRowId, isPrimary, endOn ?? EndOn.Unlimited);
     }
 
     /// <summary>
@@ -60,11 +63,11 @@ public sealed class DepartmentMembership : Entity<DepartmentMembershipRowId>
     public static DepartmentMembership Reconstruct(
         DepartmentMembershipRowId membershipRowId,
         EmployeeRowId employeeRowId,
-        DepartmentCode departmentCode,
-        bool isPrimary,
-        LocalDateTime? expirationDate = null)
+        DepartmentRowId departmentRowId,
+        IsPrimary isPrimary,
+        EndOn endOn)
     {
-        return new(membershipRowId, employeeRowId, departmentCode, isPrimary, expirationDate);
+        return new(membershipRowId, employeeRowId, departmentRowId, isPrimary, endOn);
     }
 
     /// <summary>
@@ -72,17 +75,19 @@ public sealed class DepartmentMembership : Entity<DepartmentMembershipRowId>
     /// </summary>
     public bool IsActive(LocalDateTime asOf)
     {
-        if (ExpirationDate == null)
+        // EndOn が null（無期限）なら常に有効
+        if (!EndOn.HasEnded)
         {
             return true;
         }
 
-        return asOf < ExpirationDate;
+        // asOf が EndOn より前なら有効、以後なら無効
+        return asOf < EndOn.Value;
     }
 
     /// <summary>
     /// 文字列表現を取得する
     /// </summary>
     public override string ToString()
-        => $"DepartmentMembership(RowId={RowId.Value}, Code={DepartmentCode}, Primary={IsPrimary})";
+        => $"DepartmentMembership(RowId={RowId.Value}, DeptRowId={DepartmentRowId}, Primary={IsPrimary})";
 }

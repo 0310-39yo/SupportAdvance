@@ -25,15 +25,15 @@ public class RoleAssignmentTests
         var expirationDate = new LocalDateTime(new DateTime(2026, 12, 31, 23, 59, 59));
 
         // Act
-        var roleAssignment = RoleAssignment.Create(assignmentRowId, employeeRowId, roleCode, effectiveDate, expirationDate);
+        var roleAssignment = RoleAssignment.Create(assignmentRowId, employeeRowId, roleCode, EffectiveAt.From(effectiveDate), ExpirationOn.From(expirationDate));
 
         // Assert
         Assert.NotNull(roleAssignment);
         Assert.Equal(assignmentRowId, roleAssignment.RowId);
         Assert.Equal(employeeRowId, roleAssignment.EmployeeRowId);
         Assert.Equal(roleCode, roleAssignment.RoleCode);
-        Assert.Equal(effectiveDate, roleAssignment.EffectiveDate);
-        Assert.Equal(expirationDate, roleAssignment.ExpirationDate);
+        Assert.Equal(effectiveDate, roleAssignment.EffectiveDate.Value);
+        Assert.Equal(expirationDate, roleAssignment.ExpirationDate.Value);
     }
 
     [Fact]
@@ -46,15 +46,15 @@ public class RoleAssignmentTests
         var effectiveDate = GetTestDate();
 
         // Act
-        var roleAssignment = RoleAssignment.Create(assignmentRowId, employeeRowId, roleCode, effectiveDate);
+        var roleAssignment = RoleAssignment.Create(assignmentRowId, employeeRowId, roleCode, EffectiveAt.From(effectiveDate));
 
         // Assert
         Assert.NotNull(roleAssignment);
         Assert.Equal(assignmentRowId, roleAssignment.RowId);
         Assert.Equal(employeeRowId, roleAssignment.EmployeeRowId);
         Assert.Equal(roleCode, roleAssignment.RoleCode);
-        Assert.Equal(effectiveDate, roleAssignment.EffectiveDate);
-        Assert.Null(roleAssignment.ExpirationDate);
+        Assert.Equal(effectiveDate, roleAssignment.EffectiveDate.Value);
+        Assert.False(roleAssignment.ExpirationDate.HasExpiration);  // Unlimited状態
     }
 
     #endregion
@@ -72,14 +72,14 @@ public class RoleAssignmentTests
         var expirationDate = new LocalDateTime(new DateTime(2026, 12, 31, 23, 59, 59));
 
         // Act
-        var roleAssignment = RoleAssignment.Reconstruct(assignmentRowId, employeeRowId, roleCode, effectiveDate, expirationDate);
+        var roleAssignment = RoleAssignment.Reconstruct(assignmentRowId, employeeRowId, roleCode, EffectiveAt.From(effectiveDate), ExpirationOn.From(expirationDate));
 
         // Assert
         Assert.NotNull(roleAssignment);
         Assert.Equal(assignmentRowId, roleAssignment.RowId);
         Assert.Equal(employeeRowId, roleAssignment.EmployeeRowId);
         Assert.Equal(roleCode, roleAssignment.RoleCode);
-        Assert.Equal(effectiveDate, roleAssignment.EffectiveDate);
+        Assert.Equal(effectiveDate, roleAssignment.EffectiveDate.Value);
     }
 
     #endregion
@@ -94,7 +94,7 @@ public class RoleAssignmentTests
         var employeeRowId = EmployeeRowId.From(1L);
         var roleCode = RoleCode.From("Admin");
         var effectiveDate = GetTestDate();
-        var roleAssignment = RoleAssignment.Create(assignmentRowId, employeeRowId, roleCode, effectiveDate);
+        var roleAssignment = RoleAssignment.Create(assignmentRowId, employeeRowId, roleCode, EffectiveAt.From(effectiveDate));
         var beforeDate = new LocalDateTime(new DateTime(2025, 12, 31, 23, 59, 59));
 
         // Act
@@ -112,7 +112,7 @@ public class RoleAssignmentTests
         var employeeRowId = EmployeeRowId.From(1L);
         var roleCode = RoleCode.From("Admin");
         var effectiveDate = GetTestDate();
-        var roleAssignment = RoleAssignment.Create(assignmentRowId, employeeRowId, roleCode, effectiveDate);
+        var roleAssignment = RoleAssignment.Create(assignmentRowId, employeeRowId, roleCode, EffectiveAt.From(effectiveDate));
 
         // Act
         var isActive = roleAssignment.IsActive(effectiveDate);
@@ -130,7 +130,7 @@ public class RoleAssignmentTests
         var roleCode = RoleCode.From("Admin");
         var effectiveDate = GetTestDate();
         var expirationDate = new LocalDateTime(new DateTime(2026, 12, 31, 23, 59, 59));
-        var roleAssignment = RoleAssignment.Create(assignmentRowId, employeeRowId, roleCode, effectiveDate, expirationDate);
+        var roleAssignment = RoleAssignment.Create(assignmentRowId, employeeRowId, roleCode, EffectiveAt.From(effectiveDate), ExpirationOn.From(expirationDate));
         var afterDate = new LocalDateTime(new DateTime(2027, 1, 1, 0, 0, 0));
 
         // Act

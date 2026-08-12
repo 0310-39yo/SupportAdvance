@@ -4,6 +4,7 @@ using SupportAdvance.Contexts.Employee.Application.Repositories;
 using SupportAdvance.Contexts.Employee.Application.Dtos;
 using SupportAdvance.Contexts.Employee.Domain.Entities;
 using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
+using SupportAdvance.Common.Clocks;
 
 /// <summary>
 /// 新規従業員を作成する Use Case
@@ -11,10 +12,12 @@ using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
 public class CreateEmployeeUseCase
 {
     private readonly IEmployeeRepository _repository;
+    private readonly IClock _clock;
 
-    public CreateEmployeeUseCase(IEmployeeRepository repository)
+    public CreateEmployeeUseCase(IEmployeeRepository repository, IClock clock)
     {
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));
+        _clock = clock ?? throw new ArgumentNullException(nameof(clock));
     }
 
     /// <summary>
@@ -31,22 +34,31 @@ public class CreateEmployeeUseCase
         var bizCode = EmployeeBizCode.From(typeDivision, bizId);
         var personRowId = PersonRowId.From(request.PersonRowId);
 
-        // 【Step 3】RowId 採番（プレースホルダー：実装では ISequenceProvider を使用）
+        // 【Step 3】Person Entity 生成
+        var personLastName = PersonLastName.From(request.PersonLastName);
+        var personFirstName = PersonFirstName.From(request.PersonFirstName);
+        var personLastNameKana = PersonLastNameKana.From(request.PersonLastNameKana);
+        var personFirstNameKana = PersonFirstNameKana.From(request.PersonFirstNameKana);
+        var person = Person.Create(personRowId, personLastName, personFirstName, personLastNameKana, personFirstNameKana);
+
+        // 【Step 4】RowId 採番（プレースホルダー：実装では ISequenceProvider を使用）
         var rowId = EmployeeRowId.From(1);  // TODO: ISequenceProvider で採番
 
-        // 【Step 4】Domain Entity 生成
+        // 【Step 5】Domain Entity 生成
         var employee = Employee.Create(
             rowId,
             typeDivision,
             bizId,
             bizCode,
-            personRowId
+            null,
+            person,
+            new List<DepartmentMembership>()
         );
 
-        // 【Step 5】Repository で永続化
+        // 【Step 6】Repository で永続化
         await _repository.AddAsync(employee);
 
-        // 【Step 6】DTO に変換して返却
+        // 【Step 7】DTO に変換して返却
         return employee.ToDto();
     }
 

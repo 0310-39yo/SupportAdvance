@@ -24,12 +24,12 @@ public sealed class PermissionAssignment : Entity<PermissionAssignmentRowId>
     /// <summary>
     /// 有効開始日時を取得する
     /// </summary>
-    public LocalDateTime EffectiveDate { get; private set; }
+    public EffectiveAt EffectiveDate { get; private set; }
 
     /// <summary>
-    /// 有効終了日時を取得する（null=無期限）
+    /// 有効終了日時を取得する（無期限の場合は Unlimited）
     /// </summary>
-    public LocalDateTime? ExpirationDate { get; private set; }
+    public ExpirationOn ExpirationDate { get; private set; }
 
     /// <summary>
     /// 指定されたプロパティから PermissionAssignment を生成する（プライベートコンストラクタ）
@@ -37,14 +37,14 @@ public sealed class PermissionAssignment : Entity<PermissionAssignmentRowId>
     /// <param name="assignmentRowId">権限割り当て行ID</param>
     /// <param name="employeeRowId">従業員行ID</param>
     /// <param name="permissionCode">権限コード</param>
-    /// <param name="effectiveDate">有効開始日時</param>
-    /// <param name="expirationDate">有効終了日時（null許可）</param>
+    /// <param name="effectiveDate">有効開始日</param>
+    /// <param name="expirationDate">有効終了日</param>
     private PermissionAssignment(
         PermissionAssignmentRowId assignmentRowId,
         EmployeeRowId employeeRowId,
         PermissionCode permissionCode,
-        LocalDateTime effectiveDate,
-        LocalDateTime? expirationDate = null)
+        EffectiveAt effectiveDate,
+        ExpirationOn expirationDate)
     {
         RowId = assignmentRowId;
         EmployeeRowId = employeeRowId;
@@ -60,10 +60,10 @@ public sealed class PermissionAssignment : Entity<PermissionAssignmentRowId>
         PermissionAssignmentRowId assignmentRowId,
         EmployeeRowId employeeRowId,
         PermissionCode permissionCode,
-        LocalDateTime effectiveDate,
-        LocalDateTime? expirationDate = null)
+        EffectiveAt effectiveDate,
+        ExpirationOn? expirationDate = null)
     {
-        return new(assignmentRowId, employeeRowId, permissionCode, effectiveDate, expirationDate);
+        return new(assignmentRowId, employeeRowId, permissionCode, effectiveDate, expirationDate ?? ExpirationOn.Unlimited);
     }
 
     /// <summary>
@@ -73,8 +73,8 @@ public sealed class PermissionAssignment : Entity<PermissionAssignmentRowId>
         PermissionAssignmentRowId assignmentRowId,
         EmployeeRowId employeeRowId,
         PermissionCode permissionCode,
-        LocalDateTime effectiveDate,
-        LocalDateTime? expirationDate = null)
+        EffectiveAt effectiveDate,
+        ExpirationOn expirationDate)
     {
         return new(assignmentRowId, employeeRowId, permissionCode, effectiveDate, expirationDate);
     }
@@ -87,19 +87,19 @@ public sealed class PermissionAssignment : Entity<PermissionAssignmentRowId>
     public bool IsActive(LocalDateTime asOf)
     {
         // EffectiveDate より前なら無効
-        if (asOf < EffectiveDate)
+        if (asOf < EffectiveDate.Value)
         {
             return false;
         }
 
-        // ExpirationDate がない場合は常に有効
-        if (ExpirationDate == null)
+        // ExpirationDate が無期限の場合は常に有効
+        if (!ExpirationDate.HasExpiration)
         {
             return true;
         }
 
         // asOf が ExpirationDate より前なら有効、以後なら無効
-        return asOf < ExpirationDate;
+        return asOf < ExpirationDate.Value;
     }
 
     /// <summary>

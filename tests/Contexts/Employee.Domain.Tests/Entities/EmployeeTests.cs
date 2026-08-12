@@ -12,6 +12,8 @@ public class EmployeeTests
 {
     private static LocalDateTime GetTestDate() => new(new DateTime(2026, 8, 12, 10, 0, 0));
 
+    private readonly IClock _clock = new SystemClock();
+
     private Employee CreateTestEmployee(
         long rowId = 1L,
         int bizId = 1234,
@@ -30,12 +32,22 @@ public class EmployeeTests
         var bizCode = EmployeeBizCode.From(typeDivision, employeeBizId);
         var personRowIdVO = PersonRowId.From(personRowId);
 
+        var person = Person.Create(
+            personRowIdVO,
+            PersonLastName.From("山田"),
+            PersonFirstName.From("太郎"),
+            PersonLastNameKana.From("ヤマダ"),
+            PersonFirstNameKana.From("タロウ"));
+
         return Employee.Create(
             EmployeeRowId.From(rowId),
             typeDivision,
             employeeBizId,
             bizCode,
-            personRowIdVO);
+            null,
+            person,
+            new List<DepartmentMembership>()
+            );
     }
 
     #region グループ 1: 生成メソッド（Create）
@@ -52,7 +64,7 @@ public class EmployeeTests
         Assert.Equal('M', employee.TypeDivision.Value);
         Assert.Equal("01234", employee.BizId.ToString());
         Assert.Equal("M01234", employee.BizCode.ToString());
-        Assert.Equal(1L, employee.PersonRowId.Value);
+        Assert.Equal(1L, employee.Person.RowId.Value);
     }
 
     [Fact]
@@ -104,6 +116,12 @@ public class EmployeeTests
         var bizId = EmployeeBizId.From(1234);
         var bizCode = EmployeeBizCode.From(typeDivision, bizId);
         var personRowId = PersonRowId.From(67890L);
+        var person = Person.Create(
+            personRowId,
+            PersonLastName.From("山田"),
+            PersonFirstName.From("太郎"),
+            PersonLastNameKana.From("ヤマダ"),
+            PersonFirstNameKana.From("タロウ"));
         var retiredOn = RetiredOn.From(GetTestDate());
 
         // Act
@@ -112,8 +130,10 @@ public class EmployeeTests
             typeDivision,
             bizId,
             bizCode,
-            personRowId,
-            retiredOn);
+            retiredOn,
+            person,
+            new List<DepartmentMembership>()
+            );
 
         // Assert
         Assert.NotNull(employee);
@@ -167,16 +187,18 @@ public class EmployeeTests
     }
 
     [Fact]
-    public void TestEMPPROP04_PersonRowIdPropertyReturnsPersonRowId()
+    public void TestEMPPROP04_PersonInfoPropertyReturnsPerson()
     {
         // Arrange
         var employee = CreateTestEmployee(personRowId: 67890L);
 
         // Act
-        var resultPersonRowId = employee.PersonRowId;
+        var resultPersonInfo = employee.Person;
 
         // Assert
-        Assert.Equal(67890L, resultPersonRowId.Value);
+        Assert.NotNull(resultPersonInfo);
+        Assert.Equal(67890L, resultPersonInfo.RowId.Value);
+        Assert.Equal("山田", resultPersonInfo.LastName.Value);
     }
 
     #endregion
@@ -240,14 +262,23 @@ public class EmployeeTests
         // Arrange
         var now = GetTestDate();
         var retiredOn = RetiredOn.From(now);
+        var personRowId = PersonRowId.From(1L);
+        var person = Person.Create(
+            personRowId,
+            PersonLastName.From("山田"),
+            PersonFirstName.From("太郎"),
+            PersonLastNameKana.From("ヤマダ"),
+            PersonFirstNameKana.From("タロウ"));
 
         var retiredEmployee = Employee.Create(
             EmployeeRowId.From(1L),
             EmployeeTypeDivision.RegularEmployee(),
             EmployeeBizId.From(1234),
             EmployeeBizCode.From(EmployeeTypeDivision.RegularEmployee(), EmployeeBizId.From(1234)),
-            PersonRowId.From(1L),
-            retiredOn);
+            retiredOn,
+            person,
+            new List<DepartmentMembership>()
+            );
 
         // Act
         var isActive = retiredEmployee.IsActive(now);

@@ -45,7 +45,11 @@ public class EmployeeRepository : IEmployeeRepository
                 if (!_employees.TryGetValue(id.Value, out var dbModel))
                     return null;
 
-                return dbModel.DeletedAt == null ? _mapper.ToDomainEntity(dbModel) : null;
+                if (dbModel.DeletedAt != null)
+                    return null;
+
+                var person = CreatePersonFromDbModel(dbModel);
+                return _mapper.ToDomainEntity(dbModel, person);
             }
         });
     }
@@ -62,7 +66,11 @@ public class EmployeeRepository : IEmployeeRepository
                 var dbModel = _employees.Values.FirstOrDefault(e =>
                     e.RowId == rowId.Value && e.DeletedAt == null);
 
-                return dbModel != null ? _mapper.ToDomainEntity(dbModel) : null;
+                if (dbModel == null)
+                    return null;
+
+                var person = CreatePersonFromDbModel(dbModel);
+                return _mapper.ToDomainEntity(dbModel, person);
             }
         });
     }
@@ -78,7 +86,11 @@ public class EmployeeRepository : IEmployeeRepository
             {
                 var results = _employees.Values
                     .Where(e => e.PersonRowId == personRowId.Value && e.DeletedAt == null)
-                    .Select(dbModel => _mapper.ToDomainEntity(dbModel))
+                    .Select(dbModel =>
+                    {
+                        var person = CreatePersonFromDbModel(dbModel);
+                        return _mapper.ToDomainEntity(dbModel, person);
+                    })
                     .ToList();
 
                 return (IReadOnlyList<Employee>)results;
@@ -146,6 +158,20 @@ public class EmployeeRepository : IEmployeeRepository
                 _employees[employee.RowId.Value] = updatedDbModel;
             }
         });
+    }
+
+    /// <summary>
+    /// DbModel から Person Entity を生成するヘルパーメソッド
+    /// 【注】テスト用の簡易実装。実装では PersonRepository から取得すべき
+    /// </summary>
+    private Person CreatePersonFromDbModel(EmployeeDbModel dbModel)
+    {
+        return Person.Create(
+            PersonRowId.From(dbModel.PersonRowId),
+            PersonLastName.From("山田"),  // プレースホルダー
+            PersonFirstName.From("太郎"),  // プレースホルダー
+            PersonLastNameKana.From("ヤマダ"),  // プレースホルダー
+            PersonFirstNameKana.From("タロウ"));  // プレースホルダー
     }
 
     /// <summary>

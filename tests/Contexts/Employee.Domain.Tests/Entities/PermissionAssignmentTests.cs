@@ -25,15 +25,15 @@ public class PermissionAssignmentTests
         var expirationDate = new LocalDateTime(new DateTime(2026, 12, 31, 23, 59, 59));
 
         // Act
-        var permissionAssignment = PermissionAssignment.Create(assignmentRowId, employeeRowId, permissionCode, effectiveDate, expirationDate);
+        var permissionAssignment = PermissionAssignment.Create(assignmentRowId, employeeRowId, permissionCode, EffectiveAt.From(effectiveDate), ExpirationOn.From(expirationDate));
 
         // Assert
         Assert.NotNull(permissionAssignment);
         Assert.Equal(assignmentRowId, permissionAssignment.RowId);
         Assert.Equal(employeeRowId, permissionAssignment.EmployeeRowId);
         Assert.Equal(permissionCode, permissionAssignment.PermissionCode);
-        Assert.Equal(effectiveDate, permissionAssignment.EffectiveDate);
-        Assert.Equal(expirationDate, permissionAssignment.ExpirationDate);
+        Assert.Equal(effectiveDate, permissionAssignment.EffectiveDate.Value);
+        Assert.Equal(expirationDate, permissionAssignment.ExpirationDate.Value);
     }
 
     [Fact]
@@ -46,15 +46,15 @@ public class PermissionAssignmentTests
         var effectiveDate = GetTestDate();
 
         // Act
-        var permissionAssignment = PermissionAssignment.Create(assignmentRowId, employeeRowId, permissionCode, effectiveDate);
+        var permissionAssignment = PermissionAssignment.Create(assignmentRowId, employeeRowId, permissionCode, EffectiveAt.From(effectiveDate));
 
         // Assert
         Assert.NotNull(permissionAssignment);
         Assert.Equal(assignmentRowId, permissionAssignment.RowId);
         Assert.Equal(employeeRowId, permissionAssignment.EmployeeRowId);
         Assert.Equal(permissionCode, permissionAssignment.PermissionCode);
-        Assert.Equal(effectiveDate, permissionAssignment.EffectiveDate);
-        Assert.Null(permissionAssignment.ExpirationDate);
+        Assert.Equal(effectiveDate, permissionAssignment.EffectiveDate.Value);
+        Assert.False(permissionAssignment.ExpirationDate.HasExpiration);  // Unlimited状態
     }
 
     #endregion
@@ -72,14 +72,14 @@ public class PermissionAssignmentTests
         var expirationDate = new LocalDateTime(new DateTime(2026, 12, 31, 23, 59, 59));
 
         // Act
-        var permissionAssignment = PermissionAssignment.Reconstruct(assignmentRowId, employeeRowId, permissionCode, effectiveDate, expirationDate);
+        var permissionAssignment = PermissionAssignment.Reconstruct(assignmentRowId, employeeRowId, permissionCode, EffectiveAt.From(effectiveDate), ExpirationOn.From(expirationDate));
 
         // Assert
         Assert.NotNull(permissionAssignment);
         Assert.Equal(assignmentRowId, permissionAssignment.RowId);
         Assert.Equal(employeeRowId, permissionAssignment.EmployeeRowId);
         Assert.Equal(permissionCode, permissionAssignment.PermissionCode);
-        Assert.Equal(effectiveDate, permissionAssignment.EffectiveDate);
+        Assert.Equal(effectiveDate, permissionAssignment.EffectiveDate.Value);
     }
 
     #endregion
@@ -94,7 +94,7 @@ public class PermissionAssignmentTests
         var employeeRowId = EmployeeRowId.From(1L);
         var permissionCode = PermissionCode.From("Read");
         var effectiveDate = GetTestDate();
-        var permissionAssignment = PermissionAssignment.Create(assignmentRowId, employeeRowId, permissionCode, effectiveDate);
+        var permissionAssignment = PermissionAssignment.Create(assignmentRowId, employeeRowId, permissionCode, EffectiveAt.From(effectiveDate));
         var beforeDate = new LocalDateTime(new DateTime(2025, 12, 31, 23, 59, 59));
 
         // Act
@@ -112,7 +112,7 @@ public class PermissionAssignmentTests
         var employeeRowId = EmployeeRowId.From(1L);
         var permissionCode = PermissionCode.From("Read");
         var effectiveDate = GetTestDate();
-        var permissionAssignment = PermissionAssignment.Create(assignmentRowId, employeeRowId, permissionCode, effectiveDate);
+        var permissionAssignment = PermissionAssignment.Create(assignmentRowId, employeeRowId, permissionCode, EffectiveAt.From(effectiveDate));
 
         // Act
         var isActive = permissionAssignment.IsActive(effectiveDate);
@@ -130,7 +130,7 @@ public class PermissionAssignmentTests
         var permissionCode = PermissionCode.From("Read");
         var effectiveDate = GetTestDate();
         var expirationDate = new LocalDateTime(new DateTime(2026, 12, 31, 23, 59, 59));
-        var permissionAssignment = PermissionAssignment.Create(assignmentRowId, employeeRowId, permissionCode, effectiveDate, expirationDate);
+        var permissionAssignment = PermissionAssignment.Create(assignmentRowId, employeeRowId, permissionCode, EffectiveAt.From(effectiveDate), ExpirationOn.From(expirationDate));
         var afterDate = new LocalDateTime(new DateTime(2027, 1, 1, 0, 0, 0));
 
         // Act
