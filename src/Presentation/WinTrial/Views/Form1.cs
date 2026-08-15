@@ -6,9 +6,9 @@ namespace SupportAdvance.Presentation.WinTrial.Views;
 
 public partial class Form1 : Form
 {
-    private readonly IAppSettings _appSettings;
-    private readonly IAppLogging<Form1> _logger;
-    private readonly Form1ViewModel _viewModel;
+    private readonly IAppSettings _appSettings = null!;
+    private readonly IAppLogging<Form1> _logger = null!;
+    private readonly Form1ViewModel _viewModel = null!;
 
     public Form1(Form1ViewModel viewModel, IAppLogging<Form1> logger, IAppSettings settings)
     {
@@ -22,8 +22,20 @@ public partial class Form1 : Form
         _viewModel = viewModel;
         _appSettings = settings;
 
-        // Syncfusion SfButton に ViewModel のコマンドをバインド
+        // ViewModel を DataContext に設定
+        this.DataContext = _viewModel;
+
+        // Data Binding: textBoxExt1 ← BizIdSearchInput
+        textBoxExt1.DataBindings.Add("Text", _viewModel, nameof(Form1ViewModel.BizIdSearchInput), true, DataSourceUpdateMode.OnPropertyChanged);
+
+        // Data Binding: label1 ← EmployeeFullName
+        label1.DataBindings.Add("Text", _viewModel, nameof(Form1ViewModel.EmployeeFullName));
+
+        // Command Binding: sfButton1 ← ExecuteSampleUseCaseCommand
         sfButton1.Command = _viewModel.ExecuteSampleUseCaseCommand;
+
+        // Command Binding: sfButton2 ← SearchEmployeeByBizIdCommand
+        sfButton2.Command = _viewModel.SearchEmployeeByBizIdCommand;
 
         _logger.LogInformation("Form1 initialized.");
         _logger.LogInformation("情報");

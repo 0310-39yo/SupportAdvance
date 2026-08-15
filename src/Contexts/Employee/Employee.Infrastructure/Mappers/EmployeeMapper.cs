@@ -3,6 +3,7 @@ namespace SupportAdvance.Contexts.Employee.Infrastructure.Mappers;
 using Domain.Entities;
 using SupportAdvance.Common.Clocks;
 using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
+using SupportAdvance.SharedKernel.ValueObjects;
 using Models;
 
 /// <summary>
@@ -25,22 +26,21 @@ public class EmployeeMapper
 
     /// <summary>
     /// DbModel から Domain Entity に変換（読み込み用）
+    /// 【責務】DB の プリミティブ型 → Domain の ValueObject に変換
     /// </summary>
-    /// <param name="dbModel">データベースモデル</param>
-    /// <returns>ドメイン Entity</returns>
     public Employee ToDomainEntity(EmployeeDbModel dbModel, Person person)
     {
         // 従業員種別区分の文字列から Enum に変換
-        var typeDivision = dbModel.EmployeeCodeDivision switch
+        var typeDivision = dbModel.EmployeeDivision switch
         {
             "M" => EmployeeTypeDivision.RegularEmployee(),
-            "T" => EmployeeTypeDivision.Dispatched(),
+            "D" => EmployeeTypeDivision.Dispatched(),
             "C" => EmployeeTypeDivision.Contractor(),
             _ => throw new InvalidOperationException(
-                $"Invalid employee division: {dbModel.EmployeeCodeDivision}")
+                $"Invalid employee division: {dbModel.EmployeeDivision}")
         };
 
-        var bizId = EmployeeBizId.From(dbModel.EmployeeCodeNumber);
+        var bizId = EmployeeBizId.From(dbModel.BizId);
         var bizCode = EmployeeBizCode.From(typeDivision, bizId);
 
         RetiredOn retiredOn = RetiredOn.Unset;
@@ -62,13 +62,9 @@ public class EmployeeMapper
 
     /// <summary>
     /// Domain Entity から DbModel に変換（Insert/Update 用）
+    /// 【責務】Domain の ValueObject → DB の プリミティブ型に変換
+    /// 【注意】このメソッドは未実装（Insert/Update が実装される際に使用予定）
     /// </summary>
-    /// <param name="entity">ドメイン Entity</param>
-    /// <returns>DB 挿入/更新用モデル</returns>
-    /// <remarks>
-    /// 監査カラム（CreatedAt, CreatedBy, UpdatedAt, UpdatedBy, DeletedAt, DeletedBy）は
-    /// Repository で設定するため、ここでは設定しない
-    /// </remarks>
     public EmployeeDbModel ToDbModel(Employee entity)
     {
         var divisionCode = ConvertDivisionToCode(entity.TypeDivision);
@@ -76,9 +72,8 @@ public class EmployeeMapper
         return new EmployeeDbModel
         {
             RowId = entity.RowId.Value,
-            EmployeeCodeDivision = divisionCode,
-            EmployeeCodeNumber = entity.BizId.Value,
-            PersonRowId = entity.Person.RowId.Value,
+            EmployeeDivision = divisionCode,
+            BizId = entity.BizId.Value,
             RetiredOn = entity.RetiredOn.IsSet ? entity.RetiredOn.Value.Value : null
         };
     }
@@ -86,19 +81,13 @@ public class EmployeeMapper
     private string ConvertDivisionToCode(EmployeeTypeDivision typeDivision)
     {
         if (typeDivision.IsRegularEmployee)
-        {
             return "M";
-        }
 
         if (typeDivision.IsDispatched)
-        {
-            return "T";
-        }
+            return "D";
 
         if (typeDivision.IsContractor)
-        {
             return "C";
-        }
 
         throw new InvalidOperationException($"Invalid division: {typeDivision}");
     }

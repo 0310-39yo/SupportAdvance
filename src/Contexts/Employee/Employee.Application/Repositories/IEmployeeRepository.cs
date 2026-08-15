@@ -27,6 +27,13 @@ public interface IEmployeeRepository
     Task<Employee?> GetByRowIdAsync(EmployeeRowId rowId);
 
     /// <summary>
+    /// BizId（従業員番号）で Employee を検索する
+    /// </summary>
+    /// <param name="bizId">ビジネスID（従業員番号、1001以上）</param>
+    /// <returns>見つかった Employee インスタンス、または null</returns>
+    Task<Employee?> GetByBizIdAsync(int bizId);
+
+    /// <summary>
     /// 人事マスタ行ID で Employee を検索する（複数結果想定）
     /// </summary>
     /// <param name="personRowId">m_persons.row_id</param>

@@ -32,6 +32,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Contexts\Employee\Employee.Application\Employee.Application.csproj" />
+    <ProjectReference Include="..\..\Contexts\Employee\Employee.Infrastructure\Employee.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Infrastructure\Infrastructure.csproj" />
     <ProjectReference Include="..\Shared\Shared.csproj" />
   </ItemGroup>

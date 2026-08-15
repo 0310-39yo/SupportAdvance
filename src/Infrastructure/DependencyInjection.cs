@@ -5,6 +5,7 @@ using SupportAdvance.Common.Clocks;
 using SupportAdvance.Common.Configuration;
 using SupportAdvance.Infrastructure.ORM.Dapper;
 using SupportAdvance.Infrastructure.ORM.RepoDB;
+using SupportAdvance.Infrastructure.Persistence;
 using SupportAdvance.Infrastructure.Providers;
 
 namespace SupportAdvance.Infrastructure;
@@ -53,6 +54,12 @@ public static class DependencyInjection
             var databaseSettings = provider.GetRequiredService<IDatabaseSettings>();
             return new SequenceProvider(databaseSettings);
         });
+
+        // ステップ6.5: IDbConnectionFactory を登録（Dapper 用 DB 接続ファクトリー）
+        services.AddScoped<IDbConnectionFactory, DbConnectionFactory>();
+
+        // ステップ7: 各 Context の Infrastructure は Program.cs で直接登録
+        // (循環参照を避けるため、汎用 Infrastructure は Context別層の参照を持たない)
 
         return services;
     }

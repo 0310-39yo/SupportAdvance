@@ -1,11 +1,13 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace SupportAdvance.Contexts.Employee.Infrastructure.Models;
 
 /// <summary>
 /// Employee テーブルマッピングモデル
 ///
-/// 【テーブル】t_employees
+/// 【テーブル】m_employees
 /// 【責務】DB スキーマとの ORM マッピング、プリミティブ型で保持
-/// 【特徴】DateTime プリミティブ型（LocalDateTime は Application/Domain層で使用）
+/// 【特徴】ビジネスカラムのみ（監査カラムは Repository で自動管理、属性テーブルは別途）
 /// </summary>
 public class EmployeeDbModel
 {
@@ -13,100 +15,65 @@ public class EmployeeDbModel
     /// データベース行ID（主キー、Sequence自動採番）
     /// 【対応カラム】row_id
     /// </summary>
+    [Column("row_id")]
     public long RowId { get; set; }
 
-
     /// <summary>
-    /// 従業員コード区分（M/T/C のいずれか）
-    /// 【対応カラム】employee_code_division
-    /// 【値】M=正社員, T=派遣, C=契約
+    /// 従業員区分（M/D/C のいずれか）
+    /// 【対応カラム】employee_division
+    /// 【値】M=正社員, D=派遣, C=契約
     /// </summary>
-    public string EmployeeCodeDivision { get; set; } = string.Empty;
+    [Column("employee_division")]
+    public string EmployeeDivision { get; set; } = string.Empty;
 
     /// <summary>
-    /// 従業員コード番号（1001-9999 の範囲）
-    /// 【対応カラム】employee_code_number
+    /// ビジネスID（従業員番号、1001以上）
+    /// 【対応カラム】biz_id
+    /// 【特徴】区分ごとに有効範囲が異なる
     /// </summary>
-    public int EmployeeCodeNumber { get; set; }
+    [Column("biz_id")]
+    public int BizId { get; set; }
 
     /// <summary>
-    /// 人事マスタ行ID（m_persons.row_id への外部参照）
-    /// 【対応カラム】person_row_id
-    /// 【制約】NOT NULL, FK → m_persons
-    /// </summary>
-    public long PersonRowId { get; set; }
-
-    /// <summary>
-    /// 作成日時（JST、DateTime プリミティブ型）
-    /// 【対応カラム】created_at
-    /// 【制約】NOT NULL
-    /// </summary>
-    public DateTime CreatedAt { get; set; }
-
-    /// <summary>
-    /// 作成者従業員行ID（m_persons.row_id への外部参照）
-    /// 【対応カラム】created_by
-    /// 【制約】NOT NULL, FK → m_persons
-    /// </summary>
-    public long CreatedBy { get; set; }
-
-    /// <summary>
-    /// 更新日時（JST、DateTime プリミティブ型）
-    /// 【対応カラム】updated_at
-    /// 【制約】NULL許可（未更新）
-    /// </summary>
-    public DateTime? UpdatedAt { get; set; }
-
-    /// <summary>
-    /// 更新者従業員行ID（m_persons.row_id への外部参照）
-    /// 【対応カラム】updated_by
-    /// 【制約】NULL許可、FK → m_persons
-    /// </summary>
-    public long? UpdatedBy { get; set; }
-
-    /// <summary>
-    /// 削除日時（論理削除フラグ、DateTime プリミティブ型）
-    /// 【対応カラム】deleted_at
-    /// 【制約】NULL許可（IS NULL で有効行フィルタ）
-    /// </summary>
-    public DateTime? DeletedAt { get; set; }
-
-    /// <summary>
-    /// 削除者従業員行ID（m_persons.row_id への外部参照）
-    /// 【対応カラム】deleted_by
-    /// 【制約】NULL許可、FK → m_persons
-    /// </summary>
-    public long? DeletedBy { get; set; }
-
-    /// <summary>
-    /// 退職日（論理削除ではなく、在職状況を示す）
+    /// 退職日（在職状況を示す）
     /// 【対応カラム】retired_on
     /// 【制約】NULL許可（現職時は NULL）
     /// </summary>
+    [Column("retired_on")]
     public DateTime? RetiredOn { get; set; }
 
     /// <summary>
-    /// 楽観ロック用タイムスタンプ
-    /// 【対応カラム】row_version
-    /// 【制約】NOT NULL, ROWVERSION
+    /// 人物RowId（m_persons の row_id）
+    /// 【対応カラム】person_row_id（JOINで取得）
     /// </summary>
-    public byte[]? RowVersion { get; set; }
+    [Column("person_row_id")]
+    public long PersonRowId { get; set; }
 
     /// <summary>
-    /// 子エンティティ: 部署メンバーシップ
-    /// 【リレーション】1:N（Employee:DepartmentMembership）
+    /// 姓（m_persons から JOIN で取得）
+    /// 【対応カラム】last_name
     /// </summary>
-    public List<DepartmentMembershipDbModel> DepartmentMemberships { get; set; } = new();
+    [Column("last_name")]
+    public string LastName { get; set; } = string.Empty;
 
     /// <summary>
-    /// 子エンティティ: ロール割り当て
-    /// 【リレーション】1:N（Employee:RoleAssignment）
+    /// 名（m_persons から JOIN で取得）
+    /// 【対応カラム】first_name
     /// </summary>
-    public List<RoleAssignmentDbModel> RoleAssignments { get; set; } = new();
+    [Column("first_name")]
+    public string FirstName { get; set; } = string.Empty;
 
     /// <summary>
-    /// 子エンティティ: 権限割り当て
-    /// 【リレーション】1:N（Employee:PermissionAssignment）
+    /// 姓（カナ）（m_persons から JOIN で取得）
+    /// 【対応カラム】last_name_kana
     /// </summary>
-    public List<PermissionAssignmentDbModel> PermissionAssignments { get; set; } = new();
+    [Column("last_name_kana")]
+    public string LastNameKana { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 名（カナ）（m_persons から JOIN で取得）
+    /// 【対応カラム】first_name_kana
+    /// </summary>
+    [Column("first_name_kana")]
+    public string FirstNameKana { get; set; } = string.Empty;
 }

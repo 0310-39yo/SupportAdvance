@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Persistence/Sql/**/*.sql" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Folder Include="Data\Connections\" />
     <Folder Include="Data\Repositories\" />
     <Folder Include="Data\Migrations\" />

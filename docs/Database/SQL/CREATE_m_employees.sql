@@ -1,7 +1,7 @@
 USE [SupportAdvance]
 GO
 
-/****** Object:  Table [dbo].[m_employees]    Script Date: 2026/08/09 9:07:43 ******/
+/****** Object:  Table [dbo].[m_employees]    Script Date: 2026/08/16 2:04:30 ******/
 SET ANSI_NULLS ON
 GO
 
@@ -17,10 +17,9 @@ CREATE TABLE [dbo].[m_employees](
 	[updated_by] [bigint] NULL,
 	[deleted_at] [datetime2](7) NULL,
 	[deleted_by] [bigint] NULL,
-	[person_row_id] [bigint] NOT NULL,
 	[employee_division] [char](1) NOT NULL,
-	[employee_number] [int] NOT NULL,
-	[retire_on] [datetime2](7) NULL,
+	[biz_id] [int] NOT NULL,
+	[retired_on] [datetime2](7) NULL,
  CONSTRAINT [PK__m_employ__6965AB57F60720BD] PRIMARY KEY CLUSTERED 
 (
 	[row_id] ASC
@@ -28,7 +27,7 @@ CREATE TABLE [dbo].[m_employees](
 ) ON [PRIMARY]
 GO
 
-ALTER TABLE [dbo].[m_employees] ADD  CONSTRAINT [DF__m_employe__row_i__3B75D760]  DEFAULT (NEXT VALUE FOR [dbo].[s_row_id_sequence]) FOR [row_id]
+ALTER TABLE [dbo].[m_employees] ADD  CONSTRAINT [DF_m_employees_row_id]  DEFAULT (NEXT VALUE FOR [dbo].[s_row_id_sequence]) FOR [row_id]
 GO
 
 ALTER TABLE [dbo].[m_employees] ADD  CONSTRAINT [DF_m_employees_created_at]  DEFAULT (sysdatetime()) FOR [created_at]
@@ -37,15 +36,13 @@ GO
 ALTER TABLE [dbo].[m_employees] ADD  CONSTRAINT [DF_m_employees_created_by]  DEFAULT ((2147483659.)) FOR [created_by]
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'人名RowId' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'm_employees', @level2type=N'COLUMN',@level2name=N'person_row_id'
-GO
-
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'従業員区分' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'm_employees', @level2type=N'COLUMN',@level2name=N'employee_division'
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'従業員No' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'm_employees', @level2type=N'COLUMN',@level2name=N'employee_number'
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'従業員No' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'm_employees', @level2type=N'COLUMN',@level2name=N'biz_id'
 GO
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'離職日' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'm_employees', @level2type=N'COLUMN',@level2name=N'retire_on'
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'離職日' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'm_employees', @level2type=N'COLUMN',@level2name=N'retired_on'
 GO
+
 

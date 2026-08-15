@@ -1,7 +1,7 @@
 USE [SupportAdvance]
 GO
 
-/****** Object:  Table [dbo].[m_login_credentials]    Script Date: 2026/08/09 9:05:49 ******/
+/****** Object:  Table [dbo].[m_login_credentials]    Script Date: 2026/08/16 2:15:46 ******/
 SET ANSI_NULLS ON
 GO
 
@@ -29,7 +29,7 @@ PRIMARY KEY CLUSTERED
 ) ON [PRIMARY]
 GO
 
-ALTER TABLE [dbo].[m_login_credentials] ADD  DEFAULT (NEXT VALUE FOR [dbo].[s_row_id_sequence]) FOR [row_id]
+ALTER TABLE [dbo].[m_login_credentials] ADD  CONSTRAINT [DF_m_login_credentials_row_id]  DEFAULT (NEXT VALUE FOR [dbo].[s_row_id_sequence]) FOR [row_id]
 GO
 
 ALTER TABLE [dbo].[m_login_credentials] ADD  CONSTRAINT [DF_m_login_credentials_created_at]  DEFAULT (sysdatetime()) FOR [created_at]
@@ -49,4 +49,5 @@ GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'使用可否1の時使用可' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'm_login_credentials', @level2type=N'COLUMN',@level2name=N'is_active'
 GO
+
 

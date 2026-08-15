@@ -52,7 +52,7 @@ namespace SupportAdvance.Presentation.WinTrial.Views
             sfButton2.Name = "sfButton2";
             sfButton2.Size = new Size(96, 28);
             sfButton2.TabIndex = 2;
-            sfButton2.Text = "テストボタン";
+            sfButton2.Text = "検索";
             // 
             // textBoxExt1
             // 
