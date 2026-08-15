@@ -59,12 +59,9 @@ public class UpdateEmployeeUseCase
 
     private BizDivision ConvertToDivision(string code)
     {
-        return code switch
-        {
-            "M" => BizDivision.RegularEmployee(),
-            "T" => BizDivision.Dispatched(),
-            "C" => BizDivision.Contractor(),
-            _ => throw new ArgumentException($"Invalid division code: {code}")
-        };
+        if (BizDivision.TryFromString(code, out var division))
+            return division;
+
+        throw new ArgumentException($"Invalid division code: {code}", nameof(code));
     }
 }

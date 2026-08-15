@@ -1,9 +1,7 @@
 using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Person;
+using SupportAdvance.SharedKernel.Entities;
 
 namespace SupportAdvance.Contexts.Employee.Domain.Entities;
-
-using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
-using SupportAdvance.SharedKernel.Entities;
 
 /// <summary>
 /// 個人情報エンティティ（従業員の個人基本情報）
@@ -59,10 +57,8 @@ public sealed class Person : Entity<PersonRowId>
         LastName lastName,
         FirstName firstName,
         LastNameKana lastNameKana,
-        FirstNameKana firstNameKana)
-    {
-        return new(personRowId, lastName, firstName, lastNameKana, firstNameKana);
-    }
+        FirstNameKana firstNameKana) =>
+        new(personRowId, lastName, firstName, lastNameKana, firstNameKana);
 
     /// <summary>
     /// DB から読み込んだ値から Person を復元する（ファクトリメソッド）
@@ -72,10 +68,8 @@ public sealed class Person : Entity<PersonRowId>
         LastName lastName,
         FirstName firstName,
         LastNameKana lastNameKana,
-        FirstNameKana firstNameKana)
-    {
-        return new(personRowId, lastName, firstName, lastNameKana, firstNameKana);
-    }
+        FirstNameKana firstNameKana) =>
+        new(personRowId, lastName, firstName, lastNameKana, firstNameKana);
 
     /// <summary>
     /// 氏名の完全な表記を取得する（姓 名）

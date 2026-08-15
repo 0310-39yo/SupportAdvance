@@ -1,6 +1,6 @@
 SELECT
     e.[row_id],
-    e.[employee_division],
+    e.[biz_division],
     e.[biz_id],
     e.[retired_on],
     p.[row_id] AS PersonRowId,

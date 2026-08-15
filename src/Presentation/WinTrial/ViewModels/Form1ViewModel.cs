@@ -20,6 +20,9 @@ public partial class Form1ViewModel : ObservableObject
     [ObservableProperty]
     private string employeeFullName = string.Empty;
 
+    [ObservableProperty]
+    private string departmentNames = string.Empty;
+
     public Form1ViewModel(IAppLogging<Form1ViewModel> logger,
         IAppSettings appSettings,
         IClock clock,
@@ -70,11 +73,13 @@ public partial class Form1ViewModel : ObservableObject
             }
 
             EmployeeFullName = $"{employee.PersonLastName} {employee.PersonFirstName}";
-            _logger.LogInformation($"Employee found: {EmployeeFullName}");
+            DepartmentNames = employee.DepartmentNames;
+            _logger.LogInformation($"Employee found: {EmployeeFullName}, Departments: {DepartmentNames}");
         }
         catch (Exception ex)
         {
             EmployeeFullName = "エラーが発生しました";
+            DepartmentNames = string.Empty;
             _logger.LogError("SearchEmployeeByBizId execution failed", ex);
         }
     }

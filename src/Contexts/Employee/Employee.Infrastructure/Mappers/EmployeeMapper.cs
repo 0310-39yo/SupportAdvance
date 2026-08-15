@@ -1,7 +1,9 @@
 namespace SupportAdvance.Contexts.Employee.Infrastructure.Mappers;
 
-using Domain.Entities;
 using SupportAdvance.Common.Clocks;
+using SupportAdvance.Contexts.Employee.Domain.Entities;
+using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Department;
+using SupportAdvance.Contexts.Employee.Domain.ValueObjects.DepartmentMembership;
 using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
 using SupportAdvance.SharedKernel.ValueObjects;
 using Models;
@@ -28,17 +30,10 @@ public class EmployeeMapper
     /// DbModel から Domain Entity に変換（読み込み用）
     /// 【責務】DB の プリミティブ型 → Domain の ValueObject に変換
     /// </summary>
-    public Employee ToDomainEntity(EmployeeDbModel dbModel, Person person)
+    public Employee ToDomainEntity(EmployeeDbModel dbModel, Person person, List<DepartmentMembershipDbModel> departmentMemberships = null)
     {
-        // ビジネス区分の文字列から Enum に変換
-        var typeDivision = dbModel.BizDivision switch
-        {
-            "M" => BizDivision.RegularEmployee(),
-            "D" => BizDivision.Dispatched(),
-            "C" => BizDivision.Contractor(),
-            _ => throw new InvalidOperationException(
-                $"Invalid biz division: {dbModel.BizDivision}")
-        };
+        // DB値から ValueObject に変換（責務を ValueObject に委譲）
+        var typeDivision = BizDivision.FromDbValue(dbModel.BizDivision);
 
         var bizId = BizId.From(dbModel.BizId);
         var bizCode = BizCode.From(typeDivision, bizId);
@@ -49,6 +44,27 @@ public class EmployeeMapper
             retiredOn = RetiredOn.From(new LocalDateTime(dbModel.RetiredOn.Value));
         }
 
+        // DepartmentMembership を Entity に変換
+        var memberships = new List<DepartmentMembership>();
+        if (departmentMemberships != null)
+        {
+            foreach (var dm in departmentMemberships)
+            {
+                var isPrimary = dm.IsPrimary ? IsPrimary.Primary() : IsPrimary.Secondary();
+                var endOn = dm.EndOn.HasValue ? EndOn.From(new LocalDateTime(dm.EndOn.Value)) : EndOn.Unset();
+
+                var membership = DepartmentMembership.Create(
+                    DepartmentMembershipRowId.From(dm.RowId),
+                    EmployeeRowId.From(dm.EmployeeRowId),
+                    DepartmentRowId.From(dm.DepartmentRowId),
+                    isPrimary,
+                    endOn,
+                    dm.DepartmentName
+                );
+                memberships.Add(membership);
+            }
+        }
+
         return Employee.Reconstruct(
             EmployeeRowId.From(dbModel.RowId),
             typeDivision,
@@ -56,7 +72,7 @@ public class EmployeeMapper
             bizCode,
             retiredOn,
             person,
-            new List<DepartmentMembership>()
+            memberships
         );
     }
 

@@ -83,7 +83,7 @@ public class DepartmentMembershipTests
         var deptRowId = DepartmentRowId.From(1L);
 
         // Act
-        var membership = DepartmentMembership.Reconstruct(membershipRowId, employeeRowId, deptRowId, IsPrimary.Primary(), EndOn.Unlimited);
+        var membership = DepartmentMembership.Reconstruct(membershipRowId, employeeRowId, deptRowId, IsPrimary.Primary(), EndOn.Unset());
 
         // Assert
         Assert.NotNull(membership);

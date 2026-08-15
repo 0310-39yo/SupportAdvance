@@ -17,8 +17,8 @@ public sealed class EndOn : ValueObject, IEquatable<EndOn>
     /// <summary>終了が設定されているか（Value != null）</summary>
     public bool HasEnded => Value.HasValue;
 
-    /// <summary>無期限状態（Value == null）を表す静的プロパティ</summary>
-    public static EndOn Unlimited => new(null);
+    /// <summary>無期限状態（Value == null）を生成する</summary>
+    public static EndOn Unset() => new(null);
 
     /// <summary>
     /// 指定された終了日時から EndOn を生成する（プライベートコンストラクタ）
@@ -47,7 +47,7 @@ public sealed class EndOn : ValueObject, IEquatable<EndOn>
 
         if (!value.HasValue)
         {
-            result = Unlimited;
+            result = Unset();
             return true;
         }
 

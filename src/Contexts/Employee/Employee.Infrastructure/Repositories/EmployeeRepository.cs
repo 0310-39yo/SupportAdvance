@@ -40,7 +40,7 @@ public class EmployeeRepository : IEmployeeRepository
 
     /// <summary>
     /// BizId（従業員番号）で Employee を検索する
-    /// 【責務】SQL ファイルを読み込んで Dapper で実行
+    /// 【責務】SQL ファイルを読み込んで Dapper で実行、DepartmentMembership も取得
     /// </summary>
     public async Task<Employee?> GetByBizIdAsync(int bizId)
     {
@@ -59,8 +59,15 @@ public class EmployeeRepository : IEmployeeRepository
             if (dbModel == null)
                 return null;
 
+            // DepartmentMembership を取得
+            var departmentMembershipSql = SqlQueryLoader.LoadQuery("Employee.GetEmployeeDepartmentMemberships");
+            _logger.LogInformation($"DepartmentMembership SQL loaded. RowId={dbModel.RowId}");
+            var departmentMemberships = await connection.QueryAsync<DepartmentMembershipDbModel>(
+                departmentMembershipSql,
+                new { EmployeeRowId = dbModel.RowId });
+
             var person = CreatePersonFromDbModel(dbModel);
-            return _mapper.ToDomainEntity(dbModel, person);
+            return _mapper.ToDomainEntity(dbModel, person, departmentMemberships.ToList());
         }
         catch (Exception ex)
         {

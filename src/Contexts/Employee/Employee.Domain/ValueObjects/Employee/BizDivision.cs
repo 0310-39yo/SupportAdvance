@@ -129,6 +129,33 @@ public sealed class BizDivision : EnumValueObject<char>, IEquatable<BizDivision>
     }
 
     /// <summary>
+    /// 指定された string 値からEmployeeTypeDivisionのインスタンスの生成を試みる（Application層での入力値処理用）
+    /// 【責務】Application層の外部入力（string）から null安全に BizDivision を生成する（NULL は失敗）
+    /// </summary>
+    /// <param name="input">区分値（M, T, C、またはnull）</param>
+    /// <param name="result">生成されたEmployeeTypeDivisionのインスタンス</param>
+    /// <returns>生成に成功した場合はtrue、失敗した場合はfalse</returns>
+    public static bool TryFromString(string? input, out BizDivision result)
+    {
+        result = null!;
+
+        if (string.IsNullOrEmpty(input) || input.Length == 0)
+        {
+            return false;
+        }
+
+        try
+        {
+            result = From(input[0]);
+            return true;
+        }
+        catch (ArgumentOutOfRangeException)
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
     /// 保持する char 値を取得する
     /// 【責務】保持する値を取得する
     /// </summary>

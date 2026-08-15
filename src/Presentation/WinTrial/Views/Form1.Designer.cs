@@ -31,6 +31,7 @@ namespace SupportAdvance.Presentation.WinTrial.Views
             sfButton2 = new Syncfusion.WinForms.Controls.SfButton();
             textBoxExt1 = new Syncfusion.Windows.Forms.Tools.TextBoxExt();
             label1 = new Label();
+            label2 = new Label();
             ((System.ComponentModel.ISupportInitialize)textBoxExt1).BeginInit();
             SuspendLayout();
             // 
@@ -72,11 +73,21 @@ namespace SupportAdvance.Presentation.WinTrial.Views
             label1.TabIndex = 4;
             label1.Text = "label1";
             // 
+            // label2
+            // 
+            label2.AutoSize = true;
+            label2.Location = new Point(174, 136);
+            label2.Name = "label2";
+            label2.Size = new Size(38, 15);
+            label2.TabIndex = 5;
+            label2.Text = "label2";
+            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(484, 302);
+            Controls.Add(label2);
             Controls.Add(label1);
             Controls.Add(textBoxExt1);
             Controls.Add(sfButton2);
@@ -94,5 +105,6 @@ namespace SupportAdvance.Presentation.WinTrial.Views
         private Syncfusion.WinForms.Controls.SfButton sfButton2;
         private Syncfusion.Windows.Forms.Tools.TextBoxExt textBoxExt1;
         private Label label1;
+        private Label label2;
     }
 }

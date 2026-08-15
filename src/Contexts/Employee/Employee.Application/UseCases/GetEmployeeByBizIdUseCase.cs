@@ -1,6 +1,7 @@
 namespace SupportAdvance.Contexts.Employee.Application.UseCases;
 
 using SupportAdvance.Contexts.Employee.Application.Dtos;
+using SupportAdvance.Contexts.Employee.Application.Extensions;
 using SupportAdvance.Contexts.Employee.Application.Repositories;
 
 /// <summary>
@@ -28,6 +29,6 @@ public class GetEmployeeByBizIdUseCase
 
         var employee = await _repository.GetByBizIdAsync(bizId);
 
-        return employee?.ToDto();
+        return employee == null ? null : Extensions.EmployeeExtensions.ToDto(employee);
     }
 }

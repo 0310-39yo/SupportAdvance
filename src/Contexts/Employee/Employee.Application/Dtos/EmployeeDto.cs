@@ -49,4 +49,9 @@ public record EmployeeDto
     /// 名（カナ）
     /// </summary>
     public required string PersonFirstNameKana { get; init; }
+
+    /// <summary>
+    /// 所属部署名（カンマ区切り、主部署を先頭に）
+    /// </summary>
+    public string DepartmentNames { get; init; } = string.Empty;
 }

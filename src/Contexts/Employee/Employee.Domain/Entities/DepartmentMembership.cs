@@ -26,6 +26,9 @@ public sealed class DepartmentMembership : Entity<DepartmentMembershipRowId>
     /// <summary>所属部署の ID</summary>
     public DepartmentRowId DepartmentRowId { get; private set; }
 
+    /// <summary>部署名（表示用）</summary>
+    public string? DepartmentName { get; private set; }
+
     /// <summary>主部署フラグ（Primary で従業員の主所属）</summary>
     public IsPrimary IsPrimary { get; private set; }
 
@@ -37,12 +40,14 @@ public sealed class DepartmentMembership : Entity<DepartmentMembershipRowId>
         DepartmentMembershipRowId membershipRowId,
         EmployeeRowId employeeRowId,
         DepartmentRowId departmentRowId,
+        string? departmentName,
         IsPrimary isPrimary,
         EndOn endOn)
     {
         RowId = membershipRowId;
         EmployeeRowId = employeeRowId;
         DepartmentRowId = departmentRowId;
+        DepartmentName = departmentName;
         IsPrimary = isPrimary;
         EndOn = endOn;
     }
@@ -55,9 +60,10 @@ public sealed class DepartmentMembership : Entity<DepartmentMembershipRowId>
         EmployeeRowId employeeRowId,
         DepartmentRowId departmentRowId,
         IsPrimary isPrimary,
-        EndOn? endOn = null)
+        EndOn? endOn = null,
+        string? departmentName = null)
     {
-        return new(membershipRowId, employeeRowId, departmentRowId, isPrimary, endOn ?? EndOn.Unlimited);
+        return new(membershipRowId, employeeRowId, departmentRowId, departmentName, isPrimary, endOn ?? EndOn.Unset());
     }
 
     /// <summary>
@@ -68,9 +74,10 @@ public sealed class DepartmentMembership : Entity<DepartmentMembershipRowId>
         EmployeeRowId employeeRowId,
         DepartmentRowId departmentRowId,
         IsPrimary isPrimary,
-        EndOn endOn)
+        EndOn endOn,
+        string? departmentName = null)
     {
-        return new(membershipRowId, employeeRowId, departmentRowId, isPrimary, endOn);
+        return new(membershipRowId, employeeRowId, departmentRowId, departmentName, isPrimary, endOn);
     }
 
     /// <summary>

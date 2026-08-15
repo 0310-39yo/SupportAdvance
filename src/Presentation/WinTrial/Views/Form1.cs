@@ -31,6 +31,9 @@ public partial class Form1 : Form
         // Data Binding: label1 ← EmployeeFullName
         label1.DataBindings.Add("Text", _viewModel, nameof(Form1ViewModel.EmployeeFullName));
 
+        // Data Binding: label2 ← DepartmentNames
+        label2.DataBindings.Add("Text", _viewModel, nameof(Form1ViewModel.DepartmentNames));
+
         // Command Binding: sfButton1 ← ExecuteSampleUseCaseCommand
         sfButton1.Command = _viewModel.ExecuteSampleUseCaseCommand;
 

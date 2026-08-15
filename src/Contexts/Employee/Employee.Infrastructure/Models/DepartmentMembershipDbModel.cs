@@ -49,4 +49,11 @@ public class DepartmentMembershipDbModel
     /// </summary>
     [Column("end_on")]
     public DateTime? EndOn { get; set; }
+
+    /// <summary>
+    /// 部署名（表示用、JOINで取得）
+    /// 【対応カラム】department_name
+    /// </summary>
+    [Column("department_name")]
+    public string? DepartmentName { get; set; }
 }
