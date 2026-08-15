@@ -156,6 +156,13 @@ public sealed class BizDivision : EnumValueObject<char>, IEquatable<BizDivision>
     }
 
     /// <summary>
+    /// BizDivision をDB値（string）に変換する
+    /// 【責務】Domain の ValueObject → DB の プリミティブ型に変換（Infrastructure層での使用用）
+    /// </summary>
+    /// <returns>区分値文字列（M, D, C）</returns>
+    public string ToDbValue() => ValueField.ToString();
+
+    /// <summary>
     /// 保持する char 値を取得する
     /// 【責務】保持する値を取得する
     /// </summary>

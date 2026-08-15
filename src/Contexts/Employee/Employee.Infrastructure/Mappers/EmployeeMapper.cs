@@ -83,28 +83,12 @@ public class EmployeeMapper
     /// </summary>
     public EmployeeDbModel ToDbModel(Employee entity)
     {
-        var divisionCode = ConvertDivisionToCode(entity.TypeDivision);
-
         return new EmployeeDbModel
         {
             RowId = entity.RowId.Value,
-            BizDivision = divisionCode,
+            BizDivision = entity.TypeDivision.ToDbValue(),
             BizId = entity.BizId.Value,
             RetiredOn = entity.RetiredOn.IsSet ? entity.RetiredOn.Value.Value : null
         };
-    }
-
-    private string ConvertDivisionToCode(BizDivision typeDivision)
-    {
-        if (typeDivision.IsRegularEmployee)
-            return "M";
-
-        if (typeDivision.IsDispatched)
-            return "D";
-
-        if (typeDivision.IsContractor)
-            return "C";
-
-        throw new InvalidOperationException($"Invalid division: {typeDivision}");
     }
 }
