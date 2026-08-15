@@ -1,7 +1,7 @@
 USE [SupportAdvance]
 GO
 
-/****** Object:  Table [dbo].[m_departments]    Script Date: 2026/08/09 9:12:19 ******/
+/****** Object:  Table [dbo].[m_departments]    Script Date: 2026/08/16 5:55:30 ******/
 SET ANSI_NULLS ON
 GO
 
@@ -30,7 +30,7 @@ PRIMARY KEY CLUSTERED
 ) ON [PRIMARY]
 GO
 
-ALTER TABLE [dbo].[m_departments] ADD  DEFAULT (NEXT VALUE FOR [dbo].[s_row_id_sequence]) FOR [row_id]
+ALTER TABLE [dbo].[m_departments] ADD  CONSTRAINT [DF_m_departments_row_id]  DEFAULT (NEXT VALUE FOR [dbo].[s_row_id_sequence]) FOR [row_id]
 GO
 
 ALTER TABLE [dbo].[m_departments] ADD  CONSTRAINT [DF_m_department_created_at]  DEFAULT (sysdatetime()) FOR [created_at]

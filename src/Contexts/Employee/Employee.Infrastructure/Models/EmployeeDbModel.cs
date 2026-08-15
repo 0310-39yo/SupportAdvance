@@ -19,12 +19,12 @@ public class EmployeeDbModel
     public long RowId { get; set; }
 
     /// <summary>
-    /// 従業員区分（M/D/C のいずれか）
-    /// 【対応カラム】employee_division
+    /// ビジネス区分（M/D/C のいずれか）
+    /// 【対応カラム】biz_division
     /// 【値】M=正社員, D=派遣, C=契約
     /// </summary>
-    [Column("employee_division")]
-    public string EmployeeDivision { get; set; } = string.Empty;
+    [Column("biz_division")]
+    public string BizDivision { get; set; } = string.Empty;
 
     /// <summary>
     /// ビジネスID（従業員番号、1001以上）

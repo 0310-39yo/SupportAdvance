@@ -30,14 +30,14 @@ public class EmployeeMapper
     /// </summary>
     public Employee ToDomainEntity(EmployeeDbModel dbModel, Person person)
     {
-        // 従業員種別区分の文字列から Enum に変換
-        var typeDivision = dbModel.EmployeeDivision switch
+        // ビジネス区分の文字列から Enum に変換
+        var typeDivision = dbModel.BizDivision switch
         {
             "M" => BizDivision.RegularEmployee(),
             "D" => BizDivision.Dispatched(),
             "C" => BizDivision.Contractor(),
             _ => throw new InvalidOperationException(
-                $"Invalid employee division: {dbModel.EmployeeDivision}")
+                $"Invalid biz division: {dbModel.BizDivision}")
         };
 
         var bizId = BizId.From(dbModel.BizId);
@@ -72,7 +72,7 @@ public class EmployeeMapper
         return new EmployeeDbModel
         {
             RowId = entity.RowId.Value,
-            EmployeeDivision = divisionCode,
+            BizDivision = divisionCode,
             BizId = entity.BizId.Value,
             RetiredOn = entity.RetiredOn.IsSet ? entity.RetiredOn.Value.Value : null
         };
