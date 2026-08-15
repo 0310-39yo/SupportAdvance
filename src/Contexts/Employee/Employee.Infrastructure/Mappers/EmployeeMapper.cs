@@ -1,12 +1,11 @@
 namespace SupportAdvance.Contexts.Employee.Infrastructure.Mappers;
 
-using SupportAdvance.Common.Clocks;
-using SupportAdvance.Contexts.Employee.Domain.Entities;
-using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Department;
-using SupportAdvance.Contexts.Employee.Domain.ValueObjects.DepartmentMembership;
-using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
-using SupportAdvance.SharedKernel.ValueObjects;
 using Models;
+using Common.Clocks;
+using Domain.Entities;
+using Domain.ValueObjects.Department;
+using Domain.ValueObjects.DepartmentMembership;
+using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
 
 /// <summary>
 /// Employee ドメインモデル ↔ EmployeeDbModel のマッピング
@@ -30,7 +29,9 @@ public class EmployeeMapper
     /// DbModel から Domain Entity に変換（読み込み用）
     /// 【責務】DB の プリミティブ型 → Domain の ValueObject に変換
     /// </summary>
-    public Employee ToDomainEntity(EmployeeDbModel dbModel, Person person, List<DepartmentMembershipDbModel> departmentMemberships = null)
+    public Employee ToDomainEntity(EmployeeDbModel dbModel,
+        Person person,
+        List<DepartmentMembershipDbModel>? departmentMemberships = null)
     {
         // DB値から ValueObject に変換（責務を ValueObject に委譲）
         var typeDivision = BizDivision.FromDbValue(dbModel.BizDivision);
@@ -38,7 +39,7 @@ public class EmployeeMapper
         var bizId = BizId.From(dbModel.BizId);
         var bizCode = BizCode.From(typeDivision, bizId);
 
-        RetiredOn retiredOn = RetiredOn.Unset;
+        var retiredOn = RetiredOn.Unset;
         if (dbModel.RetiredOn.HasValue)
         {
             retiredOn = RetiredOn.From(new LocalDateTime(dbModel.RetiredOn.Value));
@@ -81,14 +82,12 @@ public class EmployeeMapper
     /// 【責務】Domain の ValueObject → DB の プリミティブ型に変換
     /// 【注意】このメソッドは未実装（Insert/Update が実装される際に使用予定）
     /// </summary>
-    public EmployeeDbModel ToDbModel(Employee entity)
-    {
-        return new EmployeeDbModel
+    public EmployeeDbModel ToDbModel(Employee entity) =>
+        new()
         {
             RowId = entity.RowId.Value,
             BizDivision = entity.TypeDivision.ToDbValue(),
             BizId = entity.BizId.Value,
             RetiredOn = entity.RetiredOn.IsSet ? entity.RetiredOn.Value.Value : null
         };
-    }
 }
