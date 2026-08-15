@@ -1,6 +1,6 @@
 using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
-namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
+namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Department;
 
 /// <summary>
 /// データベース上の部署レコードの行ID（rowId）を表す ValueObject

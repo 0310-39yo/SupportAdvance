@@ -4,28 +4,28 @@ namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
 
 /// <summary>
 /// 従業員コードを表すValueObject（ビジネスコード）
-/// 【値】EmployeeTypeDivision + EmployeeBizId
+/// 【値】BizDivision + BizId
 /// 【表示】"M1234" 形式（区分+番号、スペースなし）
 /// 【責務】ビジネスコードの管理、範囲検証
 /// </summary>
-public sealed class EmployeeBizCode : ValueObject, IEquatable<EmployeeBizCode>
+public sealed class BizCode : ValueObject, IEquatable<BizCode>
 {
-    public EmployeeTypeDivision Division { get; }
-    public EmployeeBizId BizId { get; }
+    public BizDivision Division { get; }
+    public BizId BizId { get; }
 
-    private EmployeeBizCode(EmployeeTypeDivision division, EmployeeBizId bizId)
+    private BizCode(BizDivision division, BizId bizId)
     {
         Division = division;
         BizId = bizId;
     }
 
-    public static EmployeeBizCode From(EmployeeTypeDivision division, EmployeeBizId bizId)
+    public static BizCode From(BizDivision division, BizId bizId)
     {
         ValidateDivisionAndBizId(division, bizId);
-        return new EmployeeBizCode(division, bizId);
+        return new BizCode(division, bizId);
     }
 
-    public static bool TryFrom(EmployeeTypeDivision division, EmployeeBizId bizId, out EmployeeBizCode result)
+    public static bool TryFrom(BizDivision division, BizId bizId, out BizCode result)
     {
         result = null!;
         if (division == null || bizId == null)
@@ -41,7 +41,7 @@ public sealed class EmployeeBizCode : ValueObject, IEquatable<EmployeeBizCode>
         }
     }
 
-    public static bool TryParse(string? input, out EmployeeBizCode result)
+    public static bool TryParse(string? input, out BizCode result)
     {
         result = null!;
         if (string.IsNullOrEmpty(input) || input.Length < 2)
@@ -52,11 +52,11 @@ public sealed class EmployeeBizCode : ValueObject, IEquatable<EmployeeBizCode>
             var divisionChar = input[0];
             var bizIdStr = input[1..];
 
-            if (!EmployeeTypeDivision.TryFromDbValue(divisionChar.ToString(), out var division))
+            if (!BizDivision.TryFromDbValue(divisionChar.ToString(), out var division))
                 return false;
             if (!int.TryParse(bizIdStr, out var bizIdInt))
                 return false;
-            if (!EmployeeBizId.TryFromDbValue(bizIdInt, out var bizId))
+            if (!BizId.TryFromDbValue(bizIdInt, out var bizId))
                 return false;
 
             return TryFrom(division, bizId, out result);
@@ -67,14 +67,14 @@ public sealed class EmployeeBizCode : ValueObject, IEquatable<EmployeeBizCode>
         }
     }
 
-    public static bool TryFromDbValues(char divisionChar, int bizIdInt, out EmployeeBizCode result)
+    public static bool TryFromDbValues(char divisionChar, int bizIdInt, out BizCode result)
     {
         result = null!;
         try
         {
-            if (!EmployeeTypeDivision.TryFromDbValue(divisionChar.ToString(), out var division))
+            if (!BizDivision.TryFromDbValue(divisionChar.ToString(), out var division))
                 return false;
-            if (!EmployeeBizId.TryFromDbValue(bizIdInt, out var bizId))
+            if (!BizId.TryFromDbValue(bizIdInt, out var bizId))
                 return false;
             return TryFrom(division, bizId, out result);
         }
@@ -86,9 +86,9 @@ public sealed class EmployeeBizCode : ValueObject, IEquatable<EmployeeBizCode>
 
     public override string ToString() => $"{Division.Value}{BizId.ToString()}";
 
-    public override bool Equals(object? obj) => Equals(obj as EmployeeBizCode);
+    public override bool Equals(object? obj) => Equals(obj as BizCode);
 
-    public bool Equals(EmployeeBizCode? other)
+    public bool Equals(BizCode? other)
     {
         if (other is null) return false;
         if (ReferenceEquals(this, other)) return true;
@@ -103,7 +103,7 @@ public sealed class EmployeeBizCode : ValueObject, IEquatable<EmployeeBizCode>
         yield return BizId;
     }
 
-    private static void ValidateDivisionAndBizId(EmployeeTypeDivision division, EmployeeBizId bizId)
+    private static void ValidateDivisionAndBizId(BizDivision division, BizId bizId)
     {
         var num = bizId.Value;
 

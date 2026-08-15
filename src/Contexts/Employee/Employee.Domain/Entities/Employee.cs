@@ -1,5 +1,6 @@
 using SupportAdvance.Common.Clocks;
 using SupportAdvance.Contexts.Employee.Domain.DomainEvents;
+using SupportAdvance.Contexts.Employee.Domain.ValueObjects.DepartmentMembership;
 using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
 using SupportAdvance.SharedKernel.Entities;
 
@@ -21,17 +22,17 @@ public sealed class Employee : AggregateRoot<EmployeeRowId> {
     /// <summary>
     /// 従業員種別区分（正社員/派遣/請負）
     /// </summary>
-    public EmployeeTypeDivision TypeDivision { get; private set; }
+    public BizDivision TypeDivision { get; private set; }
 
     /// <summary>
     /// ビジネスID（従業員番号）
     /// </summary>
-    public EmployeeBizId BizId { get; private set; }
+    public BizId BizId { get; private set; }
 
     /// <summary>
     /// ビジネスコード（内部ID、表示用）
     /// </summary>
-    public EmployeeBizCode BizCode { get; private set; }
+    public BizCode BizCode { get; private set; }
 
     /// <summary>
     /// 個人情報（内包子Entity）
@@ -62,9 +63,9 @@ public sealed class Employee : AggregateRoot<EmployeeRowId> {
     /// </summary>
     private Employee(
         EmployeeRowId rowId,
-        EmployeeTypeDivision typeDivision,
-        EmployeeBizId bizId,
-        EmployeeBizCode bizCode,
+        BizDivision typeDivision,
+        BizId bizId,
+        BizCode bizCode,
         RetiredOn retiredOn,
         Person person,
         List<DepartmentMembership> departmentMemberships
@@ -87,9 +88,9 @@ public sealed class Employee : AggregateRoot<EmployeeRowId> {
     /// </summary>
     public static Employee Create(
         EmployeeRowId rowId,
-        EmployeeTypeDivision typeDivision,
-        EmployeeBizId bizId,
-        EmployeeBizCode bizCode,
+        BizDivision typeDivision,
+        BizId bizId,
+        BizCode bizCode,
         RetiredOn? retiredOn,
         Person person,
         IEnumerable<DepartmentMembership> departmentMemberships) =>
@@ -101,9 +102,9 @@ public sealed class Employee : AggregateRoot<EmployeeRowId> {
     /// </summary>
     public static Employee Reconstruct(
         EmployeeRowId rowId,
-        EmployeeTypeDivision typeDivision,
-        EmployeeBizId bizId,
-        EmployeeBizCode bizCode,
+        BizDivision typeDivision,
+        BizId bizId,
+        BizCode bizCode,
         RetiredOn retiredOn,
         Person person,
         IEnumerable<DepartmentMembership> departmentMemberships) =>

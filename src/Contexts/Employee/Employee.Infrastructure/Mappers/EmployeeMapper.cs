@@ -33,15 +33,15 @@ public class EmployeeMapper
         // 従業員種別区分の文字列から Enum に変換
         var typeDivision = dbModel.EmployeeDivision switch
         {
-            "M" => EmployeeTypeDivision.RegularEmployee(),
-            "D" => EmployeeTypeDivision.Dispatched(),
-            "C" => EmployeeTypeDivision.Contractor(),
+            "M" => BizDivision.RegularEmployee(),
+            "D" => BizDivision.Dispatched(),
+            "C" => BizDivision.Contractor(),
             _ => throw new InvalidOperationException(
                 $"Invalid employee division: {dbModel.EmployeeDivision}")
         };
 
-        var bizId = EmployeeBizId.From(dbModel.BizId);
-        var bizCode = EmployeeBizCode.From(typeDivision, bizId);
+        var bizId = BizId.From(dbModel.BizId);
+        var bizCode = BizCode.From(typeDivision, bizId);
 
         RetiredOn retiredOn = RetiredOn.Unset;
         if (dbModel.RetiredOn.HasValue)
@@ -78,7 +78,7 @@ public class EmployeeMapper
         };
     }
 
-    private string ConvertDivisionToCode(EmployeeTypeDivision typeDivision)
+    private string ConvertDivisionToCode(BizDivision typeDivision)
     {
         if (typeDivision.IsRegularEmployee)
             return "M";

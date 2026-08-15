@@ -1,3 +1,5 @@
+using SupportAdvance.Contexts.Employee.Domain.ValueObjects.DepartmentMembership;
+
 namespace SupportAdvance.Tests.SharedKernel.ValueObjects.Identifiers;
 
 using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;

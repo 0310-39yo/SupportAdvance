@@ -1,3 +1,5 @@
+using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Person;
+
 namespace SupportAdvance.Contexts.Employee.Application.UseCases;
 using SupportAdvance.Contexts.Employee.Application.Repositories;
 

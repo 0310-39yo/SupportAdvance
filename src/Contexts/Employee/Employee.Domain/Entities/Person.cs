@@ -1,3 +1,5 @@
+using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Person;
+
 namespace SupportAdvance.Contexts.Employee.Domain.Entities;
 
 using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
@@ -15,32 +17,32 @@ public sealed class Person : Entity<PersonRowId>
     /// <summary>
     /// 姓
     /// </summary>
-    public PersonLastName LastName { get; private set; }
+    public LastName LastName { get; private set; }
 
     /// <summary>
     /// 名
     /// </summary>
-    public PersonFirstName FirstName { get; private set; }
+    public FirstName FirstName { get; private set; }
 
     /// <summary>
     /// 姓（カナ）
     /// </summary>
-    public PersonLastNameKana LastNameKana { get; private set; }
+    public LastNameKana LastNameKana { get; private set; }
 
     /// <summary>
     /// 名（カナ）
     /// </summary>
-    public PersonFirstNameKana FirstNameKana { get; private set; }
+    public FirstNameKana FirstNameKana { get; private set; }
 
     /// <summary>
     /// 指定されたプロパティから Person を生成する（プライベートコンストラクタ）
     /// </summary>
     private Person(
         PersonRowId personRowId,
-        PersonLastName lastName,
-        PersonFirstName firstName,
-        PersonLastNameKana lastNameKana,
-        PersonFirstNameKana firstNameKana)
+        LastName lastName,
+        FirstName firstName,
+        LastNameKana lastNameKana,
+        FirstNameKana firstNameKana)
     {
         RowId = personRowId;
         LastName = lastName;
@@ -54,10 +56,10 @@ public sealed class Person : Entity<PersonRowId>
     /// </summary>
     public static Person Create(
         PersonRowId personRowId,
-        PersonLastName lastName,
-        PersonFirstName firstName,
-        PersonLastNameKana lastNameKana,
-        PersonFirstNameKana firstNameKana)
+        LastName lastName,
+        FirstName firstName,
+        LastNameKana lastNameKana,
+        FirstNameKana firstNameKana)
     {
         return new(personRowId, lastName, firstName, lastNameKana, firstNameKana);
     }
@@ -67,10 +69,10 @@ public sealed class Person : Entity<PersonRowId>
     /// </summary>
     public static Person Reconstruct(
         PersonRowId personRowId,
-        PersonLastName lastName,
-        PersonFirstName firstName,
-        PersonLastNameKana lastNameKana,
-        PersonFirstNameKana firstNameKana)
+        LastName lastName,
+        FirstName firstName,
+        LastNameKana lastNameKana,
+        FirstNameKana firstNameKana)
     {
         return new(personRowId, lastName, firstName, lastNameKana, firstNameKana);
     }
@@ -91,7 +93,7 @@ public sealed class Person : Entity<PersonRowId>
     /// 【呼び出し元】Application層の Use Case（例：UpdateEmployeeNameUseCase）
     /// 【DB永続化】Employee.Repository.SaveAsync() で集約全体を保存時に反映
     /// </summary>
-    public void UpdateLastName(PersonLastName lastName)
+    public void UpdateLastName(LastName lastName)
     {
         LastName = lastName;
     }
@@ -102,7 +104,7 @@ public sealed class Person : Entity<PersonRowId>
     /// 【呼び出し元】Application層の Use Case
     /// 【DB永続化】Employee.Repository.SaveAsync() で集約全体を保存時に反映
     /// </summary>
-    public void UpdateFirstName(PersonFirstName firstName)
+    public void UpdateFirstName(FirstName firstName)
     {
         FirstName = firstName;
     }
@@ -113,7 +115,7 @@ public sealed class Person : Entity<PersonRowId>
     /// 【呼び出し元】Application層の Use Case
     /// 【DB永続化】Employee.Repository.SaveAsync() で集約全体を保存時に反映
     /// </summary>
-    public void UpdateLastNameKana(PersonLastNameKana lastNameKana)
+    public void UpdateLastNameKana(LastNameKana lastNameKana)
     {
         LastNameKana = lastNameKana;
     }
@@ -124,7 +126,7 @@ public sealed class Person : Entity<PersonRowId>
     /// 【呼び出し元】Application層の Use Case
     /// 【DB永続化】Employee.Repository.SaveAsync() で集約全体を保存時に反映
     /// </summary>
-    public void UpdateFirstNameKana(PersonFirstNameKana firstNameKana)
+    public void UpdateFirstNameKana(FirstNameKana firstNameKana)
     {
         FirstNameKana = firstNameKana;
     }

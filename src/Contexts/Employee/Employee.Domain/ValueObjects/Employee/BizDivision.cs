@@ -7,7 +7,7 @@ namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
 /// 【値】M（従業員）、T（派遣社員）、C（請負者）
 /// 【責務】固定値の管理と検証、日本語名の提供
 /// </summary>
-public sealed class EmployeeTypeDivision : EnumValueObject<char>, IEquatable<EmployeeTypeDivision>
+public sealed class BizDivision : EnumValueObject<char>, IEquatable<BizDivision>
 {
     /// <summary>
     /// 従業員（M）の内部値定数
@@ -28,7 +28,7 @@ public sealed class EmployeeTypeDivision : EnumValueObject<char>, IEquatable<Emp
     /// 指定された char 値からEmployeeTypeDivisionを生成する（プライベートコンストラクタ）
     /// </summary>
     /// <param name="value">区分値（M, T, C）</param>
-    private EmployeeTypeDivision(char value) : base(value)
+    private BizDivision(char value) : base(value)
     {
     }
 
@@ -36,19 +36,19 @@ public sealed class EmployeeTypeDivision : EnumValueObject<char>, IEquatable<Emp
     /// 従業員（M）を表すEmployeeTypeDivisionのインスタンスを生成する
     /// </summary>
     /// <returns>従業員区分のEmployeeTypeDivisionのインスタンス</returns>
-    public static EmployeeTypeDivision RegularEmployee() => new(RegularEmployeeValue);
+    public static BizDivision RegularEmployee() => new(RegularEmployeeValue);
 
     /// <summary>
     /// 派遣社員（T）を表すEmployeeTypeDivisionのインスタンスを生成する
     /// </summary>
     /// <returns>派遣社員区分のEmployeeTypeDivisionのインスタンス</returns>
-    public static EmployeeTypeDivision Dispatched() => new(DispatchedValue);
+    public static BizDivision Dispatched() => new(DispatchedValue);
 
     /// <summary>
     /// 請負者（C）を表すEmployeeTypeDivisionのインスタンスを生成する
     /// </summary>
     /// <returns>請負者区分のEmployeeTypeDivisionのインスタンス</returns>
-    public static EmployeeTypeDivision Contractor() => new(ContractorValue);
+    public static BizDivision Contractor() => new(ContractorValue);
 
     /// <summary>
     /// 指定された char 値からEmployeeTypeDivisionのインスタンスを生成する
@@ -56,16 +56,16 @@ public sealed class EmployeeTypeDivision : EnumValueObject<char>, IEquatable<Emp
     /// </summary>
     /// <param name="value">区分値（M, T, C）</param>
     /// <returns>指定された区分のEmployeeTypeDivisionのインスタンス</returns>
-    public static EmployeeTypeDivision From(char value) => new(value);
+    public static BizDivision From(char value) => new(value);
 
     /// <summary>
     /// 指定された char? 値からEmployeeTypeDivisionのインスタンスの生成を試みる（型安全版）
-    /// 【責務】null安全に EmployeeTypeDivision を生成する
+    /// 【責務】null安全に BizDivision を生成する
     /// </summary>
     /// <param name="input">区分値（M, T, C、またはnull）</param>
     /// <param name="result">生成されたEmployeeTypeDivisionのインスタンス</param>
     /// <returns>生成に成功した場合はtrue、失敗した場合はfalse</returns>
-    public static bool TryFrom(char? input, out EmployeeTypeDivision result)
+    public static bool TryFrom(char? input, out BizDivision result)
     {
         result = null!;
 
@@ -87,28 +87,28 @@ public sealed class EmployeeTypeDivision : EnumValueObject<char>, IEquatable<Emp
 
     /// <summary>
     /// 指定された string 値からEmployeeTypeDivisionのインスタンスを生成する（Infrastructure層での型変換用）
-    /// 【責務】DB から読み込んだ nvarchar を char に変換して EmployeeTypeDivision を生成
+    /// 【責務】DB から読み込んだ nvarchar を char に変換して BizDivision を生成
     /// </summary>
     /// <param name="value">区分値（M, T, C）</param>
     /// <returns>指定された区分のEmployeeTypeDivisionのインスタンス</returns>
-    public static EmployeeTypeDivision FromDbValue(string value)
+    public static BizDivision FromDbValue(string value)
     {
         if (string.IsNullOrEmpty(value) || value.Length == 0)
         {
-            throw new ArgumentException("EmployeeTypeDivision value cannot be empty.", nameof(value));
+            throw new ArgumentException("BizDivision value cannot be empty.", nameof(value));
         }
 
-        return new EmployeeTypeDivision(value[0]);
+        return new BizDivision(value[0]);
     }
 
     /// <summary>
     /// 指定された string? 値からEmployeeTypeDivisionのインスタンスの生成を試みる（NULL安全版、Infrastructure層での型変換用）
-    /// 【責務】DB値から null安全に EmployeeTypeDivision を生成する（NULL は失敗）
+    /// 【責務】DB値から null安全に BizDivision を生成する（NULL は失敗）
     /// </summary>
     /// <param name="input">区分値（M, T, C、またはnull）</param>
     /// <param name="result">生成されたEmployeeTypeDivisionのインスタンス</param>
     /// <returns>生成に成功した場合はtrue、失敗した場合はfalse</returns>
-    public static bool TryFromDbValue(string? input, out EmployeeTypeDivision result)
+    public static bool TryFromDbValue(string? input, out BizDivision result)
     {
         result = null!;
 
@@ -159,7 +159,7 @@ public sealed class EmployeeTypeDivision : EnumValueObject<char>, IEquatable<Emp
     /// </summary>
     /// <param name="obj">比較対象のオブジェクト</param>
     /// <returns>等価である場合はtrue、そうでない場合はfalse</returns>
-    public override bool Equals(object? obj) => Equals(obj as EmployeeTypeDivision);
+    public override bool Equals(object? obj) => Equals(obj as BizDivision);
 
     /// <summary>
     /// 指定されたEmployeeTypeDivisionと等価かどうかを判定する
@@ -167,7 +167,7 @@ public sealed class EmployeeTypeDivision : EnumValueObject<char>, IEquatable<Emp
     /// </summary>
     /// <param name="other">比較対象のEmployeeTypeDivision</param>
     /// <returns>等価である場合はtrue、そうでない場合はfalse</returns>
-    public bool Equals(EmployeeTypeDivision? other)
+    public bool Equals(BizDivision? other)
     {
         if (other is null)
         {
@@ -202,7 +202,7 @@ public sealed class EmployeeTypeDivision : EnumValueObject<char>, IEquatable<Emp
             throw new ArgumentOutOfRangeException(
                 nameof(value),
                 value,
-                $"EmployeeTypeDivision must be one of: '{RegularEmployeeValue}' (従業員), '{DispatchedValue}' (派遣社員), '{ContractorValue}' (請負者).");
+                $"BizDivision must be one of: '{RegularEmployeeValue}' (従業員), '{DispatchedValue}' (派遣社員), '{ContractorValue}' (請負者).");
         }
     }
 

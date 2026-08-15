@@ -1,3 +1,5 @@
+using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Person;
+
 namespace SupportAdvance.Contexts.Employee.Application.UseCases;
 using SupportAdvance.Application.Abstractions.Identifiers;
 using SupportAdvance.Contexts.Employee.Application.Repositories;
@@ -33,15 +35,15 @@ public class CreateEmployeeUseCase
 
         // 【Step 2】ValueObject 生成
         var typeDivision = ConvertToDivision(request.DivisionCode);
-        var bizId = EmployeeBizId.From(request.EmployeeNumber);
-        var bizCode = EmployeeBizCode.From(typeDivision, bizId);
+        var bizId = BizId.From(request.EmployeeNumber);
+        var bizCode = BizCode.From(typeDivision, bizId);
         var personRowId = PersonRowId.From(request.PersonRowId);
 
         // 【Step 3】Person Entity 生成
-        var personLastName = PersonLastName.From(request.PersonLastName);
-        var personFirstName = PersonFirstName.From(request.PersonFirstName);
-        var personLastNameKana = PersonLastNameKana.From(request.PersonLastNameKana);
-        var personFirstNameKana = PersonFirstNameKana.From(request.PersonFirstNameKana);
+        var personLastName = LastName.From(request.PersonLastName);
+        var personFirstName = FirstName.From(request.PersonFirstName);
+        var personLastNameKana = LastNameKana.From(request.PersonLastNameKana);
+        var personFirstNameKana = FirstNameKana.From(request.PersonFirstNameKana);
         var person = Person.Create(personRowId, personLastName, personFirstName, personLastNameKana, personFirstNameKana);
 
         // 【Step 4】RowId 採番（DB シーケンスから採番）
@@ -83,13 +85,13 @@ public class CreateEmployeeUseCase
         return code is "M" or "T" or "C";
     }
 
-    private EmployeeTypeDivision ConvertToDivision(string code)
+    private BizDivision ConvertToDivision(string code)
     {
         return code switch
         {
-            "M" => EmployeeTypeDivision.RegularEmployee(),
-            "T" => EmployeeTypeDivision.Dispatched(),
-            "C" => EmployeeTypeDivision.Contractor(),
+            "M" => BizDivision.RegularEmployee(),
+            "T" => BizDivision.Dispatched(),
+            "C" => BizDivision.Contractor(),
             _ => throw new ArgumentException($"Invalid division code: {code}")
         };
     }

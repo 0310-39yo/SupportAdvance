@@ -1,6 +1,6 @@
 using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
-namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
+namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.DepartmentMembership;
 
 /// <summary>
 /// 部署メンバーシップの行ID（RowId ベース）

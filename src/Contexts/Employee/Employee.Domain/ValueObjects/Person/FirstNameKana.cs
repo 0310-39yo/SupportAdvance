@@ -1,31 +1,31 @@
 using SupportAdvance.SharedKernel.ValueObjects;
 
-namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
+namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Person;
 
 /// <summary>
 /// 個人の名（カナ）を表す ValueObject
 /// 【型】string のラッパー
 /// 【制約】1文字以上100文字以下、null 不可、カナ文字のみ
 /// </summary>
-public sealed class PersonFirstNameKana : ValueObject, IEquatable<PersonFirstNameKana>
+public sealed class FirstNameKana : ValueObject, IEquatable<FirstNameKana>
 {
     /// <summary>名（カナ）の値</summary>
     public string Value { get; }
 
     /// <summary>
-    /// 指定された名（カナ）から PersonFirstNameKana を生成する（プライベートコンストラクタ）
+    /// 指定された名（カナ）から FirstNameKana を生成する（プライベートコンストラクタ）
     /// </summary>
-    private PersonFirstNameKana(string value)
+    private FirstNameKana(string value)
     {
         Value = value;
     }
 
     /// <summary>
-    /// 指定された値から PersonFirstNameKana を生成する
+    /// 指定された値から FirstNameKana を生成する
     /// </summary>
     /// <param name="value">名（カナ）</param>
-    /// <returns>PersonFirstNameKana インスタンス</returns>
-    public static PersonFirstNameKana From(string value)
+    /// <returns>FirstNameKana インスタンス</returns>
+    public static FirstNameKana From(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
             throw new ArgumentException("名（カナ）は空文字列または null にできません。", nameof(value));
@@ -36,9 +36,9 @@ public sealed class PersonFirstNameKana : ValueObject, IEquatable<PersonFirstNam
     }
 
     /// <summary>
-    /// DB値から PersonFirstNameKana を復元する
+    /// DB値から FirstNameKana を復元する
     /// </summary>
-    public static bool TryFromDbValue(string? value, out PersonFirstNameKana result)
+    public static bool TryFromDbValue(string? value, out FirstNameKana result)
     {
         result = null!;
 
@@ -57,14 +57,14 @@ public sealed class PersonFirstNameKana : ValueObject, IEquatable<PersonFirstNam
     }
 
     /// <summary>
-    /// 指定された PersonFirstNameKana と等価かどうかを判定する
+    /// 指定された FirstNameKana と等価かどうかを判定する
     /// </summary>
-    public override bool Equals(object? obj) => Equals(obj as PersonFirstNameKana);
+    public override bool Equals(object? obj) => Equals(obj as FirstNameKana);
 
     /// <summary>
-    /// 指定された PersonFirstNameKana と等価かどうかを判定する
+    /// 指定された FirstNameKana と等価かどうかを判定する
     /// </summary>
-    public bool Equals(PersonFirstNameKana? other)
+    public bool Equals(FirstNameKana? other)
     {
         if (other is null)
             return false;

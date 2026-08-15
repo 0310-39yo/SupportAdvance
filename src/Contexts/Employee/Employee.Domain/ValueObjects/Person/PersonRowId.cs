@@ -1,6 +1,6 @@
 using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
-namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
+namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Person;
 
 /// <summary>
 /// データベース上の人物レコードの行ID（rowId）を表すValueObject

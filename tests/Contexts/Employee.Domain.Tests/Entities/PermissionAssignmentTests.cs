@@ -1,3 +1,6 @@
+using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Permission;
+using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Role;
+
 namespace SupportAdvance.Contexts.Employee.Domain.Tests.Entities;
 
 using SupportAdvance.Common.Clocks;

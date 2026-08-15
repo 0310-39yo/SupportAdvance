@@ -1,3 +1,5 @@
+using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Person;
+
 namespace SupportAdvance.Contexts.Employee.Infrastructure.Repositories;
 
 using Dapper;
@@ -94,9 +96,9 @@ public class EmployeeRepository : IEmployeeRepository
     {
         return Person.Create(
             PersonRowId.From(dbModel.PersonRowId),
-            PersonLastName.From(dbModel.LastName),
-            PersonFirstName.From(dbModel.FirstName),
-            PersonLastNameKana.From(dbModel.LastNameKana),
-            PersonFirstNameKana.From(dbModel.FirstNameKana));
+            LastName.From(dbModel.LastName),
+            FirstName.From(dbModel.FirstName),
+            LastNameKana.From(dbModel.LastNameKana),
+            FirstNameKana.From(dbModel.FirstNameKana));
     }
 }

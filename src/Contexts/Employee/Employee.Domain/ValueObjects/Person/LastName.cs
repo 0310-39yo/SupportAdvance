@@ -1,44 +1,44 @@
 using SupportAdvance.SharedKernel.ValueObjects;
 
-namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
+namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Person;
 
 /// <summary>
-/// 個人の名を表す ValueObject
+/// 個人の姓を表す ValueObject
 /// 【型】string のラッパー
 /// 【制約】1文字以上100文字以下、null 不可
 /// </summary>
-public sealed class PersonFirstName : ValueObject, IEquatable<PersonFirstName>
+public sealed class LastName : ValueObject, IEquatable<LastName>
 {
-    /// <summary>名の値</summary>
+    /// <summary>姓の値</summary>
     public string Value { get; }
 
     /// <summary>
-    /// 指定された名から PersonFirstName を生成する（プライベートコンストラクタ）
+    /// 指定された姓から LastName を生成する（プライベートコンストラクタ）
     /// </summary>
-    private PersonFirstName(string value)
+    private LastName(string value)
     {
         Value = value;
     }
 
     /// <summary>
-    /// 指定された値から PersonFirstName を生成する
+    /// 指定された値から LastName を生成する
     /// </summary>
-    /// <param name="value">名</param>
-    /// <returns>PersonFirstName インスタンス</returns>
-    public static PersonFirstName From(string value)
+    /// <param name="value">姓</param>
+    /// <returns>LastName インスタンス</returns>
+    public static LastName From(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
-            throw new ArgumentException("名は空文字列または null にできません。", nameof(value));
+            throw new ArgumentException("姓は空文字列または null にできません。", nameof(value));
         if (value.Length > 100)
-            throw new ArgumentException("名は100文字以下である必要があります。", nameof(value));
+            throw new ArgumentException("姓は100文字以下である必要があります。", nameof(value));
 
         return new(value);
     }
 
     /// <summary>
-    /// DB値から PersonFirstName を復元する
+    /// DB値から LastName を復元する
     /// </summary>
-    public static bool TryFromDbValue(string? value, out PersonFirstName result)
+    public static bool TryFromDbValue(string? value, out LastName result)
     {
         result = null!;
 
@@ -57,14 +57,14 @@ public sealed class PersonFirstName : ValueObject, IEquatable<PersonFirstName>
     }
 
     /// <summary>
-    /// 指定された PersonFirstName と等価かどうかを判定する
+    /// 指定された LastName と等価かどうかを判定する
     /// </summary>
-    public override bool Equals(object? obj) => Equals(obj as PersonFirstName);
+    public override bool Equals(object? obj) => Equals(obj as LastName);
 
     /// <summary>
-    /// 指定された PersonFirstName と等価かどうかを判定する
+    /// 指定された LastName と等価かどうかを判定する
     /// </summary>
-    public bool Equals(PersonFirstName? other)
+    public bool Equals(LastName? other)
     {
         if (other is null)
             return false;

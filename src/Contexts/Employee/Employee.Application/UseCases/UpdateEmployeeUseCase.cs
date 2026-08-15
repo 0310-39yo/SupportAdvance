@@ -41,8 +41,8 @@ public class UpdateEmployeeUseCase
                 throw new ArgumentException("EmployeeNumber must be between 1001 and 9999", nameof(request.EmployeeNumber));
 
             var typeDivision = ConvertToDivision(request.DivisionCode);
-            var bizId = EmployeeBizId.From(request.EmployeeNumber.Value);
-            var bizCode = EmployeeBizCode.From(typeDivision, bizId);
+            var bizId = BizId.From(request.EmployeeNumber.Value);
+            var bizCode = BizCode.From(typeDivision, bizId);
             // TODO: employee.ChangeCode(newCode) メソッドを呼び出し
         }
 
@@ -57,13 +57,13 @@ public class UpdateEmployeeUseCase
         return code is "M" or "T" or "C";
     }
 
-    private EmployeeTypeDivision ConvertToDivision(string code)
+    private BizDivision ConvertToDivision(string code)
     {
         return code switch
         {
-            "M" => EmployeeTypeDivision.RegularEmployee(),
-            "T" => EmployeeTypeDivision.Dispatched(),
-            "C" => EmployeeTypeDivision.Contractor(),
+            "M" => BizDivision.RegularEmployee(),
+            "T" => BizDivision.Dispatched(),
+            "C" => BizDivision.Contractor(),
             _ => throw new ArgumentException($"Invalid division code: {code}")
         };
     }

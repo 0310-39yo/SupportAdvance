@@ -8,16 +8,16 @@ namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
 /// 【表示】左0埋めで5桁（例："01234"）
 /// 【責務】ビジネスIDとしての従業員番号の管理と検証
 /// </summary>
-public sealed class EmployeeBizId : PrimitiveValueObject<int>, IEquatable<EmployeeBizId>
+public sealed class BizId : PrimitiveValueObject<int>, IEquatable<BizId>
 {
     public const int MinValue = 1001;
     public const int ReservedValue = 1000;
 
-    private EmployeeBizId(int value) : base(value, true) { }
+    private BizId(int value) : base(value, true) { }
 
-    public static EmployeeBizId From(int value) => new(value);
+    public static BizId From(int value) => new(value);
 
-    public static bool TryFrom(int? input, out EmployeeBizId result)
+    public static bool TryFrom(int? input, out BizId result)
     {
         result = null!;
         if (!input.HasValue)
@@ -33,9 +33,9 @@ public sealed class EmployeeBizId : PrimitiveValueObject<int>, IEquatable<Employ
         }
     }
 
-    public static EmployeeBizId FromDbValue(int value) => new(value);
+    public static BizId FromDbValue(int value) => new(value);
 
-    public static bool TryFromDbValue(int? input, out EmployeeBizId result)
+    public static bool TryFromDbValue(int? input, out BizId result)
     {
         result = null!;
         if (!input.HasValue)
@@ -55,9 +55,9 @@ public sealed class EmployeeBizId : PrimitiveValueObject<int>, IEquatable<Employ
 
     public override string ToString() => ValueField.ToString("D5");
 
-    public override bool Equals(object? obj) => Equals(obj as EmployeeBizId);
+    public override bool Equals(object? obj) => Equals(obj as BizId);
 
-    public bool Equals(EmployeeBizId? other)
+    public bool Equals(BizId? other)
     {
         if (other is null) return false;
         if (ReferenceEquals(this, other)) return true;
@@ -76,9 +76,9 @@ public sealed class EmployeeBizId : PrimitiveValueObject<int>, IEquatable<Employ
         base.Validate(normalized);
         if (normalized == ReservedValue)
             throw new ArgumentOutOfRangeException(nameof(normalized), normalized,
-                $"EmployeeBizId {ReservedValue} is reserved for system administrator.");
+                $"BizId {ReservedValue} is reserved for system administrator.");
         if (normalized < MinValue)
             throw new ArgumentOutOfRangeException(nameof(normalized), normalized,
-                $"EmployeeBizId must be {MinValue} or higher ({ReservedValue} is reserved).");
+                $"BizId must be {MinValue} or higher ({ReservedValue} is reserved).");
     }
 }

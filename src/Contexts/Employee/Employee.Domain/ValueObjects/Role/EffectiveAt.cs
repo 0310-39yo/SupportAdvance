@@ -1,7 +1,7 @@
 using SupportAdvance.Common.Clocks;
 using SupportAdvance.SharedKernel.ValueObjects;
 
-namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
+namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Role;
 
 /// <summary>
 /// 有効開始日時を表す ValueObject

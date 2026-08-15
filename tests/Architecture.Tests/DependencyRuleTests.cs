@@ -19,7 +19,7 @@ public class DependencyRuleTests
     public void Domain_Should_Not_DependOn_ApplicationOrInfrastructure()
     {
         var result = Types
-            .InAssembly(typeof(SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee.EmployeeTypeDivision).Assembly)
+            .InAssembly(typeof(SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee.BizDivision).Assembly)
             .ShouldNot()
             .HaveDependencyOnAny(
                 "SupportAdvance.Application",

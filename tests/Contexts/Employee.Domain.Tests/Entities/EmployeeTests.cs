@@ -1,3 +1,5 @@
+using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Person;
+
 namespace SupportAdvance.Tests.Contexts.Employee.Domain.Entities;
 
 using SupportAdvance.Common.Clocks;
@@ -22,22 +24,22 @@ public class EmployeeTests
     {
         var typeDivision = divisionCode switch
         {
-            "M" => EmployeeTypeDivision.RegularEmployee(),
-            "T" => EmployeeTypeDivision.Dispatched(),
-            "C" => EmployeeTypeDivision.Contractor(),
-            _ => EmployeeTypeDivision.RegularEmployee()
+            "M" => BizDivision.RegularEmployee(),
+            "T" => BizDivision.Dispatched(),
+            "C" => BizDivision.Contractor(),
+            _ => BizDivision.RegularEmployee()
         };
 
-        var employeeBizId = EmployeeBizId.From(bizId);
-        var bizCode = EmployeeBizCode.From(typeDivision, employeeBizId);
+        var employeeBizId = BizId.From(bizId);
+        var bizCode = BizCode.From(typeDivision, employeeBizId);
         var personRowIdVO = PersonRowId.From(personRowId);
 
         var person = Person.Create(
             personRowIdVO,
-            PersonLastName.From("山田"),
-            PersonFirstName.From("太郎"),
-            PersonLastNameKana.From("ヤマダ"),
-            PersonFirstNameKana.From("タロウ"));
+            LastName.From("山田"),
+            FirstName.From("太郎"),
+            LastNameKana.From("ヤマダ"),
+            FirstNameKana.From("タロウ"));
 
         return Employee.Create(
             EmployeeRowId.From(rowId),
@@ -112,16 +114,16 @@ public class EmployeeTests
     {
         // Arrange
         var rowId = EmployeeRowId.From(12345L);
-        var typeDivision = EmployeeTypeDivision.RegularEmployee();
-        var bizId = EmployeeBizId.From(1234);
-        var bizCode = EmployeeBizCode.From(typeDivision, bizId);
+        var typeDivision = BizDivision.RegularEmployee();
+        var bizId = BizId.From(1234);
+        var bizCode = BizCode.From(typeDivision, bizId);
         var personRowId = PersonRowId.From(67890L);
         var person = Person.Create(
             personRowId,
-            PersonLastName.From("山田"),
-            PersonFirstName.From("太郎"),
-            PersonLastNameKana.From("ヤマダ"),
-            PersonFirstNameKana.From("タロウ"));
+            LastName.From("山田"),
+            FirstName.From("太郎"),
+            LastNameKana.From("ヤマダ"),
+            FirstNameKana.From("タロウ"));
         var retiredOn = RetiredOn.From(GetTestDate());
 
         // Act
@@ -265,16 +267,16 @@ public class EmployeeTests
         var personRowId = PersonRowId.From(1L);
         var person = Person.Create(
             personRowId,
-            PersonLastName.From("山田"),
-            PersonFirstName.From("太郎"),
-            PersonLastNameKana.From("ヤマダ"),
-            PersonFirstNameKana.From("タロウ"));
+            LastName.From("山田"),
+            FirstName.From("太郎"),
+            LastNameKana.From("ヤマダ"),
+            FirstNameKana.From("タロウ"));
 
         var retiredEmployee = Employee.Create(
             EmployeeRowId.From(1L),
-            EmployeeTypeDivision.RegularEmployee(),
-            EmployeeBizId.From(1234),
-            EmployeeBizCode.From(EmployeeTypeDivision.RegularEmployee(), EmployeeBizId.From(1234)),
+            BizDivision.RegularEmployee(),
+            BizId.From(1234),
+            BizCode.From(BizDivision.RegularEmployee(), BizId.From(1234)),
             retiredOn,
             person,
             new List<DepartmentMembership>()

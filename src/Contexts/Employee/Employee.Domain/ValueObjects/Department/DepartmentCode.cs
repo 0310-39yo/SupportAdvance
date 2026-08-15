@@ -1,46 +1,47 @@
-using SupportAdvance.SharedKernel.ValueObjects.Abstractions;
 using System.Text.RegularExpressions;
+using SupportAdvance.SharedKernel.ValueObjects.Abstractions;
 
-namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
+namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Department;
 
 /// <summary>
-/// 権限コードを表す ValueObject
+/// 部署コードを表す ValueObject
 ///
 /// 責務：
-/// - 権限コードを型安全に保持
-/// - 値の検証（1-100文字、英数字と一部特殊文字）
+/// - 部署コード（4文字固定）を型安全に保持
+/// - 文字種検証（英数字のみ）と長さ検証
 /// - 等価性判定とハッシュコード計算
 /// </summary>
-public sealed class PermissionCode : PrimitiveValueObject<string>, IEquatable<PermissionCode>
+public sealed class DepartmentCode : PrimitiveValueObject<string>, IEquatable<DepartmentCode>
 {
     /// <summary>
-    /// 権限コードの値を取得する
+    /// 部署コード（4文字）の値を取得する
     /// </summary>
     public string Value => ValueField;
 
     /// <summary>
-    /// 指定された権限コードから PermissionCode を生成する（プライベートコンストラクタ）
+    /// 指定された部署コードから DepartmentCode を生成する（プライベートコンストラクタ）
     /// </summary>
-    /// <param name="value">権限コード</param>
-    private PermissionCode(string value) : base(value, true)
+    /// <param name="value">部署コード（4文字）</param>
+    /// <remarks>Validate は、基礎クラスのコンストラクタで自動実行される</remarks>
+    private DepartmentCode(string value) : base(value, true)
     {
     }
 
     /// <summary>
-    /// 指定された権限コードから PermissionCode を生成する
+    /// 指定された部署コードから DepartmentCode を生成する
     /// </summary>
-    /// <param name="value">権限コード（1-100文字、英数字、_、.のみ）</param>
-    /// <returns>生成された PermissionCode インスタンス</returns>
+    /// <param name="value">部署コード（4文字、英数字のみ）</param>
+    /// <returns>生成された DepartmentCode インスタンス</returns>
     /// <exception cref="ArgumentException">値が不正な場合</exception>
-    public static PermissionCode From(string value) => new(value);
+    public static DepartmentCode From(string value) => new(value);
 
     /// <summary>
-    /// 指定された権限コードから PermissionCode の生成を試みる（型安全版）
+    /// 指定された部署コードから DepartmentCode の生成を試みる（型安全版）
     /// </summary>
-    /// <param name="input">権限コード（null許容）</param>
+    /// <param name="input">部署コード（null許容）</param>
     /// <param name="result">生成されたインスタンス</param>
     /// <returns>成功時 true、失敗時 false（例外なし）</returns>
-    public static bool TryFrom(string? input, out PermissionCode result)
+    public static bool TryFrom(string? input, out DepartmentCode result)
     {
         result = null!;
 
@@ -63,10 +64,10 @@ public sealed class PermissionCode : PrimitiveValueObject<string>, IEquatable<Pe
     /// <summary>
     /// DB値からの変換
     /// </summary>
-    /// <param name="input">DB から読み込んだ権限コード（null許容）</param>
-    /// <param name="result">生成された PermissionCode インスタンス</param>
+    /// <param name="input">DB から読み込んだ部署コード（null許容）</param>
+    /// <param name="result">生成されたインスタンス</param>
     /// <returns>成功時 true、失敗時 false</returns>
-    public static bool TryFromDbValue(string? input, out PermissionCode result)
+    public static bool TryFromDbValue(string? input, out DepartmentCode result)
     {
         result = null!;
 
@@ -89,12 +90,12 @@ public sealed class PermissionCode : PrimitiveValueObject<string>, IEquatable<Pe
     /// <summary>
     /// オブジェクト等価性を判定する
     /// </summary>
-    public override bool Equals(object? obj) => Equals(obj as PermissionCode);
+    public override bool Equals(object? obj) => Equals(obj as DepartmentCode);
 
     /// <summary>
-    /// PermissionCode 間の等価性を判定する
+    /// DepartmentCode 間の等価性を判定する
     /// </summary>
-    public bool Equals(PermissionCode? other)
+    public bool Equals(DepartmentCode? other)
     {
         if (other is null)
         {
@@ -136,22 +137,22 @@ public sealed class PermissionCode : PrimitiveValueObject<string>, IEquatable<Pe
     {
         base.Validate(normalized);
 
-        // null/空文字列チェック
+        // null チェック
         if (string.IsNullOrEmpty(normalized))
         {
-            throw new ArgumentException("PermissionCode must not be null or empty.", nameof(normalized));
+            throw new ArgumentException("DepartmentCode must not be null or empty.", nameof(normalized));
         }
 
-        // 長さチェック（1-100文字）
-        if (normalized.Length > 100)
+        // 長さチェック（固定4文字）
+        if (normalized.Length != 4)
         {
-            throw new ArgumentException("PermissionCode must be 100 characters or less.", nameof(normalized));
+            throw new ArgumentException("DepartmentCode must be exactly 4 characters.", nameof(normalized));
         }
 
-        // 文字種チェック（英数字、_、.のみ）
-        if (!Regex.IsMatch(normalized, @"^[A-Za-z0-9_.]+$"))
+        // 文字種チェック（英数字のみ）
+        if (!Regex.IsMatch(normalized, @"^[A-Za-z0-9]{4}$"))
         {
-            throw new ArgumentException("PermissionCode must contain only alphanumeric characters, underscores, and dots.", nameof(normalized));
+            throw new ArgumentException("DepartmentCode must contain only alphanumeric characters.", nameof(normalized));
         }
     }
 }

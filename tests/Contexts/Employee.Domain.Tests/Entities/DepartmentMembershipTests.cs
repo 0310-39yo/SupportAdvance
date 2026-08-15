@@ -1,3 +1,6 @@
+using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Department;
+using SupportAdvance.Contexts.Employee.Domain.ValueObjects.DepartmentMembership;
+
 namespace SupportAdvance.Contexts.Employee.Domain.Tests.Entities;
 
 using SupportAdvance.Common.Clocks;
