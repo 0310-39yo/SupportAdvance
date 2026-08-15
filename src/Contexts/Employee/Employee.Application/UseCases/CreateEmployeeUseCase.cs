@@ -1,4 +1,5 @@
 namespace SupportAdvance.Contexts.Employee.Application.UseCases;
+using SupportAdvance.Application.Abstractions.Identifiers;
 using SupportAdvance.Contexts.Employee.Application.Repositories;
 
 using SupportAdvance.Contexts.Employee.Application.Dtos;
@@ -13,11 +14,13 @@ public class CreateEmployeeUseCase
 {
     private readonly IEmployeeRepository _repository;
     private readonly IClock _clock;
+    private readonly ISequenceProvider _sequenceProvider;
 
-    public CreateEmployeeUseCase(IEmployeeRepository repository, IClock clock)
+    public CreateEmployeeUseCase(IEmployeeRepository repository, IClock clock, ISequenceProvider sequenceProvider)
     {
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));
         _clock = clock ?? throw new ArgumentNullException(nameof(clock));
+        _sequenceProvider = sequenceProvider ?? throw new ArgumentNullException(nameof(sequenceProvider));
     }
 
     /// <summary>
@@ -41,8 +44,9 @@ public class CreateEmployeeUseCase
         var personFirstNameKana = PersonFirstNameKana.From(request.PersonFirstNameKana);
         var person = Person.Create(personRowId, personLastName, personFirstName, personLastNameKana, personFirstNameKana);
 
-        // 【Step 4】RowId 採番（プレースホルダー：実装では ISequenceProvider を使用）
-        var rowId = EmployeeRowId.From(1);  // TODO: ISequenceProvider で採番
+        // 【Step 4】RowId 採番（DB シーケンスから採番）
+        var sequenceValue = await _sequenceProvider.GetNextValueAsync();
+        var rowId = EmployeeRowId.From(sequenceValue);
 
         // 【Step 5】Domain Entity 生成
         var employee = Employee.Create(

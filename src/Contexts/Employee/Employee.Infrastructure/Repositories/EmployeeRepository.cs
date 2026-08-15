@@ -25,7 +25,6 @@ public class EmployeeRepository : IEmployeeRepository
     /// メモリ内ストア（テスト用）
     private readonly Dictionary<long, EmployeeDbModel> _employees = [];
     private readonly object _lock = new object();
-    private long _nextRowId = 1;
 
     public EmployeeRepository(EmployeeMapper mapper, IClock clock)
     {
@@ -100,6 +99,7 @@ public class EmployeeRepository : IEmployeeRepository
 
     /// <summary>
     /// 新規 Employee を DB に登録する
+    /// 【前提条件】RowId は Application層で事前採番済み
     /// </summary>
     public async Task AddAsync(Employee employee)
     {
@@ -109,9 +109,12 @@ public class EmployeeRepository : IEmployeeRepository
             {
                 var dbModel = _mapper.ToDbModel(employee);
 
-                // RowId の割り当て（テスト用）
-                if (dbModel.RowId == 0)
-                    dbModel.RowId = _nextRowId++;
+                // 【Assertion】RowId が Application層で事前採番されていることを確認
+                if (dbModel.RowId <= 0)
+                {
+                    throw new InvalidOperationException(
+                        $"RowId must be set by Application layer before AddAsync. Received: {dbModel.RowId}");
+                }
 
                 // 監査カラムの自動設定
                 var now = _clock.JstNow;

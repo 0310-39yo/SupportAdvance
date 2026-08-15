@@ -1,9 +1,11 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using SupportAdvance.Application.Abstractions.Identifiers;
 using SupportAdvance.Common.Clocks;
 using SupportAdvance.Common.Configuration;
 using SupportAdvance.Infrastructure.ORM.Dapper;
 using SupportAdvance.Infrastructure.ORM.RepoDB;
+using SupportAdvance.Infrastructure.Providers;
 
 namespace SupportAdvance.Infrastructure;
 
@@ -44,6 +46,13 @@ public static class DependencyInjection
 
         var clockInstance = ClockFactory.CreateClock(clockSettings);
         services.AddSingleton<IClock>(clockInstance); // ← インターフェース型で登録
+
+        // ステップ6: ISequenceProvider を登録（DB シーケンス采番用）
+        services.AddSingleton<ISequenceProvider>(provider =>
+        {
+            var databaseSettings = provider.GetRequiredService<IDatabaseSettings>();
+            return new SequenceProvider(databaseSettings);
+        });
 
         return services;
     }
