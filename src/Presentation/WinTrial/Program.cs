@@ -30,9 +30,9 @@ internal static class Program
                 services
                     .AddCrosscuttingModels(context.Configuration)
                     .AddInfrastructureModels(context.Configuration)
-                    .AddEmployeeInfrastructureModels()  // Employee Context Infrastructure を登録
+                    .AddEmployeeInfrastructureModels() // Employee Context Infrastructure を登録
                     .AddApplicationModels()
-                    .AddEmployeeApplicationModels()     // Employee Context Application を登録
+                    .AddEmployeeApplicationModels() // Employee Context Application を登録
                     .AddWinTrialModules()
                     ;
             })
