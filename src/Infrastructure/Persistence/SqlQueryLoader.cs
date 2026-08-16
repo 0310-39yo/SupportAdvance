@@ -22,8 +22,8 @@ public static class SqlQueryLoader
         var resourceName = $"SupportAdvance.Infrastructure.Persistence.Sql.{queryPath}.sql";
 
         using var stream = assembly.GetManifestResourceStream(resourceName)
-            ?? throw new FileNotFoundException(
-                $"SQL ファイルが見つかりません: {resourceName}");
+                           ?? throw new FileNotFoundException(
+                               $"SQL ファイルが見つかりません: {resourceName}");
 
         using var reader = new StreamReader(stream);
         return reader.ReadToEnd();

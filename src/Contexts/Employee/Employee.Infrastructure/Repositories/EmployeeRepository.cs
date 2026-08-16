@@ -1,17 +1,15 @@
-using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Person;
-
 namespace SupportAdvance.Contexts.Employee.Infrastructure.Repositories;
 
 using Dapper;
+using Common.Clocks;
 using SupportAdvance.Contexts.Employee.Application.Repositories;
-using SupportAdvance.Common.Clocks;
-using SupportAdvance.Contexts.Employee.Domain.Entities;
+using Domain.Entities;
 using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
-using SupportAdvance.Contexts.Employee.Infrastructure.Mappers;
-using SupportAdvance.Contexts.Employee.Infrastructure.Models;
-using SupportAdvance.Crosscutting.Logging;
+using Domain.ValueObjects.Person;
+using Mappers;
+using Models;
+using Crosscutting.Logging;
 using SupportAdvance.Infrastructure.Persistence;
-using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 /// <summary>
 /// Employee 集約の Repository 実装
@@ -23,20 +21,21 @@ using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 /// - GetByBizIdAsync: 実装済み（Dapper + SQL）
 /// - その他メソッド: 未実装（必要に応じて追加予定）
 /// </summary>
-public class EmployeeRepository : IEmployeeRepository
+public class EmployeeRepository(
+    EmployeeMapper mapper,
+    IClock clock,
+    IDbConnectionFactory connectionFactory,
+    IAppLogging<EmployeeRepository> logger)
+    : IEmployeeRepository
 {
-    private readonly EmployeeMapper _mapper;
-    private readonly IClock _clock;
-    private readonly IDbConnectionFactory _connectionFactory;
-    private readonly IAppLogging<EmployeeRepository> _logger;
+    private readonly EmployeeMapper _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+    private readonly IClock _clock = clock ?? throw new ArgumentNullException(nameof(clock));
 
-    public EmployeeRepository(EmployeeMapper mapper, IClock clock, IDbConnectionFactory connectionFactory, IAppLogging<EmployeeRepository> logger)
-    {
-        _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
-        _clock = clock ?? throw new ArgumentNullException(nameof(clock));
-        _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
+    private readonly IDbConnectionFactory _connectionFactory =
+        connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
+
+    private readonly IAppLogging<EmployeeRepository>
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
 
     /// <summary>
     /// BizId（従業員番号）で Employee を検索する
@@ -47,7 +46,9 @@ public class EmployeeRepository : IEmployeeRepository
         try
         {
             if (bizId <= 0)
+            {
                 throw new ArgumentException("Invalid BizId", nameof(bizId));
+            }
 
             var sql = SqlQueryLoader.LoadQuery("Employee.GetEmployeeByBizId");
 
@@ -57,7 +58,9 @@ public class EmployeeRepository : IEmployeeRepository
                 new { BizId = bizId });
 
             if (dbModel == null)
+            {
                 return null;
+            }
 
             // DepartmentMembership を取得
             var departmentMembershipSql = SqlQueryLoader.LoadQuery("Employee.GetEmployeeDepartmentMemberships");
@@ -99,13 +102,11 @@ public class EmployeeRepository : IEmployeeRepository
     /// DbModel から Person Entity を生成するヘルパーメソッド
     /// 【責務】SQL JOINで取得した m_persons データから Person を生成
     /// </summary>
-    private Person CreatePersonFromDbModel(EmployeeDbModel dbModel)
-    {
-        return Person.Create(
+    private Person CreatePersonFromDbModel(EmployeeDbModel dbModel) =>
+        Person.Create(
             PersonRowId.From(dbModel.PersonRowId),
             LastName.From(dbModel.LastName),
             FirstName.From(dbModel.FirstName),
             LastNameKana.From(dbModel.LastNameKana),
             FirstNameKana.From(dbModel.FirstNameKana));
-    }
 }

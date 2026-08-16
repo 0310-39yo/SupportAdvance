@@ -1,10 +1,8 @@
-using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Person;
-
 namespace SupportAdvance.Contexts.Employee.Application.Repositories;
 
-using SupportAdvance.Contexts.Employee.Domain.Entities;
+using Domain.Entities;
 using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
-using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
+using Domain.ValueObjects.Person;
 
 /// <summary>
 /// Employee 集約の Repository インターフェース

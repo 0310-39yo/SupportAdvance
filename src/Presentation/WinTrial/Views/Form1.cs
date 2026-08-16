@@ -23,21 +23,15 @@ public partial class Form1 : Form
         _appSettings = settings;
 
         // ViewModel を DataContext に設定
-        this.DataContext = _viewModel;
+        DataContext = _viewModel;
 
-        // Data Binding: textBoxExt1 ← BizIdSearchInput
-        textBoxExt1.DataBindings.Add("Text", _viewModel, nameof(Form1ViewModel.BizIdSearchInput), true, DataSourceUpdateMode.OnPropertyChanged);
+        textBoxExt1.DataBindings.Add("Text", _viewModel, nameof(Form1ViewModel.BizIdSearchInput), true,
+            DataSourceUpdateMode.OnPropertyChanged);
 
-        // Data Binding: label1 ← EmployeeFullName
         label1.DataBindings.Add("Text", _viewModel, nameof(Form1ViewModel.EmployeeFullName));
-
-        // Data Binding: label2 ← DepartmentNames
         label2.DataBindings.Add("Text", _viewModel, nameof(Form1ViewModel.DepartmentNames));
 
-        // Command Binding: sfButton1 ← ExecuteSampleUseCaseCommand
         sfButton1.Command = _viewModel.ExecuteSampleUseCaseCommand;
-
-        // Command Binding: sfButton2 ← SearchEmployeeByBizIdCommand
         sfButton2.Command = _viewModel.SearchEmployeeByBizIdCommand;
 
         _logger.LogInformation("Form1 initialized.");

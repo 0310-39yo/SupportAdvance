@@ -16,14 +16,9 @@ using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
 ///   - DbModel: プリミティブ型（ORM マッピング）
 ///   - Mapper: 変換ロジック（層の橋渡し）
 /// </summary>
-public class EmployeeMapper
+public class EmployeeMapper(IClock clock)
 {
-    private readonly IClock _clock;
-
-    public EmployeeMapper(IClock clock)
-    {
-        _clock = clock ?? throw new ArgumentNullException(nameof(clock));
-    }
+    private readonly IClock _clock = clock ?? throw new ArgumentNullException(nameof(clock));
 
     /// <summary>
     /// DbModel から Domain Entity に変換（読み込み用）

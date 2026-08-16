@@ -15,13 +15,13 @@ public partial class Form1ViewModel : ObservableObject
     private readonly GetEmployeeByBizIdUseCase _getEmployeeByBizIdUseCase;
 
     [ObservableProperty]
-    private string bizIdSearchInput = string.Empty;
+    private string _bizIdSearchInput = string.Empty;
 
     [ObservableProperty]
-    private string employeeFullName = string.Empty;
+    private string _employeeFullName = string.Empty;
 
     [ObservableProperty]
-    private string departmentNames = string.Empty;
+    private string _departmentNames = string.Empty;
 
     public Form1ViewModel(IAppLogging<Form1ViewModel> logger,
         IAppSettings appSettings,
