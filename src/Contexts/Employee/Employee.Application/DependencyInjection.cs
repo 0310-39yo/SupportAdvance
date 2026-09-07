@@ -3,7 +3,7 @@ using SupportAdvance.Application.Queries;
 using SupportAdvance.Contexts.Employee.Application.Queries;
 using SupportAdvance.Contexts.Employee.Application.UseCases;
 using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
-using EmployeeEntity = SupportAdvance.Contexts.Employee.Domain.Entities.Employee;
+using SupportAdvance.SharedKernel.Entities;
 
 namespace SupportAdvance.Contexts.Employee.Application;
 
@@ -31,7 +31,8 @@ public static class DependencyInjection
         services.AddScoped<DeleteEmployeeUseCase>();
 
         // Query Service（Context間でのドメインモデル参照）
-        services.AddScoped<IQueryService<EmployeeEntity, EmployeeRowId>, EmployeeQueryService>();
+        // IEmployee インターフェース経由で参照を提供（Domain Entity は隠蔽）
+        services.AddScoped<IQueryService<IEmployee, EmployeeRowId>, EmployeeQueryService>();
 
         return services;
     }

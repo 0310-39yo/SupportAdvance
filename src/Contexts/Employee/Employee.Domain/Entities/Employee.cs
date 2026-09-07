@@ -12,8 +12,9 @@ namespace SupportAdvance.Contexts.Employee.Domain.Entities;
 /// 【集約ID】EmployeeRowId（long ベース）
 /// 【責務】従業員の在職情報、部署配属、ロール、権限を管理
 /// 【ライフサイクル】採用～退職までの全期間をトラッキング
+/// 【Application層インターフェース】IEmployee を実装（Context間での参照用）
 /// </summary>
-public sealed class Employee : AggregateRoot<EmployeeRowId> {
+public sealed class Employee : AggregateRoot<EmployeeRowId>, IEmployee {
     /// <summary>
     /// 唯一の時計インスタンス（ドメインイベント発行時の日時取得に使用）
     /// </summary>
