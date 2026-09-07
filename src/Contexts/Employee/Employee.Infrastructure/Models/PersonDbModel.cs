@@ -3,14 +3,14 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace SupportAdvance.Contexts.Employee.Infrastructure.Models;
 
 /// <summary>
-/// Employee テーブルマッピングモデル
+/// Person テーブルマッピングモデル
 ///
-/// 【テーブル】m_employees
+/// 【テーブル】m_persons
 /// 【責務】DB スキーマとの ORM マッピング、プリミティブ型で保持
-/// 【特徴】従業員のビジネス属性のみ（個人情報は m_persons に分離、監査カラムは Repository で自動管理）
-/// 【1:1 関係】Person は m_persons テーブル（employee_row_id FK）で1:1に対応
+/// 【特徴】個人基本情報（氏名・カナ氏名）のみ、監査カラムは Repository で自動管理
+/// 【1:1 関係】Employee との 1:1 マッピング（employee_row_id FK で連携）
 /// </summary>
-public class EmployeeDbModel
+public class PersonDbModel
 {
     /// <summary>
     /// データベース行ID（主キー、Sequence自動採番）
@@ -28,36 +28,40 @@ public class EmployeeDbModel
     public byte[] RowVersion { get; set; } = [];
 
     /// <summary>
-    /// ビジネス区分（M/D/C のいずれか）
-    /// 【対応カラム】biz_division
-    /// 【値】M=正社員, D=派遣, C=契約
+    /// 従業員RowId（m_employees の row_id）
+    /// 【対応カラム】employee_row_id
+    /// 【関係】Person が属する Employee を特定（1:1 関係）
     /// </summary>
-    [Column("biz_division")]
-    public string BizDivision { get; set; } = string.Empty;
+    [Column("employee_row_id")]
+    public long EmployeeRowId { get; set; }
 
     /// <summary>
-    /// ビジネスID（従業員番号、1001以上）
-    /// 【対応カラム】biz_id
-    /// 【特徴】区分ごとに有効範囲が異なる
+    /// 姓
+    /// 【対応カラム】last_name
     /// </summary>
-    [Column("biz_id")]
-    public int BizId { get; set; }
+    [Column("last_name")]
+    public string LastName { get; set; } = string.Empty;
 
     /// <summary>
-    /// ビジネスコード（区分とIDから組み立てられたコード）
-    /// 【対応カラム】biz_code
-    /// 【形式】M001001, D001002, C001003 など（区分+ID）
+    /// 名
+    /// 【対応カラム】first_name
     /// </summary>
-    [Column("biz_code")]
-    public string BizCode { get; set; } = string.Empty;
+    [Column("first_name")]
+    public string FirstName { get; set; } = string.Empty;
 
     /// <summary>
-    /// 退職日（在職状況を示す）
-    /// 【対応カラム】retired_on
-    /// 【制約】NULL許可（現職時は NULL）
+    /// 姓（カナ）
+    /// 【対応カラム】last_name_kana
     /// </summary>
-    [Column("retired_on")]
-    public DateTime? RetiredOn { get; set; }
+    [Column("last_name_kana")]
+    public string LastNameKana { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 名（カナ）
+    /// 【対応カラム】first_name_kana
+    /// </summary>
+    [Column("first_name_kana")]
+    public string FirstNameKana { get; set; } = string.Empty;
 
     /// <summary>
     /// 作成日時（LocalDateTime/JST）
@@ -68,7 +72,7 @@ public class EmployeeDbModel
     public DateTime CreatedAt { get; set; }
 
     /// <summary>
-    /// 作成者RowId
+    /// 作成者RowId（m_persons の row_id）
     /// 【対応カラム】created_by
     /// 【責務】監査ログ（誰が作成したか）
     /// </summary>
@@ -85,7 +89,7 @@ public class EmployeeDbModel
     public DateTime? UpdatedAt { get; set; }
 
     /// <summary>
-    /// 更新者RowId
+    /// 更新者RowId（m_persons の row_id）
     /// 【対応カラム】updated_by
     /// 【制約】NULL許可（未更新時）
     /// 【責務】監査ログ（最後に誰が更新したか）
@@ -103,7 +107,7 @@ public class EmployeeDbModel
     public DateTime? DeletedAt { get; set; }
 
     /// <summary>
-    /// 削除者RowId
+    /// 削除者RowId（m_persons の row_id）
     /// 【対応カラム】deleted_by
     /// 【制約】NULL許可（削除されていない場合）
     /// 【責務】監査ログ（誰が削除したか）

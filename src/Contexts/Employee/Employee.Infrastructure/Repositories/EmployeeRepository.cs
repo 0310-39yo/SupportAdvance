@@ -62,6 +62,18 @@ public class EmployeeRepository(
                 return null;
             }
 
+            // Person を m_persons から読み込み（employee_row_id で JOIN）
+            var personSql = SqlQueryLoader.LoadQuery("Employee.GetPersonByEmployeeRowId");
+            _logger.LogInformation($"Person SQL loaded. EmployeeRowId={dbModel.RowId}");
+            var personDbModel = await connection.QueryFirstOrDefaultAsync<PersonDbModel>(
+                personSql,
+                new { EmployeeRowId = dbModel.RowId });
+
+            if (personDbModel == null)
+            {
+                throw new InvalidOperationException($"Person not found for Employee RowId={dbModel.RowId}");
+            }
+
             // DepartmentMembership を取得
             var departmentMembershipSql = SqlQueryLoader.LoadQuery("Employee.GetEmployeeDepartmentMemberships");
             _logger.LogInformation($"DepartmentMembership SQL loaded. RowId={dbModel.RowId}");
@@ -69,8 +81,7 @@ public class EmployeeRepository(
                 departmentMembershipSql,
                 new { EmployeeRowId = dbModel.RowId });
 
-            var person = CreatePersonFromDbModel(dbModel);
-            return _mapper.ToDomainEntity(dbModel, person, departmentMemberships.ToList());
+            return _mapper.ToDomainEntity(dbModel, personDbModel, departmentMemberships.ToList());
         }
         catch (Exception ex)
         {
@@ -97,16 +108,4 @@ public class EmployeeRepository(
 
     public Task DeleteAsync(EmployeeRowId id)
         => throw new NotImplementedException("DeleteAsync is not yet implemented");
-
-    /// <summary>
-    /// DbModel から Person Entity を生成するヘルパーメソッド
-    /// 【責務】SQL JOINで取得した m_persons データから Person を生成
-    /// </summary>
-    private Person CreatePersonFromDbModel(EmployeeDbModel dbModel) =>
-        Person.Create(
-            PersonRowId.From(dbModel.PersonRowId),
-            LastName.From(dbModel.LastName),
-            FirstName.From(dbModel.FirstName),
-            LastNameKana.From(dbModel.LastNameKana),
-            FirstNameKana.From(dbModel.FirstNameKana));
 }

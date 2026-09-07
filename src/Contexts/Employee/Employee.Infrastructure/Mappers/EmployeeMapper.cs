@@ -23,14 +23,24 @@ public class EmployeeMapper(IClock clock)
     /// <summary>
     /// DbModel から Domain Entity に変換（読み込み用）
     /// 【責務】DB の プリミティブ型 → Domain の ValueObject に変換
+    /// 【パラメータ】
+    ///   - dbModel: m_employees テーブルのデータ
+    ///   - personDbModel: m_persons テーブルのデータ（1:1 対応）
+    ///   - departmentMemberships: m_department_memberships テーブルのデータ（1:N 対応）
     /// </summary>
-    public Employee ToDomainEntity(EmployeeDbModel dbModel,
-        Person person,
+    public Employee ToDomainEntity(
+        EmployeeDbModel dbModel,
+        PersonDbModel personDbModel,
         List<DepartmentMembershipDbModel>? departmentMemberships = null)
     {
-        // DB値から ValueObject に変換（責務を ValueObject に委譲）
-        var typeDivision = BizDivision.FromDbValue(dbModel.BizDivision);
+        ArgumentNullException.ThrowIfNull(dbModel);
+        ArgumentNullException.ThrowIfNull(personDbModel);
 
+        // Person の変換（PersonMapper に委譲）
+        var person = PersonMapper.ToDomainEntity(personDbModel);
+
+        // ビジネス属性の変換
+        var typeDivision = BizDivision.FromDbValue(dbModel.BizDivision);
         var bizId = BizId.From(dbModel.BizId);
         var bizCode = BizCode.From(typeDivision, bizId);
 
@@ -75,7 +85,6 @@ public class EmployeeMapper(IClock clock)
     /// <summary>
     /// Domain Entity から DbModel に変換（Insert/Update 用）
     /// 【責務】Domain の ValueObject → DB の プリミティブ型に変換
-    /// 【注意】このメソッドは未実装（Insert/Update が実装される際に使用予定）
     /// </summary>
     public EmployeeDbModel ToDbModel(Employee entity) =>
         new()
@@ -83,6 +92,17 @@ public class EmployeeMapper(IClock clock)
             RowId = entity.RowId.Value,
             BizDivision = entity.TypeDivision.ToDbValue(),
             BizId = entity.BizId.Value,
-            RetiredOn = entity.RetiredOn.IsSet ? entity.RetiredOn.Value.Value : null
+            BizCode = entity.BizCode.ToString(),
+            RetiredOn = entity.RetiredOn.IsSet ? entity.RetiredOn.Value.Value : null,
+            UpdatedAt = DateTime.UtcNow,
+            UpdatedBy = 0 // ← 実装計画では Repository で上書きされる
         };
+
+    /// <summary>
+    /// Domain Person を DbModel に変換する際のヘルパーメソッド
+    /// 【責務】Employee.Person → PersonDbModel への変換
+    /// 【呼び出し元】Repository の SaveAsync メソッド
+    /// </summary>
+    public PersonDbModel ToPersonDbModel(Person person, long employeeRowId) =>
+        PersonMapper.ToDbModel(person, employeeRowId);
 }
