@@ -1,11 +1,10 @@
-using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Permission;
-using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Role;
-
-namespace SupportAdvance.Contexts.Employee.Domain.Entities;
-
 using SupportAdvance.Common.Clocks;
 using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
+using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Permission;
+using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Role;
 using SupportAdvance.SharedKernel.Entities;
+
+namespace SupportAdvance.Contexts.Employee.Domain.Entities;
 
 /// <summary>
 /// 権限割り当てエンティティ（権限有効期間管理）
@@ -16,7 +15,9 @@ using SupportAdvance.SharedKernel.Entities;
 /// </summary>
 public sealed class PermissionAssignment : Entity<PermissionAssignmentRowId>
 {
-    /// <summary>所属従業員の ID</summary>
+    /// <summary>
+    /// 所属従業員の ID
+    /// </summary>
     public EmployeeRowId EmployeeRowId { get; private set; }
 
     /// <summary>

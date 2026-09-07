@@ -406,6 +406,83 @@ if (!entity.UpdatedAt.HasUpdated) { ... }  // IsSet で状態判定
 
 ---
 
+## 🔗 Context間のデータ共有パターン
+
+複数の Bounded Context が別の Context のドメインモデル（Aggregate）情報を **リアルタイムに読み取る** 場合、**ジェネリック Query Service パターン** を採用します。
+
+### 問題
+
+- Domain Events は非同期・イベント駆動なため、「今この瞬間の最新データ」が必要な場合には不向き
+- Context別 Application層同士は参照禁止
+- 汎用Application層がContext固有のインターフェース（IEmployeeQuery など）を定義すると、Context肥大化
+
+### 解決法：ジェネリック Query Service パターン
+
+**1. 汎用Application層に抽象的なインターフェースを定義**
+
+```csharp
+// src/Application/Queries/IQueryService.cs
+namespace SupportAdvance.Application.Queries;
+
+public interface IQueryService<TAggregate, TId> 
+    where TAggregate : IAggregateRoot
+{
+    Task<TAggregate?> GetByIdAsync(TId id);
+}
+```
+
+**2. 各Contextが実装**
+
+```csharp
+// src/Contexts/Employee/Application/Queries/EmployeeQueryService.cs
+public class EmployeeQueryService : IQueryService<Employee, EmployeeId>
+{
+    private readonly IEmployeeRepository _repository;
+
+    public async Task<Employee?> GetByIdAsync(EmployeeId id)
+    {
+        return await _repository.GetByIdAsync(id);
+    }
+}
+```
+
+**3. 他のContextが使用**
+
+```csharp
+// src/Contexts/CarPreferences/Application/UseCases/UpdateCarPreferencesUseCase.cs
+public class UpdateCarPreferencesUseCase
+{
+    private readonly IQueryService<Employee, EmployeeId> _employeeQuery;
+
+    public async Task Execute(EmployeeId employeeId, CarModelRequest request)
+    {
+        var employee = await _employeeQuery.GetByIdAsync(employeeId);
+        if (employee == null)
+            throw new EmployeeNotFoundException();
+
+        var pref = new CarPreferences(employeeId, request.Model);
+        await _repository.SaveAsync(pref);
+    }
+}
+```
+
+**4. DI設定**
+
+```csharp
+// Program.cs
+services.AddScoped<IQueryService<Employee, EmployeeId>, EmployeeQueryService>();
+services.AddScoped<IQueryService<InsuranceProfile, InsuranceId>, InsuranceQueryService>();
+```
+
+### メリット
+
+✅ **汎用層が肥大化しない** — ジェネリック定義のみ  
+✅ **スケーラブル** — Aggregate追加時も構造不変  
+✅ **Context独立** — 各Context が自身の Aggregate を管理  
+✅ **依存方向が正** — Context別Application→汎用Application（正常方向）  
+
+---
+
 ## 📁 ドキュメント管理
 
 ### フォルダ構成
@@ -523,6 +600,7 @@ CREATE TABLE [dbo].[t_YourTable] (
 
 | 日付 | 更新内容 |
 |---|---|
+| 2026-09-06 | Context間のデータ共有パターンを追加。ジェネリック Query Service `IQueryService<TAggregate, TId>` パターンを採用。複数Contextがリアルタイムにドメインモデル情報にアクセスするための標準パターン。汎用層肥大化を防止 |
 | 2026-07-31（後）| Application層の依存関係表を修正。汎用Application層と Bounded Context別Application層の区別を明記。「Application（Context別）→ Application（汎用層）」が IUseCase 実装パターンとして許可されることを追記 |
 | 2026-07-31 | CLEAN_ARCHITECTURE_GUIDELINES.md の実コードとの不一致修正に合わせて本ファイルも修正。Domain/Common/SharedKernel の依存関係表を実装に合わせて訂正、Crosscutting→Infrastructure禁止を明記、SlnArch（未検証）の記述をNetArchTest.Rulesへの参照に置き換え |
 | 2026-07-30 | LocalDateTime 使用規則を追加。全層で IClock 経由の LocalDateTime 使用を明確化 |

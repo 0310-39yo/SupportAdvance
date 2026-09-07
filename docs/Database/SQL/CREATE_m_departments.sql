@@ -1,7 +1,7 @@
 USE [SupportAdvance]
 GO
 
-/****** Object:  Table [dbo].[m_departments]    Script Date: 2026/08/16 5:55:30 ******/
+/****** Object:  Table [dbo].[m_departments]    Script Date: 2026/09/07 5:38:15 ******/
 SET ANSI_NULLS ON
 GO
 

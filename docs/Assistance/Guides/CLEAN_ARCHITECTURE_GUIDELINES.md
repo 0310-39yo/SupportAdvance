@@ -387,6 +387,138 @@ public class UpdateCarPreferenceUseCase
 }
 ```
 
+#### Context間のデータ共有：ジェネリック Query Service パターン
+
+複数の Bounded Context が別の Context のドメインモデル（Aggregate）情報を **リアルタイムに読み取る** 場合、**ジェネリック Query Service パターン** を採用します。
+
+**背景:**
+- Domain Events は非同期・遅延同期なため、「UseCase実行時の最新データ」が必要な場合には不向き
+- Context別 Application層同士の参照は禁止
+- 汎用Application層がContext固有のインターフェース（`IEmployeeQuery`, `IInsuranceQuery` など）を定義すると、Context増加時に肥大化する
+
+**解決策：汎用Application層にジェネリックインターフェースを定義**
+
+```csharp
+// src/Application/Queries/IQueryService.cs
+// ← 汎用層：Aggregate非依存な抽象定義のみ
+namespace SupportAdvance.Application.Queries;
+
+public interface IQueryService<TAggregate, TId> 
+    where TAggregate : IAggregateRoot
+{
+    Task<TAggregate?> GetByIdAsync(TId id);
+}
+```
+
+**各Contextが実装:**
+
+```csharp
+// src/Contexts/Employee/Application/Queries/EmployeeQueryService.cs
+public class EmployeeQueryService : IQueryService<Employee, EmployeeId>
+{
+    private readonly IEmployeeRepository _repository;
+
+    public async Task<Employee?> GetByIdAsync(EmployeeId id)
+    {
+        return await _repository.GetByIdAsync(id);
+    }
+}
+
+// src/Contexts/Insurance/Application/Queries/InsuranceQueryService.cs
+public class InsuranceQueryService : IQueryService<InsuranceProfile, InsuranceId>
+{
+    private readonly IInsuranceRepository _repository;
+
+    public async Task<InsuranceProfile?> GetByIdAsync(InsuranceId id)
+    {
+        return await _repository.GetByIdAsync(id);
+    }
+}
+```
+
+**他のContextが使用:**
+
+```csharp
+// src/Contexts/CarPreferences/Application/UseCases/UpdateCarPreferencesUseCase.cs
+public class UpdateCarPreferencesUseCase
+{
+    // 汎用Application層の IQueryService<Employee, EmployeeId> に依存
+    // → Employee Context の実装が DI で注入される
+    private readonly IQueryService<Employee, EmployeeId> _employeeQuery;
+
+    public UpdateCarPreferencesUseCase(
+        IQueryService<Employee, EmployeeId> employeeQuery,
+        ICarPreferencesRepository preferencesRepo)
+    {
+        _employeeQuery = employeeQuery;
+        _preferencesRepo = preferencesRepo;
+    }
+
+    public async Task Execute(EmployeeId employeeId, CarModelRequest request)
+    {
+        // リアルタイムに Employee 情報を取得
+        var employee = await _employeeQuery.GetByIdAsync(employeeId);
+        if (employee == null)
+            throw new EmployeeNotFoundException();
+
+        var pref = new CarPreferences(employeeId, request.Model);
+        await _preferencesRepo.SaveAsync(pref);
+    }
+}
+```
+
+**DI設定:**
+
+```csharp
+// Program.cs
+public static void Main(string[] args)
+{
+    var services = new ServiceCollection();
+    
+    // Employee Context
+    services.AddScoped<IQueryService<Employee, EmployeeId>, EmployeeQueryService>();
+    services.AddScoped<IEmployeeRepository, EmployeeRepository>();
+    
+    // Insurance Context
+    services.AddScoped<IQueryService<InsuranceProfile, InsuranceId>, InsuranceQueryService>();
+    services.AddScoped<IInsuranceRepository, InsuranceRepository>();
+    
+    // CarPreferences Context
+    services.AddScoped<ICarPreferencesRepository, CarPreferencesRepository>();
+}
+```
+
+**メリット:**
+
+| メリット | 説明 |
+|---------|------|
+| **汎用層が肥大化しない** | `IQueryService<TAggregate, TId>` という単一のジェネリック定義。Context固有のインターフェースが増えない |
+| **スケーラブル** | Aggregate（Employee, Insurance, Benefits など）が増えても、汎用層の構造は不変 |
+| **Context独立** | 各Contextが自身の Aggregate を独立管理。Context間の結合度が低い |
+| **依存方向が正** | Context別Application→汎用Application（**外から内への正常な依存方向**） |
+| **リアルタイムアクセス** | Domain Events（非同期）ではなく、UseCase実行時の最新データを取得可能 |
+
+**参照フロー:**
+
+```
+汎用Application層:
+└── IQueryService<TAggregate, TId>（ジェネリック定義）
+        ▲
+        │ implements
+        │
+Employee Context別Application層:
+└── EmployeeQueryService implements IQueryService<Employee, EmployeeId>
+        │
+        ├── depends on → Employee Domain
+        └── depends on → IEmployeeRepository（DI注入）
+        
+他のContext（CarPreferences等）別Application層:
+└── UpdateCarPreferencesUseCase
+        │
+        ├── depends on → IQueryService<Employee, EmployeeId>（汎用層経由）
+        └── depends on → CarPreferences Domain
+```
+
 ---
 
 ### 6. **Infrastructure Layer**
@@ -596,7 +728,9 @@ dotnet format --verify-no-changes --verbosity diagnostic
 
 ### 基本原則
 
-- **全層で `LocalDateTime` を使用** — `DateTime` の直接使用は禁止
+- **Domain/Application 層**: `LocalDateTime` を使用（型安全、ビジネスロジック）
+- **Infrastructure/DbModel 層**: `DateTime` プリミティブ型を使用（ORM マッピング必須）
+- **Mapper 層**: 双方向変換を実装（`new LocalDateTime(dt)` / `localDateTime.Value`）
 - **`IClock` 経由でのみ日時を取得** — System.DateTime.Now 等への直接アクセスは禁止
 - **ローカライズされた時刻を一貫して使用** — JST（日本標準時）に統一
 
@@ -633,23 +767,33 @@ public class MyUseCase
 
 ### 外部システム/DB からの DateTime 変換
 
-**原則:** 受け取った層で早期に `LocalDateTime` に変換し、以降は `LocalDateTime` のみを使用。
+**原則:** Infrastructure層の Mapper で DB の DateTime を LocalDateTime に変換。以降 Domain/Application では LocalDateTime のみを使用。
 
 **実装パターン:**
 ```csharp
-// ✅ OK: DB から取得した DateTime を早期に LocalDateTime に変換
-public class CarPreferenceRepository
+// ✅ OK: DbModel（DateTime プリミティブ型）から Domain Entity（LocalDateTime）に変換
+public class EmployeeMapper
 {
-    public async Task<CarPreference> GetByIdAsync(int id)
+    public Employee ToDomainEntity(EmployeeDbModel dbModel)
     {
-        var dto = await _connection.QueryFirstOrDefaultAsync<CarPreferenceDto>(
-            "SELECT * FROM CarPreferences WHERE Id = @Id",
-            new { Id = id });
+        // DB値（DateTime）から ValueObject に変換
+        var retiredOn = RetiredOn.Unset;
+        if (dbModel.RetiredOn.HasValue)
+        {
+            // DateTime → LocalDateTime（Mapper が変換責務を持つ）
+            retiredOn = RetiredOn.From(new LocalDateTime(dbModel.RetiredOn.Value));
+        }
         
-        // 受け取った層で変換
-        var createdAt = CreatedAt.TryFrom(LocalDateTime.From(dto.CreatedAtUtc));
-        
-        return new CarPreference(id, ..., createdAt);
+        return new Employee(..., retiredOn);
+    }
+    
+    public EmployeeDbModel ToDbModel(Employee entity)
+    {
+        // Domain の LocalDateTime → DB の DateTime に変換
+        return new EmployeeDbModel
+        {
+            RetiredOn = entity.RetiredOn.IsSet ? entity.RetiredOn.Value.Value : null
+        };
     }
 }
 ```
@@ -674,10 +818,10 @@ services.AddSingleton<IClock>(new FixedClock(new LocalDateTime(2026, 1, 1, 10, 0
 
 | 層 | 使用パターン | 備考 |
 |---|---|---|
-| Domain | `IClock` をパラメータで受け取り検証 | ビジネスロジック検証用 |
-| Application | `_clock.JstNow` で現在時刻取得 | DI注入 |
-| Infrastructure | DB保存時に `LocalDateTime.Value` を使用 | 型変換 |
-| Presentation | `IClock` をDIで参照 | ViewModel で表示用に変換 |
+| Domain | `LocalDateTime` を ValueObject で保持、`IClock` をパラメータで受け取り検証 | ビジネスロジック検証用 |
+| Application | `_clock.JstNow` で現在時刻取得、`LocalDateTime` を使用 | DI注入 |
+| Infrastructure | DbModel は `DateTime` プリミティブ型、Mapper が `LocalDateTime` ↔ `DateTime` を変換 | 層間の変換責務 |
+| Presentation | `IClock` をDIで参照、表示用に `LocalDateTime` を文字列に変換 | ViewModel で表示用に変換 |
 
 ---
 
@@ -913,6 +1057,8 @@ public class DependencyRuleTests
 
 | 日付 | 更新内容 |
 |---|---|
+| 2026-09-06 | Application層に「Context間のデータ共有」セクションを追加。ジェネリック Query Service パターン `IQueryService<TAggregate, TId>` を標準パターンとして採用。複数Contextがリアルタイムに異なるAggregateの情報をリアルタイムにアクセスするための依存方向が正しい設計。汎用Application層の肥大化を防止 |
+| 2026-09-01 | LocalDateTime 使用規則を修正。「全層で LocalDateTime」という誤りを修正し、正しい層別責務を明記：Domain/Application は LocalDateTime、Infrastructure/DbModel は DateTime プリミティブ型、Mapper が双方向変換。実装例を EmployeeMapper に合わせて更新。外部システムからの DateTime 変換のパターンを Mapper での変換例に改善 |
 | 2026-07-31（後）| Application層の説明に「汎用Application vs Bounded Context別Application」の区別を明記。マトリックスで「Application → Application」がインターフェース実装パターン（汎用層→Context別層）として許可されることを明確化。実装検査時に見つかった CarPreferences.Application が Application.UseCases に依存する件について、正当な設計パターンであることをドキュメントで担保 |
 | 2026-07-31 | 実コード（各 `.csproj` の `ProjectReference` / `using` 宣言）との不一致を修正。①Common⇔SharedKernelの依存方向を実装に合わせて反転（Common起点に修正）②Crosscutting→Infrastructureの循環参照定義を削除しInfrastructure→Crosscuttingの一方向に統一③冒頭図をInfrastructureが最内層に見える誤った表現から同心円型に修正④編集し忘れの記述（「✓ 修正済み」）を削除⑤自動検証をSlnArch（未検証）からNetArchTest.Rulesの具体的なテストコード例に置き換え |
 | 2026-07-09 | 初版作成。各層の責務と依存関係を定義 |

@@ -28,7 +28,7 @@ namespace SupportAdvance.Infrastructure.Providers;
 public class SequenceProvider : ISequenceProvider
 {
     private readonly string _connectionString;
-    private readonly object _lockObject = new object();
+    private readonly Lock _lockObject = new Lock();
 
     public SequenceProvider(IDatabaseSettings databaseSettings)
     {
@@ -86,40 +86,36 @@ public class SequenceProvider : ISequenceProvider
 
         try
         {
-            using (var connection = new SqlConnection(_connectionString))
+            using var connection = new SqlConnection(_connectionString);
+            connection.Open();
+
+            const string sql = "SELECT NEXT VALUE FOR [dbo].[s_row_id_sequence];";
+
+            for (var i = 0; i < count; i++)
             {
-                connection.Open();
+                using var command = connection.CreateCommand();
+                command.CommandText = sql;
+                command.CommandType = CommandType.Text;
+                command.CommandTimeout = 30;  // デフォルト 30秒
 
-                const string sql = "SELECT NEXT VALUE FOR [dbo].[s_row_id_sequence];";
+                var value = command.ExecuteScalar();
 
-                for (int i = 0; i < count; i++)
+                if (value is long rowId)
                 {
-                    using (var command = connection.CreateCommand())
-                    {
-                        command.CommandText = sql;
-                        command.CommandType = CommandType.Text;
-                        command.CommandTimeout = 30;  // デフォルト 30秒
-
-                        var value = command.ExecuteScalar();
-
-                        if (value is long rowId)
-                        {
-                            result.Add(rowId);
-                        }
-                        else if (value is int intValue)
-                        {
-                            result.Add(Convert.ToInt64(intValue));
-                        }
-                        else if (value != null)
-                        {
-                            result.Add(Convert.ToInt64(value));
-                        }
-                        else
-                        {
-                            throw new SequenceProviderException(
-                                "Failed to get the next sequence value from [dbo].[s_row_id_sequence]. ExecuteScalar returned null.");
-                        }
-                    }
+                    result.Add(rowId);
+                }
+                else if (value is int intValue)
+                {
+                    result.Add(Convert.ToInt64(intValue));
+                }
+                else if (value != null)
+                {
+                    result.Add(Convert.ToInt64(value));
+                }
+                else
+                {
+                    throw new SequenceProviderException(
+                        "Failed to get the next sequence value from [dbo].[s_row_id_sequence]. ExecuteScalar returned null.");
                 }
             }
 

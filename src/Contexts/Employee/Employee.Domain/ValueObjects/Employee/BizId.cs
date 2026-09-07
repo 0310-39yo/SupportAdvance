@@ -13,7 +13,9 @@ public sealed class BizId : PrimitiveValueObject<int>, IEquatable<BizId>
     public const int MinValue = 1001;
     public const int ReservedValue = 1000;
 
-    private BizId(int value) : base(value, true) { }
+    private BizId(int value) : base(value, true)
+    {
+    }
 
     public static BizId From(int value) => new(value);
 
@@ -21,7 +23,10 @@ public sealed class BizId : PrimitiveValueObject<int>, IEquatable<BizId>
     {
         result = null!;
         if (!input.HasValue)
+        {
             return false;
+        }
+
         try
         {
             result = From(input.Value);
@@ -39,7 +44,10 @@ public sealed class BizId : PrimitiveValueObject<int>, IEquatable<BizId>
     {
         result = null!;
         if (!input.HasValue)
+        {
             return false;
+        }
+
         try
         {
             result = FromDbValue(input.Value);
@@ -59,8 +67,16 @@ public sealed class BizId : PrimitiveValueObject<int>, IEquatable<BizId>
 
     public bool Equals(BizId? other)
     {
-        if (other is null) return false;
-        if (ReferenceEquals(this, other)) return true;
+        if (other is null)
+        {
+            return false;
+        }
+
+        if (ReferenceEquals(this, other))
+        {
+            return true;
+        }
+
         return ValueField == other.ValueField;
     }
 
@@ -75,10 +91,15 @@ public sealed class BizId : PrimitiveValueObject<int>, IEquatable<BizId>
     {
         base.Validate(normalized);
         if (normalized == ReservedValue)
+        {
             throw new ArgumentOutOfRangeException(nameof(normalized), normalized,
                 $"BizId {ReservedValue} is reserved for system administrator.");
+        }
+
         if (normalized < MinValue)
+        {
             throw new ArgumentOutOfRangeException(nameof(normalized), normalized,
                 $"BizId must be {MinValue} or higher ({ReservedValue} is reserved).");
+        }
     }
 }

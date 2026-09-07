@@ -616,8 +616,8 @@ grep -rn "DateTime" src/SharedKernel/ValueObjects/Audit/*.cs
 2. **docs/Assistance/Guides/LocalDateTime_タイムゾーン_ガイド.md**
    - Audit ValueObject の LocalDateTime 保持を明記
 
-3. **docs/SharedKernel/Audit/監査ValueObject_null処理詳細設計.md**
-   - FromDbValue / ToDbValue の仕様を追加
+3. **docs/Assistance/Guides/null厳格性設計ガイド.md**
+   - FromDbValue / ToDbValue の仕様を追加（旧「監査ValueObject_null処理詳細設計.md」は本ガイドに統合）
 
 ---
 

@@ -13,19 +13,29 @@ namespace SupportAdvance.Contexts.Employee.Domain.DomainEvents;
 /// </summary>
 public sealed class EmployeeRetiredEvent : IDomainEvent
 {
-    /// <summary>集約ルート ID（RowId）</summary>
+    /// <summary>
+    /// 集約ルート ID（RowId）
+    /// </summary>
     public long AggregateRootId { get; }
 
-    /// <summary>部署コード（参考情報）</summary>
+    /// <summary>
+    /// 部署コード（参考情報）
+    /// </summary>
     public string Division { get; }
 
-    /// <summary>従業員番号（参考情報）</summary>
+    /// <summary>
+    /// 従業員番号（参考情報）
+    /// </summary>
     public string Number { get; }
 
-    /// <summary>退職日（JST）</summary>
+    /// <summary>
+    /// 退職日（JST）
+    /// </summary>
     public LocalDateTime RetiredOn { get; }
 
-    /// <summary>イベント発生時刻（JST）</summary>
+    /// <summary>
+    /// イベント発生時刻（JST）
+    /// </summary>
     public LocalDateTime OccurredAt { get; }
 
     public EmployeeRetiredEvent(

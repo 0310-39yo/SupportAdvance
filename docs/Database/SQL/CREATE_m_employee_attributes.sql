@@ -1,7 +1,7 @@
 USE [SupportAdvance]
 GO
 
-/****** Object:  Table [dbo].[m_employee_attributes]    Script Date: 2026/08/16 3:23:25 ******/
+/****** Object:  Table [dbo].[m_employee_attributes]    Script Date: 2026/09/07 5:37:16 ******/
 SET ANSI_NULLS ON
 GO
 

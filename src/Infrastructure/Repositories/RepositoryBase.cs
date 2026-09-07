@@ -21,24 +21,21 @@ namespace SupportAdvance.Infrastructure.Repositories;
 /// - TDbModel: データベースモデル
 /// - TId: Entity の ID 型（RowId を継承する型）
 /// </summary>
-public abstract class RepositoryBase<TEntity, TDbModel, TId>
+public abstract class RepositoryBase<TEntity, TDbModel, TId>(
+    IEntityMapper<TEntity, TDbModel, TId> mapper,
+    ICurrentUserService currentUser,
+    IClock clock)
     where TEntity : Entity<TId>
     where TDbModel : class
     where TId : notnull, RowId
 {
-    protected IEntityMapper<TEntity, TDbModel, TId> Mapper { get; }
-    protected ICurrentUserService CurrentUser { get; }
-    protected IClock Clock { get; }
+    protected IEntityMapper<TEntity, TDbModel, TId> Mapper { get; } =
+        mapper ?? throw new ArgumentNullException(nameof(mapper));
 
-    protected RepositoryBase(
-        IEntityMapper<TEntity, TDbModel, TId> mapper,
-        ICurrentUserService currentUser,
-        IClock clock)
-    {
-        Mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
-        CurrentUser = currentUser ?? throw new ArgumentNullException(nameof(currentUser));
-        Clock = clock ?? throw new ArgumentNullException(nameof(clock));
-    }
+    protected ICurrentUserService CurrentUser { get; } =
+        currentUser ?? throw new ArgumentNullException(nameof(currentUser));
+
+    protected IClock Clock { get; } = clock ?? throw new ArgumentNullException(nameof(clock));
 
     /// <summary>
     /// Entity を DbModel に変換し、createdBy を設定
@@ -63,10 +60,7 @@ public abstract class RepositoryBase<TEntity, TDbModel, TId>
     /// <summary>
     /// DbModel を Domain Entity に変換
     /// </summary>
-    protected TEntity MapToDomain(TDbModel dbModel)
-    {
-        return Mapper.ToDomainEntity(dbModel, Clock);
-    }
+    protected TEntity MapToDomain(TDbModel dbModel) => Mapper.ToDomainEntity(dbModel, Clock);
 
     /// <summary>
     /// createdBy（作成者従業員rowId）を設定

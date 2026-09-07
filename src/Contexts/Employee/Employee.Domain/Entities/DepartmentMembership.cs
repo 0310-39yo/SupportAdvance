@@ -1,9 +1,8 @@
-using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Department;
-using SupportAdvance.Contexts.Employee.Domain.ValueObjects.DepartmentMembership;
-
 namespace SupportAdvance.Contexts.Employee.Domain.Entities;
 
 using SupportAdvance.Common.Clocks;
+using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Department;
+using SupportAdvance.Contexts.Employee.Domain.ValueObjects.DepartmentMembership;
 using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
 using SupportAdvance.SharedKernel.Entities;
 
@@ -20,22 +19,32 @@ using SupportAdvance.SharedKernel.Entities;
 /// </summary>
 public sealed class DepartmentMembership : Entity<DepartmentMembershipRowId>
 {
-    /// <summary>所属従業員の ID</summary>
+    /// <summary>
+    /// 所属従業員の ID
+    /// </summary>
     public EmployeeRowId EmployeeRowId { get; private set; }
 
-    /// <summary>所属部署の ID</summary>
+    /// <summary>
+    /// 所属部署の ID</summary>
     public DepartmentRowId DepartmentRowId { get; private set; }
 
-    /// <summary>部署名（表示用）</summary>
+    /// <summary>
+    /// 部署名（表示用）
+    /// </summary>
     public string? DepartmentName { get; private set; }
 
-    /// <summary>主部署フラグ（Primary で従業員の主所属）</summary>
+    /// <summary>
+    /// 主部署フラグ（Primary で従業員の主所属）</summary>
     public IsPrimary IsPrimary { get; private set; }
 
-    /// <summary>異動終了日（null なら無期限・継続中）</summary>
+    /// <summary>
+    /// 異動終了日（null なら無期限・継続中）
+    /// </summary>
     public EndOn EndOn { get; private set; }
 
-    /// <summary>プライベートコンストラクタ</summary>
+    /// <summary>
+    /// プライベートコンストラクタ
+    /// </summary>
     private DepartmentMembership(
         DepartmentMembershipRowId membershipRowId,
         EmployeeRowId employeeRowId,

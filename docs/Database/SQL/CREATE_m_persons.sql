@@ -1,7 +1,7 @@
 USE [SupportAdvance]
 GO
 
-/****** Object:  Table [dbo].[m_persons]    Script Date: 2026/08/16 2:14:27 ******/
+/****** Object:  Table [dbo].[m_persons]    Script Date: 2026/09/07 5:35:34 ******/
 SET ANSI_NULLS ON
 GO
 
@@ -48,5 +48,4 @@ GO
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'名カタカナ' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'm_persons', @level2type=N'COLUMN',@level2name=N'first_name_kana'
 GO
-
 
