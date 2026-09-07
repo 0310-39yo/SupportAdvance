@@ -14,11 +14,14 @@ namespace SupportAdvance.SharedKernel.Entities;
 /// - 機能的には完全に同じ
 /// - 意味論的に「これは集約ルートである」ことを表現
 ///
+/// 【マーカーインターフェース】
+/// - IAggregateRoot を実装（Query Service パターンでのジェネリック制約用）
+///
 /// 【将来拡張】
 /// - AggregateRoot 固有の機能（例：子Entity管理）は将来追加予定
 /// </summary>
 /// <typeparam name="TId">集約ルート ID の型（RowId ベース）</typeparam>
-public abstract class AggregateRoot<TId> : Entity<TId>
+public abstract class AggregateRoot<TId> : Entity<TId>, IAggregateRoot
     where TId : notnull, RowId
 {
     // Entity<TId> を継承

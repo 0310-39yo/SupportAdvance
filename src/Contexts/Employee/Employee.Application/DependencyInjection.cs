@@ -1,5 +1,9 @@
 using Microsoft.Extensions.DependencyInjection;
+using SupportAdvance.Application.Queries;
+using SupportAdvance.Contexts.Employee.Application.Queries;
 using SupportAdvance.Contexts.Employee.Application.UseCases;
+using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
+using EmployeeEntity = SupportAdvance.Contexts.Employee.Domain.Entities.Employee;
 
 namespace SupportAdvance.Contexts.Employee.Application;
 
@@ -9,7 +13,7 @@ namespace SupportAdvance.Contexts.Employee.Application;
 public static class DependencyInjection
 {
     /// <summary>
-    /// Employee Context の Use Cases を DI に登録
+    /// Employee Context の Use Cases と Query Service を DI に登録
     /// </summary>
     public static IServiceCollection AddEmployeeApplicationModels(
         this IServiceCollection services)
@@ -25,6 +29,9 @@ public static class DependencyInjection
         services.AddScoped<CreateEmployeeUseCase>();
         services.AddScoped<UpdateEmployeeUseCase>();
         services.AddScoped<DeleteEmployeeUseCase>();
+
+        // Query Service（Context間でのドメインモデル参照）
+        services.AddScoped<IQueryService<EmployeeEntity, EmployeeRowId>, EmployeeQueryService>();
 
         return services;
     }
