@@ -32,7 +32,15 @@ public static class DependencyInjection
 
         // Query Service（Context間でのドメインモデル参照）
         // IEmployee インターフェース経由で参照を提供（Domain Entity は隠蔽）
-        services.AddScoped<IQueryService<IEmployee, EmployeeRowId>, EmployeeQueryService>();
+        // IQueryServiceWithBizId を実装（BizId での検索対応）
+        // IEmployeeQueryService を実装（汎用層のインターフェース、BC間参照用）
+        services.AddScoped<EmployeeQueryService>();
+        services.AddScoped<IQueryServiceWithBizId<IEmployee, EmployeeRowId>>(sp =>
+            sp.GetRequiredService<EmployeeQueryService>());
+        services.AddScoped<IQueryService<IEmployee, EmployeeRowId>>(sp =>
+            sp.GetRequiredService<EmployeeQueryService>());
+        services.AddScoped<IEmployeeQueryService>(sp =>
+            sp.GetRequiredService<EmployeeQueryService>());
 
         return services;
     }

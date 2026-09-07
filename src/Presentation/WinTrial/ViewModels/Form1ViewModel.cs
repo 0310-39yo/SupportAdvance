@@ -2,7 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using SupportAdvance.Common.Clocks;
 using SupportAdvance.Common.Configuration;
-using SupportAdvance.Contexts.Employee.Application.UseCases;
+using SupportAdvance.Contexts.IntegrationPrototype.Application.UseCases;
 using SupportAdvance.Crosscutting.Logging;
 
 namespace SupportAdvance.Presentation.WinTrial.ViewModels;
@@ -12,7 +12,7 @@ public partial class Form1ViewModel : ObservableObject
     private readonly AppSettings _appSettings;
     private readonly IClock _clock;
     private readonly IAppLogging<Form1ViewModel> _logger;
-    private readonly GetEmployeeByBizIdUseCase _getEmployeeByBizIdUseCase;
+    private readonly GetEmployeeByBizIdIntegrationUseCase _getEmployeeByBizIdUseCase;
 
     [ObservableProperty]
     private string _bizIdSearchInput = string.Empty;
@@ -26,7 +26,7 @@ public partial class Form1ViewModel : ObservableObject
     public Form1ViewModel(IAppLogging<Form1ViewModel> logger,
         IAppSettings appSettings,
         IClock clock,
-        GetEmployeeByBizIdUseCase getEmployeeByBizIdUseCase)
+        GetEmployeeByBizIdIntegrationUseCase getEmployeeByBizIdUseCase)
     {
         ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(appSettings);

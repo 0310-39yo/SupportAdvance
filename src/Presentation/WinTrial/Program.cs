@@ -4,6 +4,7 @@ using SupportAdvance.Application;
 using SupportAdvance.Common.Configuration;
 using SupportAdvance.Contexts.Employee.Application;
 using SupportAdvance.Contexts.Employee.Infrastructure;
+using SupportAdvance.Contexts.IntegrationPrototype.Application;
 using SupportAdvance.Crosscutting;
 using SupportAdvance.Infrastructure;
 using SupportAdvance.Presentation.Shared;
@@ -33,6 +34,7 @@ internal static class Program
                     .AddEmployeeInfrastructureModels() // Employee Context Infrastructure を登録
                     .AddApplicationModels()
                     .AddEmployeeApplicationModels() // Employee Context Application を登録
+                    .AddIntegrationPrototypeApplicationModels() // IntegrationPrototype Application を登録
                     .AddWinTrialModules()
                     ;
             })

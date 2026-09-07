@@ -8,9 +8,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\Application\Application.csproj" />
-    <ProjectReference Include="..\..\..\Common\Common.csproj" />
-    <ProjectReference Include="..\..\..\SharedKernel\SharedKernel.csproj" />
-    <ProjectReference Include="..\..\..\Crosscutting\Crosscutting.csproj" />
+    <ProjectReference Include="..\..\..\Infrastructure\Infrastructure.csproj" />
+    <ProjectReference Include="..\IntegrationPrototype.Application\IntegrationPrototype.Application.csproj" />
     <ProjectReference Include="..\IntegrationPrototype.Domain\IntegrationPrototype.Domain.csproj" />
   </ItemGroup>
 

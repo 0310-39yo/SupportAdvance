@@ -94,7 +94,6 @@ public class EmployeeMapper(IClock clock)
             RowId = entity.RowId.Value,
             BizDivision = entity.TypeDivision.ToDbValue(),
             BizId = entity.BizId.Value,
-            BizCode = entity.BizCode.ToString(),
             RetiredOn = entity.RetiredOn.IsSet ? entity.RetiredOn.Value.Value : null,
             UpdatedAt = DateTime.UtcNow,
             UpdatedBy = 0 // ← 実装計画では Repository で上書きされる

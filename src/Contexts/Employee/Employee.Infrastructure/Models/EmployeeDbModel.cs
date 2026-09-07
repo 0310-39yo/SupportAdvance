@@ -44,14 +44,6 @@ public class EmployeeDbModel
     public int BizId { get; set; }
 
     /// <summary>
-    /// ビジネスコード（区分とIDから組み立てられたコード）
-    /// 【対応カラム】biz_code
-    /// 【形式】M001001, D001002, C001003 など（区分+ID）
-    /// </summary>
-    [Column("biz_code")]
-    public string BizCode { get; set; } = string.Empty;
-
-    /// <summary>
     /// 退職日（在職状況を示す）
     /// 【対応カラム】retired_on
     /// 【制約】NULL許可（現職時は NULL）

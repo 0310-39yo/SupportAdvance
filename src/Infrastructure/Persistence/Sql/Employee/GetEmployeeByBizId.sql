@@ -3,7 +3,6 @@ SELECT
     e.[row_version],
     e.[biz_division],
     e.[biz_id],
-    e.[biz_code],
     e.[retired_on],
     e.[created_at],
     e.[created_by],
