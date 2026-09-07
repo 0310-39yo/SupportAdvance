@@ -28,7 +28,8 @@ public static class PersonMapper
             LastName.From(dbModel.LastName),
             FirstName.From(dbModel.FirstName),
             LastNameKana.From(dbModel.LastNameKana),
-            FirstNameKana.From(dbModel.FirstNameKana)
+            FirstNameKana.From(dbModel.FirstNameKana),
+            dbModel.RowVersion
         );
     }
 

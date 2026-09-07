@@ -20,6 +20,13 @@ public sealed class Employee : AggregateRoot<EmployeeRowId> {
     private IClock Clock { get; set; }
 
     /// <summary>
+    /// 楽観ロックタイムスタンプ（concurrency control 用）
+    /// 【責務】DB更新時の競合検出
+    /// 【管理】Repository で更新時に新しい値で上書きされる
+    /// </summary>
+    public byte[] RowVersion { get; internal set; } = [];
+
+    /// <summary>
     /// 従業員種別区分（正社員/派遣/請負）
     /// </summary>
     public BizDivision TypeDivision { get; private set; }
@@ -98,6 +105,8 @@ public sealed class Employee : AggregateRoot<EmployeeRowId> {
 
     /// <summary>
     /// DB から読み込んだ値から Employee を復元する（ファクトリメソッド）
+    /// 【責務】DB の プリミティブ型 → Domain Entity に変換
+    /// 【パラメータ】rowVersion は楽観ロック用（更新時に競合検出）
     /// 【独立性】departmentMemberships は配属情報（RetiredOn と独立して管理される）
     /// </summary>
     public static Employee Reconstruct(
@@ -107,9 +116,17 @@ public sealed class Employee : AggregateRoot<EmployeeRowId> {
         BizCode bizCode,
         RetiredOn retiredOn,
         Person person,
-        IEnumerable<DepartmentMembership> departmentMemberships) =>
-        new(rowId, typeDivision, bizId, bizCode, retiredOn, person,
+        IEnumerable<DepartmentMembership> departmentMemberships,
+        byte[]? rowVersion = null)
+    {
+        var employee = new Employee(rowId, typeDivision, bizId, bizCode, retiredOn, person,
             departmentMemberships.ToList());
+        if (rowVersion != null)
+        {
+            employee.RowVersion = rowVersion;
+        }
+        return employee;
+    }
 
     /// <summary>
     /// 従業員が現在アクティブか判定する

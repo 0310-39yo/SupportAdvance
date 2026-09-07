@@ -71,15 +71,17 @@ public class EmployeeMapper(IClock clock)
             }
         }
 
-        return Employee.Reconstruct(
+        var employee = Employee.Reconstruct(
             EmployeeRowId.From(dbModel.RowId),
             typeDivision,
             bizId,
             bizCode,
             retiredOn,
             person,
-            memberships
+            memberships,
+            dbModel.RowVersion
         );
+        return employee;
     }
 
     /// <summary>

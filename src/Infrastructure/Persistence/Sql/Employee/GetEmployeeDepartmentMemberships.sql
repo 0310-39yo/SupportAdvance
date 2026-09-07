@@ -1,5 +1,6 @@
 SELECT
     dm.[row_id],
+    dm.[row_version],
     dm.[employee_row_id],
     dm.[department_row_id],
     dm.[is_primary],

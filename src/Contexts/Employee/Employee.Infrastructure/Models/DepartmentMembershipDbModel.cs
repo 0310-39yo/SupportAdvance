@@ -19,6 +19,14 @@ public class DepartmentMembershipDbModel
     public long RowId { get; set; }
 
     /// <summary>
+    /// 楽観ロックタイムスタンプ
+    /// 【対応カラム】row_version
+    /// 【責務】concurrency control（更新時に競合検出）
+    /// </summary>
+    [Column("row_version")]
+    public byte[] RowVersion { get; set; } = [];
+
+    /// <summary>
     /// 従業員行ID（外部参照）
     /// 【対応カラム】employee_row_id
     /// 【制約】FK → m_employees

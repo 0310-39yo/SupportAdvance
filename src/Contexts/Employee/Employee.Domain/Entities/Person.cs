@@ -13,6 +13,13 @@ namespace SupportAdvance.Contexts.Employee.Domain.Entities;
 public sealed class Person : Entity<PersonRowId>
 {
     /// <summary>
+    /// 楽観ロックタイムスタンプ（concurrency control 用）
+    /// 【責務】DB更新時の競合検出
+    /// 【管理】Repository で更新時に新しい値で上書きされる
+    /// </summary>
+    public byte[] RowVersion { get; internal set; } = [];
+
+    /// <summary>
     /// 姓
     /// </summary>
     public LastName LastName { get; private set; }
@@ -62,14 +69,24 @@ public sealed class Person : Entity<PersonRowId>
 
     /// <summary>
     /// DB から読み込んだ値から Person を復元する（ファクトリメソッド）
+    /// 【責務】DB の プリミティブ型 → Domain Entity に変換
+    /// 【パラメータ】rowVersion は楽観ロック用（更新時に競合検出）
     /// </summary>
     public static Person Reconstruct(
         PersonRowId personRowId,
         LastName lastName,
         FirstName firstName,
         LastNameKana lastNameKana,
-        FirstNameKana firstNameKana) =>
-        new(personRowId, lastName, firstName, lastNameKana, firstNameKana);
+        FirstNameKana firstNameKana,
+        byte[]? rowVersion = null)
+    {
+        var person = new Person(personRowId, lastName, firstName, lastNameKana, firstNameKana);
+        if (rowVersion != null)
+        {
+            person.RowVersion = rowVersion;
+        }
+        return person;
+    }
 
     /// <summary>
     /// 氏名の完全な表記を取得する（姓 名）
