@@ -95,7 +95,7 @@ public class EmployeeMapper(IClock clock)
             BizDivision = entity.TypeDivision.ToDbValue(),
             BizId = entity.BizId.Value,
             RetiredOn = entity.RetiredOn.IsSet ? entity.RetiredOn.Value.Value : null,
-            UpdatedAt = DateTime.UtcNow,
+            UpdatedAt = _clock.JstNow.Value,
             UpdatedBy = 0 // ← 実装計画では Repository で上書きされる
         };
 
