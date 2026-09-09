@@ -17,8 +17,9 @@ using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
 ///   - Mapper: 変換ロジック（層の橋渡し）
 /// 【注意】監査フィールド（UpdatedAt/UpdatedBy）は Repository で管理
 /// </summary>
-public class EmployeeMapper
+public class EmployeeMapper(Common.Clocks.IClock clock)
 {
+    public Common.Clocks.IClock Clock { get; } = clock ?? throw new ArgumentNullException(nameof(clock));
 
     /// <summary>
     /// DbModel から Domain Entity に変換（読み込み用）

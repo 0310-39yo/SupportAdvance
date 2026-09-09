@@ -2,7 +2,6 @@ namespace SupportAdvance.Contexts.Employee.Infrastructure.Repositories;
 
 using System.Data;
 using Dapper;
-using Common.Clocks;
 using SupportAdvance.Contexts.Employee.Application.Repositories;
 using Domain.Entities;
 using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
@@ -11,26 +10,31 @@ using Mappers;
 using Models;
 using Crosscutting.Logging;
 using SupportAdvance.Infrastructure.Persistence;
+using SupportAdvance.Infrastructure.Repositories;
+using SupportAdvance.Infrastructure.Services;
 
 /// <summary>
 /// Employee 集約の Repository 実装
 ///
 /// 【責務】
+/// - 複数テーブルからの Entity 構築（m_employees + m_persons + m_department_memberships）
 /// - Domain Entity ↔ DbModel の相互変換（Mapper 使用）
 /// - 実データベースでの CRUD 操作（Dapper + SQL）
+/// 【基底クラス】MultiTableRepositoryBase（複数テーブル集約用）
 /// 【実装状況】
-/// - GetByBizIdAsync: 実装済み（Dapper + SQL）
-/// - その他メソッド: 未実装（必要に応じて追加予定）
+/// - GetByBizIdAsync: 実装済み
+/// - GetByIdAsync: 実装済み
+/// - UpdateAsync: 実装済み
 /// </summary>
 public class EmployeeRepository(
     EmployeeMapper mapper,
-    IClock clock,
     IDbConnectionFactory connectionFactory,
+    ICurrentUserService currentUser,
     IAppLogging<EmployeeRepository> logger)
-    : IEmployeeRepository
+    : MultiTableRepositoryBase<Employee, EmployeeDbModel, EmployeeRowId>(currentUser, mapper.Clock),
+      IEmployeeRepository
 {
     private readonly EmployeeMapper _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
-    private readonly IClock _clock = clock ?? throw new ArgumentNullException(nameof(clock));
 
     private readonly IDbConnectionFactory _connectionFactory =
         connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
@@ -158,7 +162,7 @@ public class EmployeeRepository(
     /// <summary>
     /// Employee 集約を保存（更新）する
     /// 【責務】複数テーブル（m_employees, m_persons, m_department_memberships）をトランザクション内で更新
-    /// 【特徴】楽観ロック（row_version）による競合検出、自動タイムスタンプ管理
+    /// 【特徴】楽観ロック（row_version）による競合検出、自動タイムスタンプ管理（MultiTableRepositoryBase 経由）
     /// </summary>
     public async Task UpdateAsync(Employee employee)
     {
@@ -169,8 +173,10 @@ public class EmployeeRepository(
 
         try
         {
-            var updatedAt = _clock.JstNow;
-            var currentUserId = 0L; // ← 実装計画では GetCurrentUserId() で取得（未実装）
+            // DbModel を生成し、監査フィールドを設定
+            var empDbModel = _mapper.ToDbModel(employee);
+            SetUpdatedAtAudit(empDbModel);
+            SetUpdatedByAudit(empDbModel);
 
             // 1. m_employees を UPDATE
             var empRowsAffected = await connection.ExecuteAsync(
@@ -186,13 +192,13 @@ public class EmployeeRepository(
                   AND [row_version] = @OldRowVersion",
                 new
                 {
-                    RowId = employee.RowId.Value,
-                    BizDivision = employee.TypeDivision.ToDbValue(),
-                    BizId = (int)employee.BizId.Value,
+                    RowId = empDbModel.RowId,
+                    BizDivision = empDbModel.BizDivision,
+                    BizId = empDbModel.BizId,
                     BizCode = employee.BizCode.ToString(),
-                    RetiredOn = employee.RetiredOn.IsSet ? employee.RetiredOn.Value.Value : (DateTime?)null,
-                    UpdatedAt = updatedAt.Value,
-                    UpdatedBy = currentUserId,
+                    RetiredOn = empDbModel.RetiredOn,
+                    UpdatedAt = empDbModel.UpdatedAt,
+                    UpdatedBy = empDbModel.UpdatedBy,
                     OldRowVersion = employee.RowVersion
                 },
                 transaction: transaction
@@ -203,6 +209,9 @@ public class EmployeeRepository(
 
             // 2. m_persons を UPDATE
             var personDbModel = _mapper.ToPersonDbModel(employee.Person, employee.RowId.Value);
+            SetAuditField(personDbModel, "UpdatedAt", Clock.JstNow.Value);
+            SetAuditField(personDbModel, "UpdatedBy", CurrentUser.EmployeeRowId);
+
             var perRowsAffected = await connection.ExecuteAsync(
                 @"UPDATE [dbo].[m_persons]
                   SET [last_name] = @LastName,
@@ -217,12 +226,12 @@ public class EmployeeRepository(
                 new
                 {
                     RowId = personDbModel.RowId,
-                    LastName = employee.Person.LastName.Value,
-                    FirstName = employee.Person.FirstName.Value,
-                    LastNameKana = employee.Person.LastNameKana.Value,
-                    FirstNameKana = employee.Person.FirstNameKana.Value,
-                    UpdatedAt = updatedAt.Value,
-                    UpdatedBy = currentUserId,
+                    LastName = personDbModel.LastName,
+                    FirstName = personDbModel.FirstName,
+                    LastNameKana = personDbModel.LastNameKana,
+                    FirstNameKana = personDbModel.FirstNameKana,
+                    UpdatedAt = personDbModel.UpdatedAt,
+                    UpdatedBy = personDbModel.UpdatedBy,
                     OldRowVersion = employee.Person.RowVersion
                 },
                 transaction: transaction
