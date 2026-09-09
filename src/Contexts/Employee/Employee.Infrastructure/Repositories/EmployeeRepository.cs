@@ -30,8 +30,9 @@ public class EmployeeRepository(
     EmployeeMapper mapper,
     IDbConnectionFactory connectionFactory,
     ICurrentUserService currentUser,
+    Common.Clocks.IClock clock,
     IAppLogging<EmployeeRepository> logger)
-    : MultiTableRepositoryBase<Employee, EmployeeDbModel, EmployeeRowId>(currentUser, mapper.Clock),
+    : MultiTableRepositoryBase<Employee, EmployeeDbModel, EmployeeRowId>(currentUser, clock),
       IEmployeeRepository
 {
     private readonly EmployeeMapper _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));

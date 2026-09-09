@@ -16,10 +16,10 @@ using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
 ///   - DbModel: プリミティブ型（ORM マッピング）
 ///   - Mapper: 変換ロジック（層の橋渡し）
 /// 【注意】監査フィールド（UpdatedAt/UpdatedBy）は Repository で管理
+/// 【テスト容易性】Clock 依存なし（純粋な型変換）
 /// </summary>
-public class EmployeeMapper(Common.Clocks.IClock clock)
+public class EmployeeMapper
 {
-    public Common.Clocks.IClock Clock { get; } = clock ?? throw new ArgumentNullException(nameof(clock));
 
     /// <summary>
     /// DbModel から Domain Entity に変換（読み込み用）
