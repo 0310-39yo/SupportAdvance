@@ -48,11 +48,12 @@ public abstract class RepositoryBase<TEntity, TDbModel, TId>(
     }
 
     /// <summary>
-    /// Entity を DbModel に変換し、updatedBy を設定
+    /// Entity を DbModel に変換し、updatedBy と updatedAt を設定
     /// </summary>
     protected TDbModel MapToDatabaseForUpdate(TEntity entity)
     {
         var dbModel = Mapper.ToDbModel(entity);
+        SetUpdatedAtAudit(dbModel);
         SetUpdatedByAudit(dbModel);
         return dbModel;
     }
@@ -71,6 +72,19 @@ public abstract class RepositoryBase<TEntity, TDbModel, TId>(
         if (createdByProperty != null && createdByProperty.CanWrite)
         {
             createdByProperty.SetValue(dbModel, CurrentUser.EmployeeRowId);
+        }
+    }
+
+    /// <summary>
+    /// updatedAt（更新日時）を設定
+    /// 【責務】Repository が保存時刻を管理（Mapper ではなく）
+    /// </summary>
+    private void SetUpdatedAtAudit(TDbModel dbModel)
+    {
+        var updatedAtProperty = typeof(TDbModel).GetProperty("UpdatedAt");
+        if (updatedAtProperty != null && updatedAtProperty.CanWrite)
+        {
+            updatedAtProperty.SetValue(dbModel, Clock.JstNow.Value);
         }
     }
 

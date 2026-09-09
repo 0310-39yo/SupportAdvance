@@ -15,10 +15,10 @@ using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
 ///   - Domain/Application: ValueObject（型安全性）
 ///   - DbModel: プリミティブ型（ORM マッピング）
 ///   - Mapper: 変換ロジック（層の橋渡し）
+/// 【注意】監査フィールド（UpdatedAt/UpdatedBy）は Repository で管理
 /// </summary>
-public class EmployeeMapper(IClock clock)
+public class EmployeeMapper
 {
-    private readonly IClock _clock = clock ?? throw new ArgumentNullException(nameof(clock));
 
     /// <summary>
     /// DbModel から Domain Entity に変換（読み込み用）
@@ -87,6 +87,7 @@ public class EmployeeMapper(IClock clock)
     /// <summary>
     /// Domain Entity から DbModel に変換（Insert/Update 用）
     /// 【責務】Domain の ValueObject → DB の プリミティブ型に変換
+    /// 【注意】監査フィールド（UpdatedAt/UpdatedBy）は Repository で設定
     /// </summary>
     public EmployeeDbModel ToDbModel(Employee entity) =>
         new()
@@ -94,9 +95,7 @@ public class EmployeeMapper(IClock clock)
             RowId = entity.RowId.Value,
             BizDivision = entity.TypeDivision.ToDbValue(),
             BizId = entity.BizId.Value,
-            RetiredOn = entity.RetiredOn.IsSet ? entity.RetiredOn.Value.Value : null,
-            UpdatedAt = _clock.JstNow.Value,
-            UpdatedBy = 0 // ← 実装計画では Repository で上書きされる
+            RetiredOn = entity.RetiredOn.IsSet ? entity.RetiredOn.Value.Value : null
         };
 
     /// <summary>
