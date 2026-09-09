@@ -190,6 +190,8 @@
   },
   "active": "a4a323d6c1e93a0c",
   "lastOpenFiles": [
+    "Assistance/Guides/CLEAN_ARCHITECTURE_GUIDELINES.md.tmp.12712.ad3945e17dc2",
+    "Assistance/Guides/CLEAN_ARCHITECTURE_GUIDELINES.md.tmp.12712.4d7ae1b09ead",
     "Assistance/Guides/CLEAN_ARCHITECTURE_GUIDELINES.md",
     "WorkMemo/2026-09-10.md",
     "Assistance/Reports/20260910_comparison_report.md",
@@ -212,7 +214,6 @@
     "Assistance/Guides/CLEAN_ARCHITECTURE_GUIDELINES.md.tmp.17848.c46d577a3c7a",
     "WorkMemo/2026-09-04.md",
     "Contexts/IntegrationPrototype/IntegrationPrototype.Domain/Class1.cs",
-    "Contexts/IntegrationPrototype/IntegrationPrototype.Domain/obj/Debug/net10.0/IntegrationPrototype.Domain.assets.cache",
     "Assistance/Templates/Obsidian/time.md"
   ]
 }

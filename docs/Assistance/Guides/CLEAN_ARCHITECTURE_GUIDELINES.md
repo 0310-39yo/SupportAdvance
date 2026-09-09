@@ -525,6 +525,7 @@ Employee Context別Application層:
 
 **プロジェクト:**
 - `src/Infrastructure` - Database / External Service implementations
+- `src/Infrastructure/Repositories` - 汎用 Repository 基底クラス
 
 **責務:**
 - データベース実装（Repository パターン）
@@ -532,11 +533,85 @@ Employee Context別Application層:
 - 外部API/サービスの実装
 - ファイルシステムアクセス
 - Configuration プロバイダー
+- 監査フィールド管理（CreatedAt, UpdatedAt, DeletedAt など）
 
 **特徴:**
 - **最も外側のレイヤー**
 - Application / Domain のインターフェースを実装
 - 技術的な詳細を隠蔽
+
+**Repository 基底クラス**
+
+Infrastructure層では2つの Repository 基底クラスを提供：
+
+#### RepositoryBase<TEntity, TDbModel, TId>
+単一テーブル集約向け。IEntityMapper 実装を前提。
+
+```csharp
+// 単一テーブル集約の場合
+public class UserRepository(
+    IEntityMapper<User, UserDbModel, UserId> mapper,
+    ICurrentUserService currentUser,
+    IClock clock)
+    : RepositoryBase<User, UserDbModel, UserId>(mapper, currentUser, clock)
+{
+    // CRUD 実装
+}
+```
+
+#### MultiTableRepositoryBase<TEntity, TDbModel, TId>
+複数テーブル集約向け。複数の関連テーブルから Entity を構築する場合に使用。
+
+```csharp
+// 複数テーブル集約（m_employees + m_persons + m_department_memberships）の場合
+public class EmployeeRepository(
+    EmployeeMapper mapper,
+    IDbConnectionFactory connectionFactory,
+    ICurrentUserService currentUser,
+    IClock clock,
+    IAppLogging<EmployeeRepository> logger)
+    : MultiTableRepositoryBase<Employee, EmployeeDbModel, EmployeeRowId>(currentUser, clock),
+      IEmployeeRepository
+{
+    // 複雑な読み込み・保存ロジック実装
+    public async Task<Employee?> GetByIdAsync(EmployeeRowId id) { ... }
+}
+```
+
+**Mapper の責務分離**
+
+- **Mapper**: 純粋な型変換（ドメイン型 ↔ DB型）。Clock 依存なし。
+- **Repository**: 監査フィールド設定（CreatedAt, UpdatedAt, DeletedAt）。SetUpdatedAtAudit(), SetUpdatedByAudit() を使用。
+
+```csharp
+// Mapper は型変換のみ
+public class EmployeeMapper
+{
+    public Employee ToDomainEntity(EmployeeDbModel dbModel, PersonDbModel personDbModel)
+    {
+        // 型変換のみ。監査フィールド設定なし
+        return Employee.Reconstruct(...);
+    }
+
+    public EmployeeDbModel ToDbModel(Employee entity)
+    {
+        // ビジネス属性のみ。監査フィールドなし
+        return new EmployeeDbModel { ... };
+    }
+}
+
+// Repository が監査フィールドを設定
+public class EmployeeRepository : MultiTableRepositoryBase<...>
+{
+    public async Task UpdateAsync(Employee employee)
+    {
+        var dbModel = _mapper.ToDbModel(employee);
+        SetUpdatedAtAudit(dbModel);    // Repository が責務を持つ
+        SetUpdatedByAudit(dbModel);
+        // SQL 実行
+    }
+}
+```
 
 **許可される参照:**
 - SharedKernel
@@ -545,30 +620,41 @@ Employee Context別Application層:
 - Domain（Entity/Value Object のマッピング用）
 - Application***（インターフェース実装パターンのみ）
   - 注意：汎用 `src/Infrastructure` プロジェクト自体は稀にのみ Application を参照
-  - 通常は **Bounded Context別 Infrastructure**（例：`src/Contexts/Samples/CarPreferences.Infrastructure`）が、Context固有のインターフェース実装を担当する設計
-  - 参考：実装例では CarPreferences.Infrastructure が `src/Application` を参照しており、汎用 Infrastructure は参照していない
+  - 通常は **Bounded Context別 Infrastructure**（例：`src/Contexts/Employee/Employee.Infrastructure`）が、Context固有のインターフェース実装を担当する設計
 
 **禁止される参照:**
 - Presentation
 
 **例:**
 ```csharp
-// ✓ OK：Bounded Context別 Infrastructure での実装例
-// ファイル: src/Contexts/Samples/CarPreferences.Infrastructure/Repositories/CarPreferenceRepository.cs
-// 注：汎用 Infrastructure（src/Infrastructure）ではなく、Bounded Context別 Infrastructure で実装
-namespace SupportAdvance.Contexts.Samples.CarPreferences.Infrastructure.Repositories;
+// ✓ OK：複数テーブル集約の Repository 実装例
+namespace SupportAdvance.Contexts.Employee.Infrastructure.Repositories;
 
-public class CarPreferenceRepository : ICarPreferenceRepository
+public class EmployeeRepository(
+    EmployeeMapper mapper,
+    IDbConnectionFactory connectionFactory,
+    ICurrentUserService currentUser,
+    IClock clock,
+    IAppLogging<EmployeeRepository> logger)
+    : MultiTableRepositoryBase<Employee, EmployeeDbModel, EmployeeRowId>(currentUser, clock),
+      IEmployeeRepository
 {
-    private readonly IDbConnection _connection;
-
-    public async Task<Car> GetByIdAsync(CarId id)
+    public async Task<Employee?> GetByIdAsync(EmployeeRowId id)
     {
-        var result = await _connection.QuerySingleOrDefaultAsync<CarDto>(
-            "SELECT * FROM cars WHERE id = @Id",
-            new { Id = id.Value });
+        // 複数テーブル（m_employees, m_persons, m_department_memberships）から読み込み
+        var employeeDbModel = await LoadEmployeeAsync(id);
+        var personDbModel = await LoadPersonAsync(id);
+        var memberships = await LoadDepartmentMembershipsAsync(id);
+        
+        return _mapper.ToDomainEntity(employeeDbModel, personDbModel, memberships);
+    }
 
-        return result?.ToDomain();
+    public async Task UpdateAsync(Employee employee)
+    {
+        var empDbModel = _mapper.ToDbModel(employee);
+        SetUpdatedAtAudit(empDbModel);      // Repository が監査フィールドを設定
+        SetUpdatedByAudit(empDbModel);
+        // SQL で保存
     }
 }
 ```
@@ -1057,6 +1143,7 @@ public class DependencyRuleTests
 
 | 日付 | 更新内容 |
 |---|---|
+| 2026-09-10 | Infrastructure層の Repository セクションを拡充。2つの基底クラスパターンを確立：①**RepositoryBase** - 単一テーブル集約向け（IEntityMapper実装）②**MultiTableRepositoryBase** - 複数テーブル集約向け（複雑なロジック対応）。Mapper と Repository の責務分離を明確化：Mapper は純粋な型変換のみ（Clock 依存なし、テスト容易性向上）、Repository が監査フィールド設定（CreatedAt/UpdatedAt/DeletedAt）を担当。実装例を Employee で具体化 |
 | 2026-09-06 | Application層に「Context間のデータ共有」セクションを追加。ジェネリック Query Service パターン `IQueryService<TAggregate, TId>` を標準パターンとして採用。複数Contextがリアルタイムに異なるAggregateの情報をリアルタイムにアクセスするための依存方向が正しい設計。汎用Application層の肥大化を防止 |
 | 2026-09-01 | LocalDateTime 使用規則を修正。「全層で LocalDateTime」という誤りを修正し、正しい層別責務を明記：Domain/Application は LocalDateTime、Infrastructure/DbModel は DateTime プリミティブ型、Mapper が双方向変換。実装例を EmployeeMapper に合わせて更新。外部システムからの DateTime 変換のパターンを Mapper での変換例に改善 |
 | 2026-07-31（後）| Application層の説明に「汎用Application vs Bounded Context別Application」の区別を明記。マトリックスで「Application → Application」がインターフェース実装パターン（汎用層→Context別層）として許可されることを明確化。実装検査時に見つかった CarPreferences.Application が Application.UseCases に依存する件について、正当な設計パターンであることをドキュメントで担保 |

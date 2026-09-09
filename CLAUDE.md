@@ -222,20 +222,26 @@ public class UserPreferencesDbModel
 }
 ```
 
-### Mapper での双方向変換
+### Mapper での双方向変換と責務分離
 
 Mapper は Entity ↔ DbModel の変換時に DateTime ↔ LocalDateTime を実装します。
+**重要**: 監査フィールド（CreatedAt, UpdatedAt, DeletedAt など）は Mapper では設定せず、Repository が設定します。
 
-**ToDbModel: Entity → DbModel** (LocalDateTime → DateTime):
+**ToDbModel: Entity → DbModel** (LocalDateTime → DateTime、ビジネスフィールドのみ):
 ```csharp
 public EmployeeDbModel ToDbModel(Employee entity)
 {
     return new EmployeeDbModel
     {
-        CreatedAt = entity.CreatedAt.Value,  // LocalDateTime → DateTime
+        // ビジネスフィールドのみ
+        RowId = entity.RowId.Value,
+        BizDivision = entity.TypeDivision.ToDbValue(),
         HireDate = entity.HireDate.HasValue 
             ? entity.HireDate.Value.Value  // LocalDateTime.Value で DateTime 取得
             : (DateTime?)null,
+        
+        // ❌ 監査フィールドは設定しない（Repository が責務を持つ）
+        // CreatedAt, CreatedBy, UpdatedAt, UpdatedBy は省略
     };
 }
 ```
@@ -253,6 +259,22 @@ public Employee ToDomainEntity(EmployeeDbModel dbModel, IClock clock)
         ...);
 }
 ```
+
+### Mapper と Repository の責務分離
+
+| 責務 | Mapper | Repository |
+|------|--------|-----------|
+| **ビジネスフィールド変換** | ✓ | - |
+| **DateTime ↔ LocalDateTime** | ✓ | - |
+| **CreatedAt/CreatedBy 設定** | ✗ | ✓ |
+| **UpdatedAt/UpdatedBy 設定** | ✗ | ✓ |
+| **DeletedAt/DeletedBy 設定** | ✗ | ✓ |
+| **テスト容易性** | Clock 依存なし（テストしやすい） | Clock 依存あり（DI経由） |
+
+**理由:**
+- Mapper は純粋な型変換のみに専念
+- 監査情報は「保存時刻」を記録する必要があり、Repository が実行時に取得すべき
+- Mapper の Clock 依存を削除することで、テスト容易性が向上
 
 ### DateTime の使用禁止の例外
 - **Clock の実装内部**：DateTime.Now, DateTime.UtcNow などは使用してもよい
@@ -566,6 +588,16 @@ CREATE TABLE [dbo].[t_YourTable] (
 
 - **CarPreferences.Infrastructure**: `t_UserPreferences` テーブル
   - 参考: `src/Contexts/Samples/CarPreferences.Infrastructure/Migrations/002_CreateUserPreferencesTable.sql`
+
+---
+
+## 📝 更新履歴
+
+| 日付 | 更新内容 |
+|---|---|
+| 2026-09-10 | LocalDateTime 使用規則セクションを拡充。Mapper と Repository の責務分離を明確化：Mapper は純粋な型変換のみ（Clock 依存なし）、Repository が監査フィールド（CreatedAt/UpdatedAt/DeletedAt）設定を担当。責務分離表を追加。テスト容易性向上の理由を明記 |
+| 2026-07-30 | LocalDateTime 使用規則を追加。全層で IClock 経由の LocalDateTime 使用を明確化 |
+| 2026-07-09 | 初版作成。クリーンアーキテクチャ原則と新規プロジェクトチェックリスト |
 
 ---
 
