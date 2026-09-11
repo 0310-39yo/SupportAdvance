@@ -47,7 +47,7 @@ namespace SupportAdvance.Contexts.YourGroup.YourContext.Infrastructure.DataAcces
 /// - DateTime 型でORM マッピング用プリミティブ型を統一（JST として解釈）
 /// 
 /// 【監査カラム（必須）】
-/// - row_id: システム主キー（Sequence で自動採番）
+/// - row_id: システム主キー（プログラムが ISequenceProvider で採番、INSERT 前に確定）
 /// - row_version: 楽観ロック用タイムスタンプ
 /// - created_at/by: 作成日時/者
 /// - updated_at/by: 更新日時/者（初期値 NULL）
@@ -59,7 +59,7 @@ public class YourEntityDbModel
     
     /// <summary>
     /// 主キー（row_id）
-    /// Sequence で自動採番、テーブル全体で一意
+    /// プログラムが ISequenceProvider で採番（INSERT 前に確定）、テーブル全体で一意
     /// </summary>
     public long RowId { get; set; }
 
@@ -336,6 +336,9 @@ public class YourEntityDbModel
 CREATE TABLE [dbo].[t_YourEntity]
 (
     -- 監査カラム（必須）
+    -- 【注記】row_id は DEFAULT で Sequence 設定があるが、実装ではプログラム側（ISequenceProvider）で
+    --         採番してから INSERT するため、実際には DEFAULT は使用されない。
+    --         DB 側には Sequence 定義が存在するが、アプリケーション側が先に採番を完了する。
     [row_id] [bigint] NOT NULL PRIMARY KEY 
         DEFAULT (NEXT VALUE FOR [dbo].[s_row_id_sequence]),
     [row_version] [timestamp] NOT NULL,

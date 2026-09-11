@@ -109,7 +109,7 @@ public class YourEntityMapper : IEntityMapper<YourEntity, YourEntityDbModel, You
     /// <summary>
     /// Domain Entity → DbModel（保存用）
     /// 【ID 変換】AggregateId.Value（Guid） → DbModel.YourEntityId（Guid）
-    /// 【RowId】テーブル行の物理キー（DB採番）
+    /// 【RowId】テーブル行の物理キー（ApplicationService で ISequenceProvider により事前採番済み）
     /// 【監査情報】Repository が設定するため、ここでは初期値のみ
     /// </summary>
     public YourEntityDbModel ToDbModel(YourEntity entity)
@@ -118,9 +118,9 @@ public class YourEntityMapper : IEntityMapper<YourEntity, YourEntityDbModel, You
 
         return new YourEntityDbModel
         {
-            // RowId: テーブルの物理キー
-            // 新規作成時は 0（DB採番）、更新時は既存値
-            RowId = entity.RowId?.Value ?? 0,
+            // RowId: テーブルの物理キー（ApplicationService で事前採番済み）
+            // 新規作成時は ISequenceProvider で採番済み、更新時は既存値
+            RowId = entity.RowId.Value,  // ApplicationService で既に確定
 
             // YourEntityId: Entity の集約ID（GUID ベース）を保存
             YourEntityId = entity.Id.Value,  // AggregateId → Guid 変換

@@ -112,21 +112,22 @@ public class YourEntity : Entity<YourEntityId>
     /// </summary>
     /// <param name="id">Entity の集約ID（YourEntityId）</param>
     /// <param name="name">名前</param>
-    /// <param name="entityRowId">テーブルの物理キー（DB採番前は RowId.New()）</param>
+    /// <param name="entityRowId">テーブルの物理キー（ISequenceProvider で採番、ApplicationService で事前に確定）</param>
     /// <param name="clock">クロック</param>
     public YourEntity(
         YourEntityId id,
         string name,
-        RowId? entityRowId = null,
+        RowId entityRowId,
         IClock? clock = null)
     {
         ArgumentNullException.ThrowIfNull(id);
         ArgumentNullException.ThrowIfNull(name);
+        ArgumentNullException.ThrowIfNull(entityRowId);
 
         // 集約ID を Entity.Id に設定（GUID ベース、集約を一意識別）
         Id = id;
         _name = name;
-        _entityRowId = entityRowId ?? RowId.New();  // テーブルキー（プライベート）
+        _entityRowId = entityRowId;  // テーブルキー（プライベート、ApplicationService で事前採番）
         _createdAt = clock?.JstNow ?? LocalDateTime.Now;
 
         if (clock != null)
@@ -189,18 +190,19 @@ public class YourAggregate : AggregateRoot<YourAggregateId>
     /// コンストラクタ
     /// </summary>
     /// <param name="id">集約ID（YourAggregateId）</param>
-    /// <param name="aggregateRowId">テーブルの物理キー（DB採番前は RowId.New()）</param>
+    /// <param name="aggregateRowId">テーブルの物理キー（ISequenceProvider で採番、ApplicationService で事前に確定）</param>
     /// <param name="clock">クロック</param>
     public YourAggregate(
         YourAggregateId id,
-        RowId? aggregateRowId = null,
+        RowId aggregateRowId,
         IClock? clock = null)
     {
         ArgumentNullException.ThrowIfNull(id);
+        ArgumentNullException.ThrowIfNull(aggregateRowId);
 
         // 集約ID を AggregateRoot.Id に設定（GUID ベース）
         Id = id;
-        _aggregateRowId = aggregateRowId ?? RowId.New();  // テーブルキー（プライベート）
+        _aggregateRowId = aggregateRowId;  // テーブルキー（プライベート、ApplicationService で事前採番）
 
         if (clock != null)
         {

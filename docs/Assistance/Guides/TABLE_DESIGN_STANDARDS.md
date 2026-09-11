@@ -38,7 +38,8 @@ SupportAdvance プロジェクトのすべてのテーブルは、以下の設�
 
 - **型**: bigint
 - **制約**: PK, NOT NULL
-- **デフォルト**: Sequence `s_row_id_sequence` による自動採番
+- **採番方法**: プログラム側で ISequenceProvider により採番（ApplicationService で INSERT 前に確定）
+  - **注記**: テーブルの DEFAULT で Sequence 設定があるが、実装ではプログラムが先に採番するため、実際には DEFAULT は使用されない
 - **用途**: システム全体で一意に行を識別するID（マイナンバーのような基本ID）
 - **範囲**: 1～9,223,372,036,854,775,807
 - **注記**: DB技術的な識別子、ビジネスロジックでは使用しない
@@ -210,7 +211,7 @@ WHERE [deleted_at] IS NULL;
 
 新規テーブル設計時に使用してください。
 
-- [ ] **row_id**: Sequence で自動採番されるPK
+- [ ] **row_id**: プログラム側（ISequenceProvider）で採番されるPK（ApplicationService で INSERT 前に確定）
 - [ ] **row_version**: timestamp で楽観ロック対応
 - [ ] **created_at**: datetime2(7), NOT NULL, 作成時に設定
 - [ ] **created_by**: bigint, NOT NULL, FK → m_persons
@@ -242,8 +243,9 @@ WHERE [deleted_at] IS NULL;
 ### Q: row_id と ビジネス識別子の使い分けは？
 
 **A**: 
-- **row_id**: システム内部の主キー（自動採番、技術的識別子）
-- **ビジネス識別子**: ドメイン層で使用するID（user_id, product_code など）
+- **row_id**: システム内部の主キー（プログラム側で ISequenceProvider により採番、技術的識別子）
+  - ApplicationService で INSERT 前に ISequenceProvider で採番値を取得して確定させる
+- **ビジネス識別子**: ドメイン層で使用するID（GUID ベース集約ID）
 
 Entity.Id は ビジネス識別子を使用し、DbModel の row_id はシステム技術的です。
 

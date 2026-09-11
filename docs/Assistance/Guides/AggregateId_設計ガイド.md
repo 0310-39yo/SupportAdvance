@@ -177,20 +177,21 @@ public class YourAggregate : AggregateRoot<YourAggregateId>
     /// </summary>
     /// <param name="id">集約ID（GUID ベース）</param>
     /// <param name="name">名前</param>
-    /// <param name="aggregateRowId">テーブルの物理キー（DB採番前は RowId.New()）</param>
+    /// <param name="aggregateRowId">テーブルの物理キー（ISequenceProvider で採番、ApplicationService で事前に確定）</param>
     /// <param name="clock">クロック</param>
     public YourAggregate(
         YourAggregateId id,
         string name,
-        RowId? aggregateRowId = null,
+        RowId aggregateRowId,
         IClock? clock = null)
     {
         ArgumentNullException.ThrowIfNull(id);
         ArgumentNullException.ThrowIfNull(name);
+        ArgumentNullException.ThrowIfNull(aggregateRowId);
 
         Id = id;  // GUID ベースのビジネスID
         _name = name;
-        _aggregateRowId = aggregateRowId ?? RowId.New();  // テーブルキー
+        _aggregateRowId = aggregateRowId;  // テーブルキー（ApplicationService で事前採番）
 
         if (clock != null)
         {
