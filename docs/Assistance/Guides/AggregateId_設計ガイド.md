@@ -1,467 +1,399 @@
 ---
-name: AggregateId_設計ガイド
-description: 【廃版】GUID ベース AggregateId は実装されていません。代わりに Entity_設計ガイドライン.md の RowId ベースパターンを参照してください。
+name: RowId_設計ガイド
+description: 集約を一意識別する long ベース RowId パターン。システム主キー、採番方法、複数テーブル集約対応
 metadata:
-  type: ガイドライン（廃版）
+  type: ガイドライン
 ---
 
-# ⛔ AggregateId 設計ガイド【廃版】
+# RowId 設計ガイド
 
-**このドキュメントは廃版です。**
-
-実装では GUID ベースの AggregateId パターンは採用されていません。現在のプロジェクトでは **RowId（long ベース）** が集約IDとして使用されています。
-
-**👉 代わりに以下を参照してください**:
-- [Entity_設計ガイドライン.md](Entity_設計ガイドライン.md) — RowId ベースの現行パターン
-- [RowId ドキュメント修正](../Reports/20260912_RowId採番方法ドキュメント修正.md) — RowId 採番フローの詳細
-
----
-
-## ℹ️ 廃版の理由
-
-初期設計では GUID ベースの AggregateId パターンを想定していましたが、実装では以下の理由により RowId（long ベース）に統一されました：
-
-- **シンプル性**: GUID ベースの複雑さが不要だった
-- **パフォーマンス**: long ベースの方が DB インデックス効率が良い
-- **既存規約**: プロジェクトの他の部分で RowId が統一された ID として使用されていた
-
----
-
-## 📋 基本原則【参考のみ：廃版内容】
-
-### AggregateId とは（採用されていません）
-
-**【注意】以下の内容は採用されていません。実装は Entity_設計ガイドライン.md を参照してください。**
-
-**AggregateId** = 集約ルートを一意に識別するビジネスID（廃版）
-
-| 項目 | 内容 |
-|------|------|
-| **型** | GUID ベースの ValueObject（**採用されず**） |
-| **用途** | 集約全体を識別（テーブル構成に依存しない）（**採用されず**） |
-| **生成** | システムが自動生成（`Guid.NewGuid()`）（**採用されず**） |
-| **人間可読性** | なし（機械用）（**採用されず**） |
+集約（AggregateRoot）を一意に識別するための **long ベースの RowId パターン** です。
 
 ---
 
 ## 📋 基本原則
 
-### AggregateId とは
+### RowId とは
 
-**AggregateId** = 集約ルートを一意に識別するビジネスID
+**RowId** = 集約ルートの物理キーを一意に識別するシステムID
 
 | 項目 | 内容 |
 |------|------|
-| **型** | GUID ベースの ValueObject |
-| **用途** | 集約全体を識別（テーブル構成に依存しない） |
-| **生成** | システムが自動生成（`Guid.NewGuid()`） |
-| **人間可読性** | なし（機械用） |
+| **型** | long ベースの ValueObject |
+| **用途** | テーブルの主キー（システム技術的な識別子） |
+| **採番方法** | ISequenceProvider で採番（ApplicationService で INSERT 前に確定） |
+| **人間可読性** | なし（システム用） |
+| **テーブル構成** | テーブルに依存する物理キー |
 
 ---
 
 ## 🏗️ 実装パターン
 
-### 1. 基底クラス：AggregateId（SharedKernel）
+### 1. 基底クラス：RowId（SharedKernel）
 
 ```csharp
-// src/SharedKernel/ValueObjects/Identifiers/AggregateId.cs
+// src/SharedKernel/ValueObjects/Identifiers/RowId.cs
 
 namespace SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 /// <summary>
-/// 集約を一意識別する GUID ベース ValueObject の基底クラス
+/// テーブル行の物理キーを表す long ベース ValueObject の基底クラス
 /// 
 /// 【責務】
-/// - GUID 値の保持
-/// - 等価性判定（GUID ベース）
+/// - long 値の保持（1 以上）
+/// - 等価性判定（long ベース）
 /// 
 /// 【継承】
-/// 各集約は AggregateId を継承し、固有の ID クラスを定義
-/// 例：OrderId, EmployeeId, UserPreferencesId など
+/// 各集約は RowId を継承し、固有の ID クラスを定義
+/// 例：EmployeeRowId, DepartmentRowId, PersonRowId など
 /// 
 /// 【型安全性】
-/// - 異なる集約のID を型チェックで区別
-/// - OrderId と EmployeeId は互換性なし
+/// - 異なる集約の RowId を型チェックで区別
+/// - EmployeeRowId と DepartmentRowId は互換性なし
 /// </summary>
-public abstract class AggregateId : ValueObject
+public abstract class RowId : ValueObject
 {
     /// <summary>
-    /// GUID 値
+    /// long 値（1 以上）
     /// </summary>
-    public Guid Value { get; protected set; }
+    public long Value { get; protected set; }
 
-    /// <summary>
-    /// コンストラクタ
-    /// </summary>
-    /// <param name="value">GUID 値</param>
-    /// <exception cref="ArgumentException">value が Empty の場合</exception>
-    protected AggregateId(Guid value)
+    protected RowId(long value, bool isSet)
     {
-        if (value == Guid.Empty)
-            throw new ArgumentException("AggregateId cannot be empty.", nameof(value));
-        
         Value = value;
+        IsSet = isSet;
     }
 
-    /// <summary>
-    /// 等価性判定（GUID ベース）
-    /// </summary>
-    public override IEnumerable<object> GetAtomicValues()
-    {
-        yield return Value;
-    }
+    /// <summary>IsSet フラグ</summary>
+    public bool IsSet { get; protected set; }
 
     /// <summary>
-    /// 文字列表現（デバッグ用）
+    /// 指定された long 値から RowId を生成する
     /// </summary>
-    public override string ToString() => Value.ToString();
+    /// <param name="value">RowId（1 以上）</param>
+    /// <exception cref="ArgumentOutOfRangeException">0以下の値</exception>
+    public abstract void Validate(long value);
 }
 ```
 
----
+### 2. 集約固有の RowId 実装例
 
-### 2. 具体的な集約ID：実装テンプレート
-
-#### パターン A：シンプル（ビジネスルールなし）
+#### EmployeeRowId（従業員）
 
 ```csharp
-// src/Contexts/YourGroup/YourContext/YourContext.Domain/ValueObjects/YourAggregateId.cs
+// src/Contexts/Employee/Employee.Domain/ValueObjects/Employee/EmployeeRowId.cs
 
 using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
-namespace SupportAdvance.Contexts.YourGroup.YourContext.Domain.ValueObjects;
-
-/// <summary>
-/// YourAggregate を識別する ID（GUID ベース）
-/// 【用途】YourAggregate.Id として使用
-/// 【生成】通常は YourAggregateId.New() で自動生成
-/// </summary>
-public class YourAggregateId : AggregateId
+public sealed class EmployeeRowId : RowId, IEquatable<EmployeeRowId>
 {
-    /// <summary>
-    /// コンストラクタ
-    /// </summary>
-    public YourAggregateId(Guid value) : base(value) { }
+    public const long MinValue = 1L;
 
-    /// <summary>
-    /// 新規 ID を生成
-    /// </summary>
-    public static YourAggregateId New() => new(Guid.NewGuid());
+    public long Value => ValueField;
 
-    /// <summary>
-    /// GUID から ID を生成
-    /// </summary>
-    public static YourAggregateId From(Guid value) => new(value);
-}
-```
-
-#### パターン B：ビジネスルール付き
-
-```csharp
-// ビジネス上の制約がある場合（例：系統によって採番パターンが異なるなど）
-
-public class OrderId : AggregateId
-{
-    public OrderId(Guid value) : base(value)
+    private EmployeeRowId(long value) : base(value, true)
     {
-        // OrderId 固有のビジネスルール検証
-        // 例：将来、注文タイプごとに異なるIDフォーマットが必要になった場合に追加
     }
 
-    public static OrderId New() => new(Guid.NewGuid());
-    public static OrderId From(Guid value) => new(value);
-    
     /// <summary>
-    /// OrderId 固有メソッド例
-    /// 将来、ビジネスルール追加が容易
+    /// 従業員行IDを生成する（推奨: ApplicationService で ISequenceProvider 採番後）
     /// </summary>
-    public string ToOrderReference() => $"ORD-{Value.ToString().Substring(0, 8).ToUpper()}";
-}
-```
-
----
-
-## 💡 実装例
-
-### 集約での使用
-
-```csharp
-// src/Contexts/YourGroup/YourContext/YourContext.Domain/Entities/YourAggregate.cs
-
-using SupportAdvance.Common.Clocks;
-using SupportAdvance.SharedKernel.Entities;
-using SupportAdvance.Contexts.YourGroup.YourContext.Domain.ValueObjects;
-
-namespace SupportAdvance.Contexts.YourGroup.YourContext.Domain.Entities;
-
-/// <summary>
-/// YourAggregate（集約ルート）
-/// 【ID型】YourAggregateId（GUID ベース）で一意識別
-/// </summary>
-public class YourAggregate : AggregateRoot<YourAggregateId>
-{
-    private RowId _aggregateRowId = null!;  // テーブルの物理キー（非公開）
-    private string _name = null!;
-
-    public string Name => _name;
+    public static EmployeeRowId From(long value) => new(value);
 
     /// <summary>
-    /// コンストラクタ
+    /// DB値から復元する
     /// </summary>
-    /// <param name="id">集約ID（GUID ベース）</param>
-    /// <param name="name">名前</param>
-    /// <param name="aggregateRowId">テーブルの物理キー（ISequenceProvider で採番、ApplicationService で事前に確定）</param>
-    /// <param name="clock">クロック</param>
-    public YourAggregate(
-        YourAggregateId id,
-        string name,
-        RowId aggregateRowId,
-        IClock? clock = null)
+    public static bool TryFromDbValue(long value, out EmployeeRowId result)
     {
-        ArgumentNullException.ThrowIfNull(id);
-        ArgumentNullException.ThrowIfNull(name);
-        ArgumentNullException.ThrowIfNull(aggregateRowId);
-
-        Id = id;  // GUID ベースのビジネスID
-        _name = name;
-        _aggregateRowId = aggregateRowId;  // テーブルキー（ApplicationService で事前採番）
-
-        if (clock != null)
+        try
         {
-            RaiseDomainEvent(new YourAggregateCreatedEvent(
-                DomainEventId.New(),
-                this.Id,  // ← AggregateRootId = YourAggregateId
-                clock.JstNow
-            ));
+            result = From(value);
+            return true;
+        }
+        catch (ArgumentOutOfRangeException)
+        {
+            result = null!;
+            return false;
         }
     }
 
-    public void UpdateName(string newName, IClock clock)
+    /// <summary>
+    /// 有効性検証（1以上）
+    /// </summary>
+    public override void Validate(long normalized)
     {
-        ArgumentNullException.ThrowIfNull(newName);
-        ArgumentNullException.ThrowIfNull(clock);
-
-        var oldName = _name;
-        _name = newName;
-
-        RaiseDomainEvent(new YourAggregateNameUpdatedEvent(
-            DomainEventId.New(),
-            this.Id,  // ← この集約を識別（AggregateRootId）
-            oldName,
-            newName,
-            clock.JstNow
-        ));
+        if (normalized < MinValue)
+            throw new ArgumentOutOfRangeException(
+                nameof(normalized),
+                $"EmployeeRowId must be >= {MinValue}");
     }
 }
 ```
 
----
-
-## 🔄 RowId との役割分離
-
-### 三層の ID：役割の明確化
-
-| ID | 型 | 用途 | 例 |
-|----|----|----|-----|
-| **AggregateId** | GUID ValueObject | 集約を一意識別（ビジネスID） | `YourAggregateId.New()` |
-| **RowId** | long ValueObject | テーブル行の物理キー | `RowId.From(123)` |
-| **ビジネスID** | 任意の ValueObject | ビジネス上の表示用ID（任意） | `OrderNumber("ORD-001")` |
-
-### マッピング例
+#### DepartmentRowId（部署）
 
 ```csharp
-// Domain層
-public class Order : AggregateRoot<OrderId>  // TId = OrderId（GUID）
+public sealed class DepartmentRowId : RowId, IEquatable<DepartmentRowId>
 {
-    public OrderId Id { get; }  // GUID ベース、ビジネスID
-    public OrderNumber OrderNumber { get; }  // "ORD-001"、表示用
-    private RowId _orderRowId { get; }  // テーブルの物理キー
-}
+    public const long MinValue = 1L;
 
-// DbModel層（DB操作用）
-public class OrderDbModel
-{
-    public long RowId { get; set; }  // テーブルの主キー（long）
-    public Guid OrderId { get; set; }  // 集約のビジネスID（GUID）
-    public string OrderNumber { get; set; }  // 表示用
-    // ... 他のカラム
-}
+    public long Value => ValueField;
 
-// Mapper層
-public class OrderMapper
-{
-    public Order ToDomainEntity(OrderDbModel dbModel, IClock clock)
+    private DepartmentRowId(long value) : base(value, true)
     {
-        return new Order(
-            id: OrderId.From(dbModel.OrderId),  // GUID から OrderId を復元
-            orderNumber: OrderNumber.From(dbModel.OrderNumber),
-            orderRowId: RowId.From(dbModel.RowId),
-            clock: clock
-        );
     }
 
-    public OrderDbModel ToDbModel(Order entity)
+    public static DepartmentRowId From(long value) => new(value);
+
+    public static bool TryFromDbValue(long value, out DepartmentRowId result)
     {
-        return new OrderDbModel
+        try
         {
-            RowId = entity.OrderRowId.Value,  // テーブルキー（long）
-            OrderId = entity.Id.Value,  // GUID として保存
-            OrderNumber = entity.OrderNumber.Value,
-            // ...
-        };
+            result = From(value);
+            return true;
+        }
+        catch (ArgumentOutOfRangeException)
+        {
+            result = null!;
+            return false;
+        }
     }
-}
-```
 
----
-
-## 📊 イベントでの使用
-
-### ドメインイベント定義
-
-```csharp
-// イベント内の AggregateRootId は 集約固有の ID（GUID ベース）
-
-public interface IDomainEvent
-{
-    /// <summary>
-    /// イベント一意識別子（GUID）
-    /// 【用途】このイベント自体を識別
-    /// </summary>
-    DomainEventId EventId { get; }
-
-    /// <summary>
-    /// 集約ID（集約固有の GUID ベース ValueObject）
-    /// 【用途】どの集約が変更されたか特定
-    /// 【例】OrderId, EmployeeId, UserPreferencesId など
-    /// </summary>
-    // TId AggregateRootId { get; }  ← 型パラメータで表現する方がベター
-}
-
-// 具体例
-public class OrderCreatedEvent : IDomainEvent
-{
-    public DomainEventId EventId { get; }
-    public OrderId AggregateRootId { get; }  // ← OrderId（この集約の型）
-    public LocalDateTime OccurredAt { get; }
-
-    public OrderCreatedEvent(
-        DomainEventId eventId,
-        OrderId aggregateRootId,
-        LocalDateTime occurredAt)
+    public override void Validate(long normalized)
     {
-        ArgumentNullException.ThrowIfNull(eventId);
-        ArgumentNullException.ThrowIfNull(aggregateRootId);
+        if (normalized < MinValue)
+            throw new ArgumentOutOfRangeException(
+                nameof(normalized),
+                $"DepartmentRowId must be >= {MinValue}");
+    }
+}
+```
 
-        EventId = eventId;
-        AggregateRootId = aggregateRootId;
-        OccurredAt = occurredAt;
+### 3. Entity での RowId パラメータ
+
+```csharp
+// ✅ 正しいパターン：RowId は非null 必須パラメータ
+
+public sealed class Employee : AggregateRoot<EmployeeRowId>
+{
+    /// <summary>
+    /// 従業員を生成する（ファクトリメソッド）
+    /// 【入力】RowId は事前採番済み（ApplicationService で確定）
+    /// </summary>
+    public static Employee Create(
+        EmployeeRowId rowId,              // ← 非null（ISequenceProvider で採番済み）
+        BizDivision typeDivision,
+        BizId bizId,
+        BizCode bizCode,
+        RetiredOn? retiredOn,
+        Person person,
+        IEnumerable<DepartmentMembership> departmentMemberships) =>
+        new(rowId, typeDivision, bizId, bizCode, retiredOn ?? RetiredOn.Unset(), 
+            person, departmentMemberships.ToList());
+
+    /// <summary>
+    /// DB から復元する（ファクトリメソッド）
+    /// 【入力】RowId は DB から読み込み済み
+    /// </summary>
+    public static Employee Reconstruct(
+        EmployeeRowId rowId,              // ← 非null（DB から読み込み済み）
+        BizDivision typeDivision,
+        BizId bizId,
+        BizCode bizCode,
+        RetiredOn retiredOn,
+        Person person,
+        IEnumerable<DepartmentMembership> departmentMemberships,
+        byte[]? rowVersion = null)
+    {
+        var employee = new Employee(rowId, typeDivision, bizId, bizCode, retiredOn, 
+            person, departmentMemberships.ToList());
+        if (rowVersion != null)
+        {
+            employee.RowVersion = rowVersion;
+        }
+        return employee;
     }
 }
 ```
 
 ---
 
-## 🔒 型安全性
+## 🔄 RowId の採番フロー
 
-### ✅ 正しい使用法
+### ApplicationService での採番
 
 ```csharp
-var orderId = OrderId.New();
-var employeeId = EmployeeId.New();
+public class CreateEmployeeUseCase
+{
+    private readonly ISequenceProvider _sequenceProvider;
+    private readonly IEmployeeRepository _repository;
 
-var order = new Order(orderId, ...);
-var employee = new Employee(employeeId, ...);
+    public async Task<EmployeeDto> ExecuteAsync(CreateEmployeeRequest request)
+    {
+        // Step 1: RowId を採番（プログラム側）
+        var sequenceValue = await _sequenceProvider.GetNextValueAsync();
+        var rowId = EmployeeRowId.From(sequenceValue);
 
-// ✅ 型チェック：異なる型を代入できない
-// order.Id = employeeId;  // ← コンパイルエラー！
+        // Step 2: Domain Entity を生成（RowId 確定状態）
+        var employee = Employee.Create(
+            rowId,                    // ← 採番済み
+            division,
+            bizId,
+            bizCode,
+            null,                     // RetiredOn はオプション
+            person,
+            new List<DepartmentMembership>()
+        );
+
+        // Step 3: Repository で永続化
+        await _repository.AddAsync(employee);
+
+        return employee.ToDto();
+    }
+}
 ```
 
-### ❌ 共通の AggregateId を直接使う場合の問題
+### Repository での読み込み
 
 ```csharp
-// ❌ 危険：型安全性がない
-public class Order : AggregateRoot<AggregateId>  // 共通型
+public async Task<Employee?> GetByIdAsync(EmployeeRowId id)
 {
-    // ...
+    // DB から読み込み
+    var dbModel = await _connection.QueryFirstOrDefaultAsync<EmployeeDbModel>(
+        "SELECT * FROM m_employees WHERE row_id = @rowId",
+        new { rowId = id.Value });
+
+    if (dbModel == null)
+        return null;
+
+    // RowId を復元
+    if (!EmployeeRowId.TryFromDbValue(dbModel.RowId, out var rowId))
+        throw new InvalidOperationException($"Invalid RowId: {dbModel.RowId}");
+
+    // Entity を復元
+    return _mapper.ToDomainEntity(dbModel, rowId);
 }
-
-var orderId = new AggregateId(Guid.NewGuid());
-var employeeId = new AggregateId(Guid.NewGuid());
-
-var order = new Order(orderId, ...);
-employee.Id = orderId;  // ← 誤ってアサイン可能（型チェックなし！）
 ```
 
 ---
 
-## 📁 ファイル配置
+## 📊 RowId と ビジネスID の関係
 
-```
-src/SharedKernel/
-└── ValueObjects/
-    └── Identifiers/
-        └── AggregateId.cs  ← 基底クラス
+| 層 | ID 型 | 責務 | 例 |
+|---|---|---|---|
+| **DB** | bigint (PK) | テーブル行を一意識別 | row_id |
+| **Infrastructure** | RowId ValueObject | DB の物理キーをラッピング | EmployeeRowId.From(123) |
+| **Domain** | Entity<RowId> | 集約の一意識別（ビジネスセマンティクス） | Employee(rowId, ...) |
+| **Application** | DTO | 外部インターフェース | EmployeeId (API では除外) |
 
-src/Contexts/YourGroup/YourContext/YourContext.Domain/
-└── ValueObjects/
-    ├── YourAggregateId.cs  ← 具体的な集約ID
-    ├── OrderId.cs
-    ├── EmployeeId.cs
-    └── UserPreferencesId.cs
+---
+
+## 🔑 複数テーブル集約での RowId 管理
+
+```csharp
+// Employee（親）と Person（子）の複数テーブル集約
+
+public sealed class Employee : AggregateRoot<EmployeeRowId>
+{
+    private EmployeeRowId _rowId;           // m_employees.row_id
+    public Person Person { get; private set; }
+}
+
+public sealed class Person : Entity<PersonRowId>
+{
+    private PersonRowId _rowId;             // m_persons.row_id（FK: employee_row_id）
+}
+
+// 各テーブルが独立した RowId を持つ
+// 関連は FK（employee_row_id）で管理される
 ```
 
 ---
 
 ## ✅ 実装チェックリスト
 
-### AggregateId 基底クラス
+新規 ValueObject に RowId を実装する際：
 
-- [ ] `AggregateId` が `ValueObject` を継承
-- [ ] `Guid Value { get; protected set; }` を持つ
-- [ ] Empty チェック実装
-- [ ] `GetAtomicValues()` で GUID を返す
-
-### 具体的な集約ID
-
-- [ ] `AggregateId` を継承
-- [ ] `New()` ファクトリメソッド実装
-- [ ] `From(Guid value)` ファクトリメソッド実装
-- [ ] コンストラクタが `base(value)` を呼び出す
-
-### 集約での使用
-
-- [ ] `AggregateRoot<XXXId>` で継承（XXXId = 集約固有のID）
-- [ ] `Id` プロパティが `XXXId` 型
-- [ ] `RowId` をプライベート属性として保持（表示しない）
-- [ ] イベント発行時に `this.Id`（AggregateId）を渡す
-
-### Mapper での対応
-
-- [ ] DbModel の ID カラム（Guid）を集約ID に変換
-- [ ] 集約ID を DbModel の ID カラムに変換
-- [ ] RowId と AggregateId の対応を明示
-
-### Repository での対応
-
-- [ ] `GetByIdAsync(XXXId id)` メソッド実装
-- [ ] 古い `GetByRowIdAsync(long rowId)` メソッドは削除予定
+- [ ] **RowId を継承**: `class XXXRowId : RowId`
+- [ ] **From() メソッド**: `public static XXXRowId From(long value)`
+- [ ] **TryFromDbValue()**: `public static bool TryFromDbValue(long value, out XXXRowId result)`
+- [ ] **Validate()**: `public override void Validate(long normalized)`
+- [ ] **MinValue 定義**: `public const long MinValue = 1L`
+- [ ] **Entity パラメータ**: Create/Reconstruct で非null パラメータ
+- [ ] **採番方法**: ApplicationService で ISequenceProvider を使用
+- [ ] **テスト**: RowId の型安全性をテスト
 
 ---
 
-## 🔗 関連ドキュメント
+## 💡 よくあるエラー
 
-- **Entity_設計ガイドライン.md** — Entity と AggregateRoot の実装
-- **ドメインイベント_設計ガイド.md** — イベント内の AggregateRootId 使用法
-- **Mapper_パターンガイド.md** — AggregateId ↔ RowId マッピング詳細
-- **Repository_パターンガイド.md** — AggregateId での検索実装
-- **20260807_AggregateId設計変更_実装計画.md** — 段階的な実装手順
+### ❌ エラー 1: RowId を null 許容で定義
+
+```csharp
+// ❌ 間違い
+public static Employee Create(
+    EmployeeRowId? rowId = null,  // null 許容
+    ...
+)
+{
+    var id = rowId ?? EmployeeRowId.From(0);  // 問題
+}
+```
+
+**問題**: RowId は採番前から確定すべき  
+**正しい**: 
+```csharp
+public static Employee Create(
+    EmployeeRowId rowId,          // 非null（必須）
+    ...
+)
+```
+
+### ❌ エラー 2: RowId.New() メソッドの使用
+
+```csharp
+// ❌ 間違い（RowId.New() は存在しない）
+var rowId = EmployeeRowId.New();
+```
+
+**正しい**:
+```csharp
+var sequenceValue = await _sequenceProvider.GetNextValueAsync();
+var rowId = EmployeeRowId.From(sequenceValue);
+```
+
+### ❌ エラー 3: DB の DEFAULT に頼る
+
+```csharp
+// ❌ 間違い（DB での採番を期待）
+var employee = Employee.Create(
+    EmployeeRowId.From(0),  // 0 で挿入して AUTO_INCREMENT を期待
+    ...
+);
+```
+
+**正しい**:
+```csharp
+// 先に采番
+var rowId = EmployeeRowId.From(
+    await _sequenceProvider.GetNextValueAsync()
+);
+var employee = Employee.Create(rowId, ...);
+```
 
 ---
 
-## 📝 更新履歴
+## 📖 参考ドキュメント
 
-| 日付 | 更新内容 |
-|------|---------|
-| 2026-08-07 | 初版作成。AggregateId 基底クラス、実装パターン、RowId との役割分離 |
+- [Entity_設計ガイドライン.md](Entity_設計ガイドライン.md) — Entity<RowId> パターン
+- [TABLE_DESIGN_STANDARDS.md](TABLE_DESIGN_STANDARDS.md) — テーブル設計での RowId
+- [Mapper_パターンガイド.md](Mapper_パターンガイド.md) — DbModel ↔ Entity 変換
+- [Repository_パターンガイド.md](Repository_パターンガイド.md) — Repository での RowId 管理
 
+---
+
+## 📝 改版履歴
+
+| 版 | 日付 | 作成者 | 変更内容 |
+|----|------|--------|---------|
+| 1.0 | 2026-09-12 | Claude Code | GUID ベース AggregateId から long ベース RowId に転換。采番方法、複数テーブル集約パターン、実装例 |
