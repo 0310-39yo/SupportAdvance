@@ -469,6 +469,6 @@ YourContext.Infrastructure/
 - **Repository_パターンガイド.md** — Mapper の使用方法、複数テーブル集約の DataAccess 実装
 - **Entity_設計ガイドライン.md** — Entity と AggregateId、複数テーブル集約の Entity 構造
 - **ORM_マッピング戦略.md** — LocalDateTime マッピング、複数テーブル集約のマッピング戦略
-- **AggregateId_設計ガイド.md** — GUID ベース ID の実装
+- **Entity_設計ガイドライン.md** — RowId ベースの ID 管理
 - **DbModel_設計ルール.md** — DbModel の設計原則
 

@@ -572,7 +572,7 @@ YourContext.Domain/
 
 ## 参考資料
 
-- **AggregateId_設計ガイド.md**: GUID ベース ID パターン、型安全性
+- **RowId**: long ベースの集約ID（テーブルの物理キーと統一）
 - **Mapper_パターンガイド.md**: 複数テーブル集約の複数1:1マッピング実装
 - **Repository_パターンガイド.md**: 集約ID での取得パターン、DataAccess との役割分離
 - **ORM_マッピング戦略.md**: LocalDateTime マッピング、複数テーブル集約の構成
