@@ -3,7 +3,7 @@
 **プロジェクト:** SupportAdvance  
 **レイヤ:** SharedKernel / Domain 層  
 **種別:** 設計ガイド  
-**版:** 1.0 / 2026-07-07
+**版:** 2.0 / 2026-08-08
 
 ---
 
@@ -19,8 +19,9 @@
 8. [ファクトリメソッド設計](#8-ファクトリメソッド設計)
 9. [等価性判定の設計](#9-等価性判定の設計)
 10. [検証・正規化の責務分離](#10-検証正規化の責務分離)
-11. [ValueObject パターン別ガイド](#11-valueobject-パターン別ガイド) 【新規】
+11. [ValueObject パターン別ガイド](#11-valueobject-パターン別ガイド)
 12. [レイヤ制約](#12-レイヤ制約)
+13. [チェックリスト](#13-チェックリスト-新しい-valueobject-を実装するとき)
 
 ---
 
@@ -56,13 +57,8 @@ ValueObject（抽象）
   │   ├─ RespondentName, RespondentAge（ビジネス属性）
   │   └─ {その他スカラ値型}
   │
-  ├─ AggregateId（抽象）【新規】集約の論理的識別子（GUID ベース）
-  │   ├─ UserId, RoleId, UserRoleId（Identity Bounded Context）
-  │   ├─ EmployeeId, DepartmentId（Employee Bounded Context）
-  │   └─ {その他集約ID}
-  │
-  ├─ ValueObject（特殊パターン）【新規】複合型・物理キー
-  │   ├─ RowId（テーブル物理キー：long値、value=0で未採番）
+  ├─ ValueObject（特殊パターン）複合型・物理キー
+  │   ├─ RowId（テーブル物理キー：PrimitiveValueObject<long>継承）
   │   ├─ FullName（複合型：FirstName + LastName）
   │   └─ {その他複合型}
   │
@@ -137,57 +133,6 @@ public sealed class CreatedAt : PrimitiveValueObject<DateTime>, IEquatable<Creat
             throw new ArgumentException("CreatedAt must be a valid system timestamp.");
         }
     }
-}
-```
-
-### 2.3 AggregateId（抽象）（集約ビジネスID の基底）
-
-**責務:**
-- **GUID 値の保持** — 集約を一意識別
-- **型安全性** — 異なる集約 ID を型チェックで区別（UserId ≠ RoleId）
-- **等価性判定** — GUID ベースの値比較
-- **Unset 状態なし** — 常に値を持つ（null 不許容）
-
-**設計:**
-```csharp
-public abstract class AggregateId : ValueObject
-{
-    /// <summary>
-    /// GUID 値（Guid.Empty は許可されない）
-    /// </summary>
-    public Guid Value { get; protected set; }
-
-    /// <summary>
-    /// コンストラクタ
-    /// </summary>
-    /// <param name="value">GUID 値</param>
-    /// <exception cref="ArgumentException">value が Guid.Empty の場合</exception>
-    protected AggregateId(Guid value)
-    {
-        if (value == Guid.Empty)
-            throw new ArgumentException("AggregateId cannot be empty.", nameof(value));
-        Value = value;
-    }
-
-    // 派生クラスでオーバーライド（通常は不要）
-    protected override IEnumerable<object?> GetValueComponents()
-    {
-        yield return Value;
-    }
-}
-```
-
-**実装例：UserId**
-```csharp
-public sealed class UserId : AggregateId
-{
-    private UserId(Guid value) : base(value) { }
-
-    /// <summary>新しい ID を生成（DB 永続化前）</summary>
-    public static UserId New() => new(Guid.NewGuid());
-
-    /// <summary>既存の GUID から ID を生成（DB 読み込み時）</summary>
-    public static UserId From(Guid value) => new(value);
 }
 ```
 
@@ -406,46 +351,18 @@ Assert.AreEqual(12345L, rowId.Value);
 
 ---
 
-### 4.3 【AggregateId 向け】GUID 必須（Unset 状態なし）
+### 4.3 状態管理パターン別比較表
 
-**概要:**
-- `IsSet` フラグなし
-- Unset 状態なし（常に Guid 値を持つ）
-- Guid.Empty は許可されない（コンストラクタで検証）
-- 集約の論理的識別子
-
-**生成:**
-```csharp
-// 新規 ID を生成
-var userId = UserId.New();  // Guid.NewGuid()
-
-// 既存 ID から生成（DB 読み込み時）
-var userId = UserId.From(new Guid("12345678-1234-1234-1234-123456789012"));
-
-// Guid.Empty は許可されない
-// UserId.From(Guid.Empty);  // ← ArgumentException
-```
-
-**特徴:**
-- IsSet フラグなし（常に値を持つ）
-- Unset() / Unset 状態なし（必須フィールド）
-- Guid は内部構造化済みなので Normalize / Validate 不要
-- 型安全性により異なる集約 ID を区別
-
----
-
-### 4.4 状態管理パターン別比較表
-
-| 特性 | PrimitiveValueObject | RowId | AggregateId |
-|-----|------------------|-------|------------|
-| **IsSet フラグ** | ✅ 有 | ❌ 無 | ❌ 無 |
-| **Unset 状態** | ✅ IsSet=false | ❌ value=0で未採番 | ❌ 常に値を持つ |
-| **Unset() メソッド** | ✅ 有（未設定インスタンス） | ❌ 無 | ❌ 無 |
-| **New() メソッド** | ❌ 無 | ✅ 有（value=0） | ✅ 有（Guid.NewGuid） |
-| **Value 型** | TValue（string, int など） | long（0以上） | Guid（非Empty） |
-| **Value null許容** | ✅ IsSet で制御（null可能） | ❌ 常に long | ❌ 常に Guid |
-| **Normalize 必須** | ✅ 通常必須 | ❌ 不要 | ❌ 不要 |
-| **Validate 必須** | ✅ 通常必須 | ❌ 最小限 | ❌ Guid.Empty チェックのみ |
+| 特性 | PrimitiveValueObject | RowId |
+|-----|------------------|-------|
+| **IsSet フラグ** | ✅ 有 | ❌ 無 |
+| **Unset 状態** | ✅ IsSet=false | ❌ value=0で未採番 |
+| **Unset() メソッド** | ✅ 有（未設定インスタンス） | ❌ 無 |
+| **New() メソッド** | ❌ 無 | ✅ 有（value=0） |
+| **Value 型** | TValue（string, int など） | long（0以上） |
+| **Value null許容** | ✅ IsSet で制御（null可能） | ❌ 常に long |
+| **Normalize 必須** | ✅ 通常必須 | ❌ 不要 |
+| **Validate 必須** | ✅ 通常必須 | ❌ 最小限 |
 | **用途** | ビジネス属性（名前など） | DB行の物理キー | 集約の論理的ID |
 | **使用例** | RespondentName | Entity._rowId | Entity.Id |
 
@@ -685,7 +602,7 @@ public class User : AggregateRoot<UserId>
     /// </summary>
     public User(UserId id, string name, RowId? rowId = null)
     {
-        Id = id;  // ← AggregateId（論理的ID）
+        Id = id;  // 集約の識別子
         _rowId = rowId ?? RowId.New();  // ← RowId（物理キー）
     }
 }
@@ -1067,7 +984,7 @@ public sealed class CreatedAt : PrimitiveValueObject<DateTime>, IEquatable<Creat
 
     public DateTime Value => ValueField;
 
-    public override void Validate(DateTime normalized)
+    public override void Validate(LocalDateTime normalized)
     {
         base.Validate(normalized);
         if (normalized == LocalDateTime.MinValue || normalized == LocalDateTime.MaxValue)
@@ -1090,6 +1007,58 @@ public sealed class CreatedAt : PrimitiveValueObject<DateTime>, IEquatable<Creat
     }
 }
 ```
+
+**層間での Value カプセル化の詳細**
+
+各層における ValueObject の役割と型処理の違いをまとめています。
+
+| 特性 | Infrastructure層 | Application層 | Domain層 |
+|-----|-----------------|-------------|---------|
+| **内部型** | DateTime（プリミティブ） | LocalDateTime | LocalDateTime |
+| **ValueObject の型** | DbModel（型なし、プリミティブのみ） | ValueObject（型安全） | ValueObject（型安全） |
+| **型安全性** | 低（文字列、long など） | ✅ 高（型チェック） | ✅ 高（型チェック） |
+| **責務** | 型変換のみ | 検証・正規化 | ビジネスロジック |
+| **null 処理方針** | null チェック（プリミティブ） | IsSet フラグ | IsSet フラグ |
+| **Normalize** | 不要（DbModel はプリミティブ） | ✅ 正規化ロジック | ✅ 正規化ロジック |
+| **Validate** | 不要（ORM任せ） | ✅ 検証ロジック | ✅ 検証ロジック |
+| **使用例** | `UserDbModel.CreatedAt: DateTime` | `CreateUserRequest.Name: string` → `RespondentName` | `User.Name: RespondentName` |
+
+**層間の責務分離:**
+
+1. **Infrastructure 層（DbModel）**
+   - DateTime / DateTime? など OS ネイティブ型を直接保持
+   - null で未設定を表現
+   - type-safe でない（string, long など共存）
+
+2. **Application 層（Use Case）**
+   - 入力値を ValueObject に変換（TryFrom で null 安全に）
+   - Application → Domain への受け渡しで型安全性を確保
+   - 検証・正規化は ValueObject が実施
+
+3. **Domain 層（Entity）**
+   - ValueObject を型安全に扱う（型レベルの検証）
+   - IsSet フラグで未設定状態を管理（null-free）
+   - ビジネスロジックに集中
+
+**重要：DateTime ↔ LocalDateTime 変換の流れ**
+
+```
+【DB ← → Entity の往路】
+DbModel.CreatedAt (DateTime)
+    ↓ [Mapper.ToDomainEntity]
+Entity.CreatedAt (CreatedAt: LocalDateTime)
+    ↓ [ビジネスロジック内で使用]
+Domain Logic uses: LocalDateTime（型安全）
+
+【Entity → DB への復路】
+Entity.CreatedAt (CreatedAt: LocalDateTime)
+    ↓ [Mapper.ToDbModel]
+DbModel.CreatedAt (DateTime)
+    ↓ [ORM / DataAccess]
+DB stored as: datetime2(7)
+```
+
+---
 
 ### 7.4 選択肢型 — 列挙値
 
@@ -1558,27 +1527,91 @@ public override string ToString()
 
 ### 10.4 実行順序
 
+**フローチャート**
+
 ```
-コンストラクタ呼び出し
-    ↓
-Normalize(value) 実行 → 正規化済み値を取得
-    ↓
-Validate(正規化済み値) 実行 → 検証（例外あり得る）
-    ↓
-ValueField に格納
-    ↓
-IsSet = true に設定
-    ↓
-インスタンス返却
+┌──────────────────────────────────────────┐
+│    ValueObject のインスタンス化         │
+│   From(value) / new() / TryFrom()       │
+└────────────────┬─────────────────────────┘
+                 │
+                 ↓
+        ┌───────────────────┐
+        │  Normalize(value)  │
+        │ （値を標準形に変換）│
+        └────────┬──────────┘
+                 │
+                 ↓
+        ┌─────────────────────┐
+        │ Validate(normalized) │
+        │ （ビジネスルール検証）│
+        └────────┬────────────┘
+                 │
+         ┌───────┴──────────┐
+         │                  │
+    成功 ↓              失敗 ↓
+         │                  └─→ ArgumentException スロー
+         │
+    ┌─────────────┐      失敗時の処理:
+    │ ValueField  │      - From() は例外をスロー
+    │ に値を格納  │      - TryFrom() は false を返す
+    └────┬────────┘
+         │
+         ↓
+    ┌─────────────┐
+    │ IsSet を設定 │
+    │ IsSet=true  │
+    └────┬────────┘
+         │
+         ↓
+    ┌─────────────────────┐
+    │インスタンスを返却     │
+    │（有効な ValueObject）│
+    └─────────────────────┘
+```
+
+**各ステップの詳細**
+
+| ステップ | 処理 | 例 | 例外時 |
+|---------|------|-----|--------|
+| **Normalize** | 入力値を業務ルールに基づき標準化 | `"  山田太郎  "` → `"山田太郎"` | スキップ（前処理なし） |
+| **Validate** | 正規化済み値がビジネスルール違反していないか確認 | 名前の長さが 0 文字か 100 文字超か | ArgumentException をスロー |
+| **格納** | 正規化・検証済み値を ValueField に格納 | ValueField = `"山田太郎"` | - |
+| **IsSet 設定** | IsSet フラグを true に設定（設定済み状態を表現） | IsSet = true | - |
+
+**From() vs TryFrom() の使い分け**
+
+```csharp
+// From() — 検証失敗時は例外
+try
+{
+    var name = RespondentName.From(input);  // 検証失敗 → ArgumentException
+}
+catch (ArgumentException ex)
+{
+    // エラー処理
+}
+
+// TryFrom() — 検証失敗時は false を返す
+if (RespondentName.TryFrom(input, out var name))
+{
+    // 成功時のみ処理
+    ProcessName(name);
+}
+else
+{
+    // null 入力は Unset() に変換される（失敗ではない）
+    // または検証失敗時は false が返される
+}
 ```
 
 ---
 
-## 10. ValueObject パターン別ガイド
+## 11. ValueObject パターン別ガイド
 
 3種類の ValueObject パターンの特徴と選択基準をまとめています。どのパターンを使うべきかを判断するためのチェックリストとフローチャートを提供します。
 
-### 10.1 PrimitiveValueObject を使うべき場合
+### 11.1 PrimitiveValueObject を使うべき場合
 
 **判定基準:**
 - ✅ スカラ値（単一フィールド）
@@ -1630,55 +1663,7 @@ public sealed class RespondentName : PrimitiveValueObject<string>, IEquatable<Re
 
 ---
 
-### 10.2 AggregateId を使うべき場合
-
-**判定基準:**
-- ✅ Entity の識別子（GUID ベース）
-- ✅ 型安全性が必須（UserId vs RoleId を型チェックで区別）
-- ✅ 常に値を持つ（null 不許容）
-- ✅ Unset 状態が不要
-- ✅ 複数テーブル集約の論理的統一 ID
-
-**具体例:**
-- UserId（ユーザー集約の識別子）
-- RoleId（ロール集約の識別子）
-- EmployeeId（従業員集約の識別子）
-- OrderId（注文集約の識別子）
-
-**実装パターン:**
-```csharp
-public sealed class UserId : AggregateId
-{
-    private UserId(Guid value) : base(value) { }
-
-    /// <summary>新しい ID を生成</summary>
-    public static UserId New() => new(Guid.NewGuid());
-
-    /// <summary>既存の GUID から ID を生成（DB 読み込み時）</summary>
-    public static UserId From(Guid value) => new(value);
-}
-
-// Entity での使用
-public class User : AggregateRoot<UserId>  // ← TId = UserId
-{
-    public User(UserId id, string name)
-    {
-        Id = id;  // AggregateId で識別
-    }
-}
-```
-
-**チェックリスト（使用前に確認）:**
-- [ ] 集約を一意識別する目的か
-- [ ] GUID 値で十分か
-- [ ] 型安全性が重要か（他の ID と混同されると問題になるか）
-- [ ] 常に値を持つか（null 許容ではないか）
-- [ ] Entity のジェネリック型パラメータとして使用するか
-- [ ] Unset 状態は不要か
-
----
-
-### 10.3 RowId を使うべき場合
+### 11.2 RowId を使うべき場合
 
 **判定基準:**
 - ✅ データベーステーブルの行を一意識別（物理キー）
@@ -1725,16 +1710,151 @@ public UserDbModel ToDbModel(User entity)
 - [ ] public プロパティで読み取りのみ公開するか
 - [ ] Mapper で DbModel のマッピングに使用するか
 
+#### 11.2.2 RowId のライフサイクル
+
+RowId の状態遷移は3段階です。
+
+**段階1：新規作成時（値が未採番状態）**
+```csharp
+// Entity 新規作成時
+var user = new User(
+    id: UserId.NewId(),
+    name: "Taro Yamada",
+    rowId: null  // または省略 → RowId.New() で value=0 に初期化
+);
+
+// この時点で user._rowId は value=0（未採番）
+```
+
+**段階2：DB 採番後（value > 0 に更新）**
+```csharp
+// Repository の Create メソッド内で採番
+public async Task CreateAsync(User entity)
+{
+    // INSERT 実行（DB側で IDENTITY/Sequence で自動採番）
+    var dbModel = _mapper.ToDbModel(entity);
+    var rowId = await _dataAccess.InsertAsync(dbModel);  // 採番された rowId を取得
+    
+    // Entity 内部の _rowId を更新（value=0 → value=採番値）
+    entity.UpdateRowId(rowId);  // または内部メソッドで更新
+}
+```
+
+**段階3：Entity 再構築時（既存値から復元）**
+```csharp
+// Repository の Get メソッド内
+public async Task<User?> GetAsync(UserId userId)
+{
+    var dbModel = await _dataAccess.GetAsync(userId);
+    if (dbModel == null) return null;
+    
+    // Mapper で DbModel → Entity に変換時、既存の rowId を復元
+    return _mapper.ToDomainEntity(dbModel);
+    // この時点で entity._rowId は value=既存採番値（value > 0）
+}
+```
+
+#### 11.3.3 Mapper での RowId 取得と変換
+
+**ToDbModel（Entity → DbModel）**
+```csharp
+public UserDbModel ToDbModel(User entity)
+{
+    return new UserDbModel
+    {
+        RowId = entity.RowId.Value,  // ← Entity の _rowId から取得（値を直接抽出）
+        UserId = entity.Id.Value,
+        Name = entity.Name.Value,
+        CreatedAt = entity.CreatedAt.Value.Value,  // LocalDateTime → DateTime
+        UpdatedAt = entity.UpdatedAt.HasUpdated 
+            ? entity.UpdatedAt.Value.Value 
+            : (DateTime?)null,
+    };
+}
+```
+
+**ToDomainEntity（DbModel → Entity）**
+```csharp
+public User ToDomainEntity(UserDbModel dbModel, IClock clock)
+{
+    // DbModel の RowId から RowId ValueObject を復元
+    var rowId = RowId.From(dbModel.RowId);  // value > 0 の既存値
+    
+    return new User(
+        id: UserId.From(dbModel.UserId),
+        name: RespondentName.From(dbModel.Name),
+        rowId: rowId  // ← 既存の rowId を復元
+    );
+}
+```
+
+**重要:** 
+- ToDbModel では Entity.RowId.Value で long 値を抽出
+- ToDomainEntity では DbModel.RowId から RowId.From() で復元
+- new 時に rowId パラメータを省略すると RowId.New() で value=0 に初期化される
+
+#### 11.3.4 Repository での RowId 管理
+
+**新規作成時**
+```csharp
+public async Task CreateAsync(User entity)
+{
+    // Entity は value=0 の RowId を持つ
+    var dbModel = _mapper.ToDbModel(entity);
+    // DbModel.RowId = 0
+    
+    // INSERT 実行（DB が IDENTITY で自動採番）
+    // SQL: INSERT INTO t_users (name, ...) VALUES (...)
+    //      → DB が RowId を採番（e.g., 1001）
+    
+    var adoptedRowId = await _dataAccess.InsertAsync(dbModel);
+    
+    // Entity 内部の _rowId を採番値で更新（内部メソッド）
+    entity._rowId = RowId.From(adoptedRowId);
+    // この後、entity.RowId.Value は 1001
+}
+```
+
+**既存レコード読み込み時**
+```csharp
+public async Task<User?> GetAsync(UserId userId)
+{
+    // SELECT: RowId は既に採番済み（e.g., 1001）
+    var dbModel = await _dataAccess.GetAsync(userId);
+    
+    if (dbModel == null) return null;
+    
+    // Mapper は DbModel.RowId から RowId.From() で復元
+    return _mapper.ToDomainEntity(dbModel);
+    // 戻り値の Entity は value=1001 の RowId を持つ
+}
+```
+
+**delete（論理削除）時**
+```csharp
+public async Task DeleteAsync(User entity)
+{
+    // Entity は value > 0 の RowId を持つ
+    var dbModel = _mapper.ToDbModel(entity);
+    
+    // UPDATE: RowId は変わらない（value > 0 のまま）
+    // SQL: UPDATE t_users SET deleted_at = ..., deleted_by = ... WHERE row_id = ?
+    await _dataAccess.UpdateAsync(dbModel);
+}
+```
+
+**ガイドライン:**
+- 新規作成後の Entity は Repository によって RowId が更新される責務がある
+- Mapper は RowId の変換（RowId ↔ long）のみに専念
+- Repository は DB 採番値の取得と Entity への反映の両責務を持つ
+
 ---
 
-### 10.4 パターン選択フローチャート
+### 11.4 パターン選択フローチャート
 
 ```
 【ValueObject を設計する】
           │
-          ├─ 集約（Aggregate）を識別する？
-          │   YES → AggregateId 継承
-          │   
           ├─ DB テーブル行の物理キー？
           │   YES → RowId パターン
           │   
@@ -1750,8 +1870,7 @@ public UserDbModel ToDbModel(User entity)
 
 **フローの解説:**
 
-1. **最初の判定：集約ID か物理キー か？**
-   - 集約の識別子 → AggregateId
+1. **最初の判定：DB テーブル行の物理キー か？**
    - DB テーブル行 → RowId
    - 上記以外 → 次の判定へ
 
@@ -1765,27 +1884,27 @@ public UserDbModel ToDbModel(User entity)
 
 ---
 
-### 10.5 パターン別比較表（拡張版）
+### 11.5 パターン別比較表（拡張版）
 
-| 特性 | PrimitiveValueObject | AggregateId | RowId |
-|-----|------------------|------------|-------|
-| **基底クラス** | PrimitiveValueObject<TValue> | AggregateId（抽象） | ValueObject |
+| 特性 | PrimitiveValueObject | RowId |
+|-----|------------------|-------|
+| **基底クラス** | PrimitiveValueObject<TValue> | ValueObject |
 | **値型** | TValue（string, int, DateTime など） | Guid | long |
-| **IsSet フラグ** | ✅ 有 | ❌ 無 | ❌ 無 |
-| **Unset 状態** | ✅ IsSet=false | ❌ 常に Guid | ❌ value=0で未採番 |
-| **Unset メソッド** | ✅ Unset() 有 | ❌ 無 | ❌ 無 |
-| **New() メソッド** | ❌ 無 | ✅ New()→Guid.NewGuid | ✅ New()→value=0 |
-| **from/From メソッド** | ✅ From(value) | ✅ From(Guid) | ✅ From(long) |
-| **Normalize** | ✅ 通常実装 | ❌ 不要 | ❌ 不要 |
-| **Validate** | ✅ 通常実装 | ✅ Guid.Empty チェック | ✅ value≥0 チェック |
-| **Value null許容** | ✅ IsSet で制御 | ❌ 常に Guid | ❌ 常に long |
-| **用途** | ビジネス属性 | 集約識別子 | DB物理キー |
-| **使用例** | RespondentName | UserId | Entity._rowId |
-| **Entity での役割** | Domain ロジック内で使用 | `AggregateRoot<TId>` | プライベート属性 |
+| **IsSet フラグ** | ✅ 有 | ❌ 無 |
+| **Unset 状態** | ✅ IsSet=false | ❌ value=0で未採番 |
+| **Unset メソッド** | ✅ Unset() 有 | ❌ 無 |
+| **New() メソッド** | ❌ 無 | ✅ New()→value=0 |
+| **from/From メソッド** | ✅ From(value) | ✅ From(long) |
+| **Normalize** | ✅ 通常実装 | ❌ 不要 |
+| **Validate** | ✅ 通常実装 | ✅ value≥0 チェック |
+| **Value null許容** | ✅ IsSet で制御 | ❌ 常に long |
+| **用途** | ビジネス属性 | DB物理キー |
+| **使用例** | RespondentName | Entity._rowId |
+| **Entity での役割** | Domain ロジック内で使用 | プライベート属性 |
 
 ---
 
-### 10.6 パターン別実装チェックリスト
+### 11.6 パターン別実装チェックリスト
 
 #### PrimitiveValueObject チェックリスト
 
@@ -1807,21 +1926,6 @@ public UserDbModel ToDbModel(User entity)
 - [ ] `GetValueComponents()` をオーバーライド（等価性判定）
 - [ ] IEquatable<T> を実装
 
-#### AggregateId チェックリスト
-
-**設計段階:**
-- [ ] 集約を一意識別する目的か
-- [ ] 型安全性が必須か（他の ID と区別が必要か）
-- [ ] 常に値を持つか（必須フィールド）
-- [ ] Unset 状態は不要か
-
-**実装段階:**
-- [ ] AggregateId を継承
-- [ ] コンストラクタで Guid.Empty をチェック
-- [ ] `New()` メソッドで新規 ID を生成
-- [ ] `From(Guid)` メソッドで既存 ID を復元
-- [ ] GetValueComponents() で Guid を yield
-
 #### RowId チェックリスト
 
 **設計段階:**
@@ -1838,9 +1942,9 @@ public UserDbModel ToDbModel(User entity)
 
 ---
 
-## 11. レイヤ制約
+## 12. レイヤ制約
 
-### 11.1 配置されるべきレイヤ
+### 12.1 配置されるべきレイヤ
 
 **ルール:** すべての ValueObject は **SharedKernel/ValueObjects** フォルダに配置。
 
@@ -1866,7 +1970,7 @@ src/
   │           └─ ...
 ```
 
-### 11.2 依存関係ルール
+### 12.2 依存関係ルール
 
 **ルール:** ValueObject は以下への依存が許可される：
 
@@ -1879,7 +1983,7 @@ src/
 | ロガー（ILogger） | ❌ | Domain は副作用を持たない |
 | DateTime.Now / UtcNow | ❌ | 時刻が必要な場合は `IClock` 経由 |
 
-### 11.3 外部依存の回避
+### 12.3 外部依存の回避
 
 **パターン 1: 時刻が必要な場合**
 
@@ -1929,7 +2033,7 @@ public sealed class CreateRespondentUseCase
 
 ---
 
-## 12. チェックリスト — 新しい ValueObject を実装するとき
+## 13. チェックリスト — 新しい ValueObject を実装するとき
 
 実装前に以下を確認：
 
@@ -1985,4 +2089,5 @@ public sealed class CreateRespondentUseCase
 
 | 版 | 日付 | 作成者 | 変更内容 |
 |----|------|--------|---------|
+| 2.0 | 2026-08-08 | Claude Code | 大規模リファクタ — セクション 11.3 RowId ライフサイクル詳細化、セクション 7.3 層間比較表追加、セクション 10.4 フローチャート図追加 |
 | 1.0 | 2026-07-07 | Claude Code | 初版作成 — 現在の実装に基づくガイド |
