@@ -27,12 +27,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Assistance/Guides/0_ドキュメントチェックリスト.md",
+                "file": "Assistance/Guides/TABLE_DESIGN_STANDARDS.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "0_ドキュメントチェックリスト"
+              "title": "TABLE_DESIGN_STANDARDS"
             }
           }
         ],

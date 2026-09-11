@@ -12,6 +12,7 @@ using Crosscutting.Logging;
 using SupportAdvance.Infrastructure.Persistence;
 using SupportAdvance.Infrastructure.Repositories;
 using SupportAdvance.Infrastructure.Services;
+using SupportAdvance.SharedKernel.ValueObjects.Audit;
 
 /// <summary>
 /// Employee 集約の Repository 実装
@@ -87,6 +88,27 @@ public class EmployeeRepository(
                 departmentMembershipSql,
                 new { EmployeeRowId = dbModel.RowId });
 
+            // ============ 層間フィルター ============
+            // DB の null を ValueObject の Unset() に変換（Infrastructure層の責務）
+            if (!CreatedAt.TryFromDbValue(dbModel.CreatedAt, out var employeeCreatedAt))
+                throw new InvalidOperationException($"Invalid CreatedAt for Employee BizId={bizId}");
+
+            if (!UpdatedAt.TryFromDbValue(dbModel.UpdatedAt, out var employeeUpdatedAt))
+                throw new InvalidOperationException($"Invalid UpdatedAt for Employee BizId={bizId}");
+
+            if (!DeletedAt.TryFromDbValue(dbModel.DeletedAt, out var employeeDeletedAt))
+                throw new InvalidOperationException($"Invalid DeletedAt for Employee BizId={bizId}");
+
+            // Person の監査フィールドも変換
+            if (!CreatedAt.TryFromDbValue(personDbModel.CreatedAt, out var personCreatedAt))
+                throw new InvalidOperationException($"Invalid CreatedAt for Person BizId={bizId}");
+
+            if (!UpdatedAt.TryFromDbValue(personDbModel.UpdatedAt, out var personUpdatedAt))
+                throw new InvalidOperationException($"Invalid UpdatedAt for Person BizId={bizId}");
+
+            if (!DeletedAt.TryFromDbValue(personDbModel.DeletedAt, out var personDeletedAt))
+                throw new InvalidOperationException($"Invalid DeletedAt for Person BizId={bizId}");
+
             return _mapper.ToDomainEntity(dbModel, personDbModel, departmentMemberships.ToList());
         }
         catch (Exception ex)
@@ -135,6 +157,27 @@ public class EmployeeRepository(
             var membershipDbModels = await connection.QueryAsync<DepartmentMembershipDbModel>(
                 membershipSql,
                 new { EmployeeRowId = id.Value });
+
+            // ============ 層間フィルター ============
+            // DB の null を ValueObject の Unset() に変換（Infrastructure層の責務）
+            if (!CreatedAt.TryFromDbValue(employeeDbModel.CreatedAt, out var employeeCreatedAt))
+                throw new InvalidOperationException($"Invalid CreatedAt for Employee RowId={id.Value}");
+
+            if (!UpdatedAt.TryFromDbValue(employeeDbModel.UpdatedAt, out var employeeUpdatedAt))
+                throw new InvalidOperationException($"Invalid UpdatedAt for Employee RowId={id.Value}");
+
+            if (!DeletedAt.TryFromDbValue(employeeDbModel.DeletedAt, out var employeeDeletedAt))
+                throw new InvalidOperationException($"Invalid DeletedAt for Employee RowId={id.Value}");
+
+            // Person の監査フィールドも変換
+            if (!CreatedAt.TryFromDbValue(personDbModel.CreatedAt, out var personCreatedAt))
+                throw new InvalidOperationException($"Invalid CreatedAt for Person EmployeeRowId={id.Value}");
+
+            if (!UpdatedAt.TryFromDbValue(personDbModel.UpdatedAt, out var personUpdatedAt))
+                throw new InvalidOperationException($"Invalid UpdatedAt for Person EmployeeRowId={id.Value}");
+
+            if (!DeletedAt.TryFromDbValue(personDbModel.DeletedAt, out var personDeletedAt))
+                throw new InvalidOperationException($"Invalid DeletedAt for Person EmployeeRowId={id.Value}");
 
             _logger.LogInformation($"Employee loaded: RowId={id.Value}, Person found, DepartmentMemberships={membershipDbModels.Count()}");
 
