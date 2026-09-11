@@ -102,7 +102,7 @@ public sealed class Employee : AggregateRoot<EmployeeRowId>, IEmployee {
         RetiredOn? retiredOn,
         Person person,
         IEnumerable<DepartmentMembership> departmentMemberships) =>
-        new(rowId, typeDivision, bizId, bizCode,retiredOn ?? RetiredOn.Unset, person, departmentMemberships.ToList());
+        new(rowId, typeDivision, bizId, bizCode, retiredOn ?? RetiredOn.Unset(), person, departmentMemberships.ToList());
 
     /// <summary>
     /// DB から読み込んだ値から Employee を復元する（ファクトリメソッド）

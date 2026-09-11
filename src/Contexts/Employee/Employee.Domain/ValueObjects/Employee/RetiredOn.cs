@@ -23,8 +23,8 @@ public sealed class RetiredOn : ValueObject, IEquatable<RetiredOn>
     /// <summary>退職状況フラグ（HasRetired=true で退職済み）</summary>
     public bool HasRetired => IsSet;
 
-    /// <summary>Unset 状態（現職）を表す静的プロパティ</summary>
-    public static RetiredOn Unset => new(LocalDateTime.MinValue, false);
+    /// <summary>Unset 状態（現職）を表す静的メソッド</summary>
+    public static RetiredOn Unset() => new(LocalDateTime.MinValue, false);
 
     /// <summary>
     /// 指定された退職日から RetiredOn を生成する（プライベートコンストラクタ）
@@ -54,7 +54,7 @@ public sealed class RetiredOn : ValueObject, IEquatable<RetiredOn>
 
         if (!value.HasValue)
         {
-            result = Unset;
+            result = Unset();
             return true;
         }
 

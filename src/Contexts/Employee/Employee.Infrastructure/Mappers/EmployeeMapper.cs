@@ -45,7 +45,7 @@ public class EmployeeMapper
         var bizId = BizId.From(dbModel.BizId);
         var bizCode = BizCode.From(typeDivision, bizId);
 
-        var retiredOn = RetiredOn.Unset;
+        var retiredOn = RetiredOn.Unset();
         if (dbModel.RetiredOn.HasValue)
         {
             retiredOn = RetiredOn.From(new LocalDateTime(dbModel.RetiredOn.Value));
