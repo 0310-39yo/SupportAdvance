@@ -100,24 +100,94 @@ public class SystemClock : IClock
 }
 ```
 
-### 3. テスト用の FixedClock
+### 3. テスト用の Clock 実装
+
+#### MockClock（単体テスト用・固定時刻）
 
 ```csharp
-// src/Common/Clocks/FixedClock.cs
+// src/Common/Clocks/MockClock.cs
+// 【特徴】固定時刻のみ返す（DateTime.Now 非使用）
 
-using NodaTime;
-
-namespace SupportAdvance.Common.Clocks;
-
-public class FixedClock : IClock
+public class MockClock : IClock
 {
-    private readonly LocalDateTime _fixedTime;
+    private DateTime _fixedDateTime;
 
-    public LocalDateTime JstNow => _fixedTime;
+    public LocalDateTime JstNow => new(_fixedDateTime);
 
-    public FixedClock(LocalDateTime fixedTime)
+    public MockClock(DateTime? fixedDateTime = null)
     {
-        _fixedTime = fixedTime;
+        _fixedDateTime = fixedDateTime ?? new DateTime(2024, 1, 1, 0, 0, 0);
+    }
+
+    public void SetDateTime(DateTime newDateTime)
+    {
+        _fixedDateTime = newDateTime;
+    }
+}
+```
+
+#### TickingClock（テスト・シミュレーション用・手動/自動進行）
+
+```csharp
+// src/Common/Clocks/TickingClock.cs
+// 【特徴】開始時刻から手動/自動で時刻を進める（DateTime.Now 非使用）
+
+public class TickingClock : IClock
+{
+    private DateTime _currentTime;
+    private readonly TimeSpan _tickInterval;
+
+    public LocalDateTime JstNow => new(_currentTime);
+
+    public TickingClock(DateTime startTime, TimeSpan? tickInterval = null)
+    {
+        _currentTime = startTime;
+        _tickInterval = tickInterval ?? TimeSpan.FromSeconds(1);
+    }
+
+    public void Tick()
+    {
+        _currentTime = _currentTime.Add(_tickInterval);
+    }
+
+    public void Advance(TimeSpan timeSpan)
+    {
+        _currentTime = _currentTime.Add(timeSpan);
+    }
+
+    public void SetTime(DateTime dateTime)
+    {
+        _currentTime = dateTime;
+    }
+}
+```
+
+#### OffsetClock（テスト用・オフセット付き進行）
+
+```csharp
+// src/Common/Clocks/OffsetClock.cs
+// 【特徴】過去の日付設定で、システムクロックと同じ速度で進行
+// 【例外】DateTime.Now を使用してオフセット計算（Clock実装内のみ許可）
+
+public class OffsetClock : IClock
+{
+    private readonly DateTime _offsetDateTime;
+    private readonly DateTime _systemBaseTime;
+
+    public LocalDateTime JstNow
+    {
+        get
+        {
+            var elapsed = DateTime.Now - _systemBaseTime;  // ✓ Clock内のみDateTime.Now許可
+            var displayTime = _offsetDateTime.Add(elapsed);
+            return new LocalDateTime(DateTime.SpecifyKind(displayTime, DateTimeKind.Unspecified));
+        }
+    }
+
+    public OffsetClock(DateTime offsetDateTime)
+    {
+        _offsetDateTime = offsetDateTime;
+        _systemBaseTime = DateTime.Now;  // ✓ Clock内のみDateTime.Now許可
     }
 }
 ```
