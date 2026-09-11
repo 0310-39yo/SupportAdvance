@@ -8,12 +8,17 @@
 
 ### LocalDateTime を強制
 
-SupportAdvance は **日本標準時（JST / UTC+9）** のみで動作します。すべての日時は LocalDateTime で統一します。
+SupportAdvance は **日本標準時（JST / UTC+9）** のみで動作します。
+
+- **Domain/Application/Entity 層**: すべて LocalDateTime で統一
+- **DbModel/Infrastructure 層**: DateTime（プリミティブ型）で ORM マッピング、Mapper が変換責務を持つ
+- **データベース**: datetime2(7) で JST として解釈
 
 ```
-✓ LocalDateTime（推奨）: JST タイムゾーン情報を保持
-✗ DateTime / DateTimeOffset: タイムゾーン曖昧で禁止
-✗ DateTime.UtcNow / DateTime.Now: IClock 経由のみ
+✓ LocalDateTime（推奨）: Domain/Application層でのみ使用、JST タイムゾーン情報を保持
+✓ DateTime（DbModel層）: ORM マッピング用プリミティブ型、Mapper で LocalDateTime に変換
+✗ DateTime / DateTimeOffset: Domain/Application層での直接使用は禁止
+✗ DateTime.UtcNow / DateTime.Now: IClock 経由でのみ（Clock 実装内では使用可）
 ```
 
 ### タイムゾーン方針
