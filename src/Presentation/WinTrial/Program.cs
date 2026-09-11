@@ -7,6 +7,7 @@ using SupportAdvance.Contexts.Employee.Infrastructure;
 using SupportAdvance.Contexts.IntegrationPrototype.Application;
 using SupportAdvance.Crosscutting;
 using SupportAdvance.Infrastructure;
+using SupportAdvance.Infrastructure.Services;
 using SupportAdvance.Presentation.Shared;
 using SupportAdvance.Presentation.WinTrial.Views;
 
@@ -36,9 +37,13 @@ internal static class Program
                     .AddEmployeeApplicationModels() // Employee Context Application を登録
                     .AddIntegrationPrototypeApplicationModels() // IntegrationPrototype Application を登録
                     .AddWinTrialModules()
+                    // TODO: Identity BC（認証機能）実装後、正式な ICurrentUserService に置き換えること
+                    .AddScoped<ICurrentUserService, SystemCurrentUserService>()
                     ;
             })
             .Build();
+
+        Console.WriteLine("[WARN] ICurrentUserService は未実装のため SystemCurrentUserService（暫定スタブ、EmployeeRowId=0固定）で動作しています。");
 
         host.Start();
 
