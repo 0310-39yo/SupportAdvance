@@ -40,8 +40,9 @@ namespace SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 /// テーブル行の物理キーを表す long ベース ValueObject の基底クラス
 /// 
 /// 【責務】
-/// - long 値の保持（1 以上）
+/// - long 値の保持（1 以上、またはオプション型は null を Unset に変換）
 /// - 等価性判定（long ベース）
+/// - IsSet フラグで未設定状態を管理
 /// 
 /// 【継承】
 /// 各集約は RowId を継承し、固有の ID クラスを定義
@@ -50,41 +51,66 @@ namespace SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 /// 【型安全性】
 /// - 異なる集約の RowId を型チェックで区別
 /// - EmployeeRowId と DepartmentRowId は互換性なし
+/// 
+/// 【2つのコンストラクタパターン】
+/// - 必須型: protected RowId(long value, bool isSet) で IsSet=true
+/// - オプション型: protected RowId(bool isSet) で IsSet=false（Unset状態）
 /// </summary>
 public abstract class RowId : ValueObject
 {
     /// <summary>
-    /// long 値（1 以上）
+    /// long 値（1 以上、またはオプション型は未設定時の既定値）
     /// </summary>
     public long Value { get; protected set; }
 
+    /// <summary>
+    /// 値が設定されているかを示すフラグ
+    /// 【責務】オプション型での未設定状態を型安全に管理
+    /// </summary>
+    public bool IsSet { get; protected set; }
+
+    /// <summary>
+    /// 必須型用コンストラクタ（IsSet=true）
+    /// </summary>
     protected RowId(long value, bool isSet)
     {
         Value = value;
         IsSet = isSet;
     }
 
-    /// <summary>IsSet フラグ</summary>
-    public bool IsSet { get; protected set; }
+    /// <summary>
+    /// オプション型用コンストラクタ（Unset状態、IsSet=false）
+    /// </summary>
+    protected RowId(bool isSet)
+    {
+        Value = 0;  // Unset時のデフォルト値
+        IsSet = isSet;
+    }
 
     /// <summary>
-    /// 指定された long 値から RowId を生成する
+    /// 指定された long 値を検証する（派生クラスで実装）
+    /// 【実装責務】MinValue チェック、範囲検証
     /// </summary>
-    /// <param name="value">RowId（1 以上）</param>
-    /// <exception cref="ArgumentOutOfRangeException">0以下の値</exception>
+    /// <param name="value">検証対象値</param>
+    /// <exception cref="ArgumentOutOfRangeException">不正な値の場合</exception>
     public abstract void Validate(long value);
 }
 ```
 
 ### 2. 集約固有の RowId 実装例
 
-#### EmployeeRowId（従業員）
+#### 必須型：EmployeeRowId（従業員）
 
 ```csharp
 // src/Contexts/Employee/Employee.Domain/ValueObjects/Employee/EmployeeRowId.cs
 
 using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
+/// <summary>
+/// 従業員の行ID（必須型）
+/// 【用途】t_employees.row_id を型安全に管理
+/// 【特性】IsSet=true が常に成立（未設定状態なし）
+/// </summary>
 public sealed class EmployeeRowId : RowId, IEquatable<EmployeeRowId>
 {
     public const long MinValue = 1L;
@@ -96,7 +122,7 @@ public sealed class EmployeeRowId : RowId, IEquatable<EmployeeRowId>
     }
 
     /// <summary>
-    /// 従業員行IDを生成する（推奨: ApplicationService で ISequenceProvider 採番後）
+    /// 従業員行IDを生成する（ISequenceProvider で採番後）
     /// </summary>
     public static EmployeeRowId From(long value) => new(value);
 
@@ -117,9 +143,6 @@ public sealed class EmployeeRowId : RowId, IEquatable<EmployeeRowId>
         }
     }
 
-    /// <summary>
-    /// 有効性検証（1以上）
-    /// </summary>
     public override void Validate(long normalized)
     {
         if (normalized < MinValue)
@@ -130,41 +153,112 @@ public sealed class EmployeeRowId : RowId, IEquatable<EmployeeRowId>
 }
 ```
 
-#### DepartmentRowId（部署）
+#### オプション型：ManagerEmployeeRowId（部署管理者）
 
 ```csharp
-public sealed class DepartmentRowId : RowId, IEquatable<DepartmentRowId>
+// src/Contexts/Employee/Employee.Domain/ValueObjects/Department/ManagerEmployeeRowId.cs
+
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
+
+/// <summary>
+/// 部署管理者（従業員）の行ID（オプション型）
+/// 【用途】t_departments.manager_row_id を型安全に管理
+/// 【特性】IsSet=true で管理者あり、IsSet=false で「管理者なし」を表現
+/// 【DB null 処理】自動的に Unset() に変換（Domain は null 免除）
+/// </summary>
+public sealed class ManagerEmployeeRowId : RowId, IEquatable<ManagerEmployeeRowId>
 {
-    public const long MinValue = 1L;
+    private const long MinValue = 1L;
 
     public long Value => ValueField;
 
-    private DepartmentRowId(long value) : base(value, true)
+    /// <summary>
+    /// Unset状態（管理者なし）のコンストラクタ
+    /// </summary>
+    private ManagerEmployeeRowId(bool isSet) : base(isSet)
     {
     }
 
-    public static DepartmentRowId From(long value) => new(value);
-
-    public static bool TryFromDbValue(long value, out DepartmentRowId result)
+    /// <summary>
+    /// 値設定状態のコンストラクタ
+    /// </summary>
+    private ManagerEmployeeRowId(long value) : base(value, true)
     {
+    }
+
+    /// <summary>
+    /// 未設定状態を表す Unset インスタンスを生成
+    /// 【用途】「管理者なし」を型安全に表現（null 代替）
+    /// </summary>
+    public static ManagerEmployeeRowId Unset() => new(false);
+
+    /// <summary>
+    /// 指定値から生成（管理者あり）
+    /// </summary>
+    public static ManagerEmployeeRowId From(long value) => new(value);
+
+    /// <summary>
+    /// nullable long から型安全に生成
+    /// 【null 処理】null は自動的に Unset() に変換（成功を返す）
+    /// </summary>
+    public static bool TryFrom(long? input, out ManagerEmployeeRowId result)
+    {
+        result = null!;
+
+        if (!input.HasValue)
+        {
+            result = Unset();  // null → Unset（成功）
+            return true;
+        }
+
         try
         {
-            result = From(value);
+            result = From(input.Value);
             return true;
         }
         catch (ArgumentOutOfRangeException)
         {
-            result = null!;
             return false;
         }
     }
 
+    /// <summary>
+    /// DB値から復元（null は Unset に自動変換）
+    /// 【責務】DB の null ハンドリングを自動化
+    /// </summary>
+    public static bool TryFromDbValue(long? input, out ManagerEmployeeRowId result)
+    {
+        result = null!;
+
+        if (!input.HasValue)
+        {
+            result = Unset();  // DB NULL → Unset（Domain は null 免除）
+            return true;
+        }
+
+        try
+        {
+            result = From(input.Value);
+            return true;
+        }
+        catch (ArgumentOutOfRangeException)
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// 管理者が設定されているかを判定する（IsSet の別名）
+    /// 【用途】Domain層での直感的な状態判定
+    /// </summary>
+    public bool HasManager => IsSet;
+
     public override void Validate(long normalized)
     {
-        if (normalized < MinValue)
+        if (normalized <= 0)
             throw new ArgumentOutOfRangeException(
                 nameof(normalized),
-                $"DepartmentRowId must be >= {MinValue}");
+                $"ManagerEmployeeRowId must be > 0");
     }
 }
 ```
@@ -312,16 +406,35 @@ public sealed class Person : Entity<PersonRowId>
 
 ## ✅ 実装チェックリスト
 
-新規 ValueObject に RowId を実装する際：
+### 必須型（EmployeeRowId など）
 
-- [ ] **RowId を継承**: `class XXXRowId : RowId`
-- [ ] **From() メソッド**: `public static XXXRowId From(long value)`
-- [ ] **TryFromDbValue()**: `public static bool TryFromDbValue(long value, out XXXRowId result)`
-- [ ] **Validate()**: `public override void Validate(long normalized)`
+- [ ] **RowId を継承**: `class XXXRowId : RowId, IEquatable<XXXRowId>`
 - [ ] **MinValue 定義**: `public const long MinValue = 1L`
+- [ ] **コンストラクタ**: `private XXXRowId(long value) : base(value, true)`
+- [ ] **From() メソッド**: `public static XXXRowId From(long value) => new(value);`
+- [ ] **TryFromDbValue()**: DB long → XXXRowId 変換（例外時は false）
+- [ ] **Validate()**: `if (normalized < MinValue) throw ...`
+- [ ] **Equals/GetHashCode**: RowId ベースの等価性判定
 - [ ] **Entity パラメータ**: Create/Reconstruct で非null パラメータ
 - [ ] **採番方法**: ApplicationService で ISequenceProvider を使用
-- [ ] **テスト**: RowId の型安全性をテスト
+
+### オプション型（ManagerEmployeeRowId など）
+
+- [ ] **RowId を継承**: `class XXXRowId : RowId, IEquatable<XXXRowId>`
+- [ ] **2つのコンストラクタ**: 
+  - `private XXXRowId(bool isSet) : base(isSet)` （Unset用）
+  - `private XXXRowId(long value) : base(value, true)` （値設定用）
+- [ ] **Unset() メソッド**: `public static XXXRowId Unset() => new(false);`
+- [ ] **From() メソッド**: `public static XXXRowId From(long value) => new(value);`
+- [ ] **TryFrom(long?)**: null は自動的に Unset() に変換して成功を返す
+- [ ] **TryFromDbValue(long?)**: DB null → Unset() に自動変換
+- [ ] **Validate()**: MinValue チェック（IsSet=true時のみ検証対象）
+- [ ] **IsSet 別名**: `public bool HasXxx => IsSet;` で意味を明確化
+- [ ] **Equals/GetHashCode**: IsSet と Value の両方で判定
+- [ ] **テスト**: 
+  - null → Unset の変換確認
+  - IsSet フラグの状態管理確認
+  - 型安全性テスト
 
 ---
 
@@ -396,4 +509,6 @@ var employee = Employee.Create(rowId, ...);
 
 | 版 | 日付 | 作成者 | 変更内容 |
 |----|------|--------|---------|
-| 1.0 | 2026-09-12 | Claude Code | GUID ベース AggregateId から long ベース RowId に転換。采番方法、複数テーブル集約パターン、実装例 |
+| 1.2 | 2026-09-12 | Claude Code | **オプション型パターン追加**。ManagerEmployeeRowId（オプション型）の実装例を追加。Unset()、TryFrom(long?)、TryFromDbValue(long?)、IsSet別名プロパティの説明を追加。必須型 vs オプション型のチェックリストを分離 |
+| 1.1 | 2026-09-12 | Claude Code | Entity_設計ガイドライン.md との整合性確認。実装準拠確認済み（long ベース RowId、採番方法、複数テーブル集約パターン） |
+| 1.0 | 2026-09-12 | Claude Code | 初版作成。GUID ベース AggregateId から long ベース RowId に転換。采番方法、複数テーブル集約パターン、実装例 |
