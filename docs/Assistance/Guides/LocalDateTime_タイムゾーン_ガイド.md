@@ -166,8 +166,16 @@ public class TickingClock : IClock
 
 ```csharp
 // src/Common/Clocks/OffsetClock.cs
-// 【特徴】過去の日付設定で、システムクロックと同じ速度で進行
-// 【例外】DateTime.Now を使用してオフセット計算（Clock実装内のみ許可）
+//
+// 【目的】日付を指定しながら、時刻は実現と合わせたいテストケース
+// 【例】2020年1月1日として、現在のシステム時刻と同じ速度で時刻を進める
+//
+// 【設計】
+// - 日付: テスト用に任意の日付を設定（例：2020/1/1）
+// - 時刻: システムクロックと連動（時間経過は現実と同じ）
+// - 計算: 表示時刻 = 指定日付 + (現在システム時刻 - 初期化時刻)
+//
+// 【例外】DateTime.Now を Clock内でのみ使用してオフセット計算
 
 public class OffsetClock : IClock
 {
@@ -178,18 +186,30 @@ public class OffsetClock : IClock
     {
         get
         {
+            // 【計算】現在のシステム時刻からの経過時間を、指定日付に加算
             var elapsed = DateTime.Now - _systemBaseTime;  // ✓ Clock内のみDateTime.Now許可
             var displayTime = _offsetDateTime.Add(elapsed);
             return new LocalDateTime(DateTime.SpecifyKind(displayTime, DateTimeKind.Unspecified));
         }
     }
 
+    /// <summary>
+    /// 【例】2020年1月1日 10:30:00 に設定
+    /// 初期化時の現在時刻が 2024年9月12日 14:30:00 なら、
+    /// JstNow は「2020年1月1日 10:30:00 + (現在時刻 - 初期化時刻)」になる
+    /// </summary>
     public OffsetClock(DateTime offsetDateTime)
     {
         _offsetDateTime = offsetDateTime;
         _systemBaseTime = DateTime.Now;  // ✓ Clock内のみDateTime.Now許可
     }
 }
+
+// 【使用例】
+// var offsetClock = new OffsetClock(new DateTime(2020, 1, 1, 10, 30, 0));
+// // 初期化時点: JstNow = 2020/1/1 10:30:00
+// // 5秒後:      JstNow = 2020/1/1 10:30:05（システム時刻と同じ速度で進行）
+// // 1時間後:    JstNow = 2020/1/1 11:30:00
 ```
 
 ### 4. Entity での LocalDateTime 使用
