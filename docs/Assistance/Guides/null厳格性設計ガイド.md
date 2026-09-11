@@ -263,7 +263,10 @@ public class UserPreferencesRepository
         
         // ============ Domain層へ渡す ============
         // すべての ValueObject が null-free 状態
-        return UserPreferences.Reconstruct(userId, createdAt, updatedAt, deletedAt, ...);
+        // 【注意】監査フィールド（createdAt, updatedAt, deletedAt）は検証済みだが、
+        // Entity のビジネスロジックでは不要なため、Reconstruct に渡さない設計パターンもある。
+        // 監査情報は Repository で検証済みなので、Entity は ビジネスロジック専用に保つ。
+        return UserPreferences.Reconstruct(userId, ...);
     }
 }
 ```
