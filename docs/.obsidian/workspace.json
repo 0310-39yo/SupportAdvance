@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Assistance/Guides/0_ドキュメントチェックリスト.md",
+                "file": "WorkMemo/2026-09-12.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "0_ドキュメントチェックリスト"
+              "title": "2026-09-12"
             }
           }
         ]
@@ -190,6 +190,7 @@
   },
   "active": "e14e66e2481d85c8",
   "lastOpenFiles": [
+    "Assistance/Guides/0_ドキュメントチェックリスト.md",
     "Assistance/Guides/集約の設計ガイド.md",
     "Assistance/Guides/集約の設計ガイド.md.tmp.33108.37c34a79b6e3",
     "Assistance/Guides/Mapper_パターンガイド.md.tmp.33108.902c8e741e26",
@@ -208,7 +209,6 @@
     "Assistance/Plans/20260912_ValueObject設計ガイド齟齬修正計画.md",
     "WorkMemo/2026-09-12.md",
     "Assistance/Guides/TABLE_DESIGN_STANDARDS.md",
-    "Assistance/Guides/0_ドキュメントチェックリスト.md",
     "WorkMemo/2026-09-10.md",
     "Assistance/Guides/CLEAN_ARCHITECTURE_GUIDELINES.md",
     "Assistance/Reports/20260910_comparison_report.md",
