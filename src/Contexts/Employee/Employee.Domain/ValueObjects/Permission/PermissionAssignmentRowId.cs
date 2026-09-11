@@ -18,7 +18,10 @@ public sealed class PermissionAssignmentRowId : RowId, IEquatable<PermissionAssi
     public override void Validate(long normalized)
     {
         if (normalized < MinValue)
-            throw new ArgumentOutOfRangeException(nameof(normalized), $"PermissionAssignmentRowId must be >= {MinValue}");
+        {
+            throw new ArgumentOutOfRangeException(nameof(normalized),
+                $"PermissionAssignmentRowId must be >= {MinValue}");
+        }
     }
 
     public bool Equals(PermissionAssignmentRowId? other) => other != null && Value == other.Value;

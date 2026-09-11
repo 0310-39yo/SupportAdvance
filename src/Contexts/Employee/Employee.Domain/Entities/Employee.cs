@@ -14,7 +14,8 @@ namespace SupportAdvance.Contexts.Employee.Domain.Entities;
 /// 【ライフサイクル】採用～退職までの全期間をトラッキング
 /// 【Application層インターフェース】IEmployee を実装（Context間での参照用）
 /// </summary>
-public sealed class Employee : AggregateRoot<EmployeeRowId>, IEmployee {
+public sealed class Employee : AggregateRoot<EmployeeRowId>, IEmployee
+{
     /// <summary>
     /// 唯一の時計インスタンス（ドメインイベント発行時の日時取得に使用）
     /// </summary>
@@ -77,7 +78,7 @@ public sealed class Employee : AggregateRoot<EmployeeRowId>, IEmployee {
         RetiredOn retiredOn,
         Person person,
         List<DepartmentMembership> departmentMemberships
-        )
+    )
     {
         RowId = rowId;
         TypeDivision = typeDivision;
@@ -102,7 +103,8 @@ public sealed class Employee : AggregateRoot<EmployeeRowId>, IEmployee {
         RetiredOn? retiredOn,
         Person person,
         IEnumerable<DepartmentMembership> departmentMemberships) =>
-        new(rowId, typeDivision, bizId, bizCode, retiredOn ?? RetiredOn.Unset(), person, departmentMemberships.ToList());
+        new(rowId, typeDivision, bizId, bizCode, retiredOn ?? RetiredOn.Unset(), person,
+            departmentMemberships.ToList());
 
     /// <summary>
     /// DB から読み込んだ値から Employee を復元する（ファクトリメソッド）
@@ -126,6 +128,7 @@ public sealed class Employee : AggregateRoot<EmployeeRowId>, IEmployee {
         {
             employee.RowVersion = rowVersion;
         }
+
         return employee;
     }
 

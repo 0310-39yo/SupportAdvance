@@ -12,12 +12,16 @@ public sealed class ManagerEmployeeRowId : RowId, IEquatable<ManagerEmployeeRowI
     /// <summary>
     /// プライベートコンストラクタ（IsSet=false 用）
     /// </summary>
-    private ManagerEmployeeRowId(bool isSet) : base(isSet) { }
+    private ManagerEmployeeRowId(bool isSet) : base(isSet)
+    {
+    }
 
     /// <summary>
     /// プライベートコンストラクタ（IsSet=true 用）
     /// </summary>
-    private ManagerEmployeeRowId(long value) : base(value, true) { }
+    private ManagerEmployeeRowId(long value) : base(value, true)
+    {
+    }
 
     /// <summary>
     /// 管理者がいない部署を表す Unset インスタンスを生成する
@@ -46,7 +50,7 @@ public sealed class ManagerEmployeeRowId : RowId, IEquatable<ManagerEmployeeRowI
 
         if (!input.HasValue)
         {
-            result = Unset();  // null は Unset に変換（管理者なし）
+            result = Unset(); // null は Unset に変換（管理者なし）
             return true;
         }
 
@@ -73,7 +77,7 @@ public sealed class ManagerEmployeeRowId : RowId, IEquatable<ManagerEmployeeRowI
 
         if (!input.HasValue)
         {
-            result = Unset();  // DB NULL は Unset に変換（管理者なし）
+            result = Unset(); // DB NULL は Unset に変換（管理者なし）
             return true;
         }
 

@@ -18,7 +18,10 @@ public sealed class DepartmentMembershipRowId : RowId, IEquatable<DepartmentMemb
     public override void Validate(long normalized)
     {
         if (normalized < MinValue)
-            throw new ArgumentOutOfRangeException(nameof(normalized), $"DepartmentMembershipRowId must be >= {MinValue}");
+        {
+            throw new ArgumentOutOfRangeException(nameof(normalized),
+                $"DepartmentMembershipRowId must be >= {MinValue}");
+        }
     }
 
     public bool Equals(DepartmentMembershipRowId? other) => other != null && Value == other.Value;

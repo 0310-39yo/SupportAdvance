@@ -106,7 +106,7 @@ public sealed class PermissionCode : PrimitiveValueObject<string>, IEquatable<Pe
             return true;
         }
 
-        return Value == other.Value;  // 大文字小文字区別
+        return Value == other.Value; // 大文字小文字区別
     }
 
     /// <summary>
@@ -151,13 +151,8 @@ public sealed class PermissionCode : PrimitiveValueObject<string>, IEquatable<Pe
         // 文字種チェック（英数字、_、.のみ）
         if (!Regex.IsMatch(normalized, @"^[A-Za-z0-9_.]+$"))
         {
-            throw new ArgumentException("PermissionCode must contain only alphanumeric characters, underscores, and dots.", nameof(normalized));
+            throw new ArgumentException(
+                "PermissionCode must contain only alphanumeric characters, underscores, and dots.", nameof(normalized));
         }
     }
 }
-
-
-
-
-
-

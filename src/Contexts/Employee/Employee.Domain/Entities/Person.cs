@@ -85,6 +85,7 @@ public sealed class Person : Entity<PersonRowId>
         {
             person.RowVersion = rowVersion;
         }
+
         return person;
     }
 

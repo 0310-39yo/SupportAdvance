@@ -63,7 +63,8 @@ public class GetEmployeeByBizIdIntegrationUseCase
                 return null;
             }
 
-            _logger.LogInformation($"[IntegrationPrototype] Employee found: {employeeResult.PersonLastName} {employeeResult.PersonFirstName}, BizId: {bizId}");
+            _logger.LogInformation(
+                $"[IntegrationPrototype] Employee found: {employeeResult.PersonLastName} {employeeResult.PersonFirstName}, BizId: {bizId}");
             return employeeResult;
         }
         catch (Exception ex)

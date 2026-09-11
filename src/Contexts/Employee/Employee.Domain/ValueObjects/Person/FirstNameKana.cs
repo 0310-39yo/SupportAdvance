@@ -28,11 +28,16 @@ public sealed class FirstNameKana : ValueObject, IEquatable<FirstNameKana>
     public static FirstNameKana From(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
+        {
             throw new ArgumentException("名（カナ）は空文字列または null にできません。", nameof(value));
-        if (value.Length > 100)
-            throw new ArgumentException("名（カナ）は100文字以下である必要があります。", nameof(value));
+        }
 
-        return new(value);
+        if (value.Length > 100)
+        {
+            throw new ArgumentException("名（カナ）は100文字以下である必要があります。", nameof(value));
+        }
+
+        return new FirstNameKana(value);
     }
 
     /// <summary>
@@ -43,7 +48,9 @@ public sealed class FirstNameKana : ValueObject, IEquatable<FirstNameKana>
         result = null!;
 
         if (string.IsNullOrWhiteSpace(value))
+        {
             return false;
+        }
 
         try
         {
@@ -67,10 +74,14 @@ public sealed class FirstNameKana : ValueObject, IEquatable<FirstNameKana>
     public bool Equals(FirstNameKana? other)
     {
         if (other is null)
+        {
             return false;
+        }
 
         if (ReferenceEquals(this, other))
+        {
             return true;
+        }
 
         return Value == other.Value;
     }

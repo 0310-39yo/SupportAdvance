@@ -1,7 +1,7 @@
 namespace SupportAdvance.Contexts.Employee.Domain.Entities;
 
-using SupportAdvance.Common.Clocks;
-using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Department;
+using Common.Clocks;
+using ValueObjects.Department;
 using SupportAdvance.Contexts.Employee.Domain.ValueObjects.DepartmentMembership;
 using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
 using SupportAdvance.SharedKernel.Entities;
@@ -70,10 +70,8 @@ public sealed class DepartmentMembership : Entity<DepartmentMembershipRowId>
         DepartmentRowId departmentRowId,
         IsPrimary isPrimary,
         EndOn? endOn = null,
-        string? departmentName = null)
-    {
-        return new(membershipRowId, employeeRowId, departmentRowId, departmentName, isPrimary, endOn ?? EndOn.Unset());
-    }
+        string? departmentName = null) =>
+        new(membershipRowId, employeeRowId, departmentRowId, departmentName, isPrimary, endOn ?? EndOn.Unset());
 
     /// <summary>
     /// DB から読み込んだ値から DepartmentMembership を復元する
@@ -84,10 +82,8 @@ public sealed class DepartmentMembership : Entity<DepartmentMembershipRowId>
         DepartmentRowId departmentRowId,
         IsPrimary isPrimary,
         EndOn endOn,
-        string? departmentName = null)
-    {
-        return new(membershipRowId, employeeRowId, departmentRowId, departmentName, isPrimary, endOn);
-    }
+        string? departmentName = null) =>
+        new(membershipRowId, employeeRowId, departmentRowId, departmentName, isPrimary, endOn);
 
     /// <summary>
     /// このメンバーシップが指定時点で有効かどうかを判定する

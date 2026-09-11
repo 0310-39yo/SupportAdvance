@@ -65,10 +65,8 @@ public sealed class PermissionAssignment : Entity<PermissionAssignmentRowId>
         EmployeeRowId employeeRowId,
         PermissionCode permissionCode,
         EffectiveAt effectiveDate,
-        ExpirationOn? expirationDate = null)
-    {
-        return new(assignmentRowId, employeeRowId, permissionCode, effectiveDate, expirationDate ?? ExpirationOn.Unlimited);
-    }
+        ExpirationOn? expirationDate = null) =>
+        new(assignmentRowId, employeeRowId, permissionCode, effectiveDate, expirationDate ?? ExpirationOn.Unlimited);
 
     /// <summary>
     /// DB から読み込んだ値から PermissionAssignment を復元する（ファクトリメソッド）
@@ -78,10 +76,8 @@ public sealed class PermissionAssignment : Entity<PermissionAssignmentRowId>
         EmployeeRowId employeeRowId,
         PermissionCode permissionCode,
         EffectiveAt effectiveDate,
-        ExpirationOn expirationDate)
-    {
-        return new(assignmentRowId, employeeRowId, permissionCode, effectiveDate, expirationDate);
-    }
+        ExpirationOn expirationDate) =>
+        new(assignmentRowId, employeeRowId, permissionCode, effectiveDate, expirationDate);
 
     /// <summary>
     /// この権限割り当てが指定時点で有効かどうかを判定する
@@ -110,5 +106,6 @@ public sealed class PermissionAssignment : Entity<PermissionAssignmentRowId>
     /// PermissionAssignment の文字列表現を取得する
     /// </summary>
     public override string ToString()
-        => $"PermissionAssignment(RowId={RowId.Value}, Code={PermissionCode}, Effective={EffectiveDate}, Expiration={ExpirationDate})";
+        =>
+            $"PermissionAssignment(RowId={RowId.Value}, Code={PermissionCode}, Effective={EffectiveDate}, Expiration={ExpirationDate})";
 }

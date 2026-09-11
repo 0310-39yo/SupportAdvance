@@ -2,7 +2,7 @@ using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Role;
 
 namespace SupportAdvance.Contexts.Employee.Domain.Entities;
 
-using SupportAdvance.Common.Clocks;
+using Common.Clocks;
 using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
 using SupportAdvance.SharedKernel.Entities;
 
@@ -63,10 +63,8 @@ public sealed class RoleAssignment : Entity<RoleAssignmentRowId>
         EmployeeRowId employeeRowId,
         RoleCode roleCode,
         EffectiveAt effectiveDate,
-        ExpirationOn? expirationDate = null)
-    {
-        return new(assignmentRowId, employeeRowId, roleCode, effectiveDate, expirationDate ?? ExpirationOn.Unlimited);
-    }
+        ExpirationOn? expirationDate = null) =>
+        new(assignmentRowId, employeeRowId, roleCode, effectiveDate, expirationDate ?? ExpirationOn.Unlimited);
 
     /// <summary>
     /// DB から読み込んだ値から RoleAssignment を復元する（ファクトリメソッド）
@@ -76,10 +74,8 @@ public sealed class RoleAssignment : Entity<RoleAssignmentRowId>
         EmployeeRowId employeeRowId,
         RoleCode roleCode,
         EffectiveAt effectiveDate,
-        ExpirationOn expirationDate)
-    {
-        return new(assignmentRowId, employeeRowId, roleCode, effectiveDate, expirationDate);
-    }
+        ExpirationOn expirationDate) =>
+        new(assignmentRowId, employeeRowId, roleCode, effectiveDate, expirationDate);
 
     /// <summary>
     /// このロール割り当てが指定時点で有効かどうかを判定する
@@ -108,5 +104,6 @@ public sealed class RoleAssignment : Entity<RoleAssignmentRowId>
     /// RoleAssignment の文字列表現を取得する
     /// </summary>
     public override string ToString()
-        => $"RoleAssignment(RowId={RowId.Value}, Code={RoleCode}, Effective={EffectiveDate}, Expiration={ExpirationDate})";
+        =>
+            $"RoleAssignment(RowId={RowId.Value}, Code={RoleCode}, Effective={EffectiveDate}, Expiration={ExpirationDate})";
 }

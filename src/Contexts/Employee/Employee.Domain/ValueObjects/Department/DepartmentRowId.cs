@@ -24,7 +24,9 @@ public sealed class DepartmentRowId : RowId, IEquatable<DepartmentRowId>
     /// </summary>
     /// <param name="value">部署行ID（1以上）</param>
     /// <remarks>Validate は、基礎クラスのコンストラクタで自動実行される</remarks>
-    private DepartmentRowId(long value) : base(value, true) { }
+    private DepartmentRowId(long value) : base(value, true)
+    {
+    }
 
     /// <summary>
     /// 指定された部署行IDから DepartmentRowId を生成する

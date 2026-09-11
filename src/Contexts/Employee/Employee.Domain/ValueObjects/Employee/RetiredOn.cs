@@ -12,7 +12,7 @@ namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
 /// </summary>
 public sealed class RetiredOn : ValueObject, IEquatable<RetiredOn>
 {
-    public const long UnsetValue = 0L;  // Unset 時のダミー値
+    public const long UnsetValue = 0L; // Unset 時のダミー値
 
     /// <summary>退職日（未設定時は LocalDateTime.MinValue）</summary>
     public LocalDateTime Value { get; }

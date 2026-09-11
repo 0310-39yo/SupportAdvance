@@ -12,12 +12,16 @@ public sealed class ParentDepartmentRowId : RowId, IEquatable<ParentDepartmentRo
     /// <summary>
     /// プライベートコンストラクタ（IsSet=false 用）
     /// </summary>
-    private ParentDepartmentRowId(bool isSet) : base(isSet) { }
+    private ParentDepartmentRowId(bool isSet) : base(isSet)
+    {
+    }
 
     /// <summary>
     /// プライベートコンストラクタ（IsSet=true 用）
     /// </summary>
-    private ParentDepartmentRowId(long value) : base(value, true) { }
+    private ParentDepartmentRowId(long value) : base(value, true)
+    {
+    }
 
     /// <summary>
     /// ルート部署（親なし）を表す Unset インスタンスを生成する
@@ -46,7 +50,7 @@ public sealed class ParentDepartmentRowId : RowId, IEquatable<ParentDepartmentRo
 
         if (!input.HasValue)
         {
-            result = Unset();  // null は Unset に変換（親なし）
+            result = Unset(); // null は Unset に変換（親なし）
             return true;
         }
 
@@ -73,7 +77,7 @@ public sealed class ParentDepartmentRowId : RowId, IEquatable<ParentDepartmentRo
 
         if (!input.HasValue)
         {
-            result = Unset();  // DB NULL は Unset に変換（親なし）
+            result = Unset(); // DB NULL は Unset に変換（親なし）
             return true;
         }
 

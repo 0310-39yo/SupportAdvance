@@ -18,7 +18,9 @@ public sealed class RoleAssignmentRowId : RowId, IEquatable<RoleAssignmentRowId>
     public override void Validate(long normalized)
     {
         if (normalized < MinValue)
+        {
             throw new ArgumentOutOfRangeException(nameof(normalized), $"RoleAssignmentRowId must be >= {MinValue}");
+        }
     }
 
     public bool Equals(RoleAssignmentRowId? other) => other != null && Value == other.Value;

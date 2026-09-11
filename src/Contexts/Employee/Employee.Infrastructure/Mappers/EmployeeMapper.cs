@@ -20,7 +20,6 @@ using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
 /// </summary>
 public class EmployeeMapper
 {
-
     /// <summary>
     /// DbModel から Domain Entity に変換（読み込み用）
     /// 【責務】DB の プリミティブ型 → Domain の ValueObject に変換

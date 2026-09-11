@@ -51,6 +51,6 @@ public sealed class EmployeeRetiredEvent : IDomainEvent
         Division = division;
         Number = number;
         RetiredOn = retiredOn;
-        OccurredAt = retiredOn;  // 退職日がイベント発生時刻
+        OccurredAt = retiredOn; // 退職日がイベント発生時刻
     }
 }

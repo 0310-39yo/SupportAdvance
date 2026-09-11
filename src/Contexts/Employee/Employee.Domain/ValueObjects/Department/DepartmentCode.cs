@@ -107,7 +107,7 @@ public sealed class DepartmentCode : PrimitiveValueObject<string>, IEquatable<De
             return true;
         }
 
-        return Value == other.Value;  // 大文字小文字区別
+        return Value == other.Value; // 大文字小文字区別
     }
 
     /// <summary>
@@ -152,13 +152,8 @@ public sealed class DepartmentCode : PrimitiveValueObject<string>, IEquatable<De
         // 文字種チェック（英数字のみ）
         if (!Regex.IsMatch(normalized, @"^[A-Za-z0-9]{4}$"))
         {
-            throw new ArgumentException("DepartmentCode must contain only alphanumeric characters.", nameof(normalized));
+            throw new ArgumentException("DepartmentCode must contain only alphanumeric characters.",
+                nameof(normalized));
         }
     }
 }
-
-
-
-
-
-
