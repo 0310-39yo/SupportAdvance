@@ -26,6 +26,11 @@
     <Project Path="src/Contexts/IntegrationPrototype/IntegrationPrototype.Domain/IntegrationPrototype.Domain.csproj" Id="e24ca77d-aae0-45cc-943a-0ebd13a252e8" />
     <Project Path="src/Contexts/IntegrationPrototype/IntegrationPrototype.Infrastructure/IntegrationPrototype.Infrastructure.csproj" Id="96333fa3-4290-454e-ae42-22462e679e82" />
   </Folder>
+  <Folder Name="/src/Contexts/Organization/">
+    <Project Path="src/Contexts/Organization/Organization.Application/Organization.Application.csproj" Id="9e57959f-326f-4275-a700-7cefc4544944" />
+    <Project Path="src/Contexts/Organization/Organization.Domain/Organization.Domain.csproj" Id="e5d9fe68-fb13-4017-9d4c-2484ca7d51a3" />
+    <Project Path="src/Contexts/Organization/Organization.Infrastructure/Organization.Infrastructure.csproj" Id="f93e1ce2-3fb4-4ded-bda0-734fa2468231" />
+  </Folder>
   <Folder Name="/src/Presentation/">
     <Project Path="src/Presentation/Shared/Shared.csproj" Id="d8f895c2-bee1-42bf-a71e-c35cbe78ff0c" />
     <Project Path="src/Presentation/WinTrial/WinTrial.csproj" />

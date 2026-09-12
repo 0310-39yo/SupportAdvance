@@ -1,5 +1,0 @@
-<Project>
-  <PropertyGroup>
-    <RootNamespace>SupportAdvance.Contexts.Samples.$(MSBuildProjectName)</RootNamespace>
-  </PropertyGroup>
-</Project>
