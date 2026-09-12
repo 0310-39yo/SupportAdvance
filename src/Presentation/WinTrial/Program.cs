@@ -1,7 +1,11 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using SupportAdvance.Application;
 using SupportAdvance.Common.Configuration;
+using SupportAdvance.Contexts.Department.Application;
+using SupportAdvance.Contexts.Department.Infrastructure;
 using SupportAdvance.Contexts.Employee.Application;
 using SupportAdvance.Contexts.Employee.Infrastructure;
 using SupportAdvance.Contexts.IntegrationPrototype.Application;
@@ -33,8 +37,10 @@ internal static class Program
                     .AddCrosscuttingModels(context.Configuration)
                     .AddInfrastructureModels(context.Configuration)
                     .AddEmployeeInfrastructureModels() // Employee Context Infrastructure を登録
+                    .AddDepartmentInfrastructureModels() // Department Context Infrastructure を登録
                     .AddApplicationModels()
                     .AddEmployeeApplicationModels() // Employee Context Application を登録
+                    .AddDepartmentApplicationModels() // Department Context Application を登録
                     .AddIntegrationPrototypeApplicationModels() // IntegrationPrototype Application を登録
                     .AddWinTrialModules()
                     // TODO: Identity BC（認証機能）実装後、正式な ICurrentUserService に置き換えること

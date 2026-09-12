@@ -32,6 +32,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Contexts\Department\Department.Application\Department.Application.csproj" />
+    <ProjectReference Include="..\..\Contexts\Department\Department.Infrastructure\Department.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Contexts\Employee\Employee.Application\Employee.Application.csproj" />
     <ProjectReference Include="..\..\Contexts\Employee\Employee.Infrastructure\Employee.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Contexts\IntegrationPrototype\IntegrationPrototype.Application\IntegrationPrototype.Application.csproj" />
