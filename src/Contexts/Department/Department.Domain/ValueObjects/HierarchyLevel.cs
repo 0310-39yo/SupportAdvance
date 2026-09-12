@@ -1,6 +1,6 @@
 using SupportAdvance.SharedKernel.ValueObjects;
 
-namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Department;
+namespace SupportAdvance.Contexts.Department.Domain.ValueObjects;
 
 /// <summary>
 /// 部署の階層レベルを表す ValueObject

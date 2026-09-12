@@ -3,6 +3,7 @@ using SupportAdvance.Contexts.Employee.Domain.DomainEvents;
 using SupportAdvance.Contexts.Employee.Domain.ValueObjects.DepartmentMembership;
 using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
 using SupportAdvance.SharedKernel.Entities;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 namespace SupportAdvance.Contexts.Employee.Domain.Entities;
 

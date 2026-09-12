@@ -3,6 +3,7 @@ using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
 using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Permission;
 using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Role;
 using SupportAdvance.SharedKernel.Entities;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 namespace SupportAdvance.Contexts.Employee.Domain.Entities;
 

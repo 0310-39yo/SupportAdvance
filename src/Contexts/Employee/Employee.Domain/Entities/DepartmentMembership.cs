@@ -1,10 +1,10 @@
-namespace SupportAdvance.Contexts.Employee.Domain.Entities;
-
-using Common.Clocks;
-using ValueObjects.Department;
+using SupportAdvance.Common.Clocks;
 using SupportAdvance.Contexts.Employee.Domain.ValueObjects.DepartmentMembership;
 using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
 using SupportAdvance.SharedKernel.Entities;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
+
+namespace SupportAdvance.Contexts.Employee.Domain.Entities;
 
 /// <summary>
 /// 部署メンバーシップエンティティ（従業員の部署所属）

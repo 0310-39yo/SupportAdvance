@@ -1,11 +1,11 @@
 namespace SupportAdvance.Contexts.Employee.Infrastructure.Mappers;
 
-using Models;
-using Common.Clocks;
-using Domain.Entities;
-using Domain.ValueObjects.Department;
-using Domain.ValueObjects.DepartmentMembership;
+using SupportAdvance.Common.Clocks;
+using SupportAdvance.Contexts.Employee.Domain.Entities;
+using SupportAdvance.Contexts.Employee.Domain.ValueObjects.DepartmentMembership;
 using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
+using SupportAdvance.Contexts.Employee.Infrastructure.Models;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 /// <summary>
 /// Employee ドメインモデル ↔ EmployeeDbModel のマッピング

@@ -1,7 +1,7 @@
 using System.Text.RegularExpressions;
 using SupportAdvance.SharedKernel.ValueObjects.Abstractions;
 
-namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Department;
+namespace SupportAdvance.Contexts.Department.Domain.ValueObjects;
 
 /// <summary>
 /// 部署コードを表す ValueObject

@@ -1,3 +1,5 @@
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
+
 namespace SupportAdvance.Contexts.Employee.Application.UseCases;
 
 using Dtos;

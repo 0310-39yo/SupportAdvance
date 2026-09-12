@@ -4,6 +4,7 @@ using SupportAdvance.Contexts.Employee.Application.Queries;
 using SupportAdvance.Contexts.Employee.Application.UseCases;
 using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
 using SupportAdvance.SharedKernel.Entities;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 namespace SupportAdvance.Contexts.Employee.Application;
 
