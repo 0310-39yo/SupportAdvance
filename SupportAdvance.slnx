@@ -16,6 +16,11 @@
     <Project Path="src/SharedKernel/SharedKernel.csproj" Id="bf2067f5-628a-4063-9d7b-cd4caf033931" />
   </Folder>
   <Folder Name="/src/Contexts/" />
+  <Folder Name="/src/Contexts/Department/">
+    <Project Path="src/Contexts/Department/Department.Application/Department.Application.csproj" Id="b9c8643f-3e55-4ed9-93d2-07911d29d21f" />
+    <Project Path="src/Contexts/Department/Department.Domain/Department.Domain.csproj" Id="f2e21d00-de69-44a5-a2f7-ef55bf082b75" />
+    <Project Path="src/Contexts/Department/Department.Infrastructure/Department.Infrastructure.csproj" Id="d4224d38-19ea-4ce4-87c3-76b2b45e8286" />
+  </Folder>
   <Folder Name="/src/Contexts/Employee/">
     <Project Path="src/Contexts/Employee/Employee.Application/Employee.Application.csproj" />
     <Project Path="src/Contexts/Employee/Employee.Domain/Employee.Domain.csproj" />
@@ -25,11 +30,6 @@
     <Project Path="src/Contexts/IntegrationPrototype/IntegrationPrototype.Application/IntegrationPrototype.Application.csproj" Id="0fde8c01-03d3-4d37-9a19-d81d0af81eaf" />
     <Project Path="src/Contexts/IntegrationPrototype/IntegrationPrototype.Domain/IntegrationPrototype.Domain.csproj" Id="e24ca77d-aae0-45cc-943a-0ebd13a252e8" />
     <Project Path="src/Contexts/IntegrationPrototype/IntegrationPrototype.Infrastructure/IntegrationPrototype.Infrastructure.csproj" Id="96333fa3-4290-454e-ae42-22462e679e82" />
-  </Folder>
-  <Folder Name="/src/Contexts/Organization/">
-    <Project Path="src/Contexts/Organization/Organization.Application/Organization.Application.csproj" Id="9e57959f-326f-4275-a700-7cefc4544944" />
-    <Project Path="src/Contexts/Organization/Organization.Domain/Organization.Domain.csproj" Id="e5d9fe68-fb13-4017-9d4c-2484ca7d51a3" />
-    <Project Path="src/Contexts/Organization/Organization.Infrastructure/Organization.Infrastructure.csproj" Id="f93e1ce2-3fb4-4ded-bda0-734fa2468231" />
   </Folder>
   <Folder Name="/src/Presentation/">
     <Project Path="src/Presentation/Shared/Shared.csproj" Id="d8f895c2-bee1-42bf-a71e-c35cbe78ff0c" />
