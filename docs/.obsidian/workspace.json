@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "WorkMemo/2026-09-13.md",
+                "file": "Assistance/DraftIdeas/SQL文分離配置.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "2026-09-13"
+              "title": "SQL文分離配置"
             }
           }
         ]
@@ -188,8 +188,10 @@
       "bases:新規ベースを作成": false
     }
   },
-  "active": "bcc39cf8e6d0b9c5",
+  "active": "a4a323d6c1e93a0c",
   "lastOpenFiles": [
+    "Assistance/Guides/SQL_ファイル管理_設計ガイド.md",
+    "Assistance/Guides/SQL_ファイル管理_設計ガイド.md.tmp.26816.2d35619788e3",
     "WorkMemo/2026-09-13.md",
     "Assistance/Guides/Identity_BC_設計ガイド.md",
     "Assistance/Consider/AGENTS.md",
@@ -208,7 +210,6 @@
     "Assistance/Guides/RowId_設計ガイド.md.tmp.33108.a09a2fc37ab2",
     "Assistance/Guides/RowId_設計ガイド.md.tmp.33108.2a1a13d30c0d",
     "Assistance/Guides/RowId_設計ガイド.md.tmp.33108.abbb905f44ac",
-    "Assistance/Guides/RowId_設計ガイド.md.tmp.33108.09d4902b0bdb",
     "Assistance/Guides/RowId_設計ガイド.md",
     "Assistance/Guides/ValueObject別名プロパティガイド.md",
     "Assistance/Guides/IValidateWithClock_パターンガイド.md",
@@ -224,7 +225,6 @@
     "Assistance/Plans/20260907_Employee集約スキーマ修正計画.md",
     "WorkMemo/2026-09-07.md",
     "Infrastructure/Repository_Pattern_Design.md",
-    "Contexts/Employee/Domain/Entities/Employee/Employee_技術仕様書.md",
-    "WorkMemo/2026-09-06.md"
+    "Contexts/Employee/Domain/Entities/Employee/Employee_技術仕様書.md"
   ]
 }

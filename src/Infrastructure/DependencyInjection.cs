@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using RepoDb;
 using SupportAdvance.Application.Abstractions.Identifiers;
 using SupportAdvance.Common.Clocks;
 using SupportAdvance.Common.Configuration;
@@ -23,6 +24,11 @@ public static class DependencyInjection
 
         // ステップ0b: RepoDb初期化（起動時の一度だけ）
         RepoDbTypeMapperRegistration.Register();
+
+        // ステップ0c: RepoDb GlobalConfiguration 設定（SQL Server用）
+        GlobalConfiguration
+            .Setup()
+            .UseSqlServer();
 
         // ステップ1: appsettings.json から統合設定からバインド
         var appSettings = configuration
@@ -57,6 +63,9 @@ public static class DependencyInjection
 
         // ステップ6.5: IDbConnectionFactory を登録（Dapper 用 DB 接続ファクトリー）
         services.AddScoped<IDbConnectionFactory, DbConnectionFactory>();
+
+        // ステップ6.6: SqlQueryLoader を登録（SELECT 用 SQL ファイルローダー）
+        services.AddSingleton<SqlQueryLoader>();
 
         // ステップ7: 各 Context の Infrastructure は Program.cs で直接登録
         // (循環参照を避けるため、汎用 Infrastructure は Context別層の参照を持たない)

@@ -4,6 +4,7 @@ namespace SupportAdvance.Contexts.Department.Infrastructure.Repositories;
 
 using System.Data;
 using Dapper;
+using RepoDb;
 using SupportAdvance.Common.Clocks;
 using SupportAdvance.Contexts.Department.Application.Repositories;
 using SupportAdvance.Contexts.Department.Domain.Entities;
@@ -23,15 +24,17 @@ using SupportAdvance.Infrastructure.Services;
 /// 【実装】
 ///   - Dapper でジェネリック CRUD
 ///   - Mapper で型変換
-///   - SQL で直接実行（単一テーブル集約）
+///   - SQL ファイルで実行（単一テーブル集約）
 /// </summary>
 public class DepartmentRepository(
+    SqlQueryLoader queryLoader,
     DepartmentMapper mapper,
     IDbConnectionFactory connectionFactory,
     ICurrentUserService currentUser,
     IClock clock)
     : IDepartmentRepository
 {
+    private readonly SqlQueryLoader _queryLoader = queryLoader ?? throw new ArgumentNullException(nameof(queryLoader));
     private readonly DepartmentMapper _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
     private readonly IDbConnectionFactory _connectionFactory =
         connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
@@ -45,9 +48,11 @@ public class DepartmentRepository(
     {
         ArgumentNullException.ThrowIfNull(id);
 
+        var sql = _queryLoader.LoadQuery("Departments.GetDepartmentById", typeof(DepartmentRepository));
+
         using var connection = _connectionFactory.CreateConnection();
         var dbModel = await connection.QuerySingleOrDefaultAsync<DepartmentDbModel>(
-            "SELECT * FROM m_departments WHERE row_id = @rowId",
+            sql,
             new { rowId = id.Value });
 
         if (dbModel == null)
@@ -65,9 +70,11 @@ public class DepartmentRepository(
     {
         ArgumentNullException.ThrowIfNull(code);
 
+        var sql = _queryLoader.LoadQuery("Departments.GetDepartmentByCode", typeof(DepartmentRepository));
+
         using var connection = _connectionFactory.CreateConnection();
         var dbModel = await connection.QuerySingleOrDefaultAsync<DepartmentDbModel>(
-            "SELECT * FROM m_departments WHERE code = @code AND deleted_at IS NULL",
+            sql,
             new { code = code.Value });
 
         if (dbModel == null)
@@ -83,9 +90,10 @@ public class DepartmentRepository(
     /// </summary>
     public async Task<IReadOnlyList<Department>> GetAllAsync()
     {
+        var sql = _queryLoader.LoadQuery("Departments.GetAllDepartments", typeof(DepartmentRepository));
+
         using var connection = _connectionFactory.CreateConnection();
-        var dbModels = await connection.QueryAsync<DepartmentDbModel>(
-            "SELECT * FROM m_departments ORDER BY row_id");
+        var dbModels = await connection.QueryAsync<DepartmentDbModel>(sql);
 
         return dbModels
             .Select(dbModel => _mapper.ToDomainEntity(dbModel))
@@ -95,7 +103,7 @@ public class DepartmentRepository(
 
     /// <summary>
     /// 部署を保存する（新規作成または更新）
-    /// 【責務】UpdatedAt/UpdatedBy を設定
+    /// 【責務】UpdatedAt/UpdatedBy を設定、RepoDb でDB操作
     /// </summary>
     public async Task SaveAsync(Department department)
     {
@@ -123,26 +131,19 @@ public class DepartmentRepository(
         using var connection = _connectionFactory.CreateConnection();
         if (dbModel.RowId == 0)
         {
-            // 新規作成：INSERT
-            await connection.ExecuteAsync(
-                @"INSERT INTO m_departments (code, name, level, parent_department_row_id, manager_employee_row_id, abolished_on, created_at, created_by, updated_at, updated_by, deleted_at, deleted_by)
-                  VALUES (@code, @name, @level, @parentDepartmentRowId, @managerEmployeeRowId, @abolishedOn, @createdAt, @createdBy, @updatedAt, @updatedBy, @deletedAt, @deletedBy)",
-                dbModel);
+            // 新規作成：RepoDb InsertAsync
+            await connection.InsertAsync<DepartmentDbModel>(dbModel);
         }
         else
         {
-            // 更新：UPDATE
-            await connection.ExecuteAsync(
-                @"UPDATE m_departments SET code = @code, name = @name, level = @level, parent_department_row_id = @parentDepartmentRowId,
-                  manager_employee_row_id = @managerEmployeeRowId, abolished_on = @abolishedOn, updated_at = @updatedAt, updated_by = @updatedBy
-                  WHERE row_id = @rowId",
-                dbModel);
+            // 更新：RepoDb UpdateAsync
+            await connection.UpdateAsync<DepartmentDbModel>(dbModel);
         }
     }
 
     /// <summary>
     /// 部署を論理削除する
-    /// 【責務】DeletedAt/DeletedBy を設定
+    /// 【責務】DeletedAt/DeletedBy を設定、RepoDb で更新
     /// </summary>
     public async Task DeleteAsync(DepartmentRowId id)
     {
@@ -151,10 +152,20 @@ public class DepartmentRepository(
         var now = _clock.JstNow.Value;
         var userId = _currentUser.EmployeeRowId;
 
+        // 削除対象の部署を取得
+        var department = await GetByIdAsync(id);
+        if (department == null)
+            throw new InvalidOperationException($"Department with RowId={id.Value} not found");
+
+        // DbModel を作成して論理削除フィールドを設定
+        var dbModel = _mapper.ToDbModel(department);
+        dbModel.DeletedAt = now;
+        dbModel.DeletedBy = userId;
+        dbModel.UpdatedAt = now;
+        dbModel.UpdatedBy = userId;
+
         using var connection = _connectionFactory.CreateConnection();
-        await connection.ExecuteAsync(
-            @"UPDATE m_departments SET deleted_at = @deletedAt, deleted_by = @deletedBy, updated_at = @updatedAt, updated_by = @updatedBy
-              WHERE row_id = @rowId",
-            new { rowId = id.Value, deletedAt = now, deletedBy = userId, updatedAt = now, updatedBy = userId });
+        // RepoDb UpdateAsync で更新
+        await connection.UpdateAsync<DepartmentDbModel>(dbModel);
     }
 }

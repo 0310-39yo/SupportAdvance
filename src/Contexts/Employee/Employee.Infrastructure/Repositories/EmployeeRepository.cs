@@ -30,6 +30,7 @@ using SharedKernel.ValueObjects.Audit;
 /// - UpdateAsync: 実装済み
 /// </summary>
 public class EmployeeRepository(
+    SqlQueryLoader queryLoader,
     EmployeeMapper mapper,
     IDbConnectionFactory connectionFactory,
     ICurrentUserService currentUser,
@@ -38,6 +39,8 @@ public class EmployeeRepository(
     : MultiTableRepositoryBase<Employee, EmployeeDbModel, EmployeeRowId>(currentUser, clock),
         IEmployeeRepository
 {
+    private readonly SqlQueryLoader _queryLoader = queryLoader ?? throw new ArgumentNullException(nameof(queryLoader));
+
     private readonly EmployeeMapper _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
 
     private readonly IDbConnectionFactory _connectionFactory =
@@ -59,7 +62,7 @@ public class EmployeeRepository(
                 throw new ArgumentException("Invalid BizId", nameof(bizId));
             }
 
-            var sql = SqlQueryLoader.LoadQuery("Employee.GetEmployeeByBizId");
+            var sql = _queryLoader.LoadQuery("Employees.GetEmployeeByBizId", typeof(EmployeeRepository));
 
             using var connection = _connectionFactory.CreateConnection();
             var dbModel = await connection.QueryFirstOrDefaultAsync<EmployeeDbModel>(
@@ -72,7 +75,7 @@ public class EmployeeRepository(
             }
 
             // Person を m_persons から読み込み（employee_row_id で JOIN）
-            var personSql = SqlQueryLoader.LoadQuery("Employee.GetPersonByEmployeeRowId");
+            var personSql = _queryLoader.LoadQuery("Persons.GetPersonByEmployeeRowId", typeof(EmployeeRepository));
             _logger.LogInformation($"Person SQL loaded. EmployeeRowId={dbModel.RowId}");
             var personDbModel = await connection.QueryFirstOrDefaultAsync<PersonDbModel>(
                 personSql,
@@ -84,7 +87,7 @@ public class EmployeeRepository(
             }
 
             // DepartmentMembership を取得
-            var departmentMembershipSql = SqlQueryLoader.LoadQuery("Employee.GetEmployeeDepartmentMemberships");
+            var departmentMembershipSql = _queryLoader.LoadQuery("Employees.GetEmployeeDepartmentMemberships", typeof(EmployeeRepository));
             _logger.LogInformation($"DepartmentMembership SQL loaded. RowId={dbModel.RowId}");
             var departmentMemberships = await connection.QueryAsync<DepartmentMembershipDbModel>(
                 departmentMembershipSql,
@@ -145,7 +148,7 @@ public class EmployeeRepository(
             using var connection = _connectionFactory.CreateConnection();
 
             // 1. m_employees テーブルを読み込み
-            var employeeSql = SqlQueryLoader.LoadQuery("Employee.GetEmployeeByRowId");
+            var employeeSql = _queryLoader.LoadQuery("Employees.GetEmployeeByRowId", typeof(EmployeeRepository));
             var employeeDbModel = await connection.QueryFirstOrDefaultAsync<EmployeeDbModel>(
                 employeeSql,
                 new { RowId = id.Value });
@@ -156,7 +159,7 @@ public class EmployeeRepository(
             }
 
             // 2. m_persons テーブルを読み込み（employee_row_id で結合）
-            var personSql = SqlQueryLoader.LoadQuery("Employee.GetPersonByEmployeeRowId");
+            var personSql = _queryLoader.LoadQuery("Persons.GetPersonByEmployeeRowId", typeof(EmployeeRepository));
             var personDbModel = await connection.QueryFirstOrDefaultAsync<PersonDbModel>(
                 personSql,
                 new { EmployeeRowId = id.Value });
@@ -167,7 +170,7 @@ public class EmployeeRepository(
             }
 
             // 3. m_department_memberships テーブルを読み込み（複数行）
-            var membershipSql = SqlQueryLoader.LoadQuery("Employee.GetEmployeeDepartmentMemberships");
+            var membershipSql = _queryLoader.LoadQuery("Employees.GetEmployeeDepartmentMemberships", typeof(EmployeeRepository));
             var membershipDbModels = await connection.QueryAsync<DepartmentMembershipDbModel>(
                 membershipSql,
                 new { EmployeeRowId = id.Value });

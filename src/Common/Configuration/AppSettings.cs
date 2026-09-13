@@ -47,4 +47,9 @@ public class AppSettings : IAppSettings
 
     /// <inheritdoc />
     public Dictionary<string, string> ConnectionStrings { get; init; } = new();
+
+    /// <summary>
+    /// データベース設定
+    /// </summary>
+    public DatabaseSettings Database { get; init; } = new();
 }

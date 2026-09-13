@@ -13,4 +13,10 @@
     <ProjectReference Include="..\Department.Domain\Department.Domain.csproj" />
   </ItemGroup>
 
+  <!-- SQL ファイルを埋め込みリソースとして登録 -->
+  <ItemGroup>
+    <EmbeddedResource Include="Persistence/Sql/SqlServer/**/*.sql" />
+    <EmbeddedResource Include="Persistence/Sql/PostgreSQL/**/*.sql" />
+  </ItemGroup>
+
 </Project>

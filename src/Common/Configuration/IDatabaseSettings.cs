@@ -39,4 +39,10 @@ public interface IDatabaseSettings
     /// 秘密情報を含むため、appsettings.Intrinsic.json で管理・オーバーライド
     /// </summary>
     Dictionary<string, string> ConnectionStrings { get; init; }
+
+    /// <summary>
+    /// データベース設定（方言、環境別設定）
+    /// appsettings.json の AppSettings:Database に対応
+    /// </summary>
+    DatabaseSettings Database { get; init; }
 }
