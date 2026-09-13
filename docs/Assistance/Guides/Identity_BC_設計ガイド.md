@@ -1,6 +1,6 @@
 # Identity BC 設計ガイド
 
-**最終更新**: 2026-09-13  
+**最終更新**: 2026-09-13 (修正版)
 **作成者**: Claude + User (tyokkoto@hotmail.com)
 
 ---
@@ -14,7 +14,8 @@ Identity BC は **認証（Authentication）に特化した Bounded Context** �
 ✓ **認証**
 - Windows AD 自動認証
 - ID/パスワード ローカル認証
-- ログインユーザーの身分情報を提供
+- ログインセッション管理
+- ログイン履歴記録
 
 ✗ **認可（権限付与）は含まない**
 - ロール・パーミッション管理は Employee BC または別の Authorization BC で実施
@@ -25,6 +26,55 @@ Identity BC は **認証（Authentication）に特化した Bounded Context** �
 - **責務分離**: 認証と認可を分離することで、各々の変更が独立
 - **テスト容易性**: 権限付け替えが簡単（認証ロジックに影響しない）
 - **拡張性**: 複雑な権限ルールが増えても Identity BC は変わらない
+
+---
+
+## テーブル構成
+
+### 1. m_login_credentials（マスター）
+
+ローカル認証用のログイン認証情報マスター。社外アクセス対象者を事前登録。
+
+```sql
+[row_id]                  [bigint] PK
+[row_version]             [timestamp]
+[created_at/created_by]   監査カラム
+[updated_at/updated_by]   監査カラム
+[deleted_at/deleted_by]   監査カラム
+[mapping_employee_row_id] [bigint] NOT NULL FK → m_employees
+[login_id]                [nvarchar](50) NOT NULL
+[password_hash]           [nvarchar](255) NOT NULL
+[is_active]               [bit] NOT NULL
+[last_login_at]           [datetime2](7) NULL
+```
+
+**役割**: ローカル認証の認証情報を保持。認証時に参照される。
+
+### 2. t_user_auth_sessions（トランザクション）
+
+**ログインセッション履歴**。UserAuthSession 集約の主体テーブル。
+
+```sql
+[row_id]                  [bigint] PK DEFAULT (Sequence)
+[row_version]             [timestamp]
+[created_at/created_by]   監査カラム
+[updated_at/updated_by]   監査カラム
+[deleted_at/deleted_by]   監査カラム
+[current_user_row_id]     [bigint] NOT NULL FK → m_employees
+[is_ad_authenticated]     [bit] NOT NULL
+[login_success]           [bit] NOT NULL
+[logged_in_at]            [datetime2](7) NOT NULL
+[logged_out_at]           [datetime2](7) NULL
+[login_credentials_row_id] [bigint] NULL
+```
+
+**カラム説明**:
+- `current_user_row_id` — 権限の主体（= Employee.RowId）。本番環境ではこの Employee の権限が適用される
+- `is_ad_authenticated` — 認証方式（0=ローカル認証、1=AD認証）
+- `login_success` — 認証成功/失敗（1=成功、0=失敗）
+- `logged_in_at` — ログイン操作日時（失敗時も記録）
+- `logged_out_at` — ログアウト日時（アプリ終了時に記録）。NULL = 非正常終了
+- `login_credentials_row_id` — ローカル認証時のみ値あり。m_login_credentials.row_id
 
 ---
 
@@ -211,19 +261,21 @@ public record AuthorityRowId(long Value)
 │  ├─ Domain = AppSettings.ActiveDirectoryDomain（大文字正規化）
 │  └─ UserId = Environment.UserName（大文字正規化）
 │
-├─ Step 2: AD 自動認証判定
+├─ Step 2: AD 自動認証判定（優先）
 │  ├─ Employee テーブルで Domain+UserId を検索（IQueryService<Employee, EmployeeRowId>）
 │  │  ├─ マッチした場合
-│  │  │  └─ ✓ CreateFromAD( Employee.RowId )
+│  │  │  └─ ✓ t_user_auth_sessions に INSERT
+│  │  │     is_ad_authenticated=1, current_user_row_id=Employee.RowId
+│  │  │     login_success=1, login_credentials_row_id=NULL
 │  │  │
 │  │  └─ マッチしない場合
-│  │     └─ Step 3 へ
+│  │     └─ Step 3 へ（フォールバック）
 │
 ├─ Step 3: ID/パスワード入力画面を表示
 │  ├─ ユーザー入力: LoginId, Password
 │  └─ Step 4 へ
 │
-└─ Step 4: ローカル認証判定
+└─ Step 4: ローカル認証判定（フォールバック）
    ├─ m_login_credentials でローカル認証
    │  ├─ 判定順序:
    │  │  ① login_id が一致（大文字小文字区別あり）か
@@ -233,10 +285,14 @@ public record AuthorityRowId(long Value)
    │  │  ⑤ mapping_employee_row_id が Employee に存在するか（IQueryService経由）
    │  │
    │  ├─ すべて OK
-   │  │  └─ ✓ CreateFromLocalAuth( LoginCredentials.RowId, mapping_employee_row_id )
+   │  │  └─ ✓ t_user_auth_sessions に INSERT
+   │  │     is_ad_authenticated=0, current_user_row_id=mapping_employee_row_id
+   │  │     login_success=1, login_credentials_row_id=LoginCredentials.RowId
    │  │
-   │  └─ NG な場合 → エラーメッセージを表示
-   │     (詳細は次セクション)
+   │  └─ NG な場合
+   │     └─ t_user_auth_sessions に INSERT（失敗記録）
+   │        login_success=0, current_user_row_id=SYSTEM_USER_ID
+   │        エラーメッセージを表示（詳細は次セクション）
 ```
 
 ### エラーメッセージ（ローカル認証の判定順）
@@ -499,11 +555,57 @@ services
 
 ---
 
-## 起動時フロー
+## Use Cases
+
+### ILogoutUseCase（新規）
+
+アプリケーション終了時にログアウト処理を実行。logged_out_at を記録。
+
+```csharp
+namespace SupportAdvance.Contexts.Identity.Application.UseCases;
+
+/// <summary>
+/// ログアウト Use Case
+/// 
+/// 【責務】
+/// - UserAuthSession の logged_out_at を設定
+/// - セッション終了を記録
+/// </summary>
+public interface ILogoutUseCase : IUseCase
+{
+    /// <summary>
+    /// ログアウト処理を実行
+    /// </summary>
+    Task ExecuteAsync();
+}
+
+public class LogoutUseCase : ILogoutUseCase
+{
+    private readonly IUserAuthSessionRepository _repository;
+    private readonly ICurrentUserService _currentUser;
+    private readonly IClock _clock;
+
+    public async Task ExecuteAsync()
+    {
+        if (!_currentUser.IsAuthenticated)
+            return;  // 認証されていない場合は何もしない
+
+        // 現在のセッション ID を取得
+        var sessionId = _currentUser.SessionId;  // 新規プロパティ
+
+        // logged_out_at を記録
+        await _repository.LogoutAsync(sessionId, _clock.JstNow);
+    }
+}
+```
+
+---
+
+## 起動時フロー（WPF/WinForms）
 
 ### RealCurrentUserService の実装方針
 
-認証は **起動時に1回実行**。以下のような構成で実装：
+認証は **起動時に1回実行**。ログアウトは **アプリ終了時**。
 
 ```csharp
 namespace SupportAdvance.Infrastructure.Services;
@@ -515,7 +617,7 @@ namespace SupportAdvance.Infrastructure.Services;
 /// 1. Windows AD 認証を試行
 /// 2. 失敗時は ID/パスワード入力画面を表示
 /// 3. 認証成功後、ユーザー情報をメモリに保持
-/// 4. 以後、メモリからユーザー情報を返す
+/// 4. アプリ終了時に LogoutUseCase で logged_out_at を記録
 /// </summary>
 public class RealCurrentUserService : ICurrentUserService
 {
@@ -531,15 +633,17 @@ public class RealCurrentUserService : ICurrentUserService
             if (_currentSession == null)
                 throw new InvalidOperationException("ユーザーが認証されていません");
             
-            return _currentSession.AuthorityRowId;
+            return _currentSession.CurrentUserRowId;  // authority_row_id → current_user_row_id
         }
     }
+
+    public long SessionId => _currentSession?.SessionId ?? 0;
 
     public bool IsAuthenticated => _currentSession != null;
 
     public async Task AuthenticateAsync()
     {
-        // Step 1: Windows AD 認証
+        // Step 1: Windows AD 認証（優先）
         var adResult = await TryADAuthenticationAsync();
         if (adResult != null)
         {
@@ -547,7 +651,7 @@ public class RealCurrentUserService : ICurrentUserService
             return;
         }
 
-        // Step 2: ローカル認証（ID/パスワード入力画面）
+        // Step 2: ローカル認証（フォールバック）
         var localResult = await ShowLoginDialogAndAuthenticateAsync();
         if (localResult != null)
         {
@@ -572,10 +676,9 @@ public class RealCurrentUserService : ICurrentUserService
             {
                 return new UserAuthSessionDto
                 {
-                    IdentityRowId = employee.RowId,
                     IsADAuthenticated = true,
-                    AuthorityRowId = employee.RowId,
-                    LoggedInAt = DateTime.Now
+                    CurrentUserRowId = employee.RowId,
+                    LoggedInAt = LocalDateTime.Now
                 };
             }
         }
@@ -590,10 +693,88 @@ public class RealCurrentUserService : ICurrentUserService
 
     private async Task<UserAuthSessionDto?> ShowLoginDialogAndAuthenticateAsync()
     {
-        // TODO: WinForms で ID/パスワード入力ダイアログを表示
+        // TODO: WinForms/WPF で ID/パスワード入力ダイアログを表示
         // 入力後、_authenticateLocal.ExecuteAsync() を呼び出し
         
         throw new NotImplementedException();
+    }
+}
+```
+
+### Application 終了フロー（WPF）
+
+```csharp
+// App.xaml.cs
+public partial class App : Application
+{
+    private ILogoutUseCase _logoutUseCase;
+
+    protected override async void OnStartup(StartupEventArgs e)
+    {
+        base.OnStartup(e);
+        
+        // DI からログアウト Use Case を取得
+        var serviceProvider = /* DI コンテナから取得 */;
+        _logoutUseCase = serviceProvider.GetRequiredService<ILogoutUseCase>();
+        
+        // 認証を実行
+        var currentUserService = serviceProvider.GetRequiredService<ICurrentUserService>();
+        await currentUserService.AuthenticateAsync();
+    }
+
+    protected override async void OnExit(ExitEventArgs e)
+    {
+        try
+        {
+            // ログアウト処理（logged_out_at を記録）
+            await _logoutUseCase.ExecuteAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ERROR] ログアウト失敗: {ex.Message}");
+        }
+        
+        base.OnExit(e);
+    }
+}
+```
+
+### Application 終了フロー（WinForms）
+
+```csharp
+// Program.cs
+static class Program
+{
+    [STAThread]
+    static async Task Main()
+    {
+        var serviceProvider = ConfigureServices();
+        
+        try
+        {
+            var currentUserService = serviceProvider.GetRequiredService<ICurrentUserService>();
+            await currentUserService.AuthenticateAsync();
+            
+            Application.EnableVisualStyles();
+            Application.SetHighDpiMode(HighDpiMode.SystemAware);
+            Application.Run(new MainForm());
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ERROR] 認証失敗: {ex.Message}");
+        }
+        finally
+        {
+            try
+            {
+                var logoutUseCase = serviceProvider.GetRequiredService<ILogoutUseCase>();
+                await logoutUseCase.ExecuteAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ERROR] ログアウト失敗: {ex.Message}");
+            }
+        }
     }
 }
 ```
