@@ -55,5 +55,9 @@
   </Folder>
   <Folder Name="/tests/Contexts/">
     <Project Path="tests/Contexts/Employee.Domain.Tests/Employee.Domain.Tests.csproj" />
+    <Project Path="tests/Contexts/Identity.Domain.Tests/Identity.Domain.Tests.csproj" />
+    <Project Path="tests/Contexts/Identity.Application.Tests/Identity.Application.Tests.csproj" />
+    <Project Path="tests/Contexts/Identity.Infrastructure.Tests/Identity.Infrastructure.Tests.csproj" />
+    <Project Path="tests/Contexts/Department.Domain.Tests/Department.Domain.Tests.csproj" />
   </Folder>
 </Solution>

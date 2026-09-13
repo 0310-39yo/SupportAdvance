@@ -36,8 +36,11 @@
     <ProjectReference Include="..\..\Contexts\Department\Department.Infrastructure\Department.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Contexts\Employee\Employee.Application\Employee.Application.csproj" />
     <ProjectReference Include="..\..\Contexts\Employee\Employee.Infrastructure\Employee.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Contexts\Identity\Identity.Application\Identity.Application.csproj" />
+    <ProjectReference Include="..\..\Contexts\Identity\Identity.Infrastructure\Identity.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Contexts\IntegrationPrototype\IntegrationPrototype.Application\IntegrationPrototype.Application.csproj" />
     <ProjectReference Include="..\..\Infrastructure\Infrastructure.csproj" />
+    <ProjectReference Include="..\..\SharedKernel\SharedKernel.csproj" />
     <ProjectReference Include="..\Shared\Shared.csproj" />
   </ItemGroup>
 

@@ -27,4 +27,22 @@ public sealed class SystemCurrentUserService : ICurrentUserService
     /// 認証機能が未実装のため常に false（未認証扱い）
     /// </summary>
     public bool IsAuthenticated => false;
+
+    /// <summary>
+    /// SetLoggedInUser は暫定実装のため何もしない（no-op）
+    /// Identity BC 実装時は RealCurrentUserService に置き換え
+    /// </summary>
+    public void SetLoggedInUser(long employeeRowId, string loginId)
+    {
+        // 暫定実装のため何もしない
+    }
+
+    /// <summary>
+    /// SetLoggedOut は暫定実装のため何もしない（no-op）
+    /// Identity BC 実装時は RealCurrentUserService に置き換え
+    /// </summary>
+    public void SetLoggedOut()
+    {
+        // 暫定実装のため何もしない
+    }
 }
