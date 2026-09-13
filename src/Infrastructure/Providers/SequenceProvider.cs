@@ -1,5 +1,5 @@
 using System.Data;
-using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using SupportAdvance.Application.Abstractions.Identifiers;
 using SupportAdvance.Common.Configuration;
 using SupportAdvance.Infrastructure.Exceptions;
@@ -34,19 +34,26 @@ public class SequenceProvider : ISequenceProvider
     {
         ArgumentNullException.ThrowIfNull(databaseSettings);
 
-        if (!databaseSettings.ConnectionStrings.TryGetValue("Default", out var connectionString))
-        {
-            throw new InvalidOperationException(
-                "Database connection string 'Default' is not configured in IDatabaseSettings.ConnectionStrings.");
-        }
+        var connectionString = GetConnectionString(databaseSettings);
+        _connectionString = connectionString
+            ?? throw new InvalidOperationException(
+                "No connection string is configured in appsettings.json");
+    }
 
-        if (string.IsNullOrWhiteSpace(connectionString))
-        {
-            throw new InvalidOperationException(
-                "Database connection string 'Default' is empty or null.");
-        }
+    private static string? GetConnectionString(IDatabaseSettings databaseSettings)
+    {
+        // 優先順位: "Default" → "SupportAdvance" → 最初のキー
+        if (databaseSettings.ConnectionStrings.TryGetValue("Default", out var result))
+            return result;
 
-        _connectionString = connectionString;
+        if (databaseSettings.ConnectionStrings.TryGetValue("SupportAdvance", out result))
+            return result;
+
+        var firstKey = databaseSettings.ConnectionStrings.Keys.FirstOrDefault();
+        if (firstKey != null && databaseSettings.ConnectionStrings.TryGetValue(firstKey, out result))
+            return result;
+
+        return null;
     }
 
     /// <summary>

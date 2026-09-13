@@ -1,3 +1,4 @@
+using SupportAdvance.Application.Abstractions.Identifiers;
 using SupportAdvance.Common.Clocks;
 using SupportAdvance.Contexts.Identity.Application.Dtos;
 using SupportAdvance.Contexts.Identity.Application.Queries;
@@ -37,17 +38,20 @@ public sealed class AuthenticateLocalUserUseCase
     private readonly IPasswordHashService _passwordHashService;
     private readonly IUserAuthSessionRepository _sessionRepository;
     private readonly IClock _clock;
+    private readonly ISequenceProvider _sequenceProvider;
 
     public AuthenticateLocalUserUseCase(
         ILoginCredentialsQuery loginCredentialsQuery,
         IPasswordHashService passwordHashService,
         IUserAuthSessionRepository sessionRepository,
-        IClock clock)
+        IClock clock,
+        ISequenceProvider sequenceProvider)
     {
         _loginCredentialsQuery = loginCredentialsQuery ?? throw new ArgumentNullException(nameof(loginCredentialsQuery));
         _passwordHashService = passwordHashService ?? throw new ArgumentNullException(nameof(passwordHashService));
         _sessionRepository = sessionRepository ?? throw new ArgumentNullException(nameof(sessionRepository));
         _clock = clock ?? throw new ArgumentNullException(nameof(clock));
+        _sequenceProvider = sequenceProvider ?? throw new ArgumentNullException(nameof(sequenceProvider));
     }
 
     /// <summary>
@@ -88,8 +92,12 @@ public sealed class AuthenticateLocalUserUseCase
         var authorityRowId = AuthorityRowId.From(credentials.MappingEmployeeRowId);
         var loginCredentialsRowId = LoginCredentialsRowId.From(credentials.RowId);
 
+        // RowId を事前採番
+        var sessionRowIdValue = await _sequenceProvider.GetNextValueAsync();
+        var sessionRowId = UserAuthSessionRowId.From(sessionRowIdValue);
+
         var session = UserAuthSession.Create(
-            id: UserAuthSessionRowId.From(0), // 新規作成のため仮ID（Repository で採番）
+            id: sessionRowId,
             authorityRowId,
             isAdAuthenticated: false, // ローカル認証
             loginSuccess: true,
@@ -97,7 +105,7 @@ public sealed class AuthenticateLocalUserUseCase
             loginCredentialsRowId);
 
         // Step 5: Repository で保存
-        var sessionRowId = await _sessionRepository.SaveAsync(session);
+        await _sessionRepository.SaveAsync(session);
 
         // レスポンス作成
         return new AuthenticateLocalUserResponse

@@ -1,6 +1,7 @@
 using System.Data;
 using Dapper;
 using RepoDb;
+using SupportAdvance.Application.Abstractions.Identifiers;
 using SupportAdvance.Common.Clocks;
 using SupportAdvance.Contexts.Identity.Domain.Entities;
 using SupportAdvance.Contexts.Identity.Domain.Repositories;
@@ -8,6 +9,7 @@ using SupportAdvance.Contexts.Identity.Domain.ValueObjects;
 using SupportAdvance.Contexts.Identity.Infrastructure.DbModels;
 using SupportAdvance.Contexts.Identity.Infrastructure.Mappers;
 using SupportAdvance.Infrastructure.Persistence;
+using SupportAdvance.Infrastructure.Services;
 using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 namespace SupportAdvance.Contexts.Identity.Infrastructure.Repositories;
@@ -34,16 +36,19 @@ public class UserAuthSessionRepository : IUserAuthSessionRepository
     private readonly IDbConnectionFactory _connectionFactory;
     private readonly IClock _clock;
     private readonly SqlQueryLoader _sqlQueryLoader;
+    private readonly ISequenceProvider _sequenceProvider;
     private readonly UserAuthSessionMapper _mapper;
 
     public UserAuthSessionRepository(
         IDbConnectionFactory connectionFactory,
         IClock clock,
-        SqlQueryLoader sqlQueryLoader)
+        SqlQueryLoader sqlQueryLoader,
+        ISequenceProvider sequenceProvider)
     {
         _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
         _clock = clock ?? throw new ArgumentNullException(nameof(clock));
         _sqlQueryLoader = sqlQueryLoader ?? throw new ArgumentNullException(nameof(sqlQueryLoader));
+        _sequenceProvider = sequenceProvider ?? throw new ArgumentNullException(nameof(sequenceProvider));
         _mapper = new UserAuthSessionMapper();
     }
 
@@ -95,12 +100,19 @@ public class UserAuthSessionRepository : IUserAuthSessionRepository
     /// <summary>
     /// セッションを保存（新規作成）
     /// 【責務】
+    /// - RowId が 0 の場合は Sequence で採番
     /// - RepoDb.InsertAsync でセッションを保存
     /// - 監査フィールド（CreatedAt/CreatedBy）を設定
     /// </summary>
     public async Task<UserAuthSessionRowId> SaveAsync(UserAuthSession session)
     {
         var dbModel = _mapper.ToDbModel(session);
+
+        // 新規作成時は RowId を採番
+        if (dbModel.RowId == 0)
+        {
+            dbModel.RowId = await _sequenceProvider.GetNextValueAsync();
+        }
 
         // 監査情報を設定（新規作成時）
         dbModel.CreatedAt = _clock.JstNow.Value;
@@ -111,9 +123,9 @@ public class UserAuthSessionRepository : IUserAuthSessionRepository
         dbModel.DeletedBy = null;
 
         using var connection = _connectionFactory.CreateConnection();
-        var newRowId = (long)await connection.InsertAsync<UserAuthSessionDbModel>(dbModel);
+        await connection.InsertAsync<UserAuthSessionDbModel>(dbModel);
 
-        return UserAuthSessionRowId.From(newRowId);
+        return UserAuthSessionRowId.From(dbModel.RowId);
     }
 
     /// <summary>

@@ -1,7 +1,9 @@
 using Microsoft.Extensions.DependencyInjection;
+using RepoDb;
 using SupportAdvance.Contexts.Identity.Application.Queries;
 using SupportAdvance.Contexts.Identity.Application.Services;
 using SupportAdvance.Contexts.Identity.Domain.Repositories;
+using SupportAdvance.Contexts.Identity.Infrastructure.DbModels;
 using SupportAdvance.Contexts.Identity.Infrastructure.Mappers;
 using SupportAdvance.Contexts.Identity.Infrastructure.Queries;
 using SupportAdvance.Contexts.Identity.Infrastructure.Repositories;
@@ -20,6 +22,19 @@ public static class InfrastructureServiceCollectionExtensions
     public static IServiceCollection AddIdentityInfrastructureModels(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);
+
+        // RepoDb テーブルマッピング登録（[Table] 属性が機能しない場合の明示的登録）
+        try
+        {
+            FluentMapper.Entity<UserAuthSessionDbModel>()
+                .Table("t_user_auth_sessions")
+                .Primary(e => e.RowId)
+                .Identity(e => e.RowId);
+        }
+        catch
+        {
+            // マッピング登録失敗時はスキップ（[Table] 属性でカバー）
+        }
 
         // Mapper（純粋な型変換、Clock 依存なし）
         services.AddScoped<UserAuthSessionMapper>();

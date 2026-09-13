@@ -45,10 +45,14 @@ public class SqlQueryLoader
         if (string.IsNullOrEmpty(contextNamespace))
             throw new InvalidOperationException($"Cannot determine namespace for type {repositoryType.FullName}");
 
-        // ".Repositories" で終わる場合は除去
+        // ".Repositories" または ".Queries" で終わる場合は除去
         if (contextNamespace.EndsWith(".Repositories"))
         {
             contextNamespace = contextNamespace.Substring(0, contextNamespace.Length - ".Repositories".Length);
+        }
+        else if (contextNamespace.EndsWith(".Queries"))
+        {
+            contextNamespace = contextNamespace.Substring(0, contextNamespace.Length - ".Queries".Length);
         }
 
         // queryPath を解析（例："Auth.GetLoginCredentialsByLoginId" → ["Auth", "GetLoginCredentialsByLoginId"]）

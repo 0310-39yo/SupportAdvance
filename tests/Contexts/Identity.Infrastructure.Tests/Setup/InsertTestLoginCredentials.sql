@@ -12,7 +12,7 @@ WHERE [login_id] LIKE 'test_%';
 
 -- テストユーザー1: 通常のログイン成功ケース
 -- ログインID: test_user_001
--- パスワード: password123（SHA256 ハッシュ）
+-- パスワード: password123（SHA256 ハッシュ: 75K3eLr+dx6JJFuJ7LwIpEpOFmwGZZkRiB84PURz6U8=）
 INSERT INTO [m_login_credentials]
 (
     [mapping_employee_row_id],
@@ -30,7 +30,7 @@ VALUES
 (
     1,  -- テスト従業員rowId（m_employees.row_id=1を前提）
     'test_user_001',
-    'YJfN1x5e8gZ2Hs3Kq9Lm1Oa5Bc7Df9Gj3Np2Rx4Sv6Ty8Uz0Wd5Kp+7Lm=',  -- password123 の SHA256 ハッシュ値（プレースホルダー）
+    '75K3eLr+dx6JJFuJ7LwIpEpOFmwGZZkRiB84PURz6U8=',  -- password123 の正しい SHA256 ハッシュ
     1,  -- is_active = true
     CONVERT(DATETIME2, '2026-09-14 00:00:00', 121),
     2147483667,  -- System User
@@ -58,7 +58,7 @@ VALUES
 (
     2,  -- テスト従業員rowId（m_employees.row_id=2を前提）
     'test_user_inactive',
-    'YJfN1x5e8gZ2Hs3Kq9Lm1Oa5Bc7Df9Gj3Np2Rx4Sv6Ty8Uz0Wd5Kp+7Lm=',
+    '75K3eLr+dx6JJFuJ7LwIpEpOFmwGZZkRiB84PURz6U8=',  -- password123 の正しい SHA256 ハッシュ
     0,  -- is_active = false
     CONVERT(DATETIME2, '2026-09-14 00:00:00', 121),
     2147483667,  -- System User
