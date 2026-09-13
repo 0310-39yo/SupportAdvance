@@ -4,6 +4,7 @@ namespace SupportAdvance.Contexts.Employee.Infrastructure.Repositories;
 
 using System.Data;
 using Dapper;
+using RepoDb;
 using SupportAdvance.Contexts.Employee.Application.Repositories;
 using Domain.Entities;
 using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
@@ -65,7 +66,8 @@ public class EmployeeRepository(
             var sql = _queryLoader.LoadQuery("Employees.GetEmployeeByBizId", typeof(EmployeeRepository));
 
             using var connection = _connectionFactory.CreateConnection();
-            var dbModel = await connection.QueryFirstOrDefaultAsync<EmployeeDbModel>(
+            var dbModel = await SqlMapper.QueryFirstOrDefaultAsync<EmployeeDbModel>(
+                connection,
                 sql,
                 new { BizId = bizId });
 
@@ -77,7 +79,8 @@ public class EmployeeRepository(
             // Person を m_persons から読み込み（employee_row_id で JOIN）
             var personSql = _queryLoader.LoadQuery("Persons.GetPersonByEmployeeRowId", typeof(EmployeeRepository));
             _logger.LogInformation($"Person SQL loaded. EmployeeRowId={dbModel.RowId}");
-            var personDbModel = await connection.QueryFirstOrDefaultAsync<PersonDbModel>(
+            var personDbModel = await SqlMapper.QueryFirstOrDefaultAsync<PersonDbModel>(
+                connection,
                 personSql,
                 new { EmployeeRowId = dbModel.RowId });
 
@@ -87,9 +90,11 @@ public class EmployeeRepository(
             }
 
             // DepartmentMembership を取得
-            var departmentMembershipSql = _queryLoader.LoadQuery("Employees.GetEmployeeDepartmentMemberships", typeof(EmployeeRepository));
+            var departmentMembershipSql =
+                _queryLoader.LoadQuery("Employees.GetEmployeeDepartmentMemberships", typeof(EmployeeRepository));
             _logger.LogInformation($"DepartmentMembership SQL loaded. RowId={dbModel.RowId}");
-            var departmentMemberships = await connection.QueryAsync<DepartmentMembershipDbModel>(
+            var departmentMemberships = await SqlMapper.QueryAsync<DepartmentMembershipDbModel>(
+                connection,
                 departmentMembershipSql,
                 new { EmployeeRowId = dbModel.RowId });
 
@@ -149,7 +154,8 @@ public class EmployeeRepository(
 
             // 1. m_employees テーブルを読み込み
             var employeeSql = _queryLoader.LoadQuery("Employees.GetEmployeeByRowId", typeof(EmployeeRepository));
-            var employeeDbModel = await connection.QueryFirstOrDefaultAsync<EmployeeDbModel>(
+            var employeeDbModel = await SqlMapper.QueryFirstOrDefaultAsync<EmployeeDbModel>(
+                connection,
                 employeeSql,
                 new { RowId = id.Value });
 
@@ -160,7 +166,8 @@ public class EmployeeRepository(
 
             // 2. m_persons テーブルを読み込み（employee_row_id で結合）
             var personSql = _queryLoader.LoadQuery("Persons.GetPersonByEmployeeRowId", typeof(EmployeeRepository));
-            var personDbModel = await connection.QueryFirstOrDefaultAsync<PersonDbModel>(
+            var personDbModel = await SqlMapper.QueryFirstOrDefaultAsync<PersonDbModel>(
+                connection,
                 personSql,
                 new { EmployeeRowId = id.Value });
 
@@ -170,8 +177,10 @@ public class EmployeeRepository(
             }
 
             // 3. m_department_memberships テーブルを読み込み（複数行）
-            var membershipSql = _queryLoader.LoadQuery("Employees.GetEmployeeDepartmentMemberships", typeof(EmployeeRepository));
-            var membershipDbModels = await connection.QueryAsync<DepartmentMembershipDbModel>(
+            var membershipSql =
+                _queryLoader.LoadQuery("Employees.GetEmployeeDepartmentMemberships", typeof(EmployeeRepository));
+            var membershipDbModels = await SqlMapper.QueryAsync<DepartmentMembershipDbModel>(
+                connection,
                 membershipSql,
                 new { EmployeeRowId = id.Value });
 
@@ -252,30 +261,16 @@ public class EmployeeRepository(
             SetUpdatedAtAudit(empDbModel);
             SetUpdatedByAudit(empDbModel);
 
-            // 1. m_employees を UPDATE
-            var empRowsAffected = await connection.ExecuteAsync(
-                @"UPDATE [dbo].[m_employees]
-                  SET [biz_division] = @BizDivision,
-                      [biz_id] = @BizId,
-                      [biz_code] = @BizCode,
-                      [retired_on] = @RetiredOn,
-                      [updated_at] = @UpdatedAt,
-                      [updated_by] = @UpdatedBy,
-                      [row_version] = DEFAULT
-                  WHERE [row_id] = @RowId
-                  AND [row_version] = @OldRowVersion",
-                new
+            // 1. m_employees を RepoDb UpdateAsync で UPDATE（楽観ロック付き）
+            var oldRowVersion = employee.RowVersion;
+            var empRowsAffected = await connection.UpdateAsync<EmployeeDbModel>(
+                empDbModel,
+                new QueryGroup(new[]
                 {
-                    RowId = empDbModel.RowId,
-                    BizDivision = empDbModel.BizDivision,
-                    BizId = empDbModel.BizId,
-                    BizCode = employee.BizCode.ToString(),
-                    RetiredOn = empDbModel.RetiredOn,
-                    UpdatedAt = empDbModel.UpdatedAt,
-                    UpdatedBy = empDbModel.UpdatedBy,
-                    OldRowVersion = employee.RowVersion
-                },
-                transaction
+                    new QueryField(nameof(EmployeeDbModel.RowId), empDbModel.RowId),
+                    new QueryField(nameof(EmployeeDbModel.RowVersion), oldRowVersion)
+                }),
+                transaction: transaction
             );
 
             if (empRowsAffected == 0)
@@ -283,34 +278,20 @@ public class EmployeeRepository(
                 throw new InvalidOperationException("Employee was updated by another user (concurrency conflict)");
             }
 
-            // 2. m_persons を UPDATE
+            // 2. m_persons を RepoDb UpdateAsync で UPDATE（楽観ロック付き）
             var personDbModel = _mapper.ToPersonDbModel(employee.Person, employee.RowId.Value);
             SetAuditField(personDbModel, "UpdatedAt", Clock.JstNow.Value);
             SetAuditField(personDbModel, "UpdatedBy", CurrentUser.EmployeeRowId);
 
-            var perRowsAffected = await connection.ExecuteAsync(
-                @"UPDATE [dbo].[m_persons]
-                  SET [last_name] = @LastName,
-                      [first_name] = @FirstName,
-                      [last_name_kana] = @LastNameKana,
-                      [first_name_kana] = @FirstNameKana,
-                      [updated_at] = @UpdatedAt,
-                      [updated_by] = @UpdatedBy,
-                      [row_version] = DEFAULT
-                  WHERE [row_id] = @RowId
-                  AND [row_version] = @OldRowVersion",
-                new
+            var oldPersonRowVersion = employee.Person.RowVersion;
+            var perRowsAffected = await connection.UpdateAsync<PersonDbModel>(
+                personDbModel,
+                new QueryGroup(new[]
                 {
-                    RowId = personDbModel.RowId,
-                    LastName = personDbModel.LastName,
-                    FirstName = personDbModel.FirstName,
-                    LastNameKana = personDbModel.LastNameKana,
-                    FirstNameKana = personDbModel.FirstNameKana,
-                    UpdatedAt = personDbModel.UpdatedAt,
-                    UpdatedBy = personDbModel.UpdatedBy,
-                    OldRowVersion = employee.Person.RowVersion
-                },
-                transaction
+                    new QueryField(nameof(PersonDbModel.RowId), personDbModel.RowId),
+                    new QueryField(nameof(PersonDbModel.RowVersion), oldPersonRowVersion)
+                }),
+                transaction: transaction
             );
 
             if (perRowsAffected == 0)
