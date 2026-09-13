@@ -10,6 +10,7 @@ namespace SupportAdvance.Contexts.Employee.Infrastructure.Models;
 /// 【特徴】従業員のビジネス属性のみ（個人情報は m_persons に分離、監査カラムは Repository で自動管理）
 /// 【1:1 関係】Person は m_persons テーブル（employee_row_id FK）で1:1に対応
 /// </summary>
+[Table("m_employees")]
 public class EmployeeDbModel
 {
     /// <summary>

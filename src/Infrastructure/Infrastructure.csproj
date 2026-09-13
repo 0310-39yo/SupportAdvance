@@ -6,9 +6,6 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <ItemGroup>
-    <EmbeddedResource Include="Persistence/Sql/**/*.sql" />
-  </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Data\Connections\" />

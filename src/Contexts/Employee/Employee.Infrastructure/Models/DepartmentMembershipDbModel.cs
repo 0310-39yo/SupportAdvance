@@ -5,10 +5,11 @@ using System.ComponentModel.DataAnnotations.Schema;
 /// <summary>
 /// DepartmentMembership テーブルマッピングモデル
 ///
-/// 【テーブル】m_department_membership
+/// 【テーブル】m_department_memberships
 /// 【責務】DB スキーマとの ORM マッピング、プリミティブ型で保持
 /// 【特徴】ビジネスカラムのみ（監査カラムは Repository で自動管理）
 /// </summary>
+[Table("m_department_memberships")]
 public class DepartmentMembershipDbModel
 {
     /// <summary>

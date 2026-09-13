@@ -10,6 +10,7 @@ namespace SupportAdvance.Contexts.Employee.Infrastructure.Models;
 /// 【特徴】個人基本情報（氏名・カナ氏名）のみ、監査カラムは Repository で自動管理
 /// 【1:1 関係】Employee との 1:1 マッピング（employee_row_id FK で連携）
 /// </summary>
+[Table("m_persons")]
 public class PersonDbModel
 {
     /// <summary>
