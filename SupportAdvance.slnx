@@ -26,6 +26,11 @@
     <Project Path="src/Contexts/Employee/Employee.Domain/Employee.Domain.csproj" />
     <Project Path="src/Contexts/Employee/Employee.Infrastructure/Employee.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/src/Contexts/Identity/">
+    <Project Path="src/Contexts/Identity/Identity.Application/Identity.Application.csproj" Id="a2f1a20d-8b26-47d0-b56b-d95eae028905" />
+    <Project Path="src/Contexts/Identity/Identity.Domain/Identity.Domain.csproj" Id="1a3d74c5-5de0-4c77-bcc8-75857f198601" />
+    <Project Path="src/Contexts/Identity/Identity.Infrastructure/Identity.Infrastructure.csproj" Id="08b3771a-d8cf-4fe9-88f6-39bb91f13fd2" />
+  </Folder>
   <Folder Name="/src/Contexts/IntegrationPrototype/">
     <Project Path="src/Contexts/IntegrationPrototype/IntegrationPrototype.Application/IntegrationPrototype.Application.csproj" Id="0fde8c01-03d3-4d37-9a19-d81d0af81eaf" />
     <Project Path="src/Contexts/IntegrationPrototype/IntegrationPrototype.Domain/IntegrationPrototype.Domain.csproj" Id="e24ca77d-aae0-45cc-943a-0ebd13a252e8" />
