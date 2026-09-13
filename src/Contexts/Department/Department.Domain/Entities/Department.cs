@@ -15,8 +15,9 @@ namespace SupportAdvance.Contexts.Department.Domain.Entities;
 ///   - 階層整合性（親部署の階層レベルより低い）
 ///   - 循環参照禁止（親部署チェーンにループがない）
 /// 【ライフサイクル】作成～廃止までの全期間をトラッキング
+/// 【Application層インターフェース】IDepartment を実装（Context間での参照用）
 /// </summary>
-public sealed class Department : AggregateRoot<DepartmentRowId>
+public sealed class Department : AggregateRoot<DepartmentRowId>, IDepartment
 {
     /// <summary>
     /// 楽観ロックタイムスタンプ（concurrency control 用）
