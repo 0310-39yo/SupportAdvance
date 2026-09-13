@@ -22,6 +22,9 @@ public class AppSettings : IAppSettings
     public IClockSettings ClockSettings { get; init; } = new ClockSettings();
 
     /// <inheritdoc />
+    public string ActiveDirectoryDomain { get; init; } = "YOUR_DOMAIN";
+
+    /// <inheritdoc />
     public string ApplicationBuildType { get; init; } = DebugBuild;
 
     /// <inheritdoc />
