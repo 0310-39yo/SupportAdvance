@@ -16,7 +16,7 @@ namespace SupportAdvance.Infrastructure.Providers;
 /// - SqlException を SequenceProviderException にラッピング
 ///
 /// 【実装パターン】
-/// - SqlConnection で接続（IDatabaseSettings.ConnectionStrings["Default"]）
+/// - SqlConnection で接続（IAppSettings.ConnectionStrings["Default"]）
 /// - SQL: SELECT NEXT VALUE FOR [dbo].[s_row_id_sequence]
 /// - 複数値取得は同じ SQL を count 回実行（シンプル、SQL Server保証）
 /// - スレッド安全性：lock で保護
@@ -24,34 +24,41 @@ namespace SupportAdvance.Infrastructure.Providers;
 /// 【注記】
 /// - SQL Server の SEQUENCE は自動的に重複排除を保証
 /// - lock による同期は、複数Application instance での競合回避目的
+/// 【設計】appsettings.*.json のすべての設定値は IAppSettings から統一して取得
 /// </summary>
 public class SequenceProvider : ISequenceProvider
 {
     private readonly string _connectionString;
-    private readonly Lock _lockObject = new Lock();
+    private readonly Lock _lockObject = new();
 
-    public SequenceProvider(IDatabaseSettings databaseSettings)
+    public SequenceProvider(IAppSettings appSettings)
     {
-        ArgumentNullException.ThrowIfNull(databaseSettings);
+        ArgumentNullException.ThrowIfNull(appSettings);
 
-        var connectionString = GetConnectionString(databaseSettings);
+        var connectionString = GetConnectionString(appSettings);
         _connectionString = connectionString
-            ?? throw new InvalidOperationException(
-                "No connection string is configured in appsettings.json");
+                            ?? throw new InvalidOperationException(
+                                "No connection string is configured in appsettings.json");
     }
 
-    private static string? GetConnectionString(IDatabaseSettings databaseSettings)
+    private static string? GetConnectionString(IAppSettings appSettings)
     {
         // 優先順位: "Default" → "SupportAdvance" → 最初のキー
-        if (databaseSettings.ConnectionStrings.TryGetValue("Default", out var result))
+        if (appSettings.ConnectionStrings.TryGetValue("Default", out var result))
+        {
             return result;
+        }
 
-        if (databaseSettings.ConnectionStrings.TryGetValue("SupportAdvance", out result))
+        if (appSettings.ConnectionStrings.TryGetValue("SupportAdvance", out result))
+        {
             return result;
+        }
 
-        var firstKey = databaseSettings.ConnectionStrings.Keys.FirstOrDefault();
-        if (firstKey != null && databaseSettings.ConnectionStrings.TryGetValue(firstKey, out result))
+        var firstKey = appSettings.ConnectionStrings.Keys.FirstOrDefault();
+        if (firstKey != null && appSettings.ConnectionStrings.TryGetValue(firstKey, out result))
+        {
             return result;
+        }
 
         return null;
     }
@@ -61,7 +68,7 @@ public class SequenceProvider : ISequenceProvider
     /// </summary>
     public async Task<long> GetNextValueAsync()
     {
-        var values = await GetNextValuesAsync(count: 1);
+        var values = await GetNextValuesAsync(1);
         return values[0];
     }
 
@@ -89,7 +96,7 @@ public class SequenceProvider : ISequenceProvider
     /// </summary>
     private List<long> GetNextValuesInternal(int count)
     {
-        var result = new List<long>(capacity: count);
+        var result = new List<long>(count);
 
         try
         {
@@ -103,7 +110,7 @@ public class SequenceProvider : ISequenceProvider
                 using var command = connection.CreateCommand();
                 command.CommandText = sql;
                 command.CommandType = CommandType.Text;
-                command.CommandTimeout = 30;  // デフォルト 30秒
+                command.CommandTimeout = 30; // デフォルト 30秒
 
                 var value = command.ExecuteScalar();
 
