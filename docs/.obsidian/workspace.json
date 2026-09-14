@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Assistance/Guides/Identity_BC_設計ガイド.md",
+                "file": "Assistance/Guides/SQL_ファイル管理_設計ガイド.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Identity_BC_設計ガイド"
+              "title": "SQL_ファイル管理_設計ガイド"
             }
           }
         ]
@@ -190,6 +190,7 @@
   },
   "active": "a4a323d6c1e93a0c",
   "lastOpenFiles": [
+    "Assistance/Guides/Identity_BC_設計ガイド.md",
     "Assistance/Guides/Identity_BC_設計ガイド.md.tmp.26816.7d4dc63f14c0",
     "Assistance/Guides/Identity_BC_設計ガイド.md.tmp.26816.c024ac9ba1e1",
     "Assistance/Guides/Identity_BC_設計ガイド.md.tmp.26816.4c44b49e72ab",
@@ -198,7 +199,6 @@
     "Assistance/Guides/SQL_ファイル管理_設計ガイド.md",
     "Assistance/Guides/SQL_ファイル管理_設計ガイド.md.tmp.26816.2d35619788e3",
     "WorkMemo/2026-09-13.md",
-    "Assistance/Guides/Identity_BC_設計ガイド.md",
     "Assistance/Consider/AGENTS.md",
     "Assistance/DraftIdeas/認証について.md",
     "Assistance/Consider/SupportAdvance 監査方式 設計方針案.md",
@@ -211,7 +211,6 @@
     "Assistance/Guides/Mapper_パターンガイド.md.tmp.33108.ef4e0da53504",
     "Assistance/Guides/Entity_設計ガイドライン.md.tmp.33108.e0de1fd3ac7c",
     "Assistance/Guides/RowId_設計ガイド.md.tmp.33108.974e116e303b",
-    "Assistance/Guides/RowId_設計ガイド.md.tmp.33108.a09a2fc37ab2",
     "Assistance/Guides/RowId_設計ガイド.md",
     "Assistance/Guides/ValueObject別名プロパティガイド.md",
     "Assistance/Guides/IValidateWithClock_パターンガイド.md",

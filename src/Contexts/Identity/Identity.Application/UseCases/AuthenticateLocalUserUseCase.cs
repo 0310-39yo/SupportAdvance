@@ -40,6 +40,12 @@ public sealed class AuthenticateLocalUserUseCase
     private readonly IClock _clock;
     private readonly ISequenceProvider _sequenceProvider;
 
+    /// <summary>
+    /// システムユーザー RowId（ログイン失敗時に使用）
+    /// 【用途】失敗ログの current_user_row_id として記録
+    /// </summary>
+    private const long SystemUserId = 2147483667;
+
     public AuthenticateLocalUserUseCase(
         ILoginCredentialsQuery loginCredentialsQuery,
         IPasswordHashService passwordHashService,
@@ -64,37 +70,62 @@ public sealed class AuthenticateLocalUserUseCase
     public async Task<AuthenticateLocalUserResponse> ExecuteAsync(AuthenticateLocalUserRequest request)
     {
         ValidateRequest(request);
+        var now = _clock.JstNow;
+        var sessionRowIdValue = await _sequenceProvider.GetNextValueAsync();
+        var sessionRowId = UserAuthSessionRowId.From(sessionRowIdValue);
 
         // Step 1: ログインID で認証情報を取得
         var credentials = await _loginCredentialsQuery.GetByLoginIdAsync(request.LoginId);
         if (credentials == null)
         {
-            throw new InvalidOperationException(
-                $"Authentication failed: LoginId '{request.LoginId}' not found.");
+            // 失敗ログを記録
+            var failureSession = UserAuthSession.Create(
+                id: sessionRowId,
+                AuthorityRowId.From(SystemUserId),
+                isAdAuthenticated: false,
+                loginSuccess: false,
+                loggedInAt: now,
+                loginCredentialsRowId: null);
+            await _sessionRepository.SaveAsync(failureSession);
+
+            throw new InvalidOperationException("ログインIDが見つかりません");
         }
 
         // Step 2: 認証情報が有効か確認
         if (!credentials.IsActive)
         {
-            throw new InvalidOperationException(
-                $"Authentication failed: Credentials for LoginId '{request.LoginId}' are inactive.");
+            // 失敗ログを記録
+            var failureSession = UserAuthSession.Create(
+                id: sessionRowId,
+                AuthorityRowId.From(SystemUserId),
+                isAdAuthenticated: false,
+                loginSuccess: false,
+                loggedInAt: now,
+                loginCredentialsRowId: LoginCredentialsRowId.From(credentials.RowId));
+            await _sessionRepository.SaveAsync(failureSession);
+
+            throw new InvalidOperationException("このアカウントは無効です");
         }
 
         // Step 3: パスワード検証
         if (!_passwordHashService.VerifyPassword(request.Password, credentials.PasswordHash))
         {
-            throw new InvalidOperationException(
-                $"Authentication failed: Invalid password for LoginId '{request.LoginId}'.");
+            // 失敗ログを記録
+            var failureSession = UserAuthSession.Create(
+                id: sessionRowId,
+                AuthorityRowId.From(SystemUserId),
+                isAdAuthenticated: false,
+                loginSuccess: false,
+                loggedInAt: now,
+                loginCredentialsRowId: LoginCredentialsRowId.From(credentials.RowId));
+            await _sessionRepository.SaveAsync(failureSession);
+
+            throw new InvalidOperationException("パスワードが間違っています");
         }
 
-        // Step 4: UserAuthSession を生成
-        var now = _clock.JstNow;
+        // Step 4: 成功時の UserAuthSession を生成
         var authorityRowId = AuthorityRowId.From(credentials.MappingEmployeeRowId);
         var loginCredentialsRowId = LoginCredentialsRowId.From(credentials.RowId);
-
-        // RowId を事前採番
-        var sessionRowIdValue = await _sequenceProvider.GetNextValueAsync();
-        var sessionRowId = UserAuthSessionRowId.From(sessionRowIdValue);
 
         var session = UserAuthSession.Create(
             id: sessionRowId,

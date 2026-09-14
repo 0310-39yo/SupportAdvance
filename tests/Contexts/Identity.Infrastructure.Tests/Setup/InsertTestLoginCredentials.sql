@@ -28,7 +28,7 @@ INSERT INTO [m_login_credentials]
 )
 VALUES
 (
-    1,  -- テスト従業員rowId（m_employees.row_id=1を前提）
+    2147483730,  -- テスト従業員rowId（m_employees.row_id=2147483730、biz_id=1001）
     'test_user_001',
     '75K3eLr+dx6JJFuJ7LwIpEpOFmwGZZkRiB84PURz6U8=',  -- password123 の正しい SHA256 ハッシュ
     1,  -- is_active = true
@@ -56,7 +56,7 @@ INSERT INTO [m_login_credentials]
 )
 VALUES
 (
-    2,  -- テスト従業員rowId（m_employees.row_id=2を前提）
+    2147483731,  -- テスト従業員rowId（m_employees.row_id=2147483731、biz_id=1002）
     'test_user_inactive',
     '75K3eLr+dx6JJFuJ7LwIpEpOFmwGZZkRiB84PURz6U8=',  -- password123 の正しい SHA256 ハッシュ
     0,  -- is_active = false
