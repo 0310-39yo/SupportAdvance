@@ -13,8 +13,8 @@ using SupportAdvance.Crosscutting;
 using SupportAdvance.Infrastructure;
 using SupportAdvance.Infrastructure.Services;
 using SupportAdvance.Presentation.Shared;
-using SupportAdvance.Presentation.WinTrial.Forms;
 using SupportAdvance.Presentation.WinTrial.Services;
+using SupportAdvance.Presentation.WinTrial.ViewModels;
 using SupportAdvance.Presentation.WinTrial.Views;
 
 namespace SupportAdvance.Presentation.WinTrial;
@@ -49,7 +49,8 @@ internal static class Program
                     .AddWinTrialModules()
                     // Identity BC 実装により RealCurrentUserService に切り替え
                     .AddScoped<ICurrentUserService, RealCurrentUserService>()
-                    // LoginDialog と依存関係を DI 登録
+                    // LoginDialog + ViewModel（MVVM Toolkit）を DI 登録
+                    .AddScoped<LoginDialogViewModel>()
                     .AddScoped<LoginDialog>()
                     ;
             })
