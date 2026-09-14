@@ -2,6 +2,7 @@ using SupportAdvance.Common.Clocks;
 using SupportAdvance.Infrastructure.Mappers;
 using SupportAdvance.Infrastructure.Services;
 using SupportAdvance.SharedKernel.Entities;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 namespace SupportAdvance.Infrastructure.Repositories;
 
@@ -16,28 +17,25 @@ namespace SupportAdvance.Infrastructure.Repositories;
 /// 【使用方法】BC固有の Repository が継承して、DB操作を実装
 ///
 /// 【型パラメータ】
-/// - TEntity: Entity<TId>（ID型をサポート）
+/// - TEntity: Entity<TId>（RowId型に限定）
 /// - TDbModel: データベースモデル
-/// - TId: Entity の ID 型（ValueObject など）
+/// - TId: Entity の ID 型（RowId を継承する型）
 /// </summary>
-public abstract class RepositoryBase<TEntity, TDbModel, TId>
+public abstract class RepositoryBase<TEntity, TDbModel, TId>(
+    IEntityMapper<TEntity, TDbModel, TId> mapper,
+    ICurrentUserService currentUser,
+    IClock clock)
     where TEntity : Entity<TId>
     where TDbModel : class
-    where TId : notnull
+    where TId : notnull, RowId
 {
-    protected IEntityMapper<TEntity, TDbModel, TId> Mapper { get; }
-    protected ICurrentUserService CurrentUser { get; }
-    protected IClock Clock { get; }
+    protected IEntityMapper<TEntity, TDbModel, TId> Mapper { get; } =
+        mapper ?? throw new ArgumentNullException(nameof(mapper));
 
-    protected RepositoryBase(
-        IEntityMapper<TEntity, TDbModel, TId> mapper,
-        ICurrentUserService currentUser,
-        IClock clock)
-    {
-        Mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
-        CurrentUser = currentUser ?? throw new ArgumentNullException(nameof(currentUser));
-        Clock = clock ?? throw new ArgumentNullException(nameof(clock));
-    }
+    protected ICurrentUserService CurrentUser { get; } =
+        currentUser ?? throw new ArgumentNullException(nameof(currentUser));
+
+    protected IClock Clock { get; } = clock ?? throw new ArgumentNullException(nameof(clock));
 
     /// <summary>
     /// Entity を DbModel に変換し、createdBy を設定
@@ -50,11 +48,12 @@ public abstract class RepositoryBase<TEntity, TDbModel, TId>
     }
 
     /// <summary>
-    /// Entity を DbModel に変換し、updatedBy を設定
+    /// Entity を DbModel に変換し、updatedBy と updatedAt を設定
     /// </summary>
     protected TDbModel MapToDatabaseForUpdate(TEntity entity)
     {
         var dbModel = Mapper.ToDbModel(entity);
+        SetUpdatedAtAudit(dbModel);
         SetUpdatedByAudit(dbModel);
         return dbModel;
     }
@@ -62,10 +61,7 @@ public abstract class RepositoryBase<TEntity, TDbModel, TId>
     /// <summary>
     /// DbModel を Domain Entity に変換
     /// </summary>
-    protected TEntity MapToDomain(TDbModel dbModel)
-    {
-        return Mapper.ToDomainEntity(dbModel, Clock);
-    }
+    protected TEntity MapToDomain(TDbModel dbModel) => Mapper.ToDomainEntity(dbModel, Clock);
 
     /// <summary>
     /// createdBy（作成者従業員rowId）を設定
@@ -76,6 +72,19 @@ public abstract class RepositoryBase<TEntity, TDbModel, TId>
         if (createdByProperty != null && createdByProperty.CanWrite)
         {
             createdByProperty.SetValue(dbModel, CurrentUser.EmployeeRowId);
+        }
+    }
+
+    /// <summary>
+    /// updatedAt（更新日時）を設定
+    /// 【責務】Repository が保存時刻を管理（Mapper ではなく）
+    /// </summary>
+    private void SetUpdatedAtAudit(TDbModel dbModel)
+    {
+        var updatedAtProperty = typeof(TDbModel).GetProperty("UpdatedAt");
+        if (updatedAtProperty != null && updatedAtProperty.CanWrite)
+        {
+            updatedAtProperty.SetValue(dbModel, Clock.JstNow.Value);
         }
     }
 

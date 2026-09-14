@@ -1,11 +1,14 @@
+using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Person;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
+
 namespace SupportAdvance.Contexts.Employee.Application.UseCases;
+using SupportAdvance.Application.Abstractions.Identifiers;
 using SupportAdvance.Contexts.Employee.Application.Repositories;
 
-using SupportAdvance.Common.Clocks;
 using SupportAdvance.Contexts.Employee.Application.Dtos;
 using SupportAdvance.Contexts.Employee.Domain.Entities;
 using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
-using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
+using SupportAdvance.Common.Clocks;
 
 /// <summary>
 /// 新規従業員を作成する Use Case
@@ -14,11 +17,13 @@ public class CreateEmployeeUseCase
 {
     private readonly IEmployeeRepository _repository;
     private readonly IClock _clock;
+    private readonly ISequenceProvider _sequenceProvider;
 
-    public CreateEmployeeUseCase(IEmployeeRepository repository, IClock clock)
+    public CreateEmployeeUseCase(IEmployeeRepository repository, IClock clock, ISequenceProvider sequenceProvider)
     {
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));
         _clock = clock ?? throw new ArgumentNullException(nameof(clock));
+        _sequenceProvider = sequenceProvider ?? throw new ArgumentNullException(nameof(sequenceProvider));
     }
 
     /// <summary>
@@ -30,24 +35,37 @@ public class CreateEmployeeUseCase
         ValidateRequest(request);
 
         // 【Step 2】ValueObject 生成
-        var division = ConvertToDivision(request.DivisionCode);
-        var number = EmployeeNumber.From(request.EmployeeNumber);
-        var code = EmployeeCode.From(division, number);
+        var typeDivision = ConvertToDivision(request.DivisionCode);
+        var bizId = BizId.From(request.EmployeeNumber);
+        var bizCode = BizCode.From(typeDivision, bizId);
         var personRowId = PersonRowId.From(request.PersonRowId);
 
-        // 【Step 3】Domain Entity 生成
-        // Note: Repository が rowId を採番するため、ここでは一時的に 1 を使用
+        // 【Step 3】Person Entity 生成
+        var personLastName = LastName.From(request.PersonLastName);
+        var personFirstName = FirstName.From(request.PersonFirstName);
+        var personLastNameKana = LastNameKana.From(request.PersonLastNameKana);
+        var personFirstNameKana = FirstNameKana.From(request.PersonFirstNameKana);
+        var person = Person.Create(personRowId, personLastName, personFirstName, personLastNameKana, personFirstNameKana);
+
+        // 【Step 4】RowId 採番（DB シーケンスから採番）
+        var sequenceValue = await _sequenceProvider.GetNextValueAsync();
+        var rowId = EmployeeRowId.From(sequenceValue);
+
+        // 【Step 5】Domain Entity 生成
         var employee = Employee.Create(
-            EmployeeId.NewId(),
-            EmployeeRowId.From(1),  // Repository で上書きされる
-            code,
-            personRowId
+            rowId,
+            typeDivision,
+            bizId,
+            bizCode,
+            null,
+            person,
+            new List<DepartmentMembership>()
         );
 
-        // 【Step 4】Repository で永続化
+        // 【Step 6】Repository で永続化
         await _repository.AddAsync(employee);
 
-        // 【Step 5】DTO に変換して返却
+        // 【Step 7】DTO に変換して返却
         return employee.ToDto();
     }
 
@@ -68,14 +86,11 @@ public class CreateEmployeeUseCase
         return code is "M" or "T" or "C";
     }
 
-    private EmployeeDivision ConvertToDivision(string code)
+    private BizDivision ConvertToDivision(string code)
     {
-        return code switch
-        {
-            "M" => EmployeeDivision.RegularEmployee(),
-            "T" => EmployeeDivision.Dispatched(),
-            "C" => EmployeeDivision.Contractor(),
-            _ => throw new ArgumentException($"Invalid division code: {code}")
-        };
+        if (BizDivision.TryFromString(code, out var division))
+            return division;
+
+        throw new ArgumentException($"Invalid division code: {code}", nameof(code));
     }
 }

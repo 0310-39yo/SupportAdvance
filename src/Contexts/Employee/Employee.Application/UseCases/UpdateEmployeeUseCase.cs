@@ -1,48 +1,56 @@
-namespace SupportAdvance.Contexts.Employee.Application.UseCases;
-using SupportAdvance.Contexts.Employee.Application.Repositories;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
-using SupportAdvance.Contexts.Employee.Application.Dtos;
+namespace SupportAdvance.Contexts.Employee.Application.UseCases;
+
+using Repositories;
+using Dtos;
 using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
 
 /// <summary>
 /// 従業員情報を更新する Use Case
 /// </summary>
-public class UpdateEmployeeUseCase
+public class UpdateEmployeeUseCase(IEmployeeRepository repository)
 {
-    private readonly IEmployeeRepository _repository;
-
-    public UpdateEmployeeUseCase(IEmployeeRepository repository)
-    {
+    private readonly IEmployeeRepository
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));
-    }
 
     /// <summary>
     /// 従業員を更新
     /// </summary>
     public async Task<EmployeeDto> ExecuteAsync(UpdateEmployeeRequest request)
     {
-        if (request.EmployeeId == Guid.Empty)
-            throw new ArgumentException("Invalid EmployeeId", nameof(request.EmployeeId));
+        if (request.EmployeeRowId <= 0)
+        {
+            throw new ArgumentException("Invalid EmployeeRowId", nameof(request.EmployeeRowId));
+        }
 
-        var id = EmployeeId.From(request.EmployeeId);
+        var id = EmployeeRowId.From(request.EmployeeRowId);
 
         // 既存 Entity を取得
         var employee = await _repository.GetByIdAsync(id);
         if (employee == null)
+        {
             throw new InvalidOperationException($"Employee not found: {id}");
+        }
 
         // 更新内容を適用（DivisionCode/EmployeeNumber が指定された場合）
         if (request.DivisionCode != null && request.EmployeeNumber.HasValue)
         {
             if (!IsValidDivisionCode(request.DivisionCode))
-                throw new ArgumentException($"Invalid DivisionCode: {request.DivisionCode}", nameof(request.DivisionCode));
+            {
+                throw new ArgumentException($"Invalid DivisionCode: {request.DivisionCode}",
+                    nameof(request.DivisionCode));
+            }
 
             if (request.EmployeeNumber.Value < 1001 || request.EmployeeNumber.Value > 9999)
-                throw new ArgumentException("EmployeeNumber must be between 1001 and 9999", nameof(request.EmployeeNumber));
+            {
+                throw new ArgumentException("EmployeeNumber must be between 1001 and 9999",
+                    nameof(request.EmployeeNumber));
+            }
 
-            var division = ConvertToDivision(request.DivisionCode);
-            var number = EmployeeNumber.From(request.EmployeeNumber.Value);
-            var newCode = EmployeeCode.From(division, number);
+            var typeDivision = ConvertToDivision(request.DivisionCode);
+            var bizId = BizId.From(request.EmployeeNumber.Value);
+            var bizCode = BizCode.From(typeDivision, bizId);
             // TODO: employee.ChangeCode(newCode) メソッドを呼び出し
         }
 
@@ -52,19 +60,15 @@ public class UpdateEmployeeUseCase
         return employee.ToDto();
     }
 
-    private bool IsValidDivisionCode(string? code)
-    {
-        return code is "M" or "T" or "C";
-    }
+    private bool IsValidDivisionCode(string? code) => code is "M" or "T" or "C";
 
-    private EmployeeDivision ConvertToDivision(string code)
+    private BizDivision ConvertToDivision(string code)
     {
-        return code switch
+        if (BizDivision.TryFromString(code, out var division))
         {
-            "M" => EmployeeDivision.RegularEmployee(),
-            "T" => EmployeeDivision.Dispatched(),
-            "C" => EmployeeDivision.Contractor(),
-            _ => throw new ArgumentException($"Invalid division code: {code}")
-        };
+            return division;
+        }
+
+        throw new ArgumentException($"Invalid division code: {code}", nameof(code));
     }
 }

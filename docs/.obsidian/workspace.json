@@ -1,0 +1,229 @@
+{
+  "main": {
+    "id": "b7dd2e68c35b7095",
+    "type": "split",
+    "children": [
+      {
+        "id": "cf25c5dbefe7a26f",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "6e586dc8099713c0",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Assistance/Guides/SQL_ファイル管理_設計ガイド.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "SQL_ファイル管理_設計ガイド"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "9bd36dae9302e909",
+    "type": "split",
+    "children": [
+      {
+        "id": "a1e4db046bdd8e9c",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "a4a323d6c1e93a0c",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-folder-closed",
+              "title": "ファイルエクスプローラ"
+            }
+          },
+          {
+            "id": "3cd5ddc9647ce54c",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "検索"
+            }
+          },
+          {
+            "id": "b4e7f16b2fb0f609",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-bookmark",
+              "title": "ブックマーク"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 403.5
+  },
+  "right": {
+    "id": "17b5e12373eb316d",
+    "type": "split",
+    "children": [
+      {
+        "id": "424790a8ca0f0c9e",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "9409549203fb180d",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "WorkMemo/2026-09-04.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "バックリンク"
+            }
+          },
+          {
+            "id": "95380640e682c178",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "WorkMemo/2026-09-04.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "アウトゴーイングリンク"
+            }
+          },
+          {
+            "id": "f149288714ebcc0e",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "タグ"
+            }
+          },
+          {
+            "id": "82eedf2d48f5de7f",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "すべてのプロパティ"
+            }
+          },
+          {
+            "id": "5e9c7142b9d3adb6",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "WorkMemo/2026-09-04.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "アウトライン"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:クイックスイッチャーを開く": false,
+      "graph:グラフビューを開く": false,
+      "canvas:新規キャンバスを作成": false,
+      "daily-notes:今日のデイリーノートを開く": false,
+      "templates:テンプレートを挿入": false,
+      "command-palette:コマンドパレットを開く": false,
+      "bases:新規ベースを作成": false
+    }
+  },
+  "active": "a4a323d6c1e93a0c",
+  "lastOpenFiles": [
+    "Assistance/Guides/Identity_BC_設計ガイド.md",
+    "Assistance/Guides/Identity_BC_設計ガイド.md.tmp.26816.7d4dc63f14c0",
+    "Assistance/Guides/Identity_BC_設計ガイド.md.tmp.26816.c024ac9ba1e1",
+    "Assistance/Guides/Identity_BC_設計ガイド.md.tmp.26816.4c44b49e72ab",
+    "Assistance/Guides/Bounded_Context_テンプレート.md",
+    "Assistance/DraftIdeas/SQL文分離配置.md",
+    "Assistance/Guides/SQL_ファイル管理_設計ガイド.md",
+    "Assistance/Guides/SQL_ファイル管理_設計ガイド.md.tmp.26816.2d35619788e3",
+    "WorkMemo/2026-09-13.md",
+    "Assistance/Consider/AGENTS.md",
+    "Assistance/DraftIdeas/認証について.md",
+    "Assistance/Consider/SupportAdvance 監査方式 設計方針案.md",
+    "WorkMemo/2026-09-12.md",
+    "Assistance/Guides/0_ドキュメントチェックリスト.md",
+    "Assistance/Guides/集約の設計ガイド.md",
+    "Assistance/Guides/集約の設計ガイド.md.tmp.33108.37c34a79b6e3",
+    "Assistance/Guides/Mapper_パターンガイド.md.tmp.33108.902c8e741e26",
+    "Assistance/Guides/Entity_設計ガイドライン.md.tmp.33108.1f4914604b00",
+    "Assistance/Guides/Mapper_パターンガイド.md.tmp.33108.ef4e0da53504",
+    "Assistance/Guides/Entity_設計ガイドライン.md.tmp.33108.e0de1fd3ac7c",
+    "Assistance/Guides/RowId_設計ガイド.md.tmp.33108.974e116e303b",
+    "Assistance/Guides/RowId_設計ガイド.md",
+    "Assistance/Guides/ValueObject別名プロパティガイド.md",
+    "Assistance/Guides/IValidateWithClock_パターンガイド.md",
+    "Assistance/Guides/FromDbValue_ToDbValue_パターンガイド.md",
+    "Assistance/Plans/20260912_ValueObject設計ガイド齟齬修正計画.md",
+    "Assistance/Guides/TABLE_DESIGN_STANDARDS.md",
+    "WorkMemo/2026-09-10.md",
+    "Assistance/Guides/CLEAN_ARCHITECTURE_GUIDELINES.md",
+    "Assistance/Reports/20260910_comparison_report.md",
+    "Assistance/Guides/AggregateId_設計ガイド.md",
+    "WorkMemo/2026-09-08.md",
+    "Assistance/Plans/20260907_Employee集約スキーマ修正計画 1.md",
+    "Assistance/Plans/20260907_Employee集約スキーマ修正計画.md",
+    "WorkMemo/2026-09-07.md"
+  ]
+}

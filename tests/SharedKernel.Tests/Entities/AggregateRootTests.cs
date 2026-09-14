@@ -16,11 +16,11 @@ public class AggregateRootTests
     public void AggregateRoot_InheritFromEntity_ShouldHaveSameFunctionality()
     {
         // Arrange
-        var id = new TestId("root-001");
+        var id = TestId.From(1L);
         var root = new TestAggregateRoot(id);
 
         // Act & Assert
-        Assert.Equal(id, root.Id);
+        Assert.Equal(id, root.RowId);
         Assert.Empty(root.DomainEvents);
     }
 
@@ -31,7 +31,7 @@ public class AggregateRootTests
     public void AggregateRoot_Equals_ShouldUseIdBase()
     {
         // Arrange
-        var id = new TestId("root-001");
+        var id = TestId.From(1L);
         var root1 = new TestAggregateRoot(id);
         var root2 = new TestAggregateRoot(id);
 

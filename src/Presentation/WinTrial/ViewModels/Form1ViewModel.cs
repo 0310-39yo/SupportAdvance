@@ -1,9 +1,8 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using SupportAdvance.Application.UseCases;
 using SupportAdvance.Common.Clocks;
 using SupportAdvance.Common.Configuration;
-using SupportAdvance.Contexts.Samples.CarPreferences.Application.UseCases;
+using SupportAdvance.Contexts.IntegrationPrototype.Application.UseCases;
 using SupportAdvance.Crosscutting.Logging;
 
 namespace SupportAdvance.Presentation.WinTrial.ViewModels;
@@ -11,47 +10,89 @@ namespace SupportAdvance.Presentation.WinTrial.ViewModels;
 public partial class Form1ViewModel : ObservableObject
 {
     private readonly AppSettings _appSettings;
-    private readonly IUseCase<CarPreferencesRequest, CarPreferencesResponse> _carPreferencesUseCase;
     private readonly IClock _clock;
     private readonly IAppLogging<Form1ViewModel> _logger;
+    private readonly GetEmployeeByBizIdIntegrationUseCase _getEmployeeByBizIdUseCase;
+
+    [ObservableProperty]
+    private string _bizIdSearchInput = string.Empty;
+
+    [ObservableProperty]
+    private string _employeeFullName = string.Empty;
+
+    [ObservableProperty]
+    private string _departmentNames = string.Empty;
 
     public Form1ViewModel(IAppLogging<Form1ViewModel> logger,
         IAppSettings appSettings,
         IClock clock,
-        IUseCase<CarPreferencesRequest, CarPreferencesResponse> carPreferencesUseCase)
+        GetEmployeeByBizIdIntegrationUseCase getEmployeeByBizIdUseCase)
     {
         ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(appSettings);
         ArgumentNullException.ThrowIfNull(clock);
-        ArgumentNullException.ThrowIfNull(carPreferencesUseCase);
+        ArgumentNullException.ThrowIfNull(getEmployeeByBizIdUseCase);
 
         _logger = logger;
         _appSettings = (AppSettings)appSettings;
         _clock = clock;
-        _carPreferencesUseCase = carPreferencesUseCase;
+        _getEmployeeByBizIdUseCase = getEmployeeByBizIdUseCase;
         _logger.LogInformation("Form1ViewModel initialized.");
     }
 
     /// <summary>
-    /// CarPreferencesUseCaseを実行するコマンド
+    /// BizId で従業員を検索
     /// </summary>
-    /// <returns></returns>
     [RelayCommand]
-    private async Task ExecuteSampleUseCase()
+    public async Task SearchEmployeeByBizId()
     {
         try
         {
-            var request = new CarPreferencesRequest
+            if (string.IsNullOrWhiteSpace(BizIdSearchInput))
             {
-                Name = "WinTrial Demo",
-                Details = $"Executed at {_clock.JstNow:yyyy-MM-dd HH:mm:ss}"
-            };
+                EmployeeFullName = string.Empty;
+                _logger.LogInformation("BizId search input is empty.");
+                return;
+            }
 
-            // UseCase を実行
-            // ロギングは Decorator で自動的に適用される
-            var response = await _carPreferencesUseCase.ExecuteAsync(request);
+            if (!int.TryParse(BizIdSearchInput, out var bizId))
+            {
+                EmployeeFullName = "入力エラー：BizId は数値で入力してください";
+                _logger.LogWarning($"Invalid BizId format: {BizIdSearchInput}");
+                return;
+            }
 
-            _logger.LogInformation($"SampleUseCase result: {response.Message}");
+            _logger.LogInformation($"Searching employee by BizId: {bizId}");
+            var employee = await _getEmployeeByBizIdUseCase.ExecuteAsync(bizId);
+
+            if (employee == null)
+            {
+                EmployeeFullName = "従業員が見つかりません";
+                _logger.LogInformation($"No employee found with BizId: {bizId}");
+                return;
+            }
+
+            EmployeeFullName = $"{employee.PersonLastName} {employee.PersonFirstName}";
+            DepartmentNames = employee.DepartmentNames;
+            _logger.LogInformation($"Employee found: {EmployeeFullName}, Departments: {DepartmentNames}");
+        }
+        catch (Exception ex)
+        {
+            EmployeeFullName = "エラーが発生しました";
+            DepartmentNames = string.Empty;
+            _logger.LogError("SearchEmployeeByBizId execution failed", ex);
+        }
+    }
+
+    /// <summary>
+    /// サンプル実行コマンド（ボタンクリック時に実行）
+    /// </summary>
+    [RelayCommand]
+    public void ExecuteSampleUseCase()
+    {
+        try
+        {
+            _logger.LogInformation($"[テストボタンクリック] 現在時刻: {_clock.JstNow}");
         }
         catch (Exception ex)
         {

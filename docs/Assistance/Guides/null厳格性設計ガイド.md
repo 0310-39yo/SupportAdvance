@@ -84,6 +84,7 @@ else
 ```csharp
 public sealed class RespondentName : PrimitiveValueObject<string>
 {
+    // Domain層での保持:
     // Value: 常に string を保持（null ではない）
     // IsSet: false = 未設定状態を表現
     
@@ -100,20 +101,22 @@ public sealed class RespondentName : PrimitiveValueObject<string>
 ```csharp
 public sealed class UpdatedAt : PrimitiveValueObject<LocalDateTime?>
 {
+    // Domain層での保持:
     // Value: 常に LocalDateTime を保持（null ではない）
-    // IsSet: false = 未更新状態
+    // IsSet: false = 未更新状態（Mapper により DB では null に変換）
+    // IsSet: true = 更新済み状態（Mapper により DB では DateTime 値に変換）
     
     public static UpdatedAt Unset()
-        => new(LocalDateTime.MinValue, false);
+        => new(LocalDateTime.MinValue, false);  // Unset状態のセンチネル値
     
     public bool HasUpdated => IsSet;  // IsSet の別名
 }
 ```
 
 **重要な保証:**
-- ✅ Value は常に型のデフォルト値以上
-- ✅ null は存在しない（Domain層のすべてが有効な値）
-- ✅ IsSet フラグで「存在/非存在」を表現
+- ✅ Domain層: Value は常に型のデフォルト値以上（null なし）
+- ✅ DB層: Mapper が IsSet フラグに基づいて、Domain の値を DB の null/値に変換
+- ✅ IsSet フラグで「存在/非存在」を表現（Domain層では型安全）
 
 ---
 
@@ -260,7 +263,10 @@ public class UserPreferencesRepository
         
         // ============ Domain層へ渡す ============
         // すべての ValueObject が null-free 状態
-        return UserPreferences.Reconstruct(userId, createdAt, updatedAt, deletedAt, ...);
+        // 【注意】監査フィールド（createdAt, updatedAt, deletedAt）は検証済みだが、
+        // Entity のビジネスロジックでは不要なため、Reconstruct に渡さない設計パターンもある。
+        // 監査情報は Repository で検証済みなので、Entity は ビジネスロジック専用に保つ。
+        return UserPreferences.Reconstruct(userId, ...);
     }
 }
 ```
@@ -467,7 +473,10 @@ public sealed class UpdatedAt : PrimitiveValueObject<LocalDateTime?>
         }
     }
     
-    public LocalDateTime? Value => ValueField;  // IsSet=false の場合も ValueField = LocalDateTime.MinValue を保持
+    public LocalDateTime? Value => ValueField;  
+    // Domain層での保持：IsSet の値に関わらず LocalDateTime を保持（null ではない）
+    // IsSet=false: LocalDateTime.MinValue（Unset状態）→ Mapper で DB null に変換
+    // IsSet=true: 実際の LocalDateTime 値 → Mapper で DB DateTime 値に変換
     public bool HasUpdated => IsSet;  // IsSet の別名
 }
 ```
@@ -533,9 +542,11 @@ public sealed class DeletedAt : PrimitiveValueObject<LocalDateTime?>
 #### 特徴
 - **用途**: 監査フィールド（最終更新日、削除日）
 - **DB**: NULL OK（未更新/未削除の場合）
-- **Unset 状態**: あり（IsSet=false で表現）
-- **TryFromDbValue(null)**: true（成功、Unset 状態）
+- **Unset 状態**: あり（IsSet=false で表現、Domain では LocalDateTime.MinValue を保持）
+- **DB への変換**: Mapper が IsSet=false を null に、IsSet=true を DateTime に変換
+- **TryFromDbValue(null)**: true（成功、Unset 状態に変換）
 - **別名**: HasUpdated（UpdatedAt）, IsDeleted（DeletedAt）
+- **重要**: LocalDateTime.MinValue はセンチネル値として予約済み。ビジネスロジックとして使用不可
 
 ---
 
@@ -568,14 +579,31 @@ public sealed class DeletedAt : PrimitiveValueObject<LocalDateTime?>
 ### 流れ（UpdatedAt の例）
 
 ```
+【Stage 1: DB層】
 DB: updated_at = NULL（未更新を示す）
-  ↓
+  
+【Stage 2: Repository の TryFromDbValue（層間フィルター）】
 Repository: UpdatedAt.TryFromDbValue(null)
   ↓
-Unset()に変換: new(LocalDateTime.MinValue, false)
+null → Unset() に変換: new(LocalDateTime.MinValue, isSet: false)
+  
+【Stage 3: Domain層】
+Domain: updatedAt.HasUpdated = false（未更新状態）
   ↓
-Domain: UpdatedAt.HasUpdated = false
-  → ビジネスロジック: if (!entity.UpdatedAt.HasUpdated) ...
+ビジネスロジック: if (!entity.UpdatedAt.HasUpdated) { ... }
+  （null チェック不要、IsSet フラグで状態判定）
+```
+
+**逆フロー（Entity → DB）:**
+```
+【Domain】
+updatedAt.IsSet = false, Value = LocalDateTime.MinValue
+
+【Mapper.ToDbModel（層間変換）】
+IsSet=false → (DateTime?)null
+
+【DB】
+updated_at = NULL
 ```
 
 ---
@@ -817,7 +845,7 @@ public sealed class YourAuditValueObject : PrimitiveValueObject<LocalDateTime?>
 
 ## 7. Mapper での双方向変換
 
-### 7.1 ToDbModel：Entity → DbModel（LocalDateTime → DateTime）
+### 7.1 ToDbModel：Entity → DbModel（層間変換：Domain の null-free → DB の null 許容）
 
 ```csharp
 public DbModel ToDbModel(Entity entity)
@@ -825,14 +853,20 @@ public DbModel ToDbModel(Entity entity)
     return new DbModel
     {
         // CreatedAt: 常に値がある（必須）
+        // Domain: LocalDateTime 値
+        // DB: DateTime 値に変換
         CreatedAtDb = entity.CreatedAt.ToDbValue(),
         
-        // UpdatedAt: IsSet に基づいて null/値を決定
+        // UpdatedAt: IsSet フラグに基づいて null/値を決定（層間フィルター）
+        // Domain: IsSet=false で LocalDateTime.MinValue → DB では null
+        //         IsSet=true で LocalDateTime 値 → DB では DateTime 値
         UpdatedAtDb = entity.UpdatedAt.IsSet
             ? entity.UpdatedAt.ToDbValue()
             : (DateTime?)null,
         
-        // DeletedAt: IsDeleted に基づいて null/値を決定
+        // DeletedAt: IsDeleted フラグに基づいて null/値を決定（層間フィルター）
+        // Domain: IsSet=false で LocalDateTime.MinValue → DB では null（未削除）
+        //         IsSet=true で LocalDateTime 値 → DB では DateTime 値（削除済み）
         DeletedAtDb = entity.DeletedAt.IsDeleted
             ? entity.DeletedAt.ToDbValue()
             : (DateTime?)null,
@@ -840,25 +874,43 @@ public DbModel ToDbModel(Entity entity)
 }
 ```
 
-### 7.2 ToDomainEntity：DbModel → Entity（DateTime → LocalDateTime）
+**重要な責務分離:**
+- **Domain層**: IsSet フラグで状態管理、常に LocalDateTime を保持（null-free）
+- **Mapper**: IsSet フラグに基づいて、Domain の値を DB の null/値に変換
+- **DB層**: NULL/値をネイティブに保存
+
+### 7.2 ToDomainEntity：DbModel → Entity（層間変換：DB の null 許容 → Domain の null-free）
 
 ```csharp
 public Entity ToDomainEntity(DbModel dbModel)
 {
-    // TryFromDbValue で自動的に null → Unset() に変換
+    // TryFromDbValue で自動的に DB の null → Unset() に変換（層間フィルター）
+    
+    // CreatedAt: DB NOT NULL → Domain LocalDateTime
     if (!CreatedAt.TryFromDbValue(dbModel.CreatedAtDb, out var createdAt))
         throw new InvalidOperationException("Invalid CreatedAt from DB");
     
+    // UpdatedAt: DB null → Unset() with LocalDateTime.MinValue / IsSet=false
+    //            DB 値 → From(LocalDateTime) with IsSet=true
     if (!UpdatedAt.TryFromDbValue(dbModel.UpdatedAtDb, out var updatedAt))
         throw new InvalidOperationException("Invalid UpdatedAt from DB");
     
+    // DeletedAt: DB null → Unset() with LocalDateTime.MinValue / IsSet=false（未削除）
+    //            DB 値 → From(LocalDateTime) with IsSet=true（削除済み）
     if (!DeletedAt.TryFromDbValue(dbModel.DeletedAtDb, out var deletedAt))
         throw new InvalidOperationException("Invalid DeletedAt from DB");
     
-    // すべて null-free 状態で Domain に渡す
+    // ============ 結果 ============
+    // すべての ValueObject が null-free 状態で Domain に渡される
+    // Domain層は IsSet フラグで状態判定、null チェック不要
     return Entity.Reconstruct(createdAt, updatedAt, deletedAt, ...);
 }
 ```
+
+**層間フィルターの保証:**
+- **DB → Repository**: DB の null/値を読み込む
+- **TryFromDbValue**: DB の null を Unset() に変換、値を LocalDateTime に変換
+- **Domain ← Repository**: すべて null-free の ValueObject が渡される
 
 ### 7.3 重要な責務分離
 
@@ -1059,5 +1111,6 @@ Domain層が null を含まないことを**型システムで保証**するた�
 
 | 版 | 日付 | 内容 |
 |---|------|------|
+| 1.1 | 2026-09-01 | Mapper での層間変換を明確化。Domain の null-free ← → DB の null 許容の変換フローを詳細説明。IsSet フラグと LocalDateTime.MinValue の役割を統一的に記述。Unset 状態の本質（セクション 1.3）と 3段階フロー（セクション 4）を改善。 |
 | 1.0 | 2026-08-08 | 初版：Option/Maybe パターン理論、3段階フロー、レイヤ別責務の統一的記述。既存2つのドキュメントを統合。 |
 

@@ -1,6 +1,8 @@
 namespace SupportAdvance.Contexts.Employee.Infrastructure.Mappers;
 
+using SupportAdvance.Common.Clocks;
 using SupportAdvance.Contexts.Employee.Domain.Entities;
+using SupportAdvance.Contexts.Employee.Domain.ValueObjects.DepartmentMembership;
 using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
 using SupportAdvance.Contexts.Employee.Infrastructure.Models;
 using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
@@ -13,68 +15,94 @@ using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 ///   - Domain/Application: ValueObject（型安全性）
 ///   - DbModel: プリミティブ型（ORM マッピング）
 ///   - Mapper: 変換ロジック（層の橋渡し）
+/// 【注意】監査フィールド（UpdatedAt/UpdatedBy）は Repository で管理
+/// 【テスト容易性】Clock 依存なし（純粋な型変換）
 /// </summary>
 public class EmployeeMapper
 {
     /// <summary>
     /// DbModel から Domain Entity に変換（読み込み用）
+    /// 【責務】DB の プリミティブ型 → Domain の ValueObject に変換
+    /// 【パラメータ】
+    ///   - dbModel: m_employees テーブルのデータ
+    ///   - personDbModel: m_persons テーブルのデータ（1:1 対応）
+    ///   - departmentMemberships: m_department_memberships テーブルのデータ（1:N 対応）
     /// </summary>
-    /// <param name="dbModel">データベースモデル</param>
-    /// <returns>ドメイン Entity</returns>
-    public Employee ToDomainEntity(EmployeeDbModel dbModel)
+    public Employee ToDomainEntity(
+        EmployeeDbModel dbModel,
+        PersonDbModel personDbModel,
+        List<DepartmentMembershipDbModel>? departmentMemberships = null)
     {
-        // 部署区分の文字列から Enum に変換
-        var division = dbModel.EmployeeCodeDivision switch
+        ArgumentNullException.ThrowIfNull(dbModel);
+        ArgumentNullException.ThrowIfNull(personDbModel);
+
+        // Person の変換（PersonMapper に委譲）
+        var person = PersonMapper.ToDomainEntity(personDbModel);
+
+        // ビジネス属性の変換
+        var typeDivision = BizDivision.FromDbValue(dbModel.BizDivision);
+        var bizId = BizId.From(dbModel.BizId);
+        var bizCode = BizCode.From(typeDivision, bizId);
+
+        var retiredOn = RetiredOn.Unset();
+        if (dbModel.RetiredOn.HasValue)
         {
-            "M" => EmployeeDivision.RegularEmployee(),
-            "T" => EmployeeDivision.Dispatched(),
-            "C" => EmployeeDivision.Contractor(),
-            _ => throw new InvalidOperationException(
-                $"Invalid employee division: {dbModel.EmployeeCodeDivision}")
-        };
+            retiredOn = RetiredOn.From(new LocalDateTime(dbModel.RetiredOn.Value));
+        }
 
-        var number = EmployeeNumber.From(dbModel.EmployeeCodeNumber);
-        var code = EmployeeCode.From(division, number);
+        // DepartmentMembership を Entity に変換
+        var memberships = new List<DepartmentMembership>();
+        if (departmentMemberships != null)
+        {
+            foreach (var dm in departmentMemberships)
+            {
+                var isPrimary = dm.IsPrimary ? IsPrimary.Primary() : IsPrimary.Secondary();
+                var endOn = dm.EndOn.HasValue ? EndOn.From(new LocalDateTime(dm.EndOn.Value)) : EndOn.Unset();
 
-        return Employee.Reconstruct(
-            EmployeeId.From(dbModel.EmployeeId),
+                var membership = DepartmentMembership.Create(
+                    DepartmentMembershipRowId.From(dm.RowId),
+                    EmployeeRowId.From(dm.EmployeeRowId),
+                    DepartmentRowId.From(dm.DepartmentRowId),
+                    isPrimary,
+                    endOn,
+                    dm.DepartmentName
+                );
+                memberships.Add(membership);
+            }
+        }
+
+        var employee = Employee.Reconstruct(
             EmployeeRowId.From(dbModel.RowId),
-            code,
-            PersonRowId.From(dbModel.PersonRowId)
+            typeDivision,
+            bizId,
+            bizCode,
+            retiredOn,
+            person,
+            memberships,
+            dbModel.RowVersion
         );
+        return employee;
     }
 
     /// <summary>
-    /// Domain Entity から DbModel に変換（Insert 用）
+    /// Domain Entity から DbModel に変換（Insert/Update 用）
+    /// 【責務】Domain の ValueObject → DB の プリミティブ型に変換
+    /// 【注意】監査フィールド（UpdatedAt/UpdatedBy）は Repository で設定
     /// </summary>
-    /// <param name="entity">ドメイン Entity</param>
-    /// <returns>DB 挿入用モデル</returns>
-    /// <remarks>
-    /// Insert 時には監査カラムを Repository で設定するため、ここでは設定しない
-    /// </remarks>
-    public EmployeeDbModel ToDbModel(Employee entity)
-    {
-        var divisionCode = ConvertDivisionToCode(entity.Code.Division);
-
-        return new EmployeeDbModel
+    public EmployeeDbModel ToDbModel(Employee entity) =>
+        new()
         {
-            EmployeeId = entity.Id.Value,
             RowId = entity.RowId.Value,
-            EmployeeCodeDivision = divisionCode,
-            EmployeeCodeNumber = entity.Code.Number.Value,
-            PersonRowId = entity.PersonRowId.Value,
-            // 監査カラムは Repository で設定
+            BizDivision = entity.TypeDivision.ToDbValue(),
+            BizId = entity.BizId.Value,
+            RetiredOn = entity.RetiredOn.IsSet ? entity.RetiredOn.Value.Value : null
         };
-    }
 
-    private string ConvertDivisionToCode(EmployeeDivision division)
-    {
-        if (division.IsRegularEmployee)
-            return "M";
-        if (division.IsDispatched)
-            return "T";
-        if (division.IsContractor)
-            return "C";
-        throw new InvalidOperationException($"Invalid division: {division}");
-    }
+    /// <summary>
+    /// Domain Person を DbModel に変換する際のヘルパーメソッド
+    /// 【責務】Employee.Person → PersonDbModel への変換
+    /// 【呼び出し元】Repository の SaveAsync メソッド
+    /// </summary>
+    public PersonDbModel ToPersonDbModel(Person person, long employeeRowId) =>
+        PersonMapper.ToDbModel(person, employeeRowId);
 }

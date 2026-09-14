@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using SupportAdvance.Contexts.Employee.Application.UseCases;
 using SupportAdvance.Presentation.WinTrial.ViewModels;
 using SupportAdvance.Presentation.WinTrial.Views;
 
@@ -18,10 +19,13 @@ public static class DependencyInjection
     {
         ArgumentNullException.ThrowIfNull(services);
 
-        // ViewModel を登録（DI で注入可能にする）
+        // Use Cases（Presentation が直接使用する場合）
+        services.AddScoped<GetEmployeeByBizIdUseCase>();
+
+        // ViewModels（ViewModel に Use Case を DI する）
         services.AddScoped<Form1ViewModel>();
 
-        // メインフォームをスコープ登録（Program.cs の CreateScope と整合）
+        // Views（Form に ViewModel を DI する）
         services.AddScoped<Form1>();
 
         return services;

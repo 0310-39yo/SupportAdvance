@@ -222,20 +222,26 @@ public class UserPreferencesDbModel
 }
 ```
 
-### Mapper での双方向変換
+### Mapper での双方向変換と責務分離
 
 Mapper は Entity ↔ DbModel の変換時に DateTime ↔ LocalDateTime を実装します。
+**重要**: 監査フィールド（CreatedAt, UpdatedAt, DeletedAt など）は Mapper では設定せず、Repository が設定します。
 
-**ToDbModel: Entity → DbModel** (LocalDateTime → DateTime):
+**ToDbModel: Entity → DbModel** (LocalDateTime → DateTime、ビジネスフィールドのみ):
 ```csharp
 public EmployeeDbModel ToDbModel(Employee entity)
 {
     return new EmployeeDbModel
     {
-        CreatedAt = entity.CreatedAt.Value,  // LocalDateTime → DateTime
+        // ビジネスフィールドのみ
+        RowId = entity.RowId.Value,
+        BizDivision = entity.TypeDivision.ToDbValue(),
         HireDate = entity.HireDate.HasValue 
             ? entity.HireDate.Value.Value  // LocalDateTime.Value で DateTime 取得
             : (DateTime?)null,
+        
+        // ❌ 監査フィールドは設定しない（Repository が責務を持つ）
+        // CreatedAt, CreatedBy, UpdatedAt, UpdatedBy は省略
     };
 }
 ```
@@ -253,6 +259,22 @@ public Employee ToDomainEntity(EmployeeDbModel dbModel, IClock clock)
         ...);
 }
 ```
+
+### Mapper と Repository の責務分離
+
+| 責務 | Mapper | Repository |
+|------|--------|-----------|
+| **ビジネスフィールド変換** | ✓ | - |
+| **DateTime ↔ LocalDateTime** | ✓ | - |
+| **CreatedAt/CreatedBy 設定** | ✗ | ✓ |
+| **UpdatedAt/UpdatedBy 設定** | ✗ | ✓ |
+| **DeletedAt/DeletedBy 設定** | ✗ | ✓ |
+| **テスト容易性** | Clock 依存なし（テストしやすい） | Clock 依存あり（DI経由） |
+
+**理由:**
+- Mapper は純粋な型変換のみに専念
+- 監査情報は「保存時刻」を記録する必要があり、Repository が実行時に取得すべき
+- Mapper の Clock 依存を削除することで、テスト容易性が向上
 
 ### DateTime の使用禁止の例外
 - **Clock の実装内部**：DateTime.Now, DateTime.UtcNow などは使用してもよい
@@ -406,6 +428,83 @@ if (!entity.UpdatedAt.HasUpdated) { ... }  // IsSet で状態判定
 
 ---
 
+## 🔗 Context間のデータ共有パターン
+
+複数の Bounded Context が別の Context のドメインモデル（Aggregate）情報を **リアルタイムに読み取る** 場合、**ジェネリック Query Service パターン** を採用します。
+
+### 問題
+
+- Domain Events は非同期・イベント駆動なため、「今この瞬間の最新データ」が必要な場合には不向き
+- Context別 Application層同士は参照禁止
+- 汎用Application層がContext固有のインターフェース（IEmployeeQuery など）を定義すると、Context肥大化
+
+### 解決法：ジェネリック Query Service パターン
+
+**1. 汎用Application層に抽象的なインターフェースを定義**
+
+```csharp
+// src/Application/Queries/IQueryService.cs
+namespace SupportAdvance.Application.Queries;
+
+public interface IQueryService<TAggregate, TId> 
+    where TAggregate : IAggregateRoot
+{
+    Task<TAggregate?> GetByIdAsync(TId id);
+}
+```
+
+**2. 各Contextが実装**
+
+```csharp
+// src/Contexts/Employee/Application/Queries/EmployeeQueryService.cs
+public class EmployeeQueryService : IQueryService<Employee, EmployeeId>
+{
+    private readonly IEmployeeRepository _repository;
+
+    public async Task<Employee?> GetByIdAsync(EmployeeId id)
+    {
+        return await _repository.GetByIdAsync(id);
+    }
+}
+```
+
+**3. 他のContextが使用**
+
+```csharp
+// src/Contexts/CarPreferences/Application/UseCases/UpdateCarPreferencesUseCase.cs
+public class UpdateCarPreferencesUseCase
+{
+    private readonly IQueryService<Employee, EmployeeId> _employeeQuery;
+
+    public async Task Execute(EmployeeId employeeId, CarModelRequest request)
+    {
+        var employee = await _employeeQuery.GetByIdAsync(employeeId);
+        if (employee == null)
+            throw new EmployeeNotFoundException();
+
+        var pref = new CarPreferences(employeeId, request.Model);
+        await _repository.SaveAsync(pref);
+    }
+}
+```
+
+**4. DI設定**
+
+```csharp
+// Program.cs
+services.AddScoped<IQueryService<Employee, EmployeeId>, EmployeeQueryService>();
+services.AddScoped<IQueryService<InsuranceProfile, InsuranceId>, InsuranceQueryService>();
+```
+
+### メリット
+
+✅ **汎用層が肥大化しない** — ジェネリック定義のみ  
+✅ **スケーラブル** — Aggregate追加時も構造不変  
+✅ **Context独立** — 各Context が自身の Aggregate を管理  
+✅ **依存方向が正** — Context別Application→汎用Application（正常方向）  
+
+---
+
 ## 📁 ドキュメント管理
 
 ### フォルダ構成
@@ -492,6 +591,16 @@ CREATE TABLE [dbo].[t_YourTable] (
 
 ---
 
+## 📝 更新履歴
+
+| 日付 | 更新内容 |
+|---|---|
+| 2026-09-10 | LocalDateTime 使用規則セクションを拡充。Mapper と Repository の責務分離を明確化：Mapper は純粋な型変換のみ（Clock 依存なし）、Repository が監査フィールド（CreatedAt/UpdatedAt/DeletedAt）設定を担当。責務分離表を追加。テスト容易性向上の理由を明記 |
+| 2026-07-30 | LocalDateTime 使用規則を追加。全層で IClock 経由の LocalDateTime 使用を明確化 |
+| 2026-07-09 | 初版作成。クリーンアーキテクチャ原則と新規プロジェクトチェックリスト |
+
+---
+
 ## 📚 参考資料
 
 - **CLEAN_ARCHITECTURE_GUIDELINES.md**: 詳細なガイドライン
@@ -523,6 +632,7 @@ CREATE TABLE [dbo].[t_YourTable] (
 
 | 日付 | 更新内容 |
 |---|---|
+| 2026-09-06 | Context間のデータ共有パターンを追加。ジェネリック Query Service `IQueryService<TAggregate, TId>` パターンを採用。複数Contextがリアルタイムにドメインモデル情報にアクセスするための標準パターン。汎用層肥大化を防止 |
 | 2026-07-31（後）| Application層の依存関係表を修正。汎用Application層と Bounded Context別Application層の区別を明記。「Application（Context別）→ Application（汎用層）」が IUseCase 実装パターンとして許可されることを追記 |
 | 2026-07-31 | CLEAN_ARCHITECTURE_GUIDELINES.md の実コードとの不一致修正に合わせて本ファイルも修正。Domain/Common/SharedKernel の依存関係表を実装に合わせて訂正、Crosscutting→Infrastructure禁止を明記、SlnArch（未検証）の記述をNetArchTest.Rulesへの参照に置き換え |
 | 2026-07-30 | LocalDateTime 使用規則を追加。全層で IClock 経由の LocalDateTime 使用を明確化 |

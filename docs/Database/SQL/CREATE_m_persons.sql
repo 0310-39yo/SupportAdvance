@@ -1,7 +1,7 @@
 USE [SupportAdvance]
 GO
 
-/****** Object:  Table [dbo].[m_persons]    Script Date: 2026/08/09 9:04:15 ******/
+/****** Object:  Table [dbo].[m_persons]    Script Date: 2026/09/07 5:35:34 ******/
 SET ANSI_NULLS ON
 GO
 
@@ -21,14 +21,14 @@ CREATE TABLE [dbo].[m_persons](
 	[first_name] [nvarchar](50) NOT NULL,
 	[last_name_kana] [nvarchar](50) NOT NULL,
 	[first_name_kana] [nvarchar](50) NOT NULL,
-PRIMARY KEY CLUSTERED 
+ CONSTRAINT [PK__m_person__6965AB5716155ECE] PRIMARY KEY CLUSTERED 
 (
 	[row_id] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
 
-ALTER TABLE [dbo].[m_persons] ADD  DEFAULT (NEXT VALUE FOR [dbo].[s_row_id_sequence]) FOR [row_id]
+ALTER TABLE [dbo].[m_persons] ADD  CONSTRAINT [DF_m_persons_row_id]  DEFAULT (NEXT VALUE FOR [dbo].[s_row_id_sequence]) FOR [row_id]
 GO
 
 ALTER TABLE [dbo].[m_persons] ADD  CONSTRAINT [DF_m_persons_created_at]  DEFAULT (sysdatetime()) FOR [created_at]

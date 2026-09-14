@@ -6,9 +6,9 @@ namespace SupportAdvance.Contexts.Employee.Application.Dtos;
 public record UpdateEmployeeRequest
 {
     /// <summary>
-    /// 更新対象の従業員ID（必須）
+    /// 更新対象の従業員RowId（必須）
     /// </summary>
-    public required Guid EmployeeId { get; init; }
+    public required long EmployeeRowId { get; init; }
 
     /// <summary>
     /// 新しい従業員区分コード（オプション、M/T/C のいずれか）

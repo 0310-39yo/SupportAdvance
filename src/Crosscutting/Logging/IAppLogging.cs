@@ -10,7 +10,7 @@ public interface IAppLogging<T>
     /// <summary>
     /// 情報レベルでログを出力
     /// </summary>
-    void LogInformation(string message);
+    void LogInformation(string? message);
 
     /// <summary>
     /// テンプレート + 引数で情報ログを出力

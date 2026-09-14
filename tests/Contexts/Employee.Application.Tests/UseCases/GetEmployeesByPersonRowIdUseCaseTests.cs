@@ -21,18 +21,25 @@ public class GetEmployeesByPersonRowIdUseCaseTests
     {
         // Arrange
         var (useCase, repository) = CreateUseCase();
-        var personRowId = 1L;
+        var personRowId = 100L;
+        var person = Person.Create(PersonRowId.From(personRowId), PersonLastName.From("山田"), PersonFirstName.From("太郎"), PersonLastNameKana.From("ヤマダ"), PersonFirstNameKana.From("タロウ"));
         var employee1 = Employee.Create(
-            EmployeeId.NewId(),
-            EmployeeRowId.From(1),
-            EmployeeCode.From(EmployeeDivision.RegularEmployee(), EmployeeNumber.From(1001)),
-            PersonRowId.From(personRowId)
+            EmployeeRowId.From(1L),
+            EmployeeTypeDivision.RegularEmployee(),
+            EmployeeBizId.From(1001),
+            EmployeeBizCode.From(EmployeeTypeDivision.RegularEmployee(), EmployeeBizId.From(1001)),
+            null,
+            person,
+            new List<DepartmentMembership>()
         );
         var employee2 = Employee.Create(
-            EmployeeId.NewId(),
-            EmployeeRowId.From(2),
-            EmployeeCode.From(EmployeeDivision.Dispatched(), EmployeeNumber.From(7502)),
-            PersonRowId.From(personRowId)
+            EmployeeRowId.From(2L),
+            EmployeeTypeDivision.Dispatched(),
+            EmployeeBizId.From(7502),
+            EmployeeBizCode.From(EmployeeTypeDivision.Dispatched(), EmployeeBizId.From(7502)),
+            null,
+            person,
+            new List<DepartmentMembership>()
         );
         await repository.AddAsync(employee1);
         await repository.AddAsync(employee2);
@@ -81,7 +88,7 @@ public class GetEmployeesByPersonRowIdUseCaseTests
     {
         var fixedDateTime = new DateTime(2026, 8, 11, 0, 0, 0, DateTimeKind.Unspecified);
         var clock = new MockClock(fixedDateTime);
-        var mapper = new EmployeeMapper();
+        var mapper = new EmployeeMapper(clock);
         var repository = new EmployeeRepository(mapper, clock);
         var useCase = new GetEmployeesByPersonRowIdUseCase(repository);
         return (useCase, repository);

@@ -54,6 +54,12 @@ public static class HostBuilderFactory
             {
                 NLogRegistrar.RegisterNLog(context);
                 services.Configure<AppSettings>(context.Configuration.GetSection(nameof(AppSettings)));
+
+                // IAppSettings を DI に登録（すべての設定値を統一して取得するため）
+                var appSettings = context.Configuration.GetSection(nameof(AppSettings)).Get<AppSettings>()
+                    ?? throw new InvalidOperationException("AppSettings section not found in configuration");
+                services.AddSingleton<IAppSettings>(appSettings);
+
                 // invoke layer registrations (Application/Infrastructure/Presentation etc.)
                 configureServices?.Invoke(context, services);
 

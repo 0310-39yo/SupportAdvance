@@ -30,9 +30,9 @@
     <ProjectReference Include="../../src/Crosscutting/Crosscutting.csproj" />
     <ProjectReference Include="../../src/Infrastructure/Infrastructure.csproj" />
     <ProjectReference Include="../../src/SharedKernel/SharedKernel.csproj" />
-    <ProjectReference Include="../../src/Contexts/Samples/CarPreferences.Domain/CarPreferences.Domain.csproj" />
-    <ProjectReference Include="../../src/Contexts/Samples/CarPreferences.Application/CarPreferences.Application.csproj" />
-    <ProjectReference Include="../../src/Contexts/Samples/CarPreferences.Infrastructure/CarPreferences.Infrastructure.csproj" />
+    <ProjectReference Include="../../src/Contexts/Employee/Employee.Domain/Employee.Domain.csproj" />
+    <ProjectReference Include="../../src/Contexts/Employee/Employee.Application/Employee.Application.csproj" />
+    <ProjectReference Include="../../src/Contexts/Employee/Employee.Infrastructure/Employee.Infrastructure.csproj" />
     <ProjectReference Include="../../src/Presentation/Shared/Shared.csproj" />
   </ItemGroup>
 

@@ -683,9 +683,8 @@ YourContext.Application/
 
 ## 参考資料
 
-- **Mapper_パターンガイド.md** — AggregateId ↔ RowId マッピング、複数テーブル集約の複数1:1マッピング
-- **Entity_設計ガイドライン.md** — Entity と AggregateId、複数テーブル集約の Entity 構造
+- **Mapper_パターンガイド.md** — RowId マッピング、複数テーブル集約の複数1:1マッピング
+- **Entity_設計ガイドライン.md** — Entity と RowId、複数テーブル集約の Entity 構造
 - **ORM_マッピング戦略.md** — LocalDateTime マッピング、複数テーブル集約のマッピング例
-- **AggregateId_設計ガイド.md** — GUID ベース ID の実装
 - **DbModel_設計ルール.md** — DbModel 設計
 

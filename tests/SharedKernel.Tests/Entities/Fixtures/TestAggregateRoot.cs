@@ -11,7 +11,7 @@ public sealed class TestAggregateRoot : AggregateRoot<TestId>
 
     public TestAggregateRoot(TestId id)
     {
-        Id = id;
+        RowId = id;
         Status = "Initial";
     }
 

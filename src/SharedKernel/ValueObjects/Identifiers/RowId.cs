@@ -1,53 +1,82 @@
+using SupportAdvance.SharedKernel.ValueObjects.Abstractions;
+
 namespace SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 /// <summary>
-/// データベース行を一意に識別する主キー値を表すValueObject
-/// 0は未採番状態を表し、DB採番後に実際のrowIdに更新される
+/// データベース行を一意に識別する主キー値を表す抽象基底クラス
+///
+/// 【責務】
+/// - long 型の行ID を型安全に管理
+/// - 派生クラスごとに MinValue（最小有効値）を定義
+/// - 派生クラスごとに Validate（検証ルール）を実装
+///
+/// 【継承パターン】
+/// - 必須型（MinValue 大于等于 1）: PersonRowId, DepartmentRowId, EmployeeRowId
+/// - オプション型（IsSetフラグで未設定表現）: ManagerEmployeeRowId, ParentDepartmentRowId
+///
+/// 【使用例】
+/// public sealed class PersonRowId : RowId
+/// {
+///     public const long MinValue = 1L;
+///
+///     private PersonRowId(long value) : base(value, true) { }
+///
+///     public static PersonRowId From(long value) => new(value);
+///
+///     public override void Validate(long normalized)
+///     {
+///         if (normalized &lt; MinValue)
+///             throw new ArgumentOutOfRangeException(...);
+///     }
+/// }
 /// </summary>
-public sealed class RowId : ValueObject, IEquatable<RowId>
+public abstract class RowId : PrimitiveValueObject<long>, IEquatable<RowId>
 {
-    private readonly long _value;
-
-    private RowId(long value)
+    /// <summary>
+    /// コンストラクタ（派生クラスからのみ呼び出し可能）
+    /// </summary>
+    /// <param name="value">行ID値</param>
+    /// <param name="isSet">IsSet の値。通常は true</param>
+    protected RowId(long value, bool isSet) : base(value, isSet)
     {
-        _value = value;
-        IsSet = true;
     }
 
     /// <summary>
-    /// 指定された値からRowIdを作成する
+    /// 未設定状態を表すコンストラクタ（オプション型用）
     /// </summary>
-    /// <param name="value">主キー値（0は未採番状態を表す）</param>
-    /// <returns>RowIdのインスタンス</returns>
-    public static RowId From(long value)
+    /// <param name="isSet">false</param>
+    protected RowId(bool isSet) : base(isSet)
     {
-        if (value < 0)
-        {
-            throw new ArgumentException("RowId must be non-negative.", nameof(value));
-        }
-
-        return new RowId(value);
     }
-
-    /// <summary>
-    /// 未採番状態のRowIdを作成する（value=0）
-    /// DB採番後に実際のrowIdに更新される想定
-    /// </summary>
-    /// <returns>value=0のRowIdのインスタンス</returns>
-    public static RowId New() => new(0);
 
     /// <summary>
     /// 保持する値を取得する
     /// </summary>
-    public long Value => _value;
+    public long Value => ValueField;
 
     /// <summary>
-    /// 等価性判定のための値コンポーネントを返す
+    /// 行ID値の検証を行う（派生クラスで実装）
+    ///
+    /// 【実装例】
+    /// public override void Validate(long normalized)
+    /// {
+    ///     if (normalized < MinValue)
+    ///         throw new ArgumentOutOfRangeException(...);
+    /// }
     /// </summary>
-    protected override IEnumerable<object?> GetValueComponents()
-    {
-        yield return _value;
-    }
+    /// <param name="normalized">検証対象の値</param>
+    public abstract override void Validate(long normalized);
+
+    /// <summary>
+    /// 派生クラスで From() static メソッドを実装してください
+    /// 【実装例】
+    /// public static PersonRowId From(long value) => new PersonRowId(value);
+    /// </summary>
+
+    /// <summary>
+    /// 文字列表現を返す
+    /// </summary>
+    public override string ToString() => ValueField.ToString();
 
     /// <summary>
     /// 指定されたオブジェクトと等価かどうかを判定する
@@ -55,7 +84,7 @@ public sealed class RowId : ValueObject, IEquatable<RowId>
     public override bool Equals(object? obj) => Equals(obj as RowId);
 
     /// <summary>
-    /// 指定されたRowIdと等価かどうかを判定する
+    /// 指定された RowId と等価かどうかを判定する
     /// </summary>
     public bool Equals(RowId? other)
     {
@@ -69,16 +98,11 @@ public sealed class RowId : ValueObject, IEquatable<RowId>
             return true;
         }
 
-        return _value == other._value;
+        return GetType() == other.GetType() && Value == other.Value;
     }
 
     /// <summary>
     /// ハッシュコードを取得する
     /// </summary>
-    public override int GetHashCode() => _value.GetHashCode();
-
-    /// <summary>
-    /// 文字列表現を返す
-    /// </summary>
-    public override string ToString() => _value.ToString();
+    public override int GetHashCode() => ValueField.GetHashCode();
 }

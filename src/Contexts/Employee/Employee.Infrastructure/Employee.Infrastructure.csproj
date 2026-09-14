@@ -7,10 +7,22 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Dapper" Version="2.1.79" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Employee.Domain\Employee.Domain.csproj" />
     <ProjectReference Include="..\Employee.Application\Employee.Application.csproj" />
+    <ProjectReference Include="..\..\..\Application\Application.csproj" />
+    <ProjectReference Include="..\..\..\Infrastructure\Infrastructure.csproj" />
     <ProjectReference Include="..\..\..\SharedKernel\SharedKernel.csproj" />
     <ProjectReference Include="..\..\..\Common\Common.csproj" />
+  </ItemGroup>
+
+  <!-- SQL ファイルを埋め込みリソースとして登録 -->
+  <ItemGroup>
+    <EmbeddedResource Include="Persistence/Sql/SqlServer/**/*.sql" />
+    <EmbeddedResource Include="Persistence/Sql/PostgreSQL/**/*.sql" />
   </ItemGroup>
 
 </Project>

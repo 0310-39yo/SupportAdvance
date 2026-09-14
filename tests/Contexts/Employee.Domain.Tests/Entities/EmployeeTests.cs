@@ -1,5 +1,9 @@
+using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Person;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
+
 namespace SupportAdvance.Tests.Contexts.Employee.Domain.Entities;
 
+using SupportAdvance.Common.Clocks;
 using SupportAdvance.Contexts.Employee.Domain.Entities;
 using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
 using Xunit;
@@ -9,140 +13,136 @@ using Xunit;
 /// </summary>
 public class EmployeeTests
 {
+    private static LocalDateTime GetTestDate() => new(new DateTime(2026, 8, 12, 10, 0, 0));
+
+    private readonly IClock _clock = new SystemClock();
+
+    private Employee CreateTestEmployee(
+        long rowId = 1L,
+        int bizId = 1234,
+        string? divisionCode = "M",
+        long personRowId = 1L)
+    {
+        var typeDivision = divisionCode switch
+        {
+            "M" => BizDivision.RegularEmployee(),
+            "T" => BizDivision.Dispatched(),
+            "C" => BizDivision.Contractor(),
+            _ => BizDivision.RegularEmployee()
+        };
+
+        var employeeBizId = BizId.From(bizId);
+        var bizCode = BizCode.From(typeDivision, employeeBizId);
+        var personRowIdVO = PersonRowId.From(personRowId);
+
+        var person = Person.Create(
+            personRowIdVO,
+            LastName.From("山田"),
+            FirstName.From("太郎"),
+            LastNameKana.From("ヤマダ"),
+            FirstNameKana.From("タロウ"));
+
+        return Employee.Create(
+            EmployeeRowId.From(rowId),
+            typeDivision,
+            employeeBizId,
+            bizCode,
+            null,
+            person,
+            new List<DepartmentMembership>()
+            );
+    }
+
     #region グループ 1: 生成メソッド（Create）
 
     [Fact]
     public void TestEMPCREATE01_CreateValidEmployeeReturnsValidEmployee()
     {
-        // Arrange
-        var id = EmployeeId.NewId();
-        var rowId = EmployeeRowId.From(1L);
-        var code = EmployeeCode.From(EmployeeDivision.RegularEmployee(), EmployeeNumber.From(1234));
-        var personRowId = PersonRowId.From(1L);
-
         // Act
-        var employee = Employee.Create(id, rowId, code, personRowId);
+        var employee = CreateTestEmployee();
 
         // Assert
         Assert.NotNull(employee);
-        Assert.Equal(id, employee.Id);
-        Assert.Equal(rowId, employee.RowId);
-        Assert.Equal(code, employee.Code);
-        Assert.Equal(personRowId, employee.PersonRowId);
+        Assert.Equal(1L, employee.RowId.Value);
+        Assert.Equal('M', employee.TypeDivision.Value);
+        Assert.Equal("01234", employee.BizId.ToString());
+        Assert.Equal("M01234", employee.BizCode.ToString());
+        Assert.Equal(1L, employee.Person.RowId.Value);
     }
 
     [Fact]
-    public void TestEMPCREATE02_CreateMultipleEmployeesWithDifferentCodes()
-    {
-        // Arrange & Act
-        var employee1 = Employee.Create(
-            EmployeeId.NewId(),
-            EmployeeRowId.From(1L),
-            EmployeeCode.From(EmployeeDivision.RegularEmployee(), EmployeeNumber.From(1234)),
-            PersonRowId.From(1L));
-
-        var employee2 = Employee.Create(
-            EmployeeId.NewId(),
-            EmployeeRowId.From(2L),
-            EmployeeCode.From(EmployeeDivision.RegularEmployee(), EmployeeNumber.From(5678)),
-            PersonRowId.From(2L));
-
-        // Assert
-        Assert.NotEqual(employee1.Id, employee2.Id);
-        Assert.NotEqual(employee1.Code, employee2.Code);
-    }
-
-    [Fact]
-    public void TestEMPCREATE03_CreateRegularEmployeeIsMRegularEmployee()
+    public void TestEMPCREATE02_CreateRegularEmployeeIsRegularEmployee()
     {
         // Act
-        var employee = Employee.Create(
-            EmployeeId.NewId(),
-            EmployeeRowId.From(1L),
-            EmployeeCode.From(EmployeeDivision.RegularEmployee(), EmployeeNumber.From(1234)),
-            PersonRowId.From(1L));
+        var employee = CreateTestEmployee(divisionCode: "M");
 
         // Assert
-        Assert.True(employee.Code.Division.IsRegularEmployee);
-        Assert.False(employee.Code.Division.IsDispatched);
-        Assert.False(employee.Code.Division.IsContractor);
+        Assert.True(employee.TypeDivision.IsRegularEmployee);
+        Assert.False(employee.TypeDivision.IsDispatched);
+        Assert.False(employee.TypeDivision.IsContractor);
     }
 
     [Fact]
-    public void TestEMPCREATE04_CreateDispatchedEmployeeIsTDispatched()
+    public void TestEMPCREATE03_CreateDispatchedEmployeeIsDispatched()
     {
         // Act
-        var employee = Employee.Create(
-            EmployeeId.NewId(),
-            EmployeeRowId.From(1L),
-            EmployeeCode.From(EmployeeDivision.Dispatched(), EmployeeNumber.From(7500)),
-            PersonRowId.From(1L));
+        var employee = CreateTestEmployee(bizId: 7500, divisionCode: "T");
 
         // Assert
-        Assert.True(employee.Code.Division.IsDispatched);
-        Assert.False(employee.Code.Division.IsRegularEmployee);
-        Assert.False(employee.Code.Division.IsContractor);
+        Assert.True(employee.TypeDivision.IsDispatched);
+        Assert.False(employee.TypeDivision.IsRegularEmployee);
+        Assert.False(employee.TypeDivision.IsContractor);
     }
 
     [Fact]
-    public void TestEMPCREATE05_CreateContractorEmployeeIsCContractor()
+    public void TestEMPCREATE04_CreateContractorEmployeeIsContractor()
     {
         // Act
-        var employee = Employee.Create(
-            EmployeeId.NewId(),
-            EmployeeRowId.From(1L),
-            EmployeeCode.From(EmployeeDivision.Contractor(), EmployeeNumber.From(8000)),
-            PersonRowId.From(1L));
+        var employee = CreateTestEmployee(bizId: 8000, divisionCode: "C");
 
         // Assert
-        Assert.True(employee.Code.Division.IsContractor);
-        Assert.False(employee.Code.Division.IsRegularEmployee);
-        Assert.False(employee.Code.Division.IsDispatched);
+        Assert.True(employee.TypeDivision.IsContractor);
+        Assert.False(employee.TypeDivision.IsRegularEmployee);
+        Assert.False(employee.TypeDivision.IsDispatched);
     }
 
     #endregion
 
-    #region グループ 2: 復元メソッド（Reconstruct）
+    #region グループ 2: オプションプロパティ（RetiredOn）
 
     [Fact]
-    public void TestEMPRECONSTRUCT01_ReconstructFromDbValuesReturnsValidEmployee()
+    public void TestEMPRETIRED01_CreateWithRetiredOnReturnsRetiredEmployee()
     {
         // Arrange
-        var id = EmployeeId.From(new Guid("12345678-1234-1234-1234-123456789012"));
         var rowId = EmployeeRowId.From(12345L);
-        var code = EmployeeCode.From(EmployeeDivision.RegularEmployee(), EmployeeNumber.From(1234));
+        var typeDivision = BizDivision.RegularEmployee();
+        var bizId = BizId.From(1234);
+        var bizCode = BizCode.From(typeDivision, bizId);
         var personRowId = PersonRowId.From(67890L);
+        var person = Person.Create(
+            personRowId,
+            LastName.From("山田"),
+            FirstName.From("太郎"),
+            LastNameKana.From("ヤマダ"),
+            FirstNameKana.From("タロウ"));
+        var retiredOn = RetiredOn.From(GetTestDate());
 
         // Act
-        var employee = Employee.Reconstruct(id, rowId, code, personRowId);
+        var employee = Employee.Create(
+            rowId,
+            typeDivision,
+            bizId,
+            bizCode,
+            retiredOn,
+            person,
+            new List<DepartmentMembership>()
+            );
 
         // Assert
         Assert.NotNull(employee);
-        Assert.Equal(id, employee.Id);
         Assert.Equal(rowId, employee.RowId);
-        Assert.Equal(code, employee.Code);
-        Assert.Equal(personRowId, employee.PersonRowId);
-    }
-
-    [Fact]
-    public void TestEMPRECONSTRUCT02_ReconstructMultipleEmployeesWithDifferentIds()
-    {
-        // Arrange & Act
-        var employee1 = Employee.Reconstruct(
-            EmployeeId.From(new Guid("12345678-1234-1234-1234-123456789012")),
-            EmployeeRowId.From(1L),
-            EmployeeCode.From(EmployeeDivision.RegularEmployee(), EmployeeNumber.From(1234)),
-            PersonRowId.From(1L));
-
-        var employee2 = Employee.Reconstruct(
-            EmployeeId.From(new Guid("87654321-4321-4321-4321-210987654321")),
-            EmployeeRowId.From(2L),
-            EmployeeCode.From(EmployeeDivision.RegularEmployee(), EmployeeNumber.From(5678)),
-            PersonRowId.From(2L));
-
-        // Assert
-        Assert.NotEqual(employee1.Id, employee2.Id);
-        Assert.NotEqual(employee1.RowId, employee2.RowId);
+        Assert.True(employee.RetiredOn?.HasRetired == true);
+        Assert.Equal(GetTestDate(), employee.RetiredOn?.Value);
     }
 
     #endregion
@@ -150,97 +150,58 @@ public class EmployeeTests
     #region グループ 3: プロパティアクセス
 
     [Fact]
-    public void TestEMPPROP01_IdPropertyReturnsEmployeeId()
+    public void TestEMPPROP01_RowIdPropertyReturnsEmployeeRowId()
     {
         // Arrange
-        var id = EmployeeId.NewId();
-        var employee = Employee.Create(
-            id,
-            EmployeeRowId.From(1L),
-            EmployeeCode.From(EmployeeDivision.RegularEmployee(), EmployeeNumber.From(1234)),
-            PersonRowId.From(1L));
-
-        // Act
-        var resultId = employee.Id;
-
-        // Assert
-        Assert.Equal(id, resultId);
-    }
-
-    [Fact]
-    public void TestEMPPROP02_RowIdPropertyReturnsEmployeeRowId()
-    {
-        // Arrange
-        var rowId = EmployeeRowId.From(12345L);
-        var employee = Employee.Create(
-            EmployeeId.NewId(),
-            rowId,
-            EmployeeCode.From(EmployeeDivision.RegularEmployee(), EmployeeNumber.From(1234)),
-            PersonRowId.From(1L));
+        var employee = CreateTestEmployee(rowId: 12345L);
 
         // Act
         var resultRowId = employee.RowId;
 
         // Assert
-        Assert.Equal(rowId, resultRowId);
+        Assert.Equal(12345L, resultRowId.Value);
     }
 
     [Fact]
-    public void TestEMPPROP03_CodePropertyReturnsEmployeeCode()
+    public void TestEMPPROP02_TypeDivisionPropertyReturnsTypeDivision()
     {
         // Arrange
-        var code = EmployeeCode.From(EmployeeDivision.RegularEmployee(), EmployeeNumber.From(1234));
-        var employee = Employee.Create(
-            EmployeeId.NewId(),
-            EmployeeRowId.From(1L),
-            code,
-            PersonRowId.From(1L));
+        var employee = CreateTestEmployee(divisionCode: "M");
 
         // Act
-        var resultCode = employee.Code;
+        var resultTypeDivision = employee.TypeDivision;
 
         // Assert
-        Assert.Equal(code, resultCode);
-        Assert.NotNull(resultCode.Division);
-        Assert.NotNull(resultCode.Number);
+        Assert.Equal('M', resultTypeDivision.Value);
+        Assert.True(resultTypeDivision.IsRegularEmployee);
     }
 
     [Fact]
-    public void TestEMPPROP04_PersonRowIdPropertyReturnsPersonRowId()
+    public void TestEMPPROP03_BizCodePropertyReturnsBizCode()
     {
         // Arrange
-        var personRowId = PersonRowId.From(67890L);
-        var employee = Employee.Create(
-            EmployeeId.NewId(),
-            EmployeeRowId.From(1L),
-            EmployeeCode.From(EmployeeDivision.RegularEmployee(), EmployeeNumber.From(1234)),
-            personRowId);
+        var employee = CreateTestEmployee();
 
         // Act
-        var resultPersonRowId = employee.PersonRowId;
+        var resultBizCode = employee.BizCode;
 
         // Assert
-        Assert.Equal(personRowId, resultPersonRowId);
+        Assert.Equal("M01234", resultBizCode.ToString());
     }
 
     [Fact]
-    public void TestEMPPROP05_PropertiesAreReadOnly()
+    public void TestEMPPROP04_PersonInfoPropertyReturnsPerson()
     {
         // Arrange
-        var employee = Employee.Create(
-            EmployeeId.NewId(),
-            EmployeeRowId.From(1L),
-            EmployeeCode.From(EmployeeDivision.RegularEmployee(), EmployeeNumber.From(1234)),
-            PersonRowId.From(1L));
+        var employee = CreateTestEmployee(personRowId: 67890L);
 
-        // Act & Assert
-        // 以下はコンパイルエラーになる（CS0200: Property cannot be assigned to）
-        // employee.Code = newCode;
-        // employee.RowId = newRowId;
-        // employee.PersonRowId = newPersonRowId;
+        // Act
+        var resultPersonInfo = employee.Person;
 
-        // 読み取りのみ可能
-        Assert.NotNull(employee.Code);
+        // Assert
+        Assert.NotNull(resultPersonInfo);
+        Assert.Equal(67890L, resultPersonInfo.RowId.Value);
+        Assert.Equal("山田", resultPersonInfo.LastName.Value);
     }
 
     #endregion
@@ -248,41 +209,22 @@ public class EmployeeTests
     #region グループ 4: 等価性（Equality）
 
     [Fact]
-    public void TestEMPEQ01_SameEmployeeIdAreEqual()
+    public void TestEMPEQ01_SameRowIdAreEqual()
     {
         // Arrange
-        var id = EmployeeId.NewId();
-        var employee1 = Employee.Create(
-            id,
-            EmployeeRowId.From(1L),
-            EmployeeCode.From(EmployeeDivision.RegularEmployee(), EmployeeNumber.From(1234)),
-            PersonRowId.From(1L));
-
-        var employee2 = Employee.Create(
-            id,  // 同じ ID
-            EmployeeRowId.From(2L),  // 異なる RowId
-            EmployeeCode.From(EmployeeDivision.RegularEmployee(), EmployeeNumber.From(5678)),  // 異なる Code
-            PersonRowId.From(2L));  // 異なる PersonRowId
+        var employee1 = CreateTestEmployee(rowId: 1L);
+        var employee2 = CreateTestEmployee(rowId: 1L, bizId: 5678);
 
         // Assert
-        Assert.Equal(employee1, employee2);  // Entity<TId> は Id で比較
+        Assert.Equal(employee1, employee2);  // Entity<TId> は RowId で比較
     }
 
     [Fact]
-    public void TestEMPEQ02_DifferentEmployeeIdAreNotEqual()
+    public void TestEMPEQ02_DifferentRowIdAreNotEqual()
     {
         // Arrange
-        var employee1 = Employee.Create(
-            EmployeeId.NewId(),
-            EmployeeRowId.From(1L),
-            EmployeeCode.From(EmployeeDivision.RegularEmployee(), EmployeeNumber.From(1234)),
-            PersonRowId.From(1L));
-
-        var employee2 = Employee.Create(
-            EmployeeId.NewId(),  // 異なる ID
-            EmployeeRowId.From(1L),
-            EmployeeCode.From(EmployeeDivision.RegularEmployee(), EmployeeNumber.From(1234)),
-            PersonRowId.From(1L));
+        var employee1 = CreateTestEmployee(rowId: 1L);
+        var employee2 = CreateTestEmployee(rowId: 2L);
 
         // Assert
         Assert.NotEqual(employee1, employee2);
@@ -292,104 +234,60 @@ public class EmployeeTests
     public void TestEMPEQ03_HashCodesAreEqual()
     {
         // Arrange
-        var id = EmployeeId.NewId();
-        var employee1 = Employee.Create(
-            id,
-            EmployeeRowId.From(1L),
-            EmployeeCode.From(EmployeeDivision.RegularEmployee(), EmployeeNumber.From(1234)),
-            PersonRowId.From(1L));
-
-        var employee2 = Employee.Create(
-            id,
-            EmployeeRowId.From(2L),
-            EmployeeCode.From(EmployeeDivision.RegularEmployee(), EmployeeNumber.From(5678)),
-            PersonRowId.From(2L));
+        var employee1 = CreateTestEmployee(rowId: 1L);
+        var employee2 = CreateTestEmployee(rowId: 1L, bizId: 5678);
 
         // Assert
         Assert.Equal(employee1.GetHashCode(), employee2.GetHashCode());
     }
 
-    [Fact]
-    public void TestEMPEQ04_CanBeUsedAsDictionaryKey()
-    {
-        // Arrange
-        var id = EmployeeId.NewId();
-        var employee1 = Employee.Create(
-            id,
-            EmployeeRowId.From(1L),
-            EmployeeCode.From(EmployeeDivision.RegularEmployee(), EmployeeNumber.From(1234)),
-            PersonRowId.From(1L));
-
-        var employee2 = Employee.Create(
-            id,
-            EmployeeRowId.From(2L),
-            EmployeeCode.From(EmployeeDivision.RegularEmployee(), EmployeeNumber.From(5678)),
-            PersonRowId.From(2L));
-
-        var dict = new Dictionary<Employee, string>();
-
-        // Act
-        dict.Add(employee1, "Employee1");
-        dict[employee2] = "Employee2";  // 同じ ID なので上書き
-
-        // Assert
-        Assert.Single(dict);
-        Assert.Equal("Employee2", dict[employee1]);
-    }
-
-    [Fact]
-    public void TestEMPEQ05_EqualsNullReturnsFalse()
-    {
-        // Arrange
-        var employee = Employee.Create(
-            EmployeeId.NewId(),
-            EmployeeRowId.From(1L),
-            EmployeeCode.From(EmployeeDivision.RegularEmployee(), EmployeeNumber.From(1234)),
-            PersonRowId.From(1L));
-
-        // Act & Assert
-        Assert.False(employee.Equals(null));
-    }
-
     #endregion
 
-    #region グループ 5: 統合テスト
+    #region グループ 5: 勤務状態判定
 
     [Fact]
-    public void TestEMPINTEG01_AllPropertiesAreCoherent()
+    public void TestEMPSTATE01_IsActiveReturnsTrueForCurrentEmployee()
     {
         // Arrange
-        var id = EmployeeId.NewId();
-        var rowId = EmployeeRowId.From(12345L);
-        var code = EmployeeCode.From(EmployeeDivision.RegularEmployee(), EmployeeNumber.From(1234));
-        var personRowId = PersonRowId.From(67890L);
+        var employee = CreateTestEmployee();
+        var checkDate = GetTestDate();
 
         // Act
-        var employee = Employee.Create(id, rowId, code, personRowId);
+        var isActive = employee.IsActive(checkDate);
 
-        // Assert - すべてのプロパティが有効
-        Assert.NotEqual(Guid.Empty, employee.Id.Value);
-        Assert.Equal(12345L, employee.RowId.Value);
-        Assert.Equal("M1234", employee.Code.ToString());
-        Assert.Equal(67890L, employee.PersonRowId.Value);
+        // Assert
+        Assert.True(isActive);
     }
 
     [Fact]
-    public void TestEMPINTEG02_PropertyImmutability()
+    public void TestEMPSTATE02_IsActiveReturnsFalseForRetiredEmployee()
     {
         // Arrange
-        var employee = Employee.Create(
-            EmployeeId.NewId(),
+        var now = GetTestDate();
+        var retiredOn = RetiredOn.From(now);
+        var personRowId = PersonRowId.From(1L);
+        var person = Person.Create(
+            personRowId,
+            LastName.From("山田"),
+            FirstName.From("太郎"),
+            LastNameKana.From("ヤマダ"),
+            FirstNameKana.From("タロウ"));
+
+        var retiredEmployee = Employee.Create(
             EmployeeRowId.From(1L),
-            EmployeeCode.From(EmployeeDivision.RegularEmployee(), EmployeeNumber.From(1234)),
-            PersonRowId.From(1L));
+            BizDivision.RegularEmployee(),
+            BizId.From(1234),
+            BizCode.From(BizDivision.RegularEmployee(), BizId.From(1234)),
+            retiredOn,
+            person,
+            new List<DepartmentMembership>()
+            );
 
         // Act
-        var code1 = employee.Code;
-        var code2 = employee.Code;
+        var isActive = retiredEmployee.IsActive(now);
 
         // Assert
-        Assert.Same(code1, code2);  // 同じインスタンス（値が変わらない）
+        Assert.False(isActive);
     }
 
     #endregion
@@ -397,15 +295,11 @@ public class EmployeeTests
     #region グループ 6: ValueObject 検証統合
 
     [Fact]
-    public void TestEMPVO01_InvalidEmployeeCodeThrowsException()
+    public void TestEMPVO01_InvalidBizIdThrowsException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentException>(() =>
-            Employee.Create(
-                EmployeeId.NewId(),
-                EmployeeRowId.From(1L),
-                EmployeeCode.From(EmployeeDivision.RegularEmployee(), EmployeeNumber.From(7500)),  // 無効
-                PersonRowId.From(1L)));
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            CreateTestEmployee(bizId: 1000));  // 1000は予約済み
     }
 
     [Fact]
@@ -413,11 +307,7 @@ public class EmployeeTests
     {
         // Act & Assert
         Assert.Throws<ArgumentOutOfRangeException>(() =>
-            Employee.Create(
-                EmployeeId.NewId(),
-                EmployeeRowId.From(0L),  // 無効
-                EmployeeCode.From(EmployeeDivision.RegularEmployee(), EmployeeNumber.From(1234)),
-                PersonRowId.From(1L)));
+            CreateTestEmployee(rowId: 0L));  // 無効
     }
 
     [Fact]
@@ -425,11 +315,7 @@ public class EmployeeTests
     {
         // Act & Assert
         Assert.Throws<ArgumentOutOfRangeException>(() =>
-            Employee.Create(
-                EmployeeId.NewId(),
-                EmployeeRowId.From(1L),
-                EmployeeCode.From(EmployeeDivision.RegularEmployee(), EmployeeNumber.From(1234)),
-                PersonRowId.From(0L)));  // 無効
+            CreateTestEmployee(personRowId: 0L));  // 無効
     }
 
     #endregion

@@ -10,13 +10,15 @@ public static class DependencyInjection
 {
     /// <summary>
     /// Application層の共通サービスを登録します。
+    /// 【注記】各 Context の Application 層との依存を避けるため、
+    /// 具体的な Context の登録は Program.cs で直接呼び出します。
     /// </summary>
     public static IServiceCollection AddApplicationModels(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);
 
-        // 各コンテキストの Application を登録します
-        // 例：services.AddCarPreferencesApplicationModels();
+        // 汎用 Application サービスをここで登録
+        // 各 Context の具体的な登録は Program.cs で実施
 
         return services;
     }

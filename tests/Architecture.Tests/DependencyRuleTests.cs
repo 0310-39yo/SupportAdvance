@@ -19,13 +19,13 @@ public class DependencyRuleTests
     public void Domain_Should_Not_DependOn_ApplicationOrInfrastructure()
     {
         var result = Types
-            .InAssembly(typeof(SupportAdvance.Contexts.Samples.CarPreferences.Domain.ValueObjects.CarModel).Assembly)
+            .InAssembly(typeof(SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee.BizDivision).Assembly)
             .ShouldNot()
             .HaveDependencyOnAny(
                 "SupportAdvance.Application",
-                "SupportAdvance.Contexts.Samples.CarPreferences.Application",
+                "SupportAdvance.Contexts.Employee.Application",
                 "SupportAdvance.Infrastructure",
-                "SupportAdvance.Contexts.Samples.CarPreferences.Infrastructure",
+                "SupportAdvance.Contexts.Employee.Infrastructure",
                 "SupportAdvance.Presentation")
             .GetResult();
 
@@ -121,7 +121,7 @@ public class DependencyRuleTests
 
         // Context別 Application 層（CarPreferences.Application）の検証
         var contextAppResult = Types
-            .InAssembly(typeof(SupportAdvance.Contexts.Samples.CarPreferences.Application.DependencyInjection).Assembly)
+            .InAssembly(typeof(SupportAdvance.Contexts.Employee.Domain.Entities.Employee).Assembly)
             .ShouldNot()
             .HaveDependencyOnAny(
                 "SupportAdvance.Infrastructure",
@@ -152,7 +152,7 @@ public class DependencyRuleTests
 
         // Context別 Infrastructure
         var contextInfraResult = Types
-            .InAssembly(typeof(SupportAdvance.Contexts.Samples.CarPreferences.Infrastructure.DependencyInjection).Assembly)
+            .InAssembly(typeof(SupportAdvance.Contexts.Employee.Infrastructure.Mappers.EmployeeMapper).Assembly)
             .ShouldNot()
             .HaveDependencyOn("SupportAdvance.Presentation")
             .GetResult();
@@ -174,9 +174,9 @@ public class DependencyRuleTests
             .ShouldNot()
             .HaveDependencyOnAny(
                 "SupportAdvance.Contexts",
-                "SupportAdvance.Contexts.Samples.CarPreferences.Application",
-                "SupportAdvance.Contexts.Samples.CarPreferences.Domain",
-                "SupportAdvance.Contexts.Samples.CarPreferences.Infrastructure")
+                "SupportAdvance.Contexts.Employee.Application",
+                "SupportAdvance.Contexts.Employee.Domain",
+                "SupportAdvance.Contexts.Employee.Infrastructure")
             .GetResult();
 
         Assert.True(result.IsSuccessful,

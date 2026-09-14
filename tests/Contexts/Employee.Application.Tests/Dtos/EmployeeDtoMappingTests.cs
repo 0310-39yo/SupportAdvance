@@ -17,12 +17,14 @@ public class EmployeeDtoMappingTests
     public void Test1_1_EmployeeDto_ToDto_MapsAllFields()
     {
         // Arrange
-        var id = EmployeeId.NewId();
         var employee = Employee.Create(
-            id,
             EmployeeRowId.From(100),
-            EmployeeCode.From(EmployeeDivision.RegularEmployee(), EmployeeNumber.From(1001)),
-            PersonRowId.From(50)
+            EmployeeTypeDivision.RegularEmployee(),
+            EmployeeBizId.From(1001),
+            EmployeeBizCode.From(EmployeeTypeDivision.RegularEmployee(), EmployeeBizId.From(1001)),
+            null,
+            Person.Create(PersonRowId.From(50), PersonLastName.From("山田"), PersonFirstName.From("太郎"), PersonLastNameKana.From("ヤマダ"), PersonFirstNameKana.From("タロウ")),
+            new List<DepartmentMembership>()
         );
 
         // Act
@@ -30,10 +32,9 @@ public class EmployeeDtoMappingTests
 
         // Assert
         Assert.NotNull(dto);
-        Assert.Equal(id.Value, dto.Id);
         Assert.Equal(100, dto.RowId);
         Assert.Equal(50, dto.PersonRowId);
-        Assert.NotEmpty(dto.Code);
+        Assert.NotEmpty(dto.BizCode);
     }
 
     [Fact]
@@ -41,41 +42,55 @@ public class EmployeeDtoMappingTests
     {
         // Arrange
         var employee = Employee.Create(
-            EmployeeId.NewId(),
             EmployeeRowId.From(1),
-            EmployeeCode.From(EmployeeDivision.RegularEmployee(), EmployeeNumber.From(1234)),
-            PersonRowId.From(1)
+            EmployeeTypeDivision.RegularEmployee(),
+            EmployeeBizId.From(1234),
+            EmployeeBizCode.From(EmployeeTypeDivision.RegularEmployee(), EmployeeBizId.From(1234)),
+            null,
+            Person.Create(PersonRowId.From(1), PersonLastName.From("山田"), PersonFirstName.From("太郎"), PersonLastNameKana.From("ヤマダ"), PersonFirstNameKana.From("タロウ")),
+            new List<DepartmentMembership>()
         );
 
         // Act
         var dto = employee.ToDto();
 
         // Assert
-        Assert.Contains("M", dto.Code);
-        Assert.Contains("1234", dto.Code);
+        Assert.Contains("M", dto.BizCode);
+        Assert.Contains("1234", dto.BizCode);
     }
 
     [Fact]
     public void Test1_3_EmployeeDto_ToDto_WithDifferentDivisions()
     {
         // Arrange
+        var person = Person.Create(PersonRowId.From(1), PersonLastName.From("山田"), PersonFirstName.From("太郎"), PersonLastNameKana.From("ヤマダ"), PersonFirstNameKana.From("タロウ"));
+
         var employee1 = Employee.Create(
-            EmployeeId.NewId(),
             EmployeeRowId.From(1),
-            EmployeeCode.From(EmployeeDivision.RegularEmployee(), EmployeeNumber.From(1001)),
-            PersonRowId.From(1)
+            EmployeeTypeDivision.RegularEmployee(),
+            EmployeeBizId.From(1001),
+            EmployeeBizCode.From(EmployeeTypeDivision.RegularEmployee(), EmployeeBizId.From(1001)),
+            null,
+            person,
+            new List<DepartmentMembership>()
         );
         var employee2 = Employee.Create(
-            EmployeeId.NewId(),
             EmployeeRowId.From(2),
-            EmployeeCode.From(EmployeeDivision.Dispatched(), EmployeeNumber.From(7501)),
-            PersonRowId.From(1)
+            EmployeeTypeDivision.Dispatched(),
+            EmployeeBizId.From(7501),
+            EmployeeBizCode.From(EmployeeTypeDivision.Dispatched(), EmployeeBizId.From(7501)),
+            null,
+            person,
+            new List<DepartmentMembership>()
         );
         var employee3 = Employee.Create(
-            EmployeeId.NewId(),
             EmployeeRowId.From(3),
-            EmployeeCode.From(EmployeeDivision.Contractor(), EmployeeNumber.From(8001)),
-            PersonRowId.From(1)
+            EmployeeTypeDivision.Contractor(),
+            EmployeeBizId.From(8001),
+            EmployeeBizCode.From(EmployeeTypeDivision.Contractor(), EmployeeBizId.From(8001)),
+            null,
+            person,
+            new List<DepartmentMembership>()
         );
 
         // Act
@@ -84,9 +99,9 @@ public class EmployeeDtoMappingTests
         var dto3 = employee3.ToDto();
 
         // Assert
-        Assert.Contains("M", dto1.Code);
-        Assert.Contains("T", dto2.Code);
-        Assert.Contains("C", dto3.Code);
+        Assert.Contains("M", dto1.BizCode);
+        Assert.Contains("T", dto2.BizCode);
+        Assert.Contains("C", dto3.BizCode);
     }
 
     #endregion

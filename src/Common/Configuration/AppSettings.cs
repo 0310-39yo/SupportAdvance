@@ -22,6 +22,9 @@ public class AppSettings : IAppSettings
     public IClockSettings ClockSettings { get; init; } = new ClockSettings();
 
     /// <inheritdoc />
+    public string ActiveDirectoryDomain { get; init; } = "YOUR_DOMAIN";
+
+    /// <inheritdoc />
     public string ApplicationBuildType { get; init; } = DebugBuild;
 
     /// <inheritdoc />
@@ -44,4 +47,9 @@ public class AppSettings : IAppSettings
 
     /// <inheritdoc />
     public Dictionary<string, string> ConnectionStrings { get; init; } = new();
+
+    /// <summary>
+    /// データベース設定
+    /// </summary>
+    public DatabaseSettings Database { get; init; } = new();
 }

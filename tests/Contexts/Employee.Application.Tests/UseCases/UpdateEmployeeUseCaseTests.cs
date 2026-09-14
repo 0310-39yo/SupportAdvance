@@ -22,18 +22,22 @@ public class UpdateEmployeeUseCaseTests
     {
         // Arrange
         var (useCase, repository) = CreateUseCase();
-        var id = EmployeeId.NewId();
+        var rowId = EmployeeRowId.From(1L);
+        var person = Person.Create(PersonRowId.From(100L), PersonLastName.From("山田"), PersonFirstName.From("太郎"), PersonLastNameKana.From("ヤマダ"), PersonFirstNameKana.From("タロウ"));
         var employee = Employee.Create(
-            id,
-            EmployeeRowId.From(1),
-            EmployeeCode.From(EmployeeDivision.RegularEmployee(), EmployeeNumber.From(1001)),
-            PersonRowId.From(1)
+            rowId,
+            EmployeeTypeDivision.RegularEmployee(),
+            EmployeeBizId.From(1001),
+            EmployeeBizCode.From(EmployeeTypeDivision.RegularEmployee(), EmployeeBizId.From(1001)),
+            null,
+            person,
+            new List<DepartmentMembership>()
         );
         await repository.AddAsync(employee);
 
         var request = new UpdateEmployeeRequest
         {
-            EmployeeId = id.Value,
+            EmployeeRowId = rowId.Value,
             DivisionCode = "T",
             EmployeeNumber = 7501  // 派遣社員は 7500-7999 の範囲
         };
@@ -43,7 +47,7 @@ public class UpdateEmployeeUseCaseTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(id.Value, result.Id);
+        Assert.Equal(rowId.Value, result.RowId);
     }
 
     #endregion
@@ -57,7 +61,7 @@ public class UpdateEmployeeUseCaseTests
         var (useCase, _) = CreateUseCase();
         var request = new UpdateEmployeeRequest
         {
-            EmployeeId = EmployeeId.NewId().Value,
+            EmployeeRowId = 99999L,
             DivisionCode = "T",
             EmployeeNumber = 7501
         };
@@ -71,18 +75,22 @@ public class UpdateEmployeeUseCaseTests
     {
         // Arrange
         var (useCase, repository) = CreateUseCase();
-        var id = EmployeeId.NewId();
+        var rowId = EmployeeRowId.From(1L);
+        var person = Person.Create(PersonRowId.From(100L), PersonLastName.From("山田"), PersonFirstName.From("太郎"), PersonLastNameKana.From("ヤマダ"), PersonFirstNameKana.From("タロウ"));
         var employee = Employee.Create(
-            id,
-            EmployeeRowId.From(1),
-            EmployeeCode.From(EmployeeDivision.RegularEmployee(), EmployeeNumber.From(1001)),
-            PersonRowId.From(1)
+            rowId,
+            EmployeeTypeDivision.RegularEmployee(),
+            EmployeeBizId.From(1001),
+            EmployeeBizCode.From(EmployeeTypeDivision.RegularEmployee(), EmployeeBizId.From(1001)),
+            null,
+            person,
+            new List<DepartmentMembership>()
         );
         await repository.AddAsync(employee);
 
         var request = new UpdateEmployeeRequest
         {
-            EmployeeId = id.Value,
+            EmployeeRowId = rowId.Value,
             DivisionCode = "X",  // ← 無効
             EmployeeNumber = 1002
         };
@@ -96,18 +104,22 @@ public class UpdateEmployeeUseCaseTests
     {
         // Arrange
         var (useCase, repository) = CreateUseCase();
-        var id = EmployeeId.NewId();
+        var rowId = EmployeeRowId.From(1L);
+        var person = Person.Create(PersonRowId.From(100L), PersonLastName.From("山田"), PersonFirstName.From("太郎"), PersonLastNameKana.From("ヤマダ"), PersonFirstNameKana.From("タロウ"));
         var employee = Employee.Create(
-            id,
-            EmployeeRowId.From(1),
-            EmployeeCode.From(EmployeeDivision.RegularEmployee(), EmployeeNumber.From(1001)),
-            PersonRowId.From(1)
+            rowId,
+            EmployeeTypeDivision.RegularEmployee(),
+            EmployeeBizId.From(1001),
+            EmployeeBizCode.From(EmployeeTypeDivision.RegularEmployee(), EmployeeBizId.From(1001)),
+            null,
+            person,
+            new List<DepartmentMembership>()
         );
         await repository.AddAsync(employee);
 
         var request = new UpdateEmployeeRequest
         {
-            EmployeeId = id.Value,
+            EmployeeRowId = rowId.Value,
             DivisionCode = "M",
             EmployeeNumber = 1000  // ← 無効（1001以上）
         };
@@ -117,13 +129,13 @@ public class UpdateEmployeeUseCaseTests
     }
 
     [Fact]
-    public async Task Test2_4_UpdateEmployee_WithEmptyId_ThrowsException()
+    public async Task Test2_4_UpdateEmployee_WithZeroId_ThrowsException()
     {
         // Arrange
         var (useCase, _) = CreateUseCase();
         var request = new UpdateEmployeeRequest
         {
-            EmployeeId = Guid.Empty,
+            EmployeeRowId = 0L,
             DivisionCode = "T",
             EmployeeNumber = 2001
         };
@@ -140,7 +152,7 @@ public class UpdateEmployeeUseCaseTests
     {
         var fixedDateTime = new DateTime(2026, 8, 11, 0, 0, 0, DateTimeKind.Unspecified);
         var clock = new MockClock(fixedDateTime);
-        var mapper = new EmployeeMapper();
+        var mapper = new EmployeeMapper(clock);
         var repository = new EmployeeRepository(mapper, clock);
         var useCase = new UpdateEmployeeUseCase(repository);
         return (useCase, repository);

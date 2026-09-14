@@ -8,12 +8,17 @@
 
 ### LocalDateTime を強制
 
-SupportAdvance は **日本標準時（JST / UTC+9）** のみで動作します。すべての日時は LocalDateTime で統一します。
+SupportAdvance は **日本標準時（JST / UTC+9）** のみで動作します。
+
+- **Domain/Application/Entity 層**: すべて LocalDateTime で統一
+- **DbModel/Infrastructure 層**: DateTime（プリミティブ型）で ORM マッピング、Mapper が変換責務を持つ
+- **データベース**: datetime2(7) で JST として解釈
 
 ```
-✓ LocalDateTime（推奨）: JST タイムゾーン情報を保持
-✗ DateTime / DateTimeOffset: タイムゾーン曖昧で禁止
-✗ DateTime.UtcNow / DateTime.Now: IClock 経由のみ
+✓ LocalDateTime（推奨）: Domain/Application層でのみ使用、JST タイムゾーン情報を保持
+✓ DateTime（DbModel層）: ORM マッピング用プリミティブ型、Mapper で LocalDateTime に変換
+✗ DateTime / DateTimeOffset: Domain/Application層での直接使用は禁止
+✗ DateTime.UtcNow / DateTime.Now: IClock 経由でのみ（Clock 実装内では使用可）
 ```
 
 ### タイムゾーン方針
@@ -53,46 +58,158 @@ public interface IClock
 ```csharp
 // src/Common/Clocks/SystemClock.cs
 
-using NodaTime;
-
 namespace SupportAdvance.Common.Clocks;
 
+/// <summary>
+/// システムクロック実装
+/// 実行時の現在時刻をシステムクロックから取得します
+/// 【例外】Clock 実装内でのみ DateTime.UtcNow 使用を許可
+/// </summary>
 public class SystemClock : IClock
 {
-    private static readonly DateTimeZone JstTimeZone = DateTimeZoneProviders.Tzdb["Asia/Tokyo"];
+    private static readonly TimeZoneInfo JstTimeZone =
+        TimeZoneInfo.FindSystemTimeZoneById("Tokyo Standard Time");
 
+    /// <summary>
+    /// 現在のJST日時を LocalDateTime で取得します
+    /// 【例外】内部実装で DateTime.UtcNow を使用（Clock 実装内のみ許可）
+    /// </summary>
     public LocalDateTime JstNow
     {
         get
         {
-            var instant = SystemClock.Instance.GetCurrentInstant();
-            var zonedDateTime = instant.InZone(JstTimeZone);
-            return zonedDateTime.LocalDateTime;
+            var utcNow = DateTime.UtcNow;  // ✓ Clock 実装内のみ DateTime.UtcNow 許可
+            var jstNow = TimeZoneInfo.ConvertTime(utcNow, TimeZoneInfo.Utc, JstTimeZone);
+            // DateTime.Kind を Unspecified に統一（タイムゾーン情報は LocalDateTime の仕様）
+            return new LocalDateTime(DateTime.SpecifyKind(jstNow, DateTimeKind.Unspecified));
+        }
+    }
+
+    /// <summary>
+    /// 本日（00:00:00）のJST日付を LocalDateTime で取得します
+    /// </summary>
+    public LocalDateTime JstToday
+    {
+        get
+        {
+            var jstNow = JstNow;
+            return new LocalDateTime(new DateTime(jstNow.Year, jstNow.Month, jstNow.Day, 0, 0, 0,
+                DateTimeKind.Unspecified));
         }
     }
 }
 ```
 
-### 3. テスト用の FixedClock
+### 3. テスト用の Clock 実装
+
+#### MockClock（単体テスト用・固定時刻）
 
 ```csharp
-// src/Common/Clocks/FixedClock.cs
+// src/Common/Clocks/MockClock.cs
+// 【特徴】固定時刻のみ返す（DateTime.Now 非使用）
 
-using NodaTime;
-
-namespace SupportAdvance.Common.Clocks;
-
-public class FixedClock : IClock
+public class MockClock : IClock
 {
-    private readonly LocalDateTime _fixedTime;
+    private DateTime _fixedDateTime;
 
-    public LocalDateTime JstNow => _fixedTime;
+    public LocalDateTime JstNow => new(_fixedDateTime);
 
-    public FixedClock(LocalDateTime fixedTime)
+    public MockClock(DateTime? fixedDateTime = null)
     {
-        _fixedTime = fixedTime;
+        _fixedDateTime = fixedDateTime ?? new DateTime(2024, 1, 1, 0, 0, 0);
+    }
+
+    public void SetDateTime(DateTime newDateTime)
+    {
+        _fixedDateTime = newDateTime;
     }
 }
+```
+
+#### TickingClock（テスト・シミュレーション用・手動/自動進行）
+
+```csharp
+// src/Common/Clocks/TickingClock.cs
+// 【特徴】開始時刻から手動/自動で時刻を進める（DateTime.Now 非使用）
+
+public class TickingClock : IClock
+{
+    private DateTime _currentTime;
+    private readonly TimeSpan _tickInterval;
+
+    public LocalDateTime JstNow => new(_currentTime);
+
+    public TickingClock(DateTime startTime, TimeSpan? tickInterval = null)
+    {
+        _currentTime = startTime;
+        _tickInterval = tickInterval ?? TimeSpan.FromSeconds(1);
+    }
+
+    public void Tick()
+    {
+        _currentTime = _currentTime.Add(_tickInterval);
+    }
+
+    public void Advance(TimeSpan timeSpan)
+    {
+        _currentTime = _currentTime.Add(timeSpan);
+    }
+
+    public void SetTime(DateTime dateTime)
+    {
+        _currentTime = dateTime;
+    }
+}
+```
+
+#### OffsetClock（テスト用・オフセット付き進行）
+
+```csharp
+// src/Common/Clocks/OffsetClock.cs
+//
+// 【目的】日付を指定しながら、時刻は実現と合わせたいテストケース
+// 【例】2020年1月1日として、現在のシステム時刻と同じ速度で時刻を進める
+//
+// 【設計】
+// - 日付: テスト用に任意の日付を設定（例：2020/1/1）
+// - 時刻: システムクロックと連動（時間経過は現実と同じ）
+// - 計算: 表示時刻 = 指定日付 + (現在システム時刻 - 初期化時刻)
+//
+// 【例外】DateTime.Now を Clock内でのみ使用してオフセット計算
+
+public class OffsetClock : IClock
+{
+    private readonly DateTime _offsetDateTime;
+    private readonly DateTime _systemBaseTime;
+
+    public LocalDateTime JstNow
+    {
+        get
+        {
+            // 【計算】現在のシステム時刻からの経過時間を、指定日付に加算
+            var elapsed = DateTime.Now - _systemBaseTime;  // ✓ Clock内のみDateTime.Now許可
+            var displayTime = _offsetDateTime.Add(elapsed);
+            return new LocalDateTime(DateTime.SpecifyKind(displayTime, DateTimeKind.Unspecified));
+        }
+    }
+
+    /// <summary>
+    /// 【例】2020年1月1日 10:30:00 に設定
+    /// 初期化時の現在時刻が 2024年9月12日 14:30:00 なら、
+    /// JstNow は「2020年1月1日 10:30:00 + (現在時刻 - 初期化時刻)」になる
+    /// </summary>
+    public OffsetClock(DateTime offsetDateTime)
+    {
+        _offsetDateTime = offsetDateTime;
+        _systemBaseTime = DateTime.Now;  // ✓ Clock内のみDateTime.Now許可
+    }
+}
+
+// 【使用例】
+// var offsetClock = new OffsetClock(new DateTime(2020, 1, 1, 10, 30, 0));
+// // 初期化時点: JstNow = 2020/1/1 10:30:00
+// // 5秒後:      JstNow = 2020/1/1 10:30:05（システム時刻と同じ速度で進行）
+// // 1時間後:    JstNow = 2020/1/1 11:30:00
 ```
 
 ### 4. Entity での LocalDateTime 使用
@@ -252,15 +369,16 @@ public async Task ProcessExternalData(string externalTimestamp)
 
 ## ❌ 避けるべきパターン
 
-### パターン1: DateTime.Now / DateTime.UtcNow の直接使用
+### パターン1: DateTime.Now / DateTime.UtcNow の直接使用（Domain/Application層）
 
 ```csharp
-// ✗ 禁止: IClock を経由しない
+// ✗ 禁止: Domain/Application層での DateTime.Now / DateTime.UtcNow
 public class YourUseCase
 {
     public async Task Execute(YourRequest request)
     {
-        var now = DateTime.Now;          // ✗ DateTime.Now
+        var now = DateTime.Now;          // ✗ DateTime.Now（禁止）
+        var nowUtc = DateTime.UtcNow;    // ✗ DateTime.UtcNow（禁止）
         var entity = new YourEntity(rowId, businessId, now, clock);
     }
 }
@@ -268,7 +386,7 @@ public class YourUseCase
 
 **修正:**
 ```csharp
-// ✓ IClock 経由で取得
+// ✓ IClock 経由で取得（Domain/Application層）
 public class YourUseCase
 {
     private readonly IClock _clock;
@@ -280,8 +398,22 @@ public class YourUseCase
 
     public async Task Execute(YourRequest request)
     {
-        var now = _clock.JstNow;  // ✓ IClock から LocalDateTime
+        var now = _clock.JstNow;  // ✓ IClock から LocalDateTime を取得
         var entity = new YourEntity(rowId, businessId, now, _clock);
+    }
+}
+
+// ✓ Clock 実装内のみ DateTime.UtcNow 使用許可
+public class SystemClock : IClock
+{
+    public LocalDateTime JstNow
+    {
+        get
+        {
+            var utcNow = DateTime.UtcNow;  // ✓ Clock 実装内のみ許可
+            // タイムゾーン変換...
+            return new LocalDateTime(...);
+        }
     }
 }
 ```
@@ -305,35 +437,49 @@ public class YourEntity : Entity<long>
 }
 ```
 
-### パターN 3: Clock の実装内外での DateTime 混在
+### パターン3: Clock の実装内外での DateTime 混在
 
 ```csharp
-// ✗ 禁止: Clock が DateTime と LocalDateTime を混在
-public class SystemClock : IClock
+// ✗ 禁止: 他の層で DateTime.Now を直接使用
+public class YourUseCase
 {
-    public LocalDateTime JstNow
+    public void Execute()
     {
-        get
-        {
-            var dateTime = DateTime.Now;  // ✗ DateTimeとLocalDateTimeを混在
-            return LocalDateTime.FromDateTime(dateTime);
-        }
+        var now = DateTime.Now;  // ✗ UseCase が DateTime.Now を直接使用（禁止）
+        // ...
     }
 }
 ```
 
 **修正:**
 ```csharp
-// ✓ Clock の実装内のみ DateTime 使用可、外部は LocalDateTime
+// ✓ Clock（IClock）経由でのみ取得
+public class YourUseCase
+{
+    private readonly IClock _clock;
+
+    public YourUseCase(IClock clock)
+    {
+        _clock = clock;
+    }
+
+    public void Execute()
+    {
+        var now = _clock.JstNow;  // ✓ IClock 経由で LocalDateTime を取得
+        // ...
+    }
+}
+
+// ✓ Clock 実装内のみ DateTime.UtcNow 使用許可
 public class SystemClock : IClock
 {
     public LocalDateTime JstNow
     {
         get
         {
-            var instant = SystemClock.Instance.GetCurrentInstant();
-            var zonedDateTime = instant.InZone(jstZone);
-            return zonedDateTime.LocalDateTime;  // ✓ LocalDateTime で返す
+            var utcNow = DateTime.UtcNow;  // ✓ Clock 実装内のみ DateTime.UtcNow 許可
+            var jstNow = TimeZoneInfo.ConvertTime(utcNow, TimeZoneInfo.Utc, JstTimeZone);
+            return new LocalDateTime(DateTime.SpecifyKind(jstNow, DateTimeKind.Unspecified));
         }
     }
 }

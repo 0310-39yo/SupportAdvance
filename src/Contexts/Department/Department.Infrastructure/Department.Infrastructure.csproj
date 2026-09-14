@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Application\Application.csproj" />
+    <ProjectReference Include="..\..\..\Infrastructure\Infrastructure.csproj" />
+    <ProjectReference Include="..\Department.Application\Department.Application.csproj" />
+    <ProjectReference Include="..\Department.Domain\Department.Domain.csproj" />
+  </ItemGroup>
+
+  <!-- SQL ファイルを埋め込みリソースとして登録 -->
+  <ItemGroup>
+    <EmbeddedResource Include="Persistence/Sql/SqlServer/**/*.sql" />
+    <EmbeddedResource Include="Persistence/Sql/PostgreSQL/**/*.sql" />
+  </ItemGroup>
+
+</Project>

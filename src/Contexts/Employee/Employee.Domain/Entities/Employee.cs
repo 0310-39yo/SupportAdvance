@@ -1,98 +1,205 @@
-namespace SupportAdvance.Contexts.Employee.Domain.Entities;
-
+using SupportAdvance.Common.Clocks;
+using SupportAdvance.Contexts.Employee.Domain.DomainEvents;
+using SupportAdvance.Contexts.Employee.Domain.ValueObjects.DepartmentMembership;
 using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
 using SupportAdvance.SharedKernel.Entities;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
+
+namespace SupportAdvance.Contexts.Employee.Domain.Entities;
 
 /// <summary>
 /// 従業員を表すドメインエンティティ（集約根）
-/// 【集約根ID】EmployeeId（GUID ベース）、Entity&lt;TId&gt;.Id で公開
-/// 【公開プロパティ】EmployeeCode（M1234 形式）、PersonRowId（人事マスタ行ID）
-/// 【責務】従業員ビジネスID の管理（属性は t_employee_attributes で管理）
+///
+/// 【集約ID】EmployeeRowId（long ベース）
+/// 【責務】従業員の在職情報、部署配属、ロール、権限を管理
+/// 【ライフサイクル】採用～退職までの全期間をトラッキング
+/// 【Application層インターフェース】IEmployee を実装（Context間での参照用）
 /// </summary>
-public sealed class Employee : Entity<EmployeeId>
+public sealed class Employee : AggregateRoot<EmployeeRowId>, IEmployee
 {
     /// <summary>
-    /// 従業員コード（M1234 形式）を取得する
+    /// 唯一の時計インスタンス（ドメインイベント発行時の日時取得に使用）
     /// </summary>
-    public EmployeeCode Code { get; private set; }
+    private IClock Clock { get; set; }
 
     /// <summary>
-    /// 人事マスタ行ID（m_persons.row_id への外部参照）を取得する
+    /// 楽観ロックタイムスタンプ（concurrency control 用）
+    /// 【責務】DB更新時の競合検出
+    /// 【管理】Repository で更新時に新しい値で上書きされる
     /// </summary>
-    public PersonRowId PersonRowId { get; private set; }
+    public byte[] RowVersion { get; internal set; } = [];
 
     /// <summary>
-    /// DB行ID（m_employees.row_id）を取得する
+    /// 従業員種別区分（正社員/派遣/請負）
     /// </summary>
-    public EmployeeRowId RowId { get; private set; }
+    public BizDivision TypeDivision { get; private set; }
 
     /// <summary>
-    /// 指定されたプロパティからEmployeeを生成する（プライベートコンストラクタ）
+    /// ビジネスID（従業員番号）
     /// </summary>
-    /// <param name="employeeId">集約根ID（GUID ベース）</param>
-    /// <param name="rowId">DB行ID</param>
-    /// <param name="code">従業員コード（M1234 形式）</param>
-    /// <param name="personRowId">人事マスタ行ID</param>
+    public BizId BizId { get; private set; }
+
+    /// <summary>
+    /// ビジネスコード（内部ID、表示用）
+    /// </summary>
+    public BizCode BizCode { get; private set; }
+
+    /// <summary>
+    /// 個人情報（内包子Entity）
+    /// </summary>
+    public Person Person { get; private set; }
+
+    /// <summary>
+    /// 退職日（現職時は Unset）
+    /// </summary>
+    public RetiredOn RetiredOn { get; private set; }
+
+    /// <summary>
+    /// 部署所属のコレクション（従業員が複数部署に所属可能）
+    /// 【独立性】RetiredOn（雇用終了）と EndOn（配属終了）は独立している
+    /// - 配置転換時：前部署の EndOn 更新、Employee.RetiredOn は変わらない
+    /// - 退職時：Employee.RetiredOn 設定、配属終了日は別途管理
+    /// 【責務】配属期間の管理（雇用期間はRetiredOnで管理）
+    /// </summary>
+    public IReadOnlyCollection<DepartmentMembership> DepartmentMemberships => _departmentMemberships.AsReadOnly();
+
+    /// <summary>
+    /// 部署所属の内部リスト
+    /// </summary>
+    private readonly List<DepartmentMembership> _departmentMemberships;
+
+    /// <summary>
+    /// 指定されたプロパティから Employee を生成する（プライベートコンストラクタ）
+    /// </summary>
     private Employee(
-        EmployeeId employeeId,
         EmployeeRowId rowId,
-        EmployeeCode code,
-        PersonRowId personRowId)
+        BizDivision typeDivision,
+        BizId bizId,
+        BizCode bizCode,
+        RetiredOn retiredOn,
+        Person person,
+        List<DepartmentMembership> departmentMemberships
+    )
     {
-        Id = employeeId;
         RowId = rowId;
-        Code = code;
-        PersonRowId = personRowId;
+        TypeDivision = typeDivision;
+        BizId = bizId;
+        BizCode = bizCode;
+        RetiredOn = retiredOn;
+        Person = person;
+        _departmentMemberships = departmentMemberships;
     }
 
     /// <summary>
-    /// 新規 Employee を生成する（ファクトリメソッド）
-    /// 【責務】Application 層での新規 Employee 生成
+    /// Employee を生成する（ファクトリメソッド）
+    /// 【責務】Application/Infrastructure 層での Employee 生成・復元
+    /// 【入力】RowId 事前採番済み、Person は新規生成される
+    /// 【独立性】departmentMemberships は配属情報を指定（RetiredOn と独立して管理される）
     /// </summary>
-    /// <param name="employeeId">集約根ID（GUID ベース）</param>
-    /// <param name="rowId">DB行ID（通常は 0L で初期化、Insert後に生成）</param>
-    /// <param name="code">従業員コード（M1234 形式）</param>
-    /// <param name="personRowId">人事マスタ行ID</param>
-    /// <returns>生成された Employee インスタンス</returns>
-    /// <remarks>
-    /// パラメータはすべて検証済みの ValueObject として渡される。
-    /// Employee レベルでの追加検証は不要。
-    /// </remarks>
     public static Employee Create(
-        EmployeeId employeeId,
         EmployeeRowId rowId,
-        EmployeeCode code,
-        PersonRowId personRowId)
-    {
-        return new(employeeId, rowId, code, personRowId);
-    }
+        BizDivision typeDivision,
+        BizId bizId,
+        BizCode bizCode,
+        RetiredOn? retiredOn,
+        Person person,
+        IEnumerable<DepartmentMembership> departmentMemberships) =>
+        new(rowId, typeDivision, bizId, bizCode, retiredOn ?? RetiredOn.Unset(), person,
+            departmentMemberships.ToList());
 
     /// <summary>
     /// DB から読み込んだ値から Employee を復元する（ファクトリメソッド）
-    /// 【責務】Infrastructure 層での Employee 復元
+    /// 【責務】DB の プリミティブ型 → Domain Entity に変換
+    /// 【パラメータ】rowVersion は楽観ロック用（更新時に競合検出）
+    /// 【独立性】departmentMemberships は配属情報（RetiredOn と独立して管理される）
     /// </summary>
-    /// <param name="employeeId">集約根ID（GUID ベース）</param>
-    /// <param name="rowId">DB行ID（生成済み）</param>
-    /// <param name="code">従業員コード</param>
-    /// <param name="personRowId">人事マスタ行ID</param>
-    /// <returns>復元された Employee インスタンス</returns>
-    /// <remarks>
-    /// DB 値は既に検証済みと仮定。検証なしで復元。
-    /// </remarks>
     public static Employee Reconstruct(
-        EmployeeId employeeId,
         EmployeeRowId rowId,
-        EmployeeCode code,
-        PersonRowId personRowId)
+        BizDivision typeDivision,
+        BizId bizId,
+        BizCode bizCode,
+        RetiredOn retiredOn,
+        Person person,
+        IEnumerable<DepartmentMembership> departmentMemberships,
+        byte[]? rowVersion = null)
     {
-        return new(employeeId, rowId, code, personRowId);
+        var employee = new Employee(rowId, typeDivision, bizId, bizCode, retiredOn, person,
+            departmentMemberships.ToList());
+        if (rowVersion != null)
+        {
+            employee.RowVersion = rowVersion;
+        }
+
+        return employee;
+    }
+
+    /// <summary>
+    /// 従業員が現在アクティブか判定する
+    /// </summary>
+    /// <param name="asOf">判定日時（JST）</param>
+    /// <returns>現職の場合 true</returns>
+    public bool IsActive(LocalDateTime asOf)
+    {
+        // 退職済みで判定日が退職日以降の場合は非アクティブ
+        if (!RetiredOn.HasRetired)
+        {
+            return true; // 退職していない = アクティブ
+        }
+
+        return asOf < RetiredOn.Value; // 退職していて、判定日が退職日より前 = アクティブ
+    }
+
+    /// <summary>
+    /// 従業員を退職させる
+    /// 【責務】退職日の記録、ドメインイベント発行
+    /// </summary>
+    public void RetireEmployee(LocalDateTime retiredOn)
+    {
+        if (!IsActive(retiredOn))
+        {
+            throw new InvalidOperationException("Already retired.");
+        }
+
+        RetiredOn = RetiredOn.From(retiredOn);
+
+        var retiredEvent = new EmployeeRetiredEvent(
+            RowId.Value,
+            TypeDivision.ToString(),
+            BizId.ToString(),
+            retiredOn);
+
+        RaiseDomainEvent(retiredEvent);
+    }
+
+    /// <summary>
+    /// 部署メンバーシップを追加する
+    /// 【責務】従業員の部署配置転換を記録
+    /// 【呼び出し元】Application層の Use Case（例：TransferDepartmentUseCase）
+    /// 【DB永続化】Repository.SaveAsync() で集約全体を保存時に DepartmentMemberships テーブルに反映
+    /// </summary>
+    public void AddDepartmentMembership(DepartmentMembership membership)
+    {
+        if (membership.EmployeeRowId != RowId)
+        {
+            throw new InvalidOperationException("DepartmentMembership must belong to this Employee.");
+        }
+
+        _departmentMemberships.Add(membership);
+    }
+
+    /// <summary>
+    /// 部署メンバーシップを削除する
+    /// 【責務】従業員の部署配置終了を記録
+    /// 【呼び出し元】Application層の Use Case（例：TerminateDepartmentUseCase）
+    /// 【DB永続化】Repository.SaveAsync() で集約全体を保存時に DepartmentMemberships テーブルから削除
+    /// </summary>
+    public void RemoveDepartmentMembership(DepartmentMembershipRowId membershipRowId)
+    {
+        _departmentMemberships.RemoveAll(m => m.RowId == membershipRowId);
     }
 
     /// <summary>
     /// Employee の文字列表現を取得する
-    /// 【責務】ログ出力、デバッグ用の表現
     /// </summary>
-    /// <returns>Employee の説明文字列（例："Employee(Id=..., Code=M1234)"）</returns>
-    public override string ToString() => $"Employee(Id={Id.Value}, Code={Code})";
+    public override string ToString() => $"Employee(RowId={RowId.Value}, TypeDivision={TypeDivision}, BizId={BizId})";
 }
-

@@ -57,13 +57,8 @@ ValueObject（抽象）
   │   ├─ RespondentName, RespondentAge（ビジネス属性）
   │   └─ {その他スカラ値型}
   │
-  ├─ AggregateId（抽象）【新規】集約の論理的識別子（GUID ベース）
-  │   ├─ UserId, RoleId, UserRoleId（Identity Bounded Context）
-  │   ├─ EmployeeId, DepartmentId（Employee Bounded Context）
-  │   └─ {その他集約ID}
-  │
-  ├─ ValueObject（特殊パターン）【新規】複合型・物理キー
-  │   ├─ RowId（テーブル物理キー：long値、value=0で未採番）
+  ├─ ValueObject（特殊パターン）複合型・物理キー
+  │   ├─ RowId（テーブル物理キー：PrimitiveValueObject<long>継承）
   │   ├─ FullName（複合型：FirstName + LastName）
   │   └─ {その他複合型}
   │
@@ -138,57 +133,6 @@ public sealed class CreatedAt : PrimitiveValueObject<DateTime>, IEquatable<Creat
             throw new ArgumentException("CreatedAt must be a valid system timestamp.");
         }
     }
-}
-```
-
-### 2.3 AggregateId（抽象）（集約ビジネスID の基底）
-
-**責務:**
-- **GUID 値の保持** — 集約を一意識別
-- **型安全性** — 異なる集約 ID を型チェックで区別（UserId ≠ RoleId）
-- **等価性判定** — GUID ベースの値比較
-- **Unset 状態なし** — 常に値を持つ（null 不許容）
-
-**設計:**
-```csharp
-public abstract class AggregateId : ValueObject
-{
-    /// <summary>
-    /// GUID 値（Guid.Empty は許可されない）
-    /// </summary>
-    public Guid Value { get; protected set; }
-
-    /// <summary>
-    /// コンストラクタ
-    /// </summary>
-    /// <param name="value">GUID 値</param>
-    /// <exception cref="ArgumentException">value が Guid.Empty の場合</exception>
-    protected AggregateId(Guid value)
-    {
-        if (value == Guid.Empty)
-            throw new ArgumentException("AggregateId cannot be empty.", nameof(value));
-        Value = value;
-    }
-
-    // 派生クラスでオーバーライド（通常は不要）
-    protected override IEnumerable<object?> GetValueComponents()
-    {
-        yield return Value;
-    }
-}
-```
-
-**実装例：UserId**
-```csharp
-public sealed class UserId : AggregateId
-{
-    private UserId(Guid value) : base(value) { }
-
-    /// <summary>新しい ID を生成（DB 永続化前）</summary>
-    public static UserId New() => new(Guid.NewGuid());
-
-    /// <summary>既存の GUID から ID を生成（DB 読み込み時）</summary>
-    public static UserId From(Guid value) => new(value);
 }
 ```
 
@@ -407,46 +351,18 @@ Assert.AreEqual(12345L, rowId.Value);
 
 ---
 
-### 4.3 【AggregateId 向け】GUID 必須（Unset 状態なし）
+### 4.3 状態管理パターン別比較表
 
-**概要:**
-- `IsSet` フラグなし
-- Unset 状態なし（常に Guid 値を持つ）
-- Guid.Empty は許可されない（コンストラクタで検証）
-- 集約の論理的識別子
-
-**生成:**
-```csharp
-// 新規 ID を生成
-var userId = UserId.New();  // Guid.NewGuid()
-
-// 既存 ID から生成（DB 読み込み時）
-var userId = UserId.From(new Guid("12345678-1234-1234-1234-123456789012"));
-
-// Guid.Empty は許可されない
-// UserId.From(Guid.Empty);  // ← ArgumentException
-```
-
-**特徴:**
-- IsSet フラグなし（常に値を持つ）
-- Unset() / Unset 状態なし（必須フィールド）
-- Guid は内部構造化済みなので Normalize / Validate 不要
-- 型安全性により異なる集約 ID を区別
-
----
-
-### 4.4 状態管理パターン別比較表
-
-| 特性 | PrimitiveValueObject | RowId | AggregateId |
-|-----|------------------|-------|------------|
-| **IsSet フラグ** | ✅ 有 | ❌ 無 | ❌ 無 |
-| **Unset 状態** | ✅ IsSet=false | ❌ value=0で未採番 | ❌ 常に値を持つ |
-| **Unset() メソッド** | ✅ 有（未設定インスタンス） | ❌ 無 | ❌ 無 |
-| **New() メソッド** | ❌ 無 | ✅ 有（value=0） | ✅ 有（Guid.NewGuid） |
-| **Value 型** | TValue（string, int など） | long（0以上） | Guid（非Empty） |
-| **Value null許容** | ✅ IsSet で制御（null可能） | ❌ 常に long | ❌ 常に Guid |
-| **Normalize 必須** | ✅ 通常必須 | ❌ 不要 | ❌ 不要 |
-| **Validate 必須** | ✅ 通常必須 | ❌ 最小限 | ❌ Guid.Empty チェックのみ |
+| 特性 | PrimitiveValueObject | RowId |
+|-----|------------------|-------|
+| **IsSet フラグ** | ✅ 有 | ❌ 無 |
+| **Unset 状態** | ✅ IsSet=false | ❌ value=0で未採番 |
+| **Unset() メソッド** | ✅ 有（未設定インスタンス） | ❌ 無 |
+| **New() メソッド** | ❌ 無 | ✅ 有（value=0） |
+| **Value 型** | TValue（string, int など） | long（0以上） |
+| **Value null許容** | ✅ IsSet で制御（null可能） | ❌ 常に long |
+| **Normalize 必須** | ✅ 通常必須 | ❌ 不要 |
+| **Validate 必須** | ✅ 通常必須 | ❌ 最小限 |
 | **用途** | ビジネス属性（名前など） | DB行の物理キー | 集約の論理的ID |
 | **使用例** | RespondentName | Entity._rowId | Entity.Id |
 
@@ -686,7 +602,7 @@ public class User : AggregateRoot<UserId>
     /// </summary>
     public User(UserId id, string name, RowId? rowId = null)
     {
-        Id = id;  // ← AggregateId（論理的ID）
+        Id = id;  // 集約の識別子
         _rowId = rowId ?? RowId.New();  // ← RowId（物理キー）
     }
 }
@@ -1747,55 +1663,7 @@ public sealed class RespondentName : PrimitiveValueObject<string>, IEquatable<Re
 
 ---
 
-### 11.2 AggregateId を使うべき場合
-
-**判定基準:**
-- ✅ Entity の識別子（GUID ベース）
-- ✅ 型安全性が必須（UserId vs RoleId を型チェックで区別）
-- ✅ 常に値を持つ（null 不許容）
-- ✅ Unset 状態が不要
-- ✅ 複数テーブル集約の論理的統一 ID
-
-**具体例:**
-- UserId（ユーザー集約の識別子）
-- RoleId（ロール集約の識別子）
-- EmployeeId（従業員集約の識別子）
-- OrderId（注文集約の識別子）
-
-**実装パターン:**
-```csharp
-public sealed class UserId : AggregateId
-{
-    private UserId(Guid value) : base(value) { }
-
-    /// <summary>新しい ID を生成</summary>
-    public static UserId New() => new(Guid.NewGuid());
-
-    /// <summary>既存の GUID から ID を生成（DB 読み込み時）</summary>
-    public static UserId From(Guid value) => new(value);
-}
-
-// Entity での使用
-public class User : AggregateRoot<UserId>  // ← TId = UserId
-{
-    public User(UserId id, string name)
-    {
-        Id = id;  // AggregateId で識別
-    }
-}
-```
-
-**チェックリスト（使用前に確認）:**
-- [ ] 集約を一意識別する目的か
-- [ ] GUID 値で十分か
-- [ ] 型安全性が重要か（他の ID と混同されると問題になるか）
-- [ ] 常に値を持つか（null 許容ではないか）
-- [ ] Entity のジェネリック型パラメータとして使用するか
-- [ ] Unset 状態は不要か
-
----
-
-### 11.3 RowId を使うべき場合
+### 11.2 RowId を使うべき場合
 
 **判定基準:**
 - ✅ データベーステーブルの行を一意識別（物理キー）
@@ -1842,7 +1710,7 @@ public UserDbModel ToDbModel(User entity)
 - [ ] public プロパティで読み取りのみ公開するか
 - [ ] Mapper で DbModel のマッピングに使用するか
 
-#### 11.3.2 RowId のライフサイクル
+#### 11.2.2 RowId のライフサイクル
 
 RowId の状態遷移は3段階です。
 
@@ -1987,9 +1855,6 @@ public async Task DeleteAsync(User entity)
 ```
 【ValueObject を設計する】
           │
-          ├─ 集約（Aggregate）を識別する？
-          │   YES → AggregateId 継承
-          │   
           ├─ DB テーブル行の物理キー？
           │   YES → RowId パターン
           │   
@@ -2005,8 +1870,7 @@ public async Task DeleteAsync(User entity)
 
 **フローの解説:**
 
-1. **最初の判定：集約ID か物理キー か？**
-   - 集約の識別子 → AggregateId
+1. **最初の判定：DB テーブル行の物理キー か？**
    - DB テーブル行 → RowId
    - 上記以外 → 次の判定へ
 
@@ -2022,21 +1886,21 @@ public async Task DeleteAsync(User entity)
 
 ### 11.5 パターン別比較表（拡張版）
 
-| 特性 | PrimitiveValueObject | AggregateId | RowId |
-|-----|------------------|------------|-------|
-| **基底クラス** | PrimitiveValueObject<TValue> | AggregateId（抽象） | ValueObject |
+| 特性 | PrimitiveValueObject | RowId |
+|-----|------------------|-------|
+| **基底クラス** | PrimitiveValueObject<TValue> | ValueObject |
 | **値型** | TValue（string, int, DateTime など） | Guid | long |
-| **IsSet フラグ** | ✅ 有 | ❌ 無 | ❌ 無 |
-| **Unset 状態** | ✅ IsSet=false | ❌ 常に Guid | ❌ value=0で未採番 |
-| **Unset メソッド** | ✅ Unset() 有 | ❌ 無 | ❌ 無 |
-| **New() メソッド** | ❌ 無 | ✅ New()→Guid.NewGuid | ✅ New()→value=0 |
-| **from/From メソッド** | ✅ From(value) | ✅ From(Guid) | ✅ From(long) |
-| **Normalize** | ✅ 通常実装 | ❌ 不要 | ❌ 不要 |
-| **Validate** | ✅ 通常実装 | ✅ Guid.Empty チェック | ✅ value≥0 チェック |
-| **Value null許容** | ✅ IsSet で制御 | ❌ 常に Guid | ❌ 常に long |
-| **用途** | ビジネス属性 | 集約識別子 | DB物理キー |
-| **使用例** | RespondentName | UserId | Entity._rowId |
-| **Entity での役割** | Domain ロジック内で使用 | `AggregateRoot<TId>` | プライベート属性 |
+| **IsSet フラグ** | ✅ 有 | ❌ 無 |
+| **Unset 状態** | ✅ IsSet=false | ❌ value=0で未採番 |
+| **Unset メソッド** | ✅ Unset() 有 | ❌ 無 |
+| **New() メソッド** | ❌ 無 | ✅ New()→value=0 |
+| **from/From メソッド** | ✅ From(value) | ✅ From(long) |
+| **Normalize** | ✅ 通常実装 | ❌ 不要 |
+| **Validate** | ✅ 通常実装 | ✅ value≥0 チェック |
+| **Value null許容** | ✅ IsSet で制御 | ❌ 常に long |
+| **用途** | ビジネス属性 | DB物理キー |
+| **使用例** | RespondentName | Entity._rowId |
+| **Entity での役割** | Domain ロジック内で使用 | プライベート属性 |
 
 ---
 
@@ -2061,21 +1925,6 @@ public async Task DeleteAsync(User entity)
 - [ ] `Validate()` をオーバーライド（検証ロジック）
 - [ ] `GetValueComponents()` をオーバーライド（等価性判定）
 - [ ] IEquatable<T> を実装
-
-#### AggregateId チェックリスト
-
-**設計段階:**
-- [ ] 集約を一意識別する目的か
-- [ ] 型安全性が必須か（他の ID と区別が必要か）
-- [ ] 常に値を持つか（必須フィールド）
-- [ ] Unset 状態は不要か
-
-**実装段階:**
-- [ ] AggregateId を継承
-- [ ] コンストラクタで Guid.Empty をチェック
-- [ ] `New()` メソッドで新規 ID を生成
-- [ ] `From(Guid)` メソッドで既存 ID を復元
-- [ ] GetValueComponents() で Guid を yield
 
 #### RowId チェックリスト
 

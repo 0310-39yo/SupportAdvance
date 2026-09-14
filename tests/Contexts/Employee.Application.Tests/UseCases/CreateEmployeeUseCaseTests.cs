@@ -1,5 +1,6 @@
 namespace SupportAdvance.Contexts.Employee.Application.Tests.UseCases;
 
+using SupportAdvance.Application.Abstractions.Identifiers;
 using SupportAdvance.Contexts.Employee.Application.Repositories;
 using SupportAdvance.Common.Clocks;
 using SupportAdvance.Contexts.Employee.Application.Dtos;
@@ -26,7 +27,11 @@ public class CreateEmployeeUseCaseTests
         {
             PersonRowId = 1,
             DivisionCode = "M",
-            EmployeeNumber = 1001
+            EmployeeNumber = 1001,
+            PersonLastName = "山田",
+            PersonFirstName = "太郎",
+            PersonLastNameKana = "ヤマダ",
+            PersonFirstNameKana = "タロウ"
         };
 
         // Act
@@ -34,9 +39,9 @@ public class CreateEmployeeUseCaseTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.NotEqual(Guid.Empty, result.Id);
-        Assert.Contains("M", result.Code);
-        Assert.Contains("1001", result.Code);
+        Assert.True(result.RowId > 0);
+        Assert.Contains("M", result.BizCode);
+        Assert.Contains("1001", result.BizCode);
         Assert.Equal(1, result.PersonRowId);
     }
 
@@ -45,17 +50,35 @@ public class CreateEmployeeUseCaseTests
     {
         // Arrange
         var (useCase, _) = CreateUseCase();
-        var request1 = new CreateEmployeeRequest { PersonRowId = 1, DivisionCode = "M", EmployeeNumber = 1001 };
-        var request2 = new CreateEmployeeRequest { PersonRowId = 2, DivisionCode = "T", EmployeeNumber = 7501 };
+        var request1 = new CreateEmployeeRequest
+        {
+            PersonRowId = 1,
+            DivisionCode = "M",
+            EmployeeNumber = 1001,
+            PersonLastName = "山田",
+            PersonFirstName = "太郎",
+            PersonLastNameKana = "ヤマダ",
+            PersonFirstNameKana = "タロウ"
+        };
+        var request2 = new CreateEmployeeRequest
+        {
+            PersonRowId = 2,
+            DivisionCode = "T",
+            EmployeeNumber = 7501,
+            PersonLastName = "佐藤",
+            PersonFirstName = "花子",
+            PersonLastNameKana = "サトウ",
+            PersonFirstNameKana = "ハナコ"
+        };
 
         // Act
         var result1 = await useCase.ExecuteAsync(request1);
         var result2 = await useCase.ExecuteAsync(request2);
 
         // Assert
-        Assert.NotEqual(result1.Id, result2.Id);
-        Assert.Contains("M", result1.Code);
-        Assert.Contains("T", result2.Code);
+        Assert.NotEqual(result1.RowId, result2.RowId);
+        Assert.Contains("M", result1.BizCode);
+        Assert.Contains("T", result2.BizCode);
     }
 
     #endregion
@@ -71,7 +94,11 @@ public class CreateEmployeeUseCaseTests
         {
             PersonRowId = 0,  // ← 無効
             DivisionCode = "M",
-            EmployeeNumber = 1001
+            EmployeeNumber = 1001,
+            PersonLastName = "山田",
+            PersonFirstName = "太郎",
+            PersonLastNameKana = "ヤマダ",
+            PersonFirstNameKana = "タロウ"
         };
 
         // Act & Assert
@@ -87,7 +114,11 @@ public class CreateEmployeeUseCaseTests
         {
             PersonRowId = 1,
             DivisionCode = "X",  // ← 無効
-            EmployeeNumber = 1001
+            EmployeeNumber = 1001,
+            PersonLastName = "山田",
+            PersonFirstName = "太郎",
+            PersonLastNameKana = "ヤマダ",
+            PersonFirstNameKana = "タロウ"
         };
 
         // Act & Assert
@@ -103,7 +134,11 @@ public class CreateEmployeeUseCaseTests
         {
             PersonRowId = 1,
             DivisionCode = "M",
-            EmployeeNumber = 1000  // ← 無効（1001以上必須）
+            EmployeeNumber = 1000,  // ← 無効（1001以上必須）
+            PersonLastName = "山田",
+            PersonFirstName = "太郎",
+            PersonLastNameKana = "ヤマダ",
+            PersonFirstNameKana = "タロウ"
         };
 
         // Act & Assert
@@ -119,7 +154,11 @@ public class CreateEmployeeUseCaseTests
         {
             PersonRowId = 1,
             DivisionCode = "M",
-            EmployeeNumber = 10000  // ← 無効（9999以下必須）
+            EmployeeNumber = 10000,  // ← 無効（9999以下必須）
+            PersonLastName = "山田",
+            PersonFirstName = "太郎",
+            PersonLastNameKana = "ヤマダ",
+            PersonFirstNameKana = "タロウ"
         };
 
         // Act & Assert
@@ -139,31 +178,64 @@ public class CreateEmployeeUseCaseTests
         {
             PersonRowId = 1,
             DivisionCode = "M",
-            EmployeeNumber = 1001
+            EmployeeNumber = 1001,
+            PersonLastName = "山田",
+            PersonFirstName = "太郎",
+            PersonLastNameKana = "ヤマダ",
+            PersonFirstNameKana = "タロウ"
         };
 
         // Act: 作成
         var created = await createUseCase.ExecuteAsync(request);
 
         // Act: Repository で確認
-        var retrieved = await repository.GetByIdAsync(SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee.EmployeeId.From(created.Id));
+        var retrieved = await repository.GetByIdAsync(EmployeeRowId.From(created.RowId));
 
         // Assert
         Assert.NotNull(retrieved);
-        Assert.Equal(created.Id, retrieved.Id.Value);
+        Assert.Equal(created.RowId, retrieved.RowId.Value);
     }
 
     #endregion
 
     #region ヘルパーメソッド
 
+    /// <summary>
+    /// テスト用 MockSequenceProvider
+    /// 連続した RowId を返す（テスト用開始値 2147483648）
+    /// </summary>
+    private class MockSequenceProvider : ISequenceProvider
+    {
+        private long _counter = 2147483648;  // テスト用開始値
+
+        public async Task<long> GetNextValueAsync()
+        {
+            return await Task.FromResult(_counter++);
+        }
+
+        public async Task<IReadOnlyList<long>> GetNextValuesAsync(int count = 1)
+        {
+            if (count <= 0)
+                throw new ArgumentException("Count must be greater than 0.", nameof(count));
+
+            var result = new List<long>(capacity: count);
+            for (int i = 0; i < count; i++)
+            {
+                result.Add(_counter++);
+            }
+
+            return await Task.FromResult(result.AsReadOnly());
+        }
+    }
+
     private (CreateEmployeeUseCase, IEmployeeRepository) CreateUseCase()
     {
         var fixedDateTime = new DateTime(2026, 8, 11, 0, 0, 0, DateTimeKind.Unspecified);
         var clock = new MockClock(fixedDateTime);
-        var mapper = new EmployeeMapper();
+        var mapper = new EmployeeMapper(clock);  // ← IClock を渡す
         var repository = new EmployeeRepository(mapper, clock);
-        var useCase = new CreateEmployeeUseCase(repository, clock);
+        var sequenceProvider = new MockSequenceProvider();  // ← MockSequenceProvider を追加
+        var useCase = new CreateEmployeeUseCase(repository, clock, sequenceProvider);  // ← ISequenceProvider 注入
         return (useCase, repository);
     }
 

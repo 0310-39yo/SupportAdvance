@@ -21,10 +21,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="configs\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Include="..\..\..\configs\NLog\NLog.config" Link="NLog.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -36,8 +32,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Contexts\Samples\CarPreferences.Application\CarPreferences.Application.csproj" />
-    <ProjectReference Include="..\..\Contexts\Samples\CarPreferences.Infrastructure\CarPreferences.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Contexts\Department\Department.Application\Department.Application.csproj" />
+    <ProjectReference Include="..\..\Contexts\Department\Department.Infrastructure\Department.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Contexts\Employee\Employee.Application\Employee.Application.csproj" />
+    <ProjectReference Include="..\..\Contexts\Employee\Employee.Infrastructure\Employee.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Contexts\Identity\Identity.Application\Identity.Application.csproj" />
+    <ProjectReference Include="..\..\Contexts\Identity\Identity.Infrastructure\Identity.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Contexts\IntegrationPrototype\IntegrationPrototype.Application\IntegrationPrototype.Application.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\Infrastructure.csproj" />
+    <ProjectReference Include="..\..\SharedKernel\SharedKernel.csproj" />
     <ProjectReference Include="..\Shared\Shared.csproj" />
   </ItemGroup>
 
@@ -45,6 +48,10 @@
     <None Update="appsettings.Intrinsic.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Forms\" />
   </ItemGroup>
 
 </Project>
