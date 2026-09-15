@@ -3,7 +3,9 @@
   <Folder Name="/docs/" />
   <Folder Name="/docs/Common/" />
   <Folder Name="/docs/Contexts/" />
-  <Folder Name="/docs/Contexts/Samples/" />
+  <Folder Name="/docs/Contexts/Authentication/" />
+  <Folder Name="/docs/Contexts/Department/" />
+  <Folder Name="/docs/Contexts/Employee/" />
   <Folder Name="/docs/Crosscutting/" />
   <Folder Name="/docs/Infrastructure/" />
   <Folder Name="/docs/Presentation/" />
