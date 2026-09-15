@@ -62,5 +62,8 @@
     <Project Path="tests/Contexts/Authentication.Application.Tests/Authentication.Application.Tests.csproj" />
     <Project Path="tests/Contexts/Authentication.Infrastructure.Tests/Authentication.Infrastructure.Tests.csproj" />
     <Project Path="tests/Contexts/Department.Domain.Tests/Department.Domain.Tests.csproj" />
+    <Project Path="tests/Contexts/Department.Application.Tests/Department.Application.Tests.csproj" />
+    <Project Path="tests/Contexts/Department.Infrastructure.Tests/Department.Infrastructure.Tests.csproj" />
   </Folder>
 </Solution>
+
