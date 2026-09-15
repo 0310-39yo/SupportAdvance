@@ -18,7 +18,7 @@ namespace SupportAdvance.Application.Abstractions.Identifiers;
 ///
 /// 【使用箇所】
 /// - Employee Context: CreateEmployeeUseCase 他
-/// - Identity Context: 将来実装時に使用予定
+/// - Authentication Context: 将来実装時に使用予定
 /// - Master Context: 将来実装時に使用予定
 /// </summary>
 public interface ISequenceProvider
