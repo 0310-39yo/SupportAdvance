@@ -1,6 +1,6 @@
 using Xunit;
 
-namespace SupportAdvance.Contexts.Identity.Infrastructure.Tests.E2E;
+namespace SupportAdvance.Contexts.Authentication.Infrastructure.Tests.E2E;
 
 /// <summary>
 /// LoginDialog の UI オートメーション テスト

@@ -2,7 +2,7 @@
 
 ## 📋 テスト目的
 
-Identity BC の完全なログインフロー を検証する：
+Authentication BC の完全なログインフロー を検証する：
 1. **アプリ起動** → LoginDialog が表示
 2. **認証処理** → ログイン成功/失敗の処理
 3. **セッション管理** → RealCurrentUserService にユーザー情報が保持
@@ -19,7 +19,7 @@ Identity BC の完全なログインフロー を検証する：
 USE [SupportAdvance];
 
 -- Setup スクリプトを実行
--- ファイル: tests/Contexts/Identity.Infrastructure.Tests/Setup/InsertTestLoginCredentials.sql
+-- ファイル: tests/Contexts/Authentication.Infrastructure.Tests/Setup/InsertTestLoginCredentials.sql
 ```
 
 **挿入されるテストデータ：**

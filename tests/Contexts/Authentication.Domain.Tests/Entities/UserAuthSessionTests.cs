@@ -1,8 +1,8 @@
 using SupportAdvance.Common.Clocks;
-using SupportAdvance.Contexts.Identity.Domain.Entities;
-using SupportAdvance.Contexts.Identity.Domain.ValueObjects;
+using SupportAdvance.Contexts.Authentication.Domain.Entities;
+using SupportAdvance.Contexts.Authentication.Domain.ValueObjects;
 
-namespace SupportAdvance.Contexts.Identity.Domain.Tests.Entities;
+namespace SupportAdvance.Contexts.Authentication.Domain.Tests.Entities;
 
 public class UserAuthSessionTests
 {

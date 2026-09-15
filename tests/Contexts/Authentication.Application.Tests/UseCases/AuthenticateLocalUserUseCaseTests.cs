@@ -1,6 +1,6 @@
 using Xunit;
 
-namespace SupportAdvance.Contexts.Identity.Application.Tests.UseCases;
+namespace SupportAdvance.Contexts.Authentication.Application.Tests.UseCases;
 
 /// <summary>
 /// AuthenticateLocalUserUseCase の Integration Test

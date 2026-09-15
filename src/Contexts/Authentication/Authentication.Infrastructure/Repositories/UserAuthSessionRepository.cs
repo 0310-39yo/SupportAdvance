@@ -1,18 +1,15 @@
-using System.Data;
 using Dapper;
 using RepoDb;
 using SupportAdvance.Application.Abstractions.Identifiers;
 using SupportAdvance.Common.Clocks;
-using SupportAdvance.Contexts.Identity.Domain.Entities;
-using SupportAdvance.Contexts.Identity.Domain.Repositories;
-using SupportAdvance.Contexts.Identity.Domain.ValueObjects;
-using SupportAdvance.Contexts.Identity.Infrastructure.DbModels;
-using SupportAdvance.Contexts.Identity.Infrastructure.Mappers;
+using SupportAdvance.Contexts.Authentication.Domain.Entities;
+using SupportAdvance.Contexts.Authentication.Domain.Repositories;
+using SupportAdvance.Contexts.Authentication.Domain.ValueObjects;
+using SupportAdvance.Contexts.Authentication.Infrastructure.DbModels;
+using SupportAdvance.Contexts.Authentication.Infrastructure.Mappers;
 using SupportAdvance.Infrastructure.Persistence;
-using SupportAdvance.Infrastructure.Services;
-using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
-namespace SupportAdvance.Contexts.Identity.Infrastructure.Repositories;
+namespace SupportAdvance.Contexts.Authentication.Infrastructure.Repositories;
 
 /// <summary>
 /// UserAuthSession Repository 実装

@@ -1,13 +1,13 @@
 using SupportAdvance.Application.Abstractions.Identifiers;
 using SupportAdvance.Common.Clocks;
-using SupportAdvance.Contexts.Identity.Application.Dtos;
-using SupportAdvance.Contexts.Identity.Application.Queries;
-using SupportAdvance.Contexts.Identity.Application.Services;
-using SupportAdvance.Contexts.Identity.Domain.Entities;
-using SupportAdvance.Contexts.Identity.Domain.Repositories;
-using SupportAdvance.Contexts.Identity.Domain.ValueObjects;
+using SupportAdvance.Contexts.Authentication.Application.Dtos;
+using SupportAdvance.Contexts.Authentication.Application.Queries;
+using SupportAdvance.Contexts.Authentication.Application.Services;
+using SupportAdvance.Contexts.Authentication.Domain.Entities;
+using SupportAdvance.Contexts.Authentication.Domain.Repositories;
+using SupportAdvance.Contexts.Authentication.Domain.ValueObjects;
 
-namespace SupportAdvance.Contexts.Identity.Application.UseCases;
+namespace SupportAdvance.Contexts.Authentication.Application.UseCases;
 
 /// <summary>
 /// ローカル認証 Use Case

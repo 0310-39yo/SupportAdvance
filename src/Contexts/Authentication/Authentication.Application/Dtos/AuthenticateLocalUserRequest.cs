@@ -1,4 +1,4 @@
-namespace SupportAdvance.Contexts.Identity.Application.Dtos;
+namespace SupportAdvance.Contexts.Authentication.Application.Dtos;
 
 /// <summary>
 /// ローカル認証リクエスト

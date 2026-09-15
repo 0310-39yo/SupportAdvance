@@ -1,6 +1,6 @@
-using SupportAdvance.Contexts.Identity.Domain.ValueObjects;
+using SupportAdvance.Contexts.Authentication.Domain.ValueObjects;
 
-namespace SupportAdvance.Contexts.Identity.Domain.Tests.ValueObjects;
+namespace SupportAdvance.Contexts.Authentication.Domain.Tests.ValueObjects;
 
 public class LoginIdTests
 {

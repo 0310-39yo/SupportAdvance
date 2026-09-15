@@ -1,9 +1,9 @@
 using SupportAdvance.Common.Clocks;
-using SupportAdvance.Contexts.Identity.Domain.Entities;
-using SupportAdvance.Contexts.Identity.Domain.ValueObjects;
-using SupportAdvance.Contexts.Identity.Infrastructure.DbModels;
+using SupportAdvance.Contexts.Authentication.Domain.Entities;
+using SupportAdvance.Contexts.Authentication.Domain.ValueObjects;
+using SupportAdvance.Contexts.Authentication.Infrastructure.DbModels;
 
-namespace SupportAdvance.Contexts.Identity.Infrastructure.Mappers;
+namespace SupportAdvance.Contexts.Authentication.Infrastructure.Mappers;
 
 /// <summary>
 /// UserAuthSession マッパー

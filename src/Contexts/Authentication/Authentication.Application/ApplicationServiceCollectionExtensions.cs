@@ -1,18 +1,17 @@
 using Microsoft.Extensions.DependencyInjection;
-using SupportAdvance.Contexts.Identity.Application.Queries;
-using SupportAdvance.Contexts.Identity.Application.UseCases;
+using SupportAdvance.Contexts.Authentication.Application.UseCases;
 
-namespace SupportAdvance.Contexts.Identity.Application;
+namespace SupportAdvance.Contexts.Authentication.Application;
 
 /// <summary>
-/// Identity Context の Application層 DI 拡張メソッド
+/// Authentication Context の Application層 DI 拡張メソッド
 /// </summary>
 public static class ApplicationServiceCollectionExtensions
 {
     /// <summary>
-    /// Identity Context の Application Models を DI コンテナに登録する
+    /// Authentication Context の Application Models を DI コンテナに登録する
     /// </summary>
-    public static IServiceCollection AddIdentityApplicationModels(this IServiceCollection services)
+    public static IServiceCollection AddAuthenticationApplicationModels(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);
 

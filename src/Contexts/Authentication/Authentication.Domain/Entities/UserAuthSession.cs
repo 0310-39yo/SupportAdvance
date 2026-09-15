@@ -1,8 +1,8 @@
 using SupportAdvance.Common.Clocks;
+using SupportAdvance.Contexts.Authentication.Domain.ValueObjects;
 using SupportAdvance.SharedKernel.Entities;
-using SupportAdvance.Contexts.Identity.Domain.ValueObjects;
 
-namespace SupportAdvance.Contexts.Identity.Domain.Entities;
+namespace SupportAdvance.Contexts.Authentication.Domain.Entities;
 
 /// <summary>
 /// ユーザー認証セッション（ログイン状態を表現）

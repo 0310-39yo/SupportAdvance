@@ -1,6 +1,6 @@
 using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
-namespace SupportAdvance.Contexts.Identity.Domain.ValueObjects;
+namespace SupportAdvance.Contexts.Authentication.Domain.ValueObjects;
 
 /// <summary>
 /// ユーザー認証セッションレコード RowId（主キー）

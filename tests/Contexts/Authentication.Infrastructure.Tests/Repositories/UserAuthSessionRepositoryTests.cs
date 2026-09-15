@@ -1,6 +1,6 @@
 using Xunit;
 
-namespace SupportAdvance.Contexts.Identity.Infrastructure.Tests.Repositories;
+namespace SupportAdvance.Contexts.Authentication.Infrastructure.Tests.Repositories;
 
 /// <summary>
 /// UserAuthSessionRepository の Integration Test

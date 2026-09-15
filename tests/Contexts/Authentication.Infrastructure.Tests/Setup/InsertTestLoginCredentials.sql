@@ -1,6 +1,6 @@
 -- ============================================
 -- テストユーザー用 ログイン認証情報
--- 【用途】Identity BC の Integration/E2E テスト
+-- 【用途】Authentication BC の Integration/E2E テスト
 -- 【実行前提】
 --   - m_login_credentials テーブルが存在
 --   - m_employees テーブルにテストユーザーが存在

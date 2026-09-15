@@ -1,8 +1,8 @@
 using Dapper;
-using SupportAdvance.Contexts.Identity.Application.Queries;
+using SupportAdvance.Contexts.Authentication.Application.Queries;
 using SupportAdvance.Infrastructure.Persistence;
 
-namespace SupportAdvance.Contexts.Identity.Infrastructure.Queries;
+namespace SupportAdvance.Contexts.Authentication.Infrastructure.Queries;
 
 /// <summary>
 /// ローカル認証情報マスター Query Service 実装

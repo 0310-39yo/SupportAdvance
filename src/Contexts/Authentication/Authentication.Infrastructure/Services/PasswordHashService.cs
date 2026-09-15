@@ -1,7 +1,7 @@
 using System.Security.Cryptography;
-using SupportAdvance.Contexts.Identity.Application.Services;
+using SupportAdvance.Contexts.Authentication.Application.Services;
 
-namespace SupportAdvance.Contexts.Identity.Infrastructure.Services;
+namespace SupportAdvance.Contexts.Authentication.Infrastructure.Services;
 
 /// <summary>
 /// パスワードハッシュ検証サービス 実装

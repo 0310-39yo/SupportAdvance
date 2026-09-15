@@ -1,7 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using SupportAdvance.Contexts.Identity.Application.Dtos;
-using SupportAdvance.Contexts.Identity.Application.UseCases;
+using SupportAdvance.Contexts.Authentication.Application.Dtos;
+using SupportAdvance.Contexts.Authentication.Application.UseCases;
 using SupportAdvance.Crosscutting.Logging;
 using SupportAdvance.Infrastructure.Services;
 

@@ -12,7 +12,7 @@ namespace SupportAdvance.Infrastructure.Persistence;
 ///
 /// 【使用例】
 /// var sql = _queryLoader.LoadQuery("Auth.GetLoginCredentialsByLoginId", typeof(LoginCredentialsRepository));
-/// → Identity.Infrastructure/Persistence/Sql/SqlServer/Auth/GetLoginCredentialsByLoginId.sql
+/// → Authentication.Infrastructure/Persistence/Sql/SqlServer/Auth/GetLoginCredentialsByLoginId.sql
 /// </summary>
 public class SqlQueryLoader
 {
@@ -39,8 +39,8 @@ public class SqlQueryLoader
         var dbDialect = _appSettings.Database.Dialect ?? "SqlServer";
 
         // repositoryType の Namespace から Context を特定
-        // 例: SupportAdvance.Contexts.Identity.Infrastructure.Repositories.LoginCredentialsRepository
-        // → SupportAdvance.Contexts.Identity.Infrastructure
+        // 例: SupportAdvance.Contexts.Authentication.Infrastructure.Repositories.LoginCredentialsRepository
+        // → SupportAdvance.Contexts.Authentication.Infrastructure
         var contextNamespace = repositoryType.Namespace;
         if (string.IsNullOrEmpty(contextNamespace))
             throw new InvalidOperationException($"Cannot determine namespace for type {repositoryType.FullName}");
@@ -66,7 +66,7 @@ public class SqlQueryLoader
         var queryName = parts[1];
 
         // リソース名構築
-        // 例: SupportAdvance.Contexts.Identity.Infrastructure.Persistence.Sql.SqlServer.Auth.GetLoginCredentialsByLoginId.sql
+        // 例: SupportAdvance.Contexts.Authentication.Infrastructure.Persistence.Sql.SqlServer.Auth.GetLoginCredentialsByLoginId.sql
         var resourceName = $"{contextNamespace}.Persistence.Sql.{dbDialect}.{category}.{queryName}.sql";
 
         // Assembly から埋め込みリソースを取得

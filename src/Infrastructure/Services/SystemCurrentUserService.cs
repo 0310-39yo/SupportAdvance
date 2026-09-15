@@ -3,7 +3,7 @@ namespace SupportAdvance.Infrastructure.Services;
 /// <summary>
 /// ICurrentUserService の暫定実装（認証機能未実装のための仮実装 / スタブ）
 ///
-/// 【TODO】Identity BC（認証機能）が実装され次第、ログインユーザー情報を返す
+/// 【TODO】Authentication BC（認証機能）が実装され次第、ログインユーザー情報を返す
 /// 正式な実装（例：HttpContext / Windows認証ベース）に置き換えること
 ///
 /// 【現状の挙動】常に固定のシステムユーザー（m_employees.row_id=2147483667）を返す。
@@ -30,7 +30,7 @@ public sealed class SystemCurrentUserService : ICurrentUserService
 
     /// <summary>
     /// SetLoggedInUser は暫定実装のため何もしない（no-op）
-    /// Identity BC 実装時は RealCurrentUserService に置き換え
+    /// Authentication BC 実装時は RealCurrentUserService に置き換え
     /// </summary>
     public void SetLoggedInUser(long employeeRowId, string loginId)
     {
@@ -39,7 +39,7 @@ public sealed class SystemCurrentUserService : ICurrentUserService
 
     /// <summary>
     /// SetLoggedOut は暫定実装のため何もしない（no-op）
-    /// Identity BC 実装時は RealCurrentUserService に置き換え
+    /// Authentication BC 実装時は RealCurrentUserService に置き換え
     /// </summary>
     public void SetLoggedOut()
     {

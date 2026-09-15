@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace SupportAdvance.Contexts.Identity.Infrastructure.DbModels;
+namespace SupportAdvance.Contexts.Authentication.Infrastructure.DbModels;
 
 /// <summary>
 /// ユーザー認証セッション データベースモデル

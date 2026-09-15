@@ -2,12 +2,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using SupportAdvance.Application;
 using SupportAdvance.Common.Configuration;
+using SupportAdvance.Contexts.Authentication.Application;
+using SupportAdvance.Contexts.Authentication.Infrastructure;
 using SupportAdvance.Contexts.Department.Application;
 using SupportAdvance.Contexts.Department.Infrastructure;
 using SupportAdvance.Contexts.Employee.Application;
 using SupportAdvance.Contexts.Employee.Infrastructure;
-using SupportAdvance.Contexts.Identity.Application;
-using SupportAdvance.Contexts.Identity.Infrastructure;
 using SupportAdvance.Contexts.IntegrationPrototype.Application;
 using SupportAdvance.Crosscutting;
 using SupportAdvance.Infrastructure;
@@ -40,14 +40,14 @@ internal static class Program
                     .AddInfrastructureModels(context.Configuration)
                     .AddEmployeeInfrastructureModels() // Employee Context Infrastructure を登録
                     .AddDepartmentInfrastructureModels() // Department Context Infrastructure を登録
-                    .AddIdentityInfrastructureModels() // Identity Context Infrastructure を登録
+                    .AddAuthenticationInfrastructureModels() // Authentication Context Infrastructure を登録
                     .AddApplicationModels()
                     .AddEmployeeApplicationModels() // Employee Context Application を登録
                     .AddDepartmentApplicationModels() // Department Context Application を登録
-                    .AddIdentityApplicationModels() // Identity Context Application を登録
+                    .AddAuthenticationApplicationModels() // Authentication Context Application を登録
                     .AddIntegrationPrototypeApplicationModels() // IntegrationPrototype Application を登録
                     .AddWinTrialModules()
-                    // Identity BC 実装により RealCurrentUserService に切り替え
+                    // Authentication BC 実装により RealCurrentUserService に切り替え
                     .AddScoped<ICurrentUserService, RealCurrentUserService>()
                     // LoginDialog + ViewModel（MVVM Toolkit）を DI 登録
                     .AddScoped<LoginDialogViewModel>()

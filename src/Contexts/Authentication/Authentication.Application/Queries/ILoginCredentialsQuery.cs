@@ -1,4 +1,4 @@
-namespace SupportAdvance.Contexts.Identity.Application.Queries;
+namespace SupportAdvance.Contexts.Authentication.Application.Queries;
 
 /// <summary>
 /// ローカル認証情報マスター Query インターフェース

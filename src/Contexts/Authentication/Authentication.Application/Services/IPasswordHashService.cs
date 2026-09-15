@@ -1,4 +1,4 @@
-namespace SupportAdvance.Contexts.Identity.Application.Services;
+namespace SupportAdvance.Contexts.Authentication.Application.Services;
 
 /// <summary>
 /// パスワードハッシュ検証サービス インターフェース

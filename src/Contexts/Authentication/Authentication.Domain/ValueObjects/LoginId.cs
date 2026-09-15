@@ -1,4 +1,4 @@
-namespace SupportAdvance.Contexts.Identity.Domain.ValueObjects;
+namespace SupportAdvance.Contexts.Authentication.Domain.ValueObjects;
 
 /// <summary>
 /// ログインID（従業員番号など）

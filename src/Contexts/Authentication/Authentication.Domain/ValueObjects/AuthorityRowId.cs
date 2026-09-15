@@ -1,13 +1,13 @@
 using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
-namespace SupportAdvance.Contexts.Identity.Domain.ValueObjects;
+namespace SupportAdvance.Contexts.Authentication.Domain.ValueObjects;
 
 /// <summary>
 /// 権限主体 RowId（従業員ID）
 /// 【型】long（m_employees.row_id に対応）
 /// 【特徴】UserAuthSession が紐づく従業員。本番環境ではこの従業員の権限が適用される
 /// 【用途】current_user_row_id として t_user_auth_sessions に記録
-/// 【注】Identity BC がローカルで定義。Employee BC の EmployeeRowId と論理的に同一だが、BC境界を明確化
+/// 【注】Authentication BC がローカルで定義。Employee BC の EmployeeRowId と論理的に同一だが、BC境界を明確化
 /// 【不変性】生成後変更不可
 /// </summary>
 public sealed class AuthorityRowId : RowId, IEquatable<AuthorityRowId>

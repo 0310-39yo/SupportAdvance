@@ -1,25 +1,25 @@
 using Microsoft.Extensions.DependencyInjection;
 using RepoDb;
-using SupportAdvance.Contexts.Identity.Application.Queries;
-using SupportAdvance.Contexts.Identity.Application.Services;
-using SupportAdvance.Contexts.Identity.Domain.Repositories;
-using SupportAdvance.Contexts.Identity.Infrastructure.DbModels;
-using SupportAdvance.Contexts.Identity.Infrastructure.Mappers;
-using SupportAdvance.Contexts.Identity.Infrastructure.Queries;
-using SupportAdvance.Contexts.Identity.Infrastructure.Repositories;
-using SupportAdvance.Contexts.Identity.Infrastructure.Services;
+using SupportAdvance.Contexts.Authentication.Application.Queries;
+using SupportAdvance.Contexts.Authentication.Application.Services;
+using SupportAdvance.Contexts.Authentication.Domain.Repositories;
+using SupportAdvance.Contexts.Authentication.Infrastructure.DbModels;
+using SupportAdvance.Contexts.Authentication.Infrastructure.Mappers;
+using SupportAdvance.Contexts.Authentication.Infrastructure.Queries;
+using SupportAdvance.Contexts.Authentication.Infrastructure.Repositories;
+using SupportAdvance.Contexts.Authentication.Infrastructure.Services;
 
-namespace SupportAdvance.Contexts.Identity.Infrastructure;
+namespace SupportAdvance.Contexts.Authentication.Infrastructure;
 
 /// <summary>
-/// Identity Context の Infrastructure層 DI 拡張メソッド
+/// Authentication Context の Infrastructure層 DI 拡張メソッド
 /// </summary>
 public static class InfrastructureServiceCollectionExtensions
 {
     /// <summary>
-    /// Identity Context の Infrastructure Models を DI コンテナに登録する
+    /// Authentication Context の Infrastructure Models を DI コンテナに登録する
     /// </summary>
-    public static IServiceCollection AddIdentityInfrastructureModels(this IServiceCollection services)
+    public static IServiceCollection AddAuthenticationInfrastructureModels(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);
 

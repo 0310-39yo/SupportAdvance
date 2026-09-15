@@ -1,6 +1,4 @@
-using SupportAdvance.Contexts.Identity.Domain.ValueObjects;
-
-namespace SupportAdvance.Contexts.Identity.Application.UseCases;
+namespace SupportAdvance.Contexts.Authentication.Application.UseCases;
 
 /// <summary>
 /// Windows AD 認証で従業員を検索 Use Case
@@ -21,7 +19,7 @@ namespace SupportAdvance.Contexts.Identity.Application.UseCases;
 ///
 /// 【パターン】
 /// - AD認証の詳細な実装（認証確認、属性取得など）は Presentation層で
-/// - Identity BC はセッション記録のみを責務とする
+/// - Authentication BC はセッション記録のみを責務とする
 /// </summary>
 public sealed class FindEmployeeByADUseCase
 {

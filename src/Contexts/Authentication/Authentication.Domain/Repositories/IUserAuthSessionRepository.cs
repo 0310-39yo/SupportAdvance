@@ -1,7 +1,7 @@
-using SupportAdvance.Contexts.Identity.Domain.Entities;
-using SupportAdvance.Contexts.Identity.Domain.ValueObjects;
+using SupportAdvance.Contexts.Authentication.Domain.Entities;
+using SupportAdvance.Contexts.Authentication.Domain.ValueObjects;
 
-namespace SupportAdvance.Contexts.Identity.Domain.Repositories;
+namespace SupportAdvance.Contexts.Authentication.Domain.Repositories;
 
 /// <summary>
 /// ユーザー認証セッション Repository インターフェース
