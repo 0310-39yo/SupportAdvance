@@ -1,6 +1,6 @@
 # Authentication BC 設計ガイド
 
-**最終更新**: 2026-09-13 (修正版)
+**最終更新**: 2026-09-16（実装状況セクションを追加、実装と乖離していたコード例を修正）
 **作成者**: Claude + User (tyokkoto@hotmail.com)
 
 ---
@@ -12,7 +12,7 @@ Authentication BC は **認証（Authentication）に特化した Bounded Contex
 ### 責務（Responsibility）
 
 ✓ **認証**
-- Windows AD 自動認証
+- Windows AD 自動認証（未実装、下記「実装状況」参照）
 - ID/パスワード ローカル認証
 - ログインセッション管理
 - ログイン履歴記録
@@ -82,171 +82,53 @@ Authentication BC は **認証（Authentication）に特化した Bounded Contex
 
 ### Entity: UserAuthSession
 
-ユーザーのログイン状態と身分情報を表現。
+ユーザーのログイン試行結果（成功・失敗とも）を表現する `AggregateRoot`。実装は
+[UserAuthSession.cs](../../../src/Contexts/Authentication/Authentication.Domain/Entities/UserAuthSession.cs) を参照。要点:
 
 ```csharp
 namespace SupportAdvance.Contexts.Authentication.Domain.Entities;
 
-/// <summary>
-/// ユーザー認証セッション（ログイン状態を表現）
-/// 
-/// 【責務】
-/// - ユーザーの認証状態管理
-/// - 「誰がログインしているか」を保持
-/// - 「何ができるか」は保持しない（認可は外部に委ねる）
-/// </summary>
-public class UserAuthSession : Entity<IdentityRowId>
+public sealed class UserAuthSession : AggregateRoot<UserAuthSessionRowId>
 {
-    /// <summary>
-    /// Windows AD 認証か否か
-    /// 
-    /// true: AD認証 → IdentityRowId は Employee.RowId
-    /// false: ローカル認証 → IdentityRowId は LoginCredentials.RowId
-    /// </summary>
-    public bool IsADAuthenticated { get; private set; }
-
-    /// <summary>
-    /// ログインユーザーの身分識別子
-    /// 
-    /// AD認証: Employee.RowId
-    /// ローカル認証: LoginCredentials.RowId
-    /// </summary>
-    public long IdentityRowId { get; private set; }
-
-    /// <summary>
-    /// 権限の主体（Employee.RowId）
-    /// 
-    /// AD認証: Windows ログイン → Employee に紐付いた RowId
-    /// ローカル認証: mapping_employee_row_id から取得
-    /// 
-    /// 【注】権限の詳細（ロール・パーミッション）は、
-    /// Employee BC や Authorization BC で管理
-    /// </summary>
-    public EmployeeRowId AuthorityRowId { get; private set; }
-
-    /// <summary>
-    /// ログイン日時
-    /// </summary>
+    public AuthorityRowId AuthorityRowId { get; private set; }          // 権限主体（m_employees.row_id）
+    public bool IsAdAuthenticated { get; private set; }                 // true=AD認証、false=ローカル認証
+    public bool LoginSuccess { get; private set; }                      // 認証成功/失敗（失敗も記録）
     public LocalDateTime LoggedInAt { get; private set; }
+    public LocalDateTime? LoggedOutAt { get; private set; }             // アプリ正常終了時のみ設定
+    public LoginCredentialsRowId? LoginCredentialsRowId { get; private set; } // ローカル認証時のみ値あり
+    public byte[] RowVersion { get; set; } = [];
 
-    /// <summary>
-    /// 前回ログイン日時（ローカル認証の場合のみ更新）
-    /// </summary>
-    public LocalDateTime? PreviousLoginAt { get; private set; }
+    public static UserAuthSession Create(
+        UserAuthSessionRowId id, AuthorityRowId authorityRowId,
+        bool isAdAuthenticated, bool loginSuccess, LocalDateTime loggedInAt,
+        LoginCredentialsRowId? loginCredentialsRowId = null);
 
-    // ================== Factory Methods ==================
+    // DB から復元（Repository が使用）
+    public static UserAuthSession Reconstruct(
+        UserAuthSessionRowId id, AuthorityRowId authorityRowId,
+        bool isAdAuthenticated, bool loginSuccess, LocalDateTime loggedInAt,
+        LocalDateTime? loggedOutAt, LoginCredentialsRowId? loginCredentialsRowId);
 
-    /// <summary>
-    /// Windows AD 認証による UserAuthSession を生成
-    /// </summary>
-    public static UserAuthSession CreateFromAD(
-        EmployeeRowId employeeRowId,
-        LocalDateTime loggedInAt)
-    {
-        return new UserAuthSession
-        {
-            IsADAuthenticated = true,
-            IdentityRowId = employeeRowId.Value,  // Employee.RowId
-            AuthorityRowId = employeeRowId,
-            LoggedInAt = loggedInAt,
-            PreviousLoginAt = null
-        };
-    }
-
-    /// <summary>
-    /// ID/パスワード認証による UserAuthSession を生成
-    /// </summary>
-    public static UserAuthSession CreateFromLocalAuth(
-        long loginCredentialsRowId,
-        EmployeeRowId mappingEmployeeRowId,
-        LocalDateTime loggedInAt)
-    {
-        return new UserAuthSession
-        {
-            IsADAuthenticated = false,
-            IdentityRowId = loginCredentialsRowId,  // LoginCredentials.RowId
-            AuthorityRowId = mappingEmployeeRowId,  // mapping_employee_row_id から
-            LoggedInAt = loggedInAt,
-            PreviousLoginAt = null
-        };
-    }
-
-    // ================== ビジネスロジック ==================
-
-    /// <summary>
-    /// ログイン前回日時を更新（ローカル認証でのみ使用）
-    /// </summary>
-    public void UpdatePreviousLoginAt(LocalDateTime newLoggedInAt)
-    {
-        if (IsADAuthenticated)
-            throw new InvalidOperationException("AD認証の場合は前回ログイン日時を更新しません");
-
-        PreviousLoginAt = LoggedInAt;
-        LoggedInAt = newLoggedInAt;
-    }
+    public void SetLoggedOutAt(LocalDateTime loggedOutAt);
+    public bool IsActive() => LoginSuccess && LoggedOutAt == null;
 }
 ```
+
+**注**: 監査フィールド（CreatedAt/CreatedBy 等）は Domain Entity には保持せず、Repository が保存・更新時に設定する（[LocalDateTime 使用規則](../../../CLAUDE.md#-localdatetime-使用規則)参照）。
 
 ### ValueObjects
 
-#### 1. IdentityRowId
+Domain 層の実際の ValueObject は以下の5つ（[ValueObjects/](../../../src/Contexts/Authentication/Authentication.Domain/ValueObjects/) 配下）。
 
-```csharp
-namespace SupportAdvance.Contexts.Authentication.Domain.ValueObjects;
+| ValueObject | 用途 |
+|---|---|
+| `UserAuthSessionRowId` | UserAuthSession の主キー（`t_user_auth_sessions.row_id`） |
+| `AuthorityRowId` | 権限主体（`m_employees.row_id`）。EmployeeRowId と論理的に同一の値だが、BC境界を明確化するためこのBCでローカルに定義した独立した型（EmployeeRowId 型そのものではない） |
+| `LoginCredentialsRowId` | ローカル認証マスターの行ID（`m_login_credentials.row_id`） |
+| `LoginId` | ログインID（現状 `AuthenticateLocalUserRequest`/`LoginCredentialsDbModel` では素の `string` として扱われており、この ValueObject は未結線） |
+| `AuthMethod` | 認証方式を表す enum ラッパー（`LocalAuth`/`WindowsAD`）。現状 `UserAuthSession.IsAdAuthenticated`（bool）が実際に使われており、この ValueObject は未結線 |
 
-/// <summary>
-/// 身分識別子（IdentityRowId）
-/// 
-/// AD認証: Employee.RowId の値
-/// ローカル認証: LoginCredentials.RowId の値
-/// </summary>
-public record IdentityRowId(long Value)
-{
-    public static IdentityRowId From(long value)
-    {
-        if (value <= 0)
-            throw new ArgumentException("IdentityRowId は正数である必要があります", nameof(value));
-        
-        return new IdentityRowId(value);
-    }
-
-    public static bool TryFrom(long value, out IdentityRowId result)
-    {
-        if (value <= 0)
-        {
-            result = null!;
-            return false;
-        }
-
-        result = new IdentityRowId(value);
-        return true;
-    }
-}
-```
-
-#### 2. AuthorityRowId
-
-実装は EmployeeRowId と同一。別名として使用：
-
-```csharp
-namespace SupportAdvance.Contexts.Authentication.Domain.ValueObjects;
-
-// EmployeeRowId の別名・エイリアス
-public record AuthorityRowId(long Value)
-{
-    /// <summary>
-    /// EmployeeRowId から AuthorityRowId に変換
-    /// </summary>
-    public static AuthorityRowId FromEmployeeRowId(EmployeeRowId employeeRowId)
-        => new(employeeRowId.Value);
-
-    /// <summary>
-    /// AuthorityRowId から EmployeeRowId に変換
-    /// </summary>
-    public EmployeeRowId ToEmployeeRowId()
-        => new(Value);
-}
-```
+いずれも `From`/`TryFrom`（`AuthorityRowId` は `TryFromDbValue` も）を持つ標準パターン。`LoginId`/`AuthMethod` は将来の置き換え候補として定義済みだが、現在のコードパスでは未使用（要検証: 実装が追いついていない可能性）。
 
 ---
 
@@ -255,116 +137,76 @@ public record AuthorityRowId(long Value)
 ### 認証フロー図
 
 ```
-起動時: RealCurrentUserService.Authenticate()
+起動時: WinTrial Program.cs → LoginDialog.ShowDialog()
 │
 ├─ Step 1: Windows ログイン情報取得
 │  ├─ Domain = AppSettings.ActiveDirectoryDomain（大文字正規化）
 │  └─ UserId = Environment.UserName（大文字正規化）
 │
-├─ Step 2: AD 自動認証判定（優先）
-│  ├─ Employee テーブルで Domain+UserId を検索（IQueryService<Employee, EmployeeRowId>）
-│  │  ├─ マッチした場合
-│  │  │  └─ ✓ t_user_auth_sessions に INSERT
-│  │  │     is_ad_authenticated=1, current_user_row_id=Employee.RowId
-│  │  │     login_success=1, login_credentials_row_id=NULL
-│  │  │
-│  │  └─ マッチしない場合
-│  │     └─ Step 3 へ（フォールバック）
+├─ Step 2: AD 自動認証判定（優先・設計のみ、未実装）
+│  ├─ 【未実装】FindEmployeeByADUseCase は現状 空のスタブクラス
+│  │  （Presentation層からも呼び出されていない）
+│  │  実装後は Employee テーブルで Domain+UserId を検索する想定
+│  │     ├─ マッチした場合
+│  │     │  └─ ✓ t_user_auth_sessions に INSERT
+│  │     │     is_ad_authenticated=1, current_user_row_id=Employee.RowId
+│  │     │     login_success=1, login_credentials_row_id=NULL
+│  │     └─ マッチしない場合 → Step 3 へ（フォールバック）
+│  └─ 現状は常に Step 3（ローカル認証）から開始する
 │
 ├─ Step 3: ID/パスワード入力画面を表示
 │  ├─ ユーザー入力: LoginId, Password
 │  └─ Step 4 へ
 │
-└─ Step 4: ローカル認証判定（フォールバック）
-   ├─ m_login_credentials でローカル認証
-   │  ├─ 判定順序:
-   │  │  ① login_id が一致（大文字小文字区別あり）か
-   │  │  ② password_hash が一致するか
-   │  │  ③ is_active = true か
-   │  │  ④ mapping_employee_row_id が null でないか
-   │  │  ⑤ mapping_employee_row_id が Employee に存在するか（IQueryService経由）
+└─ Step 4: ローカル認証（LoginDialog → AuthenticateLocalUserUseCase）
+   ├─ m_login_credentials でローカル認証（判定順序）:
+   │  │  ① login_id が一致するレコードが存在するか
+   │  │  ② is_active = true か
+   │  │  ③ password_hash が一致するか（IPasswordHashService、PBKDF2+Salt）
    │  │
    │  ├─ すべて OK
-   │  │  └─ ✓ t_user_auth_sessions に INSERT
+   │  │  └─ ✓ t_user_auth_sessions に INSERT（成功記録）
    │  │     is_ad_authenticated=0, current_user_row_id=mapping_employee_row_id
    │  │     login_success=1, login_credentials_row_id=LoginCredentials.RowId
    │  │
    │  └─ NG な場合
-   │     └─ t_user_auth_sessions に INSERT（失敗記録）
-   │        login_success=0, current_user_row_id=SYSTEM_USER_ID
-   │        エラーメッセージを表示（詳細は次セクション）
+   │     └─ t_user_auth_sessions に INSERT（失敗記録、current_user_row_id=SYSTEM_USER_ID）
+   │        続けて InvalidOperationException をスロー（エラーメッセージは次セクション）
 ```
 
 ### エラーメッセージ（ローカル認証の判定順）
 
-ユーザーが「ID/パスワード」を入力した時の検証：
+実装は [AuthenticateLocalUserUseCase.cs](../../../src/Contexts/Authentication/Authentication.Application/UseCases/AuthenticateLocalUserUseCase.cs) を参照。判定順序と失敗時のメッセージ（例外の `Message`）:
 
-| # | 判定項目 | 条件 | エラーメッセージ | 例 |
-|---|---|---|---|---|
-| 1 | login_id | DB に同じ ID が存在しない | "ログインIDが見つかりません" | 入力: `user01` → DB に なし |
-| 2 | password_hash | パスワードハッシュが不一致 | "パスワードが間違っています" | ハッシュ値が異なる |
-| 3 | is_active | false（アカウント無効） | "このアカウントは無効です" | is_active = 0 |
-| 4 | mapping_employee_row_id | null（マッピング未設定） | "権限が設定されていません" | mapping_employee_row_id is null |
-| 5 | Employee 存在確認 | mapping_employee_row_id が Employee.RowId に存在しない | "権限設定が無効です" | mapping_employee_row_id = 999（存在しない） |
+| # | 判定項目 | 条件 | エラーメッセージ |
+|---|---|---|---|
+| 1 | login_id | `ILoginCredentialsQuery.GetByLoginIdAsync` が null を返す（該当なし） | "ログインIDが見つかりません" |
+| 2 | is_active | false（アカウント無効） | "このアカウントは無効です" |
+| 3 | password_hash | `IPasswordHashService.VerifyPassword` が false | "パスワードが間違っています" |
 
-**実装パターン:**
+いずれの失敗時も、失敗ログ（`login_success=false`, `current_user_row_id=SYSTEM_USER_ID`）をまず保存してから例外をスローする。`mapping_employee_row_id` は DB上 NOT NULL のため null チェックや Employee 存在確認は行っていない（設計初期段階で検討されていたが実装では省略されている）。
+
+**実装パターン（要点抜粋）:**
 
 ```csharp
-public class AuthenticateLocalUserUseCase : IAuthenticateLocalUserUseCase
+public sealed class AuthenticateLocalUserUseCase
 {
-    private readonly ILoginCredentialsRepository _loginCredentialsRepository;
-    private readonly IQueryService<Employee, EmployeeRowId> _employeeQuery;  // ← DI注入
+    private readonly ILoginCredentialsQuery _loginCredentialsQuery;
+    private readonly IPasswordHashService _passwordHashService;
+    private readonly IUserAuthSessionRepository _sessionRepository;
     private readonly IClock _clock;
+    private readonly ISequenceProvider _sequenceProvider;
+    private const long SystemUserId = 2147483667; // 失敗ログの current_user_row_id
 
-    public async Task<Result<UserAuthSessionDto>> ExecuteAsync(string loginId, string password)
+    public async Task<AuthenticateLocalUserResponse> ExecuteAsync(AuthenticateLocalUserRequest request)
     {
-        // ① login_id チェック
-        var credential = await _loginCredentialsRepository.GetByLoginIdAsync(loginId);
-        if (credential == null)
-            return Result.Failure("ログインIDが見つかりません");
+        // Step 1: ログインID で認証情報を取得（null → 失敗ログ保存 + 例外）
+        var credentials = await _loginCredentialsQuery.GetByLoginIdAsync(request.LoginId);
 
-        // ② password_hash チェック
-        if (!VerifyPasswordHash(password, credential.PasswordHash))
-            return Result.Failure("パスワードが間違っています");
-
-        // ③ is_active チェック
-        if (!credential.IsActive)
-            return Result.Failure("このアカウントは無効です");
-
-        // ④ mapping_employee_row_id is null チェック
-        if (credential.MappingEmployeeRowId == null)
-            return Result.Failure("権限が設定されていません");
-
-        // ⑤ Employee 存在確認（ジェネリック Query Service 経由）
-        var employee = await _employeeQuery.GetByIdAsync(
-            new EmployeeRowId(credential.MappingEmployeeRowId.Value));
-        if (employee == null)
-            return Result.Failure("権限設定が無効です");
-
-        // 認証成功
-        var session = UserAuthSession.CreateFromLocalAuth(
-            credential.RowId,
-            new EmployeeRowId(credential.MappingEmployeeRowId.Value),
-            _clock.JstNow);
-
-        return Result.Success(MapToDto(session));
-    }
-
-    private bool VerifyPasswordHash(string password, string hash)
-    {
-        // TODO: BCrypt など、適切なハッシュ検証ロジック
-        throw new NotImplementedException();
-    }
-
-    private UserAuthSessionDto MapToDto(UserAuthSession session)
-    {
-        return new UserAuthSessionDto
-        {
-            IdentityRowId = session.IdentityRowId,
-            IsADAuthenticated = session.IsADAuthenticated,
-            AuthorityRowId = session.AuthorityRowId.Value,
-            LoggedInAt = session.LoggedInAt
-        };
+        // Step 2: is_active 確認（false → 失敗ログ保存 + 例外）
+        // Step 3: パスワード検証（不一致 → 失敗ログ保存 + 例外）
+        // Step 4: 成功時の UserAuthSession を生成して保存
+        // Step 5: AuthenticateLocalUserResponse を返す
     }
 }
 ```
@@ -375,114 +217,92 @@ public class AuthenticateLocalUserUseCase : IAuthenticateLocalUserUseCase
 
 ### IUserAuthSessionRepository
 
+Domain 層が定義する永続化インターフェース。実装は
+[IUserAuthSessionRepository.cs](../../../src/Contexts/Authentication/Authentication.Domain/Repositories/IUserAuthSessionRepository.cs) を参照。
+
 ```csharp
 namespace SupportAdvance.Contexts.Authentication.Domain.Repositories;
 
-/// <summary>
-/// UserAuthSession の永続化インターフェース
-/// </summary>
 public interface IUserAuthSessionRepository
 {
-    /// <summary>
-    /// UserAuthSession を保存（新規作成）
-    /// </summary>
-    Task SaveAsync(UserAuthSession session);
-
-    /// <summary>
-    /// 最新のログインセッションを取得（ユーザー確認用）
-    /// </summary>
-    Task<UserAuthSession?> GetLatestAsync(EmployeeRowId employeeRowId);
-
-    /// <summary>
-    /// ログイン履歴を取得
-    /// </summary>
-    Task<IEnumerable<UserAuthSession>> GetLoginHistoryAsync(
-        EmployeeRowId employeeRowId,
-        int limit = 10);
-}
-
-/// <summary>
-/// LoginCredentials テーブルアクセス用インターフェース
-/// 
-/// 【注】Authentication BC 内部で使用。外部には公開しない。
-/// </summary>
-public interface ILoginCredentialsRepository
-{
-    Task<LoginCredentialsDbModel?> GetByLoginIdAsync(string loginId);
+    Task<UserAuthSession?> GetByIdAsync(UserAuthSessionRowId id);
+    Task<UserAuthSession?> GetLatestByAuthorityRowIdAsync(AuthorityRowId authorityRowId);
+    Task<UserAuthSession?> GetLatestByLoginCredentialsRowIdAsync(LoginCredentialsRowId loginCredentialsRowId);
+    Task<UserAuthSessionRowId> SaveAsync(UserAuthSession session);   // 新規作成
+    Task UpdateAsync(UserAuthSession session);                       // 楽観ロック付き更新（主に LoggedOutAt 用）
+    Task DeleteAsync(UserAuthSessionRowId id);                       // 論理削除
 }
 ```
+
+**注**: `m_login_credentials` へのアクセスは Domain 層の Repository ではなく、Application 層の `ILoginCredentialsQuery`（[ILoginCredentialsQuery.cs](../../../src/Contexts/Authentication/Authentication.Application/Queries/ILoginCredentialsQuery.cs)）として定義され、Infrastructure 層の `LoginCredentialsQueryService` が実装する（SELECT専用の Query Service パターン。ILoginCredentialsRepository という Domain Repository は存在しない）。
 
 ---
 
 ## Application層: Use Cases
 
-### IAuthenticateLocalUserUseCase（インターフェース）
+### AuthenticateLocalUserUseCase
+
+Interface を挟まず、クラスを直接 DI 登録・注入する構成（`IUseCase` 実装ではない）。実装は
+[AuthenticateLocalUserUseCase.cs](../../../src/Contexts/Authentication/Authentication.Application/UseCases/AuthenticateLocalUserUseCase.cs)、DTOは
+[AuthenticateLocalUserRequest.cs](../../../src/Contexts/Authentication/Authentication.Application/Dtos/AuthenticateLocalUserRequest.cs) /
+[AuthenticateLocalUserResponse.cs](../../../src/Contexts/Authentication/Authentication.Application/Dtos/AuthenticateLocalUserResponse.cs) を参照。
 
 ```csharp
-namespace SupportAdvance.Contexts.Authentication.Application.UseCases;
-
-/// <summary>
-/// ローカル認証 Use Case インターフェース
-/// </summary>
-public interface IAuthenticateLocalUserUseCase : IUseCase
+public sealed class AuthenticateLocalUserUseCase
 {
-    Task<Result<UserAuthSessionDto>> ExecuteAsync(string loginId, string password);
+    public AuthenticateLocalUserUseCase(
+        ILoginCredentialsQuery loginCredentialsQuery,
+        IPasswordHashService passwordHashService,
+        IUserAuthSessionRepository sessionRepository,
+        IClock clock,
+        ISequenceProvider sequenceProvider);
+
+    public async Task<AuthenticateLocalUserResponse> ExecuteAsync(AuthenticateLocalUserRequest request);
+    // 失敗時は AuthenticateLocalUserResponse を返さず InvalidOperationException をスロー
 }
 
-public class UserAuthSessionDto
+public sealed class AuthenticateLocalUserResponse
 {
-    public long IdentityRowId { get; set; }
-    public bool IsADAuthenticated { get; set; }
-    public long AuthorityRowId { get; set; }
-    public LocalDateTime LoggedInAt { get; set; }
+    public long UserAuthSessionRowId { get; init; }
+    public long EmployeeRowId { get; init; }
+    public string LoginId { get; init; } = string.Empty;
+    public DateTime LoggedInAt { get; init; }
 }
 ```
 
-### IFindEmployeeByADUseCase（Windows AD 検索）
+### FindEmployeeByADUseCase（未実装スタブ）
+
+Windows AD 認証用に予約されたクラスだが、現状は空実装。実装は
+[FindEmployeeByADUseCase.cs](../../../src/Contexts/Authentication/Authentication.Application/UseCases/FindEmployeeByADUseCase.cs) を参照。
 
 ```csharp
-namespace SupportAdvance.Contexts.Authentication.Application.UseCases;
-
-/// <summary>
-/// Windows AD 情報から Employee を検索する Use Case
-/// </summary>
-public interface IFindEmployeeByADUseCase
+public sealed class FindEmployeeByADUseCase
 {
-    Task<EmployeeDto?> ExecuteAsync(string domain, string userId);
-}
-
-public class EmployeeDto
-{
-    public long RowId { get; set; }
-    public string BisCode { get; set; } = null!;
+    // 実装予定: Presentation層で AD 認証情報を取得し、
+    // AuthorityRowId を受け取ってセッションを生成するロジック
+    // 今後の実装で詳細化
 }
 ```
 
-**実装例:**
+### LogoutUseCase
+
+実装は [LogoutUseCase.cs](../../../src/Contexts/Authentication/Authentication.Application/UseCases/LogoutUseCase.cs) を参照。`IUseCase` インターフェースは実装しておらず、クラスを直接 DI 登録する構成。
 
 ```csharp
-public class FindEmployeeByADUseCase : IFindEmployeeByADUseCase
+public sealed class LogoutUseCase
 {
-    private readonly IQueryService<Employee, EmployeeRowId> _employeeQuery;
+    public LogoutUseCase(IUserAuthSessionRepository sessionRepository, IClock clock);
 
-    public async Task<EmployeeDto?> ExecuteAsync(string domain, string userId)
+    /// <param name="sessionRowId">ログアウト対象のセッション RowId</param>
+    /// <exception cref="InvalidOperationException">セッションが見つからない</exception>
+    public async Task ExecuteAsync(UserAuthSessionRowId sessionRowId)
     {
-        // Employee BC の Query Service 経由で検索
-        // （Employee BC では AD情報を持つ Employee を検索可能と想定）
-        
-        var employee = await _employeeQuery.FindByADAsync(domain, userId);
-        
-        if (employee == null)
-            return null;
-
-        return new EmployeeDto
-        {
-            RowId = employee.RowId.Value,
-            BisCode = employee.BisCode.Value
-        };
+        // GetByIdAsync → SetLoggedOutAt(現在時刻) → UpdateAsync
     }
 }
 ```
+
+**注（未実装部分）**: `LogoutUseCase` は実装済みだが、2026-09-16 時点で Presentation 層（`WinTrial`）から呼び出すコードはまだ存在しない。アプリ終了時の呼び出し配線は未実装。
 
 ---
 
@@ -555,271 +375,64 @@ services
 
 ---
 
-## Use Cases
+## 起動時フロー（WinForms: WinTrial）
 
-### ILogoutUseCase（新規）
+### 実際の起動シーケンス
 
-アプリケーション終了時にログアウト処理を実行。logged_out_at を記録。
+実装は [Program.cs](../../../src/Presentation/WinTrial/Program.cs) を参照。
+
+```
+Main()
+├─ DI コンテナ構築（AddAuthenticationApplicationModels / AddAuthenticationInfrastructureModels 等）
+├─ host.Start()
+├─ LoginDialog を DI から取得して ShowDialog()（モーダル）
+│  └─ LoginDialogViewModel.Login() が AuthenticateLocalUserUseCase.ExecuteAsync() を実行
+│     ├─ 成功 → ICurrentUserService.SetLoggedInUser(...) → LoginSucceeded イベント → ダイアログを閉じる（DialogResult.OK）
+│     └─ 失敗 → ErrorMessage 表示、パスワード欄クリア、ダイアログは閉じない（再入力可）
+├─ DialogResult.OK の場合 → Form1（メイン画面）を表示
+└─ キャンセルの場合 → アプリケーションを終了
+```
+
+**未実装のギャップ**:
+- Windows AD 自動認証（認証フロー図の Step 2）は未実装のため、現状は常にこの ID/パスワードダイアログから開始する
+- `LogoutUseCase` はアプリ終了時に呼び出されておらず、`logged_out_at` は記録されない
+
+### ICurrentUserService の実装
+
+`RealCurrentUserService`（[RealCurrentUserService.cs](../../../src/Presentation/WinTrial/Services/RealCurrentUserService.cs)、`SupportAdvance.Presentation.WinTrial.Services` 名前空間）は認証オーケストレーションを行わず、ログイン中のユーザー情報を保持するだけの単純な実装。
 
 ```csharp
-namespace SupportAdvance.Contexts.Authentication.Application.UseCases;
+namespace SupportAdvance.Presentation.WinTrial.Services;
 
-/// <summary>
-/// ログアウト Use Case
-/// 
-/// 【責務】
-/// - UserAuthSession の logged_out_at を設定
-/// - セッション終了を記録
-/// </summary>
-public interface ILogoutUseCase : IUseCase
+public sealed class RealCurrentUserService : ICurrentUserService
 {
-    /// <summary>
-    /// ログアウト処理を実行
-    /// </summary>
-    Task ExecuteAsync();
-}
+    public long EmployeeRowId { get; }   // 未ログイン時は InvalidOperationException
+    public string LoginId { get; }       // 未ログイン時は InvalidOperationException
+    public bool IsLoggedIn { get; }
+    public bool IsAuthenticated => IsLoggedIn;
 
-public class LogoutUseCase : ILogoutUseCase
-{
-    private readonly IUserAuthSessionRepository _repository;
-    private readonly ICurrentUserService _currentUser;
-    private readonly IClock _clock;
-
-    public async Task ExecuteAsync()
-    {
-        if (!_currentUser.IsAuthenticated)
-            return;  // 認証されていない場合は何もしない
-
-        // 現在のセッション ID を取得
-        var sessionId = _currentUser.SessionId;  // 新規プロパティ
-
-        // logged_out_at を記録
-        await _repository.LogoutAsync(sessionId, _clock.JstNow);
-    }
+    public void SetLoggedInUser(long employeeRowId, string loginId); // LoginDialogViewModel から呼ばれる
+    public void SetLoggedOut();
 }
 ```
+
+起動時の `SystemCurrentUserService`（暫定スタブ）→ `RealCurrentUserService` への切り替えは [Program.cs](../../../src/Presentation/WinTrial/Program.cs) の DI 登録（`AddScoped<ICurrentUserService, RealCurrentUserService>()`）で完了済み。
 
 ---
 
-## 起動時フロー（WPF/WinForms）
+## 実装状況（2026-09-16 時点）
 
-### RealCurrentUserService の実装方針
+- ✅ **Domain層**: UserAuthSession Entity、5つの ValueObject、IUserAuthSessionRepository 実装済み
+- ✅ **Application層**: AuthenticateLocalUserUseCase、LogoutUseCase 実装済み。DTOs 定義済み
+- ✅ **Infrastructure層**: UserAuthSessionRepository（RepoDb+Dapper）、LoginCredentialsQueryService、PasswordHashService（PBKDF2+Salt）実装済み
+- ✅ **Presentation層との統合**: LoginDialog + LoginDialogViewModel（MVVM Toolkit）、RealCurrentUserService への切り替え完了
+- ✅ **E2Eテスト**: ログイン成功/失敗フローの検証完了（[LoginDialogUITests.cs](../../../tests/Contexts/Authentication.Infrastructure.Tests/E2E/LoginDialogUITests.cs)）
 
-認証は **起動時に1回実行**。ログアウトは **アプリ終了時**。
-
-```csharp
-namespace SupportAdvance.Infrastructure.Services;
-
-/// <summary>
-/// 本番環境用 CurrentUserService
-/// 
-/// 【起動時フロー】
-/// 1. Windows AD 認証を試行
-/// 2. 失敗時は ID/パスワード入力画面を表示
-/// 3. 認証成功後、ユーザー情報をメモリに保持
-/// 4. アプリ終了時に LogoutUseCase で logged_out_at を記録
-/// </summary>
-public class RealCurrentUserService : ICurrentUserService
-{
-    private UserAuthSessionDto? _currentSession;
-    private readonly IFindEmployeeByADUseCase _findEmployeeByAD;
-    private readonly IAuthenticateLocalUserUseCase _authenticateLocal;
-    private readonly IConfiguration _configuration;
-
-    public long EmployeeRowId 
-    {
-        get
-        {
-            if (_currentSession == null)
-                throw new InvalidOperationException("ユーザーが認証されていません");
-            
-            return _currentSession.CurrentUserRowId;  // authority_row_id → current_user_row_id
-        }
-    }
-
-    public long SessionId => _currentSession?.SessionId ?? 0;
-
-    public bool IsAuthenticated => _currentSession != null;
-
-    public async Task AuthenticateAsync()
-    {
-        // Step 1: Windows AD 認証（優先）
-        var adResult = await TryADAuthenticationAsync();
-        if (adResult != null)
-        {
-            _currentSession = adResult;
-            return;
-        }
-
-        // Step 2: ローカル認証（フォールバック）
-        var localResult = await ShowLoginDialogAndAuthenticateAsync();
-        if (localResult != null)
-        {
-            _currentSession = localResult;
-            return;
-        }
-
-        // 認証失敗
-        throw new AuthenticationFailedException("ユーザー認証に失敗しました");
-    }
-
-    private async Task<UserAuthSessionDto?> TryADAuthenticationAsync()
-    {
-        try
-        {
-            var domain = _configuration["ActiveDirectoryDomain"];
-            var userId = Environment.UserName;
-
-            var employee = await _findEmployeeByAD.ExecuteAsync(domain, userId);
-            
-            if (employee != null)
-            {
-                return new UserAuthSessionDto
-                {
-                    IsADAuthenticated = true,
-                    CurrentUserRowId = employee.RowId,
-                    LoggedInAt = LocalDateTime.Now
-                };
-            }
-        }
-        catch (Exception ex)
-        {
-            // ログ出力
-            Console.WriteLine($"[WARN] AD 認証失敗: {ex.Message}");
-        }
-
-        return null;
-    }
-
-    private async Task<UserAuthSessionDto?> ShowLoginDialogAndAuthenticateAsync()
-    {
-        // TODO: WinForms/WPF で ID/パスワード入力ダイアログを表示
-        // 入力後、_authenticateLocal.ExecuteAsync() を呼び出し
-        
-        throw new NotImplementedException();
-    }
-}
-```
-
-### Application 終了フロー（WPF）
-
-```csharp
-// App.xaml.cs
-public partial class App : Application
-{
-    private ILogoutUseCase _logoutUseCase;
-
-    protected override async void OnStartup(StartupEventArgs e)
-    {
-        base.OnStartup(e);
-        
-        // DI からログアウト Use Case を取得
-        var serviceProvider = /* DI コンテナから取得 */;
-        _logoutUseCase = serviceProvider.GetRequiredService<ILogoutUseCase>();
-        
-        // 認証を実行
-        var currentUserService = serviceProvider.GetRequiredService<ICurrentUserService>();
-        await currentUserService.AuthenticateAsync();
-    }
-
-    protected override async void OnExit(ExitEventArgs e)
-    {
-        try
-        {
-            // ログアウト処理（logged_out_at を記録）
-            await _logoutUseCase.ExecuteAsync();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"[ERROR] ログアウト失敗: {ex.Message}");
-        }
-        
-        base.OnExit(e);
-    }
-}
-```
-
-### Application 終了フロー（WinForms）
-
-```csharp
-// Program.cs
-static class Program
-{
-    [STAThread]
-    static async Task Main()
-    {
-        var serviceProvider = ConfigureServices();
-        
-        try
-        {
-            var currentUserService = serviceProvider.GetRequiredService<ICurrentUserService>();
-            await currentUserService.AuthenticateAsync();
-            
-            Application.EnableVisualStyles();
-            Application.SetHighDpiMode(HighDpiMode.SystemAware);
-            Application.Run(new MainForm());
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"[ERROR] 認証失敗: {ex.Message}");
-        }
-        finally
-        {
-            try
-            {
-                var logoutUseCase = serviceProvider.GetRequiredService<ILogoutUseCase>();
-                await logoutUseCase.ExecuteAsync();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[ERROR] ログアウト失敗: {ex.Message}");
-            }
-        }
-    }
-}
-```
-
----
-
-## 次のステップ
-
-### フェーズ 1: Domain層の実装
-
-- [ ] Authentication.Domain プロジェクト作成
-- [ ] UserAuthSession Entity 実装
-- [ ] IdentityRowId, AuthorityRowId ValueObject 実装
-- [ ] Repository インターフェース定義
-- [ ] Unit Tests（Entity のファクトリメソッド、ビジネスロジック）
-
-### フェーズ 2: Application層の実装
-
-- [ ] Authentication.Application プロジェクト作成
-- [ ] IAuthenticateLocalUserUseCase 実装
-- [ ] IFindEmployeeByADUseCase 実装
-- [ ] DTOs 定義
-- [ ] Use Case Unit Tests
-
-### フェーズ 3: Infrastructure層の実装
-
-- [ ] Authentication.Infrastructure プロジェクト作成
-- [ ] UserAuthSessionRepository 実装
-- [ ] LoginCredentialsRepository 実装（m_login_credentials テーブル）
-- [ ] DbModel マッピング（LocalDateTime ↔ DateTime）
-- [ ] Integration Tests（実DB接続）
-
-### フェーズ 4: Presentation層との統合
-
-- [ ] RealCurrentUserService 実装
-- [ ] ID/パスワード入力ダイアログ実装（WinForms）
-- [ ] 起動時認証フロー実装
-- [ ] SystemCurrentUserService → RealCurrentUserService 切り替え
-
-### フェーズ 5: テスト・検証
-
-- [ ] 全体統合テスト
-- [ ] Windows AD 認証テスト
-- [ ] ローカル認証テスト
-- [ ] エラーメッセージの正確性確認
+**未実装・既知のギャップ**:
+- ❌ **Windows AD 自動認証**: `FindEmployeeByADUseCase` は空のスタブ。常に ID/パスワード認証のダイアログから開始する
+- ❌ **ログアウト時の記録**: `LogoutUseCase` は実装済みだが Presentation層から呼び出されておらず、`logged_out_at` はアプリ終了時に記録されない
+- ⚠️ **LoginId / AuthMethod ValueObject**: 定義済みだが実際のコードパス（Entity/DbModel/DTO）では未使用（`string`/`bool` のまま）
+- ⚠️ **RowVersion（楽観ロック）**: `UserAuthSessionDbModel.RowVersion` は `[NotMapped]` のプレースホルダーで、実際の DB カラムとは未連携
 
 ---
 

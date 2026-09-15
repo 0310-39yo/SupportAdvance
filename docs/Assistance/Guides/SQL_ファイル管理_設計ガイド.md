@@ -22,30 +22,22 @@
 
 ### Authentication BC の例
 
+INSERT/UPDATE/DELETE は RepoDb のエンティティベース API を直接使用するため .sql ファイルを持たない。.sql ファイルがあるのは Dapper で実行する SELECT 系のみ。
+
 ```
 src/Contexts/Authentication/Authentication.Infrastructure/
 └── Persistence/
     └── Sql/
         ├── SqlServer/                          # SQL Server 用（当面使用）
-        │   ├── Auth/
-        │   │   ├── GetLoginCredentialsByLoginId.sql
-        │   │   ├── InsertUserAuthSession.sql
-        │   │   ├── UpdateLoginCredentialsLastLogin.sql
-        │   │   └── GetUserAuthSessionByRowId.sql
-        │   └── Identities/
-        │       ├── GetUserAuthSessionByRowId.sql
-        │       ├── GetLoginHistory.sql
-        │       └── InsertUserAuthSession.sql
-        └── PostgreSQL/                         # PostgreSQL 用（将来対応）
-            ├── Auth/
-            │   ├── GetLoginCredentialsByLoginId.sql
-            │   ├── InsertUserAuthSession.sql
-            │   ├── UpdateLoginCredentialsLastLogin.sql
-            │   └── GetUserAuthSessionByRowId.sql
-            └── Identities/
-                ├── GetUserAuthSessionByRowId.sql
-                ├── GetLoginHistory.sql
-                └── InsertUserAuthSession.sql
+        │   ├── LoginCredentials/
+        │   │   └── GetLoginCredentialsByLoginId.sql
+        │   └── Sessions/
+        │       ├── GetUserAuthSessionById.sql
+        │       ├── GetLatestUserAuthSessionByAuthorityRowId.sql
+        │       └── GetLatestUserAuthSessionByLoginCredentialsRowId.sql
+        └── PostgreSQL/                         # PostgreSQL 用（将来対応、未実装）
+            ├── LoginCredentials/
+            └── Sessions/
 ```
 
 ### 他の Context も同じ構成を踏襲
@@ -126,96 +118,39 @@ src/Contexts/Department/Department.Infrastructure/
 
 **ファイル**: `src/Infrastructure/Persistence/SqlQueryLoader.cs`
 
-```csharp
-using System.Reflection;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
+実際の実装は [SqlQueryLoader.cs](../../../src/Infrastructure/Persistence/SqlQueryLoader.cs) を参照。要点のみ抜粋:
 
+```csharp
 namespace SupportAdvance.Infrastructure.Persistence;
 
-/// <summary>
-/// SQL ファイルを埋め込みリソースから読み込むローダー
-///
-/// 【用途】
-/// - 環境に応じて SqlServer / PostgreSQL の SQL を自動切り替え
-/// - Dapper / RepoDb での SQL 実行時に呼び出し
-///
-/// 【責務】
-/// 1. IConfiguration から DB 方言を読み込み
-/// 2. Context の Assembly から埋め込み SQL リソースを検索
-/// 3. DB 方言に応じて正しいファイルを返す
-///
-/// 【使用例】
-/// var sql = SqlQueryLoader.LoadQuery("Auth.GetLoginCredentialsByLoginId", typeof(LoginCredentialsRepository));
-/// // → Authentication.Infrastructure/Persistence/Sql/[SqlServer|PostgreSQL]/Auth/GetLoginCredentialsByLoginId.sql
-/// </summary>
 public class SqlQueryLoader
 {
-    private readonly IConfiguration _configuration;
+    private readonly IAppSettings _appSettings;
 
-    public SqlQueryLoader(IConfiguration configuration)
+    public SqlQueryLoader(IAppSettings appSettings)
     {
-        _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+        _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
     }
 
-    /// <summary>
-    /// SQL ファイルを読み込む
-    /// </summary>
-    /// <param name="queryPath">クエリパス（例: "Auth.GetLoginCredentialsByLoginId"）</param>
-    /// <param name="repositoryType">Repository の Type（リソース検索用）</param>
-    /// <returns>SQL ファイルの内容</returns>
-    /// <exception cref="FileNotFoundException">SQL ファイルが見つからない場合</exception>
+    /// <param name="queryPath">クエリパス（例: "LoginCredentials.GetLoginCredentialsByLoginId"）</param>
+    /// <param name="repositoryType">Repository/QueryService の Type（Namespace からContext を特定するために使用）</param>
     public string LoadQuery(string queryPath, Type repositoryType)
     {
-        ArgumentException.ThrowIfNullOrEmpty(queryPath, nameof(queryPath));
-        ArgumentNullException.ThrowIfNull(repositoryType, nameof(repositoryType));
+        var dbDialect = _appSettings.Database.Dialect ?? "SqlServer";
 
-        // パスの検証と分割
-        var parts = queryPath.Split('.', StringSplitOptions.RemoveEmptyEntries);
-        if (parts.Length != 2)
-            throw new ArgumentException(
-                $"Invalid query path format: '{queryPath}'. Expected format: 'Category.QueryName' (e.g., 'Auth.GetLoginCredentialsByLoginId')",
-                nameof(queryPath));
+        // repositoryType.Namespace の末尾 ".Repositories" / ".Queries" を除去して Context の名前空間を得る
+        // 例: SupportAdvance.Contexts.Authentication.Infrastructure.Repositories.UserAuthSessionRepository
+        //   → SupportAdvance.Contexts.Authentication.Infrastructure
 
-        var category = parts[0];       // "Auth"
-        var queryName = parts[1];      // "GetLoginCredentialsByLoginId"
-
-        // DB 方言を取得（appsettings.json / appsettings.{Environment}.json）
-        var dbDialect = _configuration["Database:Dialect"] ?? "SqlServer";
-
-        // Namespace 構築
-        // repositoryType: SupportAdvance.Contexts.Authentication.Infrastructure.Repositories.LoginCredentialsRepository
-        // Namespace: SupportAdvance.Contexts.Authentication.Infrastructure
-        var contextNamespace = repositoryType.Namespace;
-        if (string.IsNullOrEmpty(contextNamespace))
-            throw new InvalidOperationException($"Cannot determine namespace for type {repositoryType.FullName}");
-
-        // リソース名構築
-        // SupportAdvance.Contexts.Authentication.Infrastructure.Persistence.Sql.SqlServer.Auth.GetLoginCredentialsByLoginId.sql
-        var resourceName = $"{contextNamespace}.Persistence.Sql.{dbDialect}.{category}.{queryName}.sql";
-
-        // Assembly から埋め込みリソースを取得
-        var assembly = repositoryType.Assembly;
-        using var stream = assembly.GetManifestResourceStream(resourceName)
-            ?? throw new FileNotFoundException(
-                $"SQL file not found: {resourceName}\n" +
-                $"Expected location: [Context].Infrastructure/Persistence/Sql/{dbDialect}/{category}/{queryName}.sql\n" +
-                $"Database Dialect: {dbDialect}\n" +
-                $"Assembly: {assembly.FullName}");
-
-        using var reader = new StreamReader(stream);
-        return reader.ReadToEnd();
-    }
-
-    /// <summary>
-    /// 現在の DB 方言を取得
-    /// </summary>
-    public string GetCurrentDialect()
-    {
-        return _configuration["Database:Dialect"] ?? "SqlServer";
+        // クエリパスを "Category.QueryName" として分割し、
+        // {contextNamespace}.Persistence.Sql.{dbDialect}.{category}.{queryName}.sql
+        // という埋め込みリソース名でアセンブリから検索する
     }
 }
 ```
+
+**呼び出し例**: `_sqlQueryLoader.LoadQuery("LoginCredentials.GetLoginCredentialsByLoginId", typeof(LoginCredentialsQueryService))`
+→ `Authentication.Infrastructure/Persistence/Sql/SqlServer/LoginCredentials/GetLoginCredentialsByLoginId.sql`
 
 ### DI への登録
 
@@ -226,15 +161,10 @@ public static IServiceCollection AddInfrastructureModels(
     this IServiceCollection services,
     IConfiguration configuration)
 {
-    ArgumentNullException.ThrowIfNull(services);
-    ArgumentNullException.ThrowIfNull(configuration);
-
-    // SqlQueryLoader を DI に登録
-    services.AddSingleton(new SqlQueryLoader(configuration));
-
-    // その他の Infrastructure サービス
+    // ...
+    services.AddSingleton<SqlQueryLoader>();  // IAppSettings はコンストラクタ引数として DI が自動解決
     services.AddScoped<IDbConnectionFactory, DbConnectionFactory>();
-
+    // ...
     return services;
 }
 ```
@@ -245,99 +175,78 @@ public static IServiceCollection AddInfrastructureModels(
 
 ### Example 1: Dapper (SELECT)
 
-**ファイル**: `src/Contexts/Authentication/Authentication.Infrastructure/Repositories/LoginCredentialsRepository.cs`
+**ファイル**: `src/Contexts/Authentication/Authentication.Infrastructure/Queries/LoginCredentialsQueryService.cs`
 
 ```csharp
+using Dapper;
+using SupportAdvance.Contexts.Authentication.Application.Queries;
 using SupportAdvance.Infrastructure.Persistence;
 
-namespace SupportAdvance.Contexts.Authentication.Infrastructure.Repositories;
+namespace SupportAdvance.Contexts.Authentication.Infrastructure.Queries;
 
-public class LoginCredentialsRepository(
-    SqlQueryLoader queryLoader,
-    IDbConnectionFactory connectionFactory) : ILoginCredentialsRepository
+public sealed class LoginCredentialsQueryService(
+    IDbConnectionFactory connectionFactory,
+    SqlQueryLoader sqlQueryLoader) : ILoginCredentialsQuery
 {
-    public async Task<LoginCredentialsDbModel?> GetByLoginIdAsync(string loginId)
+    public async Task<LoginCredentialsQueryResult?> GetByLoginIdAsync(string loginId)
     {
-        // SQL ファイルを読み込み
-        // Persistence/Sql/[SqlServer|PostgreSQL]/Auth/GetLoginCredentialsByLoginId.sql
-        var sql = _queryLoader.LoadQuery("Auth.GetLoginCredentialsByLoginId", typeof(LoginCredentialsRepository));
+        // Persistence/Sql/SqlServer/LoginCredentials/GetLoginCredentialsByLoginId.sql
+        var sql = sqlQueryLoader.LoadQuery("LoginCredentials.GetLoginCredentialsByLoginId", typeof(LoginCredentialsQueryService));
 
-        using var connection = _connectionFactory.CreateConnection();
-        
+        using var connection = connectionFactory.CreateConnection();
+
         // Dapper で実行
-        return await connection.QuerySingleOrDefaultAsync<LoginCredentialsDbModel>(
+        return await connection.QueryFirstOrDefaultAsync<LoginCredentialsQueryResult>(
             sql,
             new { LoginId = loginId });
     }
 }
 ```
 
-**SQL ファイル**: `src/Contexts/Authentication/Authentication.Infrastructure/Persistence/Sql/SqlServer/Auth/GetLoginCredentialsByLoginId.sql`
+**SQL ファイル**: `src/Contexts/Authentication/Authentication.Infrastructure/Persistence/Sql/SqlServer/LoginCredentials/GetLoginCredentialsByLoginId.sql`
 
 ```sql
-SELECT 
+SELECT
     [row_id],
-    [row_version],
+    [mapping_employee_row_id],
     [login_id],
     [password_hash],
-    [is_active],
-    [mapping_employee_row_id],
-    [last_login_at],
-    [created_at],
-    [created_by],
-    [updated_at],
-    [updated_by],
-    [deleted_at],
-    [deleted_by]
-FROM [dbo].[m_login_credentials]
-WHERE [login_id] = @LoginId
-AND [deleted_at] IS NULL
+    [is_active]
+FROM
+    [m_login_credentials]
+WHERE
+    [login_id] = @LoginId
+    AND [deleted_at] IS NULL
 ```
 
-### Example 2: RepoDb (INSERT)
+### Example 2: RepoDb (INSERT/UPDATE)
+
+RepoDb はエンティティベース API を使うため .sql ファイルは不要（SqlQueryLoader は関与しない）。
 
 **ファイル**: `src/Contexts/Authentication/Authentication.Infrastructure/Repositories/UserAuthSessionRepository.cs`
 
 ```csharp
-public class UserAuthSessionRepository(
-    SqlQueryLoader queryLoader,
-    IDbConnectionFactory connectionFactory,
-    ICurrentUserService currentUser,
-    IClock clock) : IUserAuthSessionRepository
+public async Task<UserAuthSessionRowId> SaveAsync(UserAuthSession session)
 {
-    public async Task SaveAsync(UserAuthSession session)
-    {
-        // SQL ファイルを読み込み
-        var sql = _queryLoader.LoadQuery("Identities.InsertUserAuthSession", typeof(UserAuthSessionRepository));
+    var dbModel = _mapper.ToDbModel(session);
 
-        using var connection = _connectionFactory.CreateConnection();
-        
-        // RepoDb で実行
-        await connection.ExecuteAsync(sql, new DbParameter[]
-        {
-            new("@RowId", session.RowId.Value),
-            new("@IsADAuthenticated", session.IsADAuthenticated),
-            new("@IdentityRowId", session.IdentityRowId),
-            new("@AuthorityRowId", session.AuthorityRowId.Value),
-            new("@LoggedInAt", session.LoggedInAt.Value),
-            new("@PreviousLoginAt", session.PreviousLoginAt?.Value),
-            new("@CreatedAt", _clock.JstNow.Value),
-            new("@CreatedBy", _currentUser.EmployeeRowId)
-        });
-    }
+    if (dbModel.RowId == 0)
+        dbModel.RowId = await _sequenceProvider.GetNextValueAsync();
+
+    // 監査フィールドは Repository が設定する（Mapper では設定しない）
+    dbModel.CreatedAt = _clock.JstNow.Value;
+    dbModel.CreatedBy = 1; // TODO: 現在のユーザーを取得する仕組みが必要
+
+    using var connection = _connectionFactory.CreateConnection();
+
+    // RepoDb のエンティティベース API で INSERT（SQL ファイルなし）
+    await connection.InsertAsync<UserAuthSessionDbModel>(dbModel);
+
+    return UserAuthSessionRowId.From(dbModel.RowId);
 }
 ```
 
-**SQL ファイル**: `src/Contexts/Authentication/Authentication.Infrastructure/Persistence/Sql/SqlServer/Identities/InsertUserAuthSession.sql`
-
-```sql
-INSERT INTO [dbo].[m_user_auth_sessions]
-    ([row_id], [is_ad_authenticated], [identity_row_id], [authority_row_id], 
-     [logged_in_at], [previous_login_at], [created_at], [created_by])
-VALUES
-    (@RowId, @IsADAuthenticated, @IdentityRowId, @AuthorityRowId,
-     @LoggedInAt, @PreviousLoginAt, @CreatedAt, @CreatedBy)
-```
+`UserAuthSessionDbModel` は `[Table("t_user_auth_sessions")]` の属性で対応するテーブルを指定し、各プロパティに `[Column("...")]` でカラム名を明示している（[UserAuthSessionDbModel.cs](../../../src/Contexts/Authentication/Authentication.Infrastructure/DbModels/UserAuthSessionDbModel.cs) 参照）。
 
 ---
 
@@ -348,7 +257,7 @@ VALUES
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
     </PropertyGroup>
 
     <!-- SQL ファイルを埋め込みリソースとして登録 -->
@@ -375,8 +284,8 @@ VALUES
 # appsettings.Debug.json が適用される
 # "Database:Dialect": "SqlServer"
 
-# Persistence/Sql/SqlServer/Auth/GetLoginCredentialsByLoginId.sql が読み込まれる
-var sql = queryLoader.LoadQuery("Auth.GetLoginCredentialsByLoginId", typeof(LoginCredentialsRepository));
+# Persistence/Sql/SqlServer/LoginCredentials/GetLoginCredentialsByLoginId.sql が読み込まれる
+var sql = sqlQueryLoader.LoadQuery("LoginCredentials.GetLoginCredentialsByLoginId", typeof(LoginCredentialsQueryService));
 // → SqlServer 方言の SQL が実行
 ```
 
@@ -386,7 +295,7 @@ var sql = queryLoader.LoadQuery("Auth.GetLoginCredentialsByLoginId", typeof(Logi
 # appsettings.Intrinsic.json が適用される
 # "Database:Dialect": "SqlServer"
 
-# Persistence/Sql/SqlServer/Auth/GetLoginCredentialsByLoginId.sql が読み込まれる
+# Persistence/Sql/SqlServer/LoginCredentials/GetLoginCredentialsByLoginId.sql が読み込まれる
 # テスト用接続文字列で実行
 ```
 
@@ -396,7 +305,7 @@ var sql = queryLoader.LoadQuery("Auth.GetLoginCredentialsByLoginId", typeof(Logi
 # appsettings.Production.json が適用される
 # "Database:Dialect": "PostgreSQL"
 
-# Persistence/Sql/PostgreSQL/Auth/GetLoginCredentialsByLoginId.sql が読み込まれる
+# Persistence/Sql/PostgreSQL/LoginCredentials/GetLoginCredentialsByLoginId.sql が読み込まれる
 // → PostgreSQL 方言の SQL が実行
 ```
 
@@ -454,8 +363,8 @@ dotnet build
 ### SQL ファイル命名規則
 
 - **ファイル名**: PascalCase + .sql（例: `GetLoginCredentialsByLoginId.sql`）
-- **フォルダ**: 操作対象テーブル/エンティティ（例: `Auth/`, `Identities/`）
-- **クエリパス**: `Category.QueryName`（例: `Auth.GetLoginCredentialsByLoginId`）
+- **フォルダ**: 操作対象テーブル/エンティティ（例: `LoginCredentials/`, `Sessions/`）
+- **クエリパス**: `Category.QueryName`（例: `LoginCredentials.GetLoginCredentialsByLoginId`）
 
 ### SQL 方言の統一
 
@@ -470,13 +379,13 @@ dotnet build
 ### エラー: SQL ファイルが見つからない
 
 ```
-FileNotFoundException: SQL file not found: SupportAdvance.Contexts.Authentication.Infrastructure.Persistence.Sql.SqlServer.Auth.GetLoginCredentialsByLoginId.sql
+FileNotFoundException: SQL file not found: SupportAdvance.Contexts.Authentication.Infrastructure.Persistence.Sql.SqlServer.LoginCredentials.GetLoginCredentialsByLoginId.sql
 ```
 
 **原因と対策:**
-1. **ファイルパスが間違っている** → `[Context].Infrastructure/Persistence/Sql/SqlServer/Auth/GetLoginCredentialsByLoginId.sql` を確認
+1. **ファイルパスが間違っている** → `[Context].Infrastructure/Persistence/Sql/SqlServer/LoginCredentials/GetLoginCredentialsByLoginId.sql` を確認
 2. **.csproj に `<EmbeddedResource>` が未登録** → Authentication.Infrastructure.csproj に `<EmbeddedResource Include="Persistence/Sql/**/*.sql" />` を追加
-3. **クエリパスが間違っている** → `LoadQuery("Auth.GetLoginCredentialsByLoginId", ...)` を確認（ドットの位置）
+3. **クエリパスが間違っている** → `LoadQuery("LoginCredentials.GetLoginCredentialsByLoginId", ...)` を確認（ドットの位置）
 
 ### エラー: DB 方言が見つからない
 

@@ -25,7 +25,7 @@ public class BoundedContextIsolationTests
     {
         var rule = Types.InNamespace("SupportAdvance.Contexts.Samples.CarPreferences")
             .ShouldNot()
-            .HaveDependencyOn("SupportAdvance.Contexts.Master.Employee");
+            .HaveDependencyOn("SupportAdvance.Contexts.Employee");
 
         Assert.True(rule.GetResult().IsSuccessful,
             $"CarPreferences should not depend on Employee: {string.Join(", ", rule.GetResult().FailingTypes?.Select(t => t.Name) ?? Array.Empty<string>())}");
@@ -47,7 +47,7 @@ public class BoundedContextIsolationTests
     {
         var rule = Types.InNamespace("SupportAdvance.Contexts.Authentication")
             .ShouldNot()
-            .HaveDependencyOn("SupportAdvance.Contexts.Master.Employee");
+            .HaveDependencyOn("SupportAdvance.Contexts.Employee");
 
         Assert.True(rule.GetResult().IsSuccessful,
             $"Authentication should not depend on Employee: {string.Join(", ", rule.GetResult().FailingTypes?.Select(t => t.Name) ?? Array.Empty<string>())}");
@@ -56,7 +56,7 @@ public class BoundedContextIsolationTests
     [Fact]
     public void Employee_ShouldNotDependOnCarPreferences()
     {
-        var rule = Types.InNamespace("SupportAdvance.Contexts.Master.Employee")
+        var rule = Types.InNamespace("SupportAdvance.Contexts.Employee")
             .ShouldNot()
             .HaveDependencyOn("SupportAdvance.Contexts.Samples.CarPreferences");
 
@@ -67,7 +67,7 @@ public class BoundedContextIsolationTests
     [Fact]
     public void Employee_ShouldNotDependOnAuthentication()
     {
-        var rule = Types.InNamespace("SupportAdvance.Contexts.Master.Employee")
+        var rule = Types.InNamespace("SupportAdvance.Contexts.Employee")
             .ShouldNot()
             .HaveDependencyOn("SupportAdvance.Contexts.Authentication");
 
