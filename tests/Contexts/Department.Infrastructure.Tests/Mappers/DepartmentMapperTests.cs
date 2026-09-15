@@ -287,8 +287,8 @@ public class DepartmentMapperTests
         // Mapper は監査フィールドを設定しない（Repository の責務）
         Assert.Equal(default, result.CreatedAt);
         Assert.Equal(default, result.UpdatedAt);
-        Assert.Null(result.CreatedBy);
-        Assert.Null(result.UpdatedBy);
+        Assert.Equal(default(long), result.CreatedBy);
+        Assert.Equal(default(long), result.UpdatedBy);
     }
 
     #endregion

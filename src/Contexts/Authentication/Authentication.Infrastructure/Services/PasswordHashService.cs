@@ -67,13 +67,10 @@ public sealed class PasswordHashService : IPasswordHashService
             Array.Copy(saltAndHash, SaltSize, storedHash, 0, HashSize);
 
             // 入力パスワードを同じ Salt で PBKDF2 ハッシュ化
-            using (var pbkdf2 = new Rfc2898DeriveBytes(plainPassword, salt, Iterations, HashAlgorithmName.SHA256))
-            {
-                byte[] computedHash = pbkdf2.GetBytes(HashSize);
+            byte[] computedHash = Rfc2898DeriveBytes.Pbkdf2(plainPassword, salt, Iterations, HashAlgorithmName.SHA256, HashSize);
 
-                // ハッシュ部分を比較（タイミング攻撃対策）
-                return ConstantTimeComparison(storedHash, computedHash);
-            }
+            // ハッシュ部分を比較（タイミング攻撃対策）
+            return ConstantTimeComparison(storedHash, computedHash);
         }
         catch
         {
@@ -100,17 +97,14 @@ public sealed class PasswordHashService : IPasswordHashService
             }
 
             // PBKDF2 でハッシュ化（イテレーション回数：10000）
-            using (var pbkdf2 = new Rfc2898DeriveBytes(plainPassword, salt, Iterations, HashAlgorithmName.SHA256))
-            {
-                byte[] hash = pbkdf2.GetBytes(HashSize);
+            byte[] hash = Rfc2898DeriveBytes.Pbkdf2(plainPassword, salt, Iterations, HashAlgorithmName.SHA256, HashSize);
 
-                // Salt + Hash を結合して Base64 エンコード
-                byte[] saltAndHash = new byte[salt.Length + hash.Length];
-                Buffer.BlockCopy(salt, 0, saltAndHash, 0, salt.Length);
-                Buffer.BlockCopy(hash, 0, saltAndHash, salt.Length, hash.Length);
+            // Salt + Hash を結合して Base64 エンコード
+            byte[] saltAndHash = new byte[salt.Length + hash.Length];
+            Buffer.BlockCopy(salt, 0, saltAndHash, 0, salt.Length);
+            Buffer.BlockCopy(hash, 0, saltAndHash, salt.Length, hash.Length);
 
-                return Convert.ToBase64String(saltAndHash);
-            }
+            return Convert.ToBase64String(saltAndHash);
         }
         catch (Exception ex)
         {

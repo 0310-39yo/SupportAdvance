@@ -18,7 +18,7 @@ public sealed class UserAuthSessionRowId : RowId, IEquatable<UserAuthSessionRowI
     /// <summary>
     /// ユーザー認証セッションレコード行IDの値を取得する
     /// </summary>
-    public long Value => ValueField;
+    public new long Value => ValueField;
 
     /// <summary>
     /// 指定された long 値から UserAuthSessionRowId を生成する（プライベートコンストラクタ）

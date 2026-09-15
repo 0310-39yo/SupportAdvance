@@ -30,4 +30,8 @@
     <ProjectReference Include="../../../src/Contexts/Employee/Employee.Domain/Employee.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="DomainEvents\" />
+  </ItemGroup>
+
 </Project>

@@ -15,7 +15,7 @@ public sealed class DepartmentRowId : RowId, IEquatable<DepartmentRowId>
     /// <summary>
     /// 部署行IDの値を取得する
     /// </summary>
-    public long Value => ValueField;
+    public new long Value => ValueField;
 
     /// <summary>
     /// 指定された部署行IDから DepartmentRowId を生成する（プライベートコンストラクタ）

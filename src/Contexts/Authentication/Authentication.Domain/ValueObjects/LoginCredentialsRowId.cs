@@ -18,7 +18,7 @@ public sealed class LoginCredentialsRowId : RowId, IEquatable<LoginCredentialsRo
     /// <summary>
     /// ログイン認証情報マスター行IDの値を取得する
     /// </summary>
-    public long Value => ValueField;
+    public new long Value => ValueField;
 
     /// <summary>
     /// 指定された long 値から LoginCredentialsRowId を生成する（プライベートコンストラクタ）

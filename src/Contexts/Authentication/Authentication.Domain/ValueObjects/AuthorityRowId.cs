@@ -20,7 +20,7 @@ public sealed class AuthorityRowId : RowId, IEquatable<AuthorityRowId>
     /// <summary>
     /// 権限主体行IDの値を取得する
     /// </summary>
-    public long Value => ValueField;
+    public new long Value => ValueField;
 
     /// <summary>
     /// 指定された long 値から AuthorityRowId を生成する（プライベートコンストラクタ）

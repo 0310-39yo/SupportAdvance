@@ -15,7 +15,7 @@ public sealed class EmployeeRowId : RowId, IEquatable<EmployeeRowId>
     /// <summary>
     /// 従業員行IDの値を取得する
     /// </summary>
-    public long Value => ValueField;
+    public new long Value => ValueField;
 
     /// <summary>
     /// 指定された long 値からEmployeeRowIdを生成する（プライベートコンストラクタ）
@@ -39,7 +39,7 @@ public sealed class EmployeeRowId : RowId, IEquatable<EmployeeRowId>
     /// 指定された long 値からEmployeeRowIdのインスタンスの生成を試みる（型安全版）
     /// 【責務】null安全に EmployeeRowId を生成する（Domain層での生成方式）
     /// </summary>
-    /// <param name="input">従業員行ID（null許容）</param>
+    /// <param name="value">従業員行ID</param>
     /// <param name="result">生成されたEmployeeRowIdのインスタンス</param>
     /// <returns>生成に成功した場合はtrue、失敗した場合はfalse</returns>
     public static bool TryFrom(long value, out EmployeeRowId result)

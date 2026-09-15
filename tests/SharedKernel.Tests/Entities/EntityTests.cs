@@ -118,7 +118,6 @@ public class EntityTests
 
         // Act & Assert
         Assert.Empty(entity.DomainEvents);
-        Assert.Equal(0, entity.DomainEvents.Count);
     }
 
     #endregion

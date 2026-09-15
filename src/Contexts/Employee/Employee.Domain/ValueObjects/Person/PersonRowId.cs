@@ -17,7 +17,7 @@ public sealed class PersonRowId : RowId, IEquatable<PersonRowId>
     /// <summary>
     /// 人物行IDの値を取得する
     /// </summary>
-    public long Value => ValueField;
+    public new long Value => ValueField;
 
     /// <summary>
     /// 指定された long 値からPersonRowIdを生成する（プライベートコンストラクタ）

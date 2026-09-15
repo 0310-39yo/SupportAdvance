@@ -60,7 +60,7 @@ public abstract class RowId : PrimitiveValueObject<long>, IEquatable<RowId>
     /// 【実装例】
     /// public override void Validate(long normalized)
     /// {
-    ///     if (normalized < MinValue)
+    ///     if (normalized &lt; MinValue)
     ///         throw new ArgumentOutOfRangeException(...);
     /// }
     /// </summary>
