@@ -10,7 +10,7 @@
 
 - **何を実装するのか**: Domain層の状態変化をドメインイベントで記録
 - **どこに実装するのか**: src/SharedKernel/Entities/Abstractions/
-- **誰が使うのか**: Identity.Domain, Employee.Domain など各 Bounded Context の Domain層
+- **誰が使うのか**: Authentication.Domain, Employee.Domain など各 Bounded Context の Domain層
 
 ---
 

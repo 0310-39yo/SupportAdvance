@@ -20,10 +20,10 @@
 
 ## ディレクトリ構成
 
-### Identity BC の例
+### Authentication BC の例
 
 ```
-src/Contexts/Identity/Identity.Infrastructure/
+src/Contexts/Authentication/Authentication.Infrastructure/
 └── Persistence/
     └── Sql/
         ├── SqlServer/                          # SQL Server 用（当面使用）
@@ -147,7 +147,7 @@ namespace SupportAdvance.Infrastructure.Persistence;
 ///
 /// 【使用例】
 /// var sql = SqlQueryLoader.LoadQuery("Auth.GetLoginCredentialsByLoginId", typeof(LoginCredentialsRepository));
-/// // → Identity.Infrastructure/Persistence/Sql/[SqlServer|PostgreSQL]/Auth/GetLoginCredentialsByLoginId.sql
+/// // → Authentication.Infrastructure/Persistence/Sql/[SqlServer|PostgreSQL]/Auth/GetLoginCredentialsByLoginId.sql
 /// </summary>
 public class SqlQueryLoader
 {
@@ -184,14 +184,14 @@ public class SqlQueryLoader
         var dbDialect = _configuration["Database:Dialect"] ?? "SqlServer";
 
         // Namespace 構築
-        // repositoryType: SupportAdvance.Contexts.Identity.Infrastructure.Repositories.LoginCredentialsRepository
-        // Namespace: SupportAdvance.Contexts.Identity.Infrastructure
+        // repositoryType: SupportAdvance.Contexts.Authentication.Infrastructure.Repositories.LoginCredentialsRepository
+        // Namespace: SupportAdvance.Contexts.Authentication.Infrastructure
         var contextNamespace = repositoryType.Namespace;
         if (string.IsNullOrEmpty(contextNamespace))
             throw new InvalidOperationException($"Cannot determine namespace for type {repositoryType.FullName}");
 
         // リソース名構築
-        // SupportAdvance.Contexts.Identity.Infrastructure.Persistence.Sql.SqlServer.Auth.GetLoginCredentialsByLoginId.sql
+        // SupportAdvance.Contexts.Authentication.Infrastructure.Persistence.Sql.SqlServer.Auth.GetLoginCredentialsByLoginId.sql
         var resourceName = $"{contextNamespace}.Persistence.Sql.{dbDialect}.{category}.{queryName}.sql";
 
         // Assembly から埋め込みリソースを取得
@@ -245,12 +245,12 @@ public static IServiceCollection AddInfrastructureModels(
 
 ### Example 1: Dapper (SELECT)
 
-**ファイル**: `src/Contexts/Identity/Identity.Infrastructure/Repositories/LoginCredentialsRepository.cs`
+**ファイル**: `src/Contexts/Authentication/Authentication.Infrastructure/Repositories/LoginCredentialsRepository.cs`
 
 ```csharp
 using SupportAdvance.Infrastructure.Persistence;
 
-namespace SupportAdvance.Contexts.Identity.Identity.Infrastructure.Repositories;
+namespace SupportAdvance.Contexts.Authentication.Infrastructure.Repositories;
 
 public class LoginCredentialsRepository(
     SqlQueryLoader queryLoader,
@@ -272,7 +272,7 @@ public class LoginCredentialsRepository(
 }
 ```
 
-**SQL ファイル**: `src/Contexts/Identity/Identity.Infrastructure/Persistence/Sql/SqlServer/Auth/GetLoginCredentialsByLoginId.sql`
+**SQL ファイル**: `src/Contexts/Authentication/Authentication.Infrastructure/Persistence/Sql/SqlServer/Auth/GetLoginCredentialsByLoginId.sql`
 
 ```sql
 SELECT 
@@ -296,7 +296,7 @@ AND [deleted_at] IS NULL
 
 ### Example 2: RepoDb (INSERT)
 
-**ファイル**: `src/Contexts/Identity/Identity.Infrastructure/Repositories/UserAuthSessionRepository.cs`
+**ファイル**: `src/Contexts/Authentication/Authentication.Infrastructure/Repositories/UserAuthSessionRepository.cs`
 
 ```csharp
 public class UserAuthSessionRepository(
@@ -328,7 +328,7 @@ public class UserAuthSessionRepository(
 }
 ```
 
-**SQL ファイル**: `src/Contexts/Identity/Identity.Infrastructure/Persistence/Sql/SqlServer/Identities/InsertUserAuthSession.sql`
+**SQL ファイル**: `src/Contexts/Authentication/Authentication.Infrastructure/Persistence/Sql/SqlServer/Identities/InsertUserAuthSession.sql`
 
 ```sql
 INSERT INTO [dbo].[m_user_auth_sessions]
@@ -343,7 +343,7 @@ VALUES
 
 ## .csproj での埋め込み設定
 
-### Identity.Infrastructure.csproj
+### Authentication.Infrastructure.csproj
 
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
@@ -358,8 +358,8 @@ VALUES
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="../Identity.Domain/Identity.Domain.csproj" />
-        <ProjectReference Include="../Identity.Application/Identity.Application.csproj" />
+        <ProjectReference Include="../Authentication.Domain/Authentication.Domain.csproj" />
+        <ProjectReference Include="../Authentication.Application/Authentication.Application.csproj" />
         <ProjectReference Include="../../Infrastructure/Infrastructure.csproj" />
     </ItemGroup>
 </Project>
@@ -470,12 +470,12 @@ dotnet build
 ### エラー: SQL ファイルが見つからない
 
 ```
-FileNotFoundException: SQL file not found: SupportAdvance.Contexts.Identity.Infrastructure.Persistence.Sql.SqlServer.Auth.GetLoginCredentialsByLoginId.sql
+FileNotFoundException: SQL file not found: SupportAdvance.Contexts.Authentication.Infrastructure.Persistence.Sql.SqlServer.Auth.GetLoginCredentialsByLoginId.sql
 ```
 
 **原因と対策:**
 1. **ファイルパスが間違っている** → `[Context].Infrastructure/Persistence/Sql/SqlServer/Auth/GetLoginCredentialsByLoginId.sql` を確認
-2. **.csproj に `<EmbeddedResource>` が未登録** → Identity.Infrastructure.csproj に `<EmbeddedResource Include="Persistence/Sql/**/*.sql" />` を追加
+2. **.csproj に `<EmbeddedResource>` が未登録** → Authentication.Infrastructure.csproj に `<EmbeddedResource Include="Persistence/Sql/**/*.sql" />` を追加
 3. **クエリパスが間違っている** → `LoadQuery("Auth.GetLoginCredentialsByLoginId", ...)` を確認（ドットの位置）
 
 ### エラー: DB 方言が見つからない
@@ -491,5 +491,5 @@ NullReferenceException: Database:Dialect is not configured in appsettings.json
 
 ## 参考資料
 
-- [Identity_BC_設計ガイド.md](Identity_BC_設計ガイド.md) — Identity BC の全体設計
+- [Authentication_BC_設計ガイド.md](Authentication_BC_設計ガイド.md) — Authentication BC の全体設計
 - [SqlQueryLoader.cs](../../Infrastructure/Persistence/SqlQueryLoader.cs) — ローダーの実装

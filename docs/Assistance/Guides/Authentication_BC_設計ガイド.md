@@ -1,4 +1,4 @@
-# Identity BC 設計ガイド
+# Authentication BC 設計ガイド
 
 **最終更新**: 2026-09-13 (修正版)
 **作成者**: Claude + User (tyokkoto@hotmail.com)
@@ -7,7 +7,7 @@
 
 ## 概要
 
-Identity BC は **認証（Authentication）に特化した Bounded Context** です。
+Authentication BC は **認証（Authentication）に特化した Bounded Context** です。
 
 ### 責務（Responsibility）
 
@@ -19,13 +19,13 @@ Identity BC は **認証（Authentication）に特化した Bounded Context** �
 
 ✗ **認可（権限付与）は含まない**
 - ロール・パーミッション管理は Employee BC または別の Authorization BC で実施
-- Identity BC は「誰か」を確認するのみ、「何ができるか」は外部に委ねる
+- Authentication BC は「誰か」を確認するのみ、「何ができるか」は外部に委ねる
 
 ### 理由
 
 - **責務分離**: 認証と認可を分離することで、各々の変更が独立
 - **テスト容易性**: 権限付け替えが簡単（認証ロジックに影響しない）
-- **拡張性**: 複雑な権限ルールが増えても Identity BC は変わらない
+- **拡張性**: 複雑な権限ルールが増えても Authentication BC は変わらない
 
 ---
 
@@ -85,7 +85,7 @@ Identity BC は **認証（Authentication）に特化した Bounded Context** �
 ユーザーのログイン状態と身分情報を表現。
 
 ```csharp
-namespace SupportAdvance.Contexts.Identity.Domain.Entities;
+namespace SupportAdvance.Contexts.Authentication.Domain.Entities;
 
 /// <summary>
 /// ユーザー認証セッション（ログイン状態を表現）
@@ -192,7 +192,7 @@ public class UserAuthSession : Entity<IdentityRowId>
 #### 1. IdentityRowId
 
 ```csharp
-namespace SupportAdvance.Contexts.Identity.Domain.ValueObjects;
+namespace SupportAdvance.Contexts.Authentication.Domain.ValueObjects;
 
 /// <summary>
 /// 身分識別子（IdentityRowId）
@@ -229,7 +229,7 @@ public record IdentityRowId(long Value)
 実装は EmployeeRowId と同一。別名として使用：
 
 ```csharp
-namespace SupportAdvance.Contexts.Identity.Domain.ValueObjects;
+namespace SupportAdvance.Contexts.Authentication.Domain.ValueObjects;
 
 // EmployeeRowId の別名・エイリアス
 public record AuthorityRowId(long Value)
@@ -376,7 +376,7 @@ public class AuthenticateLocalUserUseCase : IAuthenticateLocalUserUseCase
 ### IUserAuthSessionRepository
 
 ```csharp
-namespace SupportAdvance.Contexts.Identity.Domain.Repositories;
+namespace SupportAdvance.Contexts.Authentication.Domain.Repositories;
 
 /// <summary>
 /// UserAuthSession の永続化インターフェース
@@ -404,7 +404,7 @@ public interface IUserAuthSessionRepository
 /// <summary>
 /// LoginCredentials テーブルアクセス用インターフェース
 /// 
-/// 【注】Identity BC 内部で使用。外部には公開しない。
+/// 【注】Authentication BC 内部で使用。外部には公開しない。
 /// </summary>
 public interface ILoginCredentialsRepository
 {
@@ -419,7 +419,7 @@ public interface ILoginCredentialsRepository
 ### IAuthenticateLocalUserUseCase（インターフェース）
 
 ```csharp
-namespace SupportAdvance.Contexts.Identity.Application.UseCases;
+namespace SupportAdvance.Contexts.Authentication.Application.UseCases;
 
 /// <summary>
 /// ローカル認証 Use Case インターフェース
@@ -441,7 +441,7 @@ public class UserAuthSessionDto
 ### IFindEmployeeByADUseCase（Windows AD 検索）
 
 ```csharp
-namespace SupportAdvance.Contexts.Identity.Application.UseCases;
+namespace SupportAdvance.Contexts.Authentication.Application.UseCases;
 
 /// <summary>
 /// Windows AD 情報から Employee を検索する Use Case
@@ -490,7 +490,7 @@ public class FindEmployeeByADUseCase : IFindEmployeeByADUseCase
 
 ### プロジェクト参照（.csproj）
 
-**✓ Identity.Domain**
+**✓ Authentication.Domain**
 
 ```xml
 <ItemGroup>
@@ -499,22 +499,22 @@ public class FindEmployeeByADUseCase : IFindEmployeeByADUseCase
 </ItemGroup>
 ```
 
-**✓ Identity.Application**
+**✓ Authentication.Application**
 
 ```xml
 <ItemGroup>
-    <ProjectReference Include="../Identity.Domain/Identity.Domain.csproj" />
+    <ProjectReference Include="../Authentication.Domain/Authentication.Domain.csproj" />
     <ProjectReference Include="../../Application/Application.csproj" />
     <ProjectReference Include="../../Crosscutting/Crosscutting.csproj" />
 </ItemGroup>
 ```
 
-**✓ Identity.Infrastructure**
+**✓ Authentication.Infrastructure**
 
 ```xml
 <ItemGroup>
-    <ProjectReference Include="../Identity.Domain/Identity.Domain.csproj" />
-    <ProjectReference Include="../Identity.Application/Identity.Application.csproj" />
+    <ProjectReference Include="../Authentication.Domain/Authentication.Domain.csproj" />
+    <ProjectReference Include="../Authentication.Application/Authentication.Application.csproj" />
     <ProjectReference Include="../../Infrastructure/Infrastructure.csproj" />
     <!-- ✓ 汎用層の Query Service インターフェース（DI 経由で取得） -->
     <!-- ✗ Employee.Application / Employee.Domain への直接参照は禁止 -->
@@ -525,10 +525,10 @@ public class FindEmployeeByADUseCase : IFindEmployeeByADUseCase
 
 | From | To | 許可 | 理由 |
 |---|---|---|---|
-| Identity.Domain → SharedKernel, Common | ✓ | 基盤型のため |
-| Identity.Application → Identity.Domain, Application（汎用）, Crosscutting | ✓ | Use Case 実装のため |
-| Identity.Infrastructure → Identity.Domain, Identity.Application（インターフェース）, Infrastructure | ✓ | Repository 実装のため |
-| Identity.Infrastructure → Employee.Application / Employee.Domain | ✗ | BC 参照禁止。代わりに `IQueryService<Employee, EmployeeRowId>` を DI 経由で使用 |
+| Authentication.Domain → SharedKernel, Common | ✓ | 基盤型のため |
+| Authentication.Application → Authentication.Domain, Application（汎用）, Crosscutting | ✓ | Use Case 実装のため |
+| Authentication.Infrastructure → Authentication.Domain, Authentication.Application（インターフェース）, Infrastructure | ✓ | Repository 実装のため |
+| Authentication.Infrastructure → Employee.Application / Employee.Domain | ✗ | BC 参照禁止。代わりに `IQueryService<Employee, EmployeeRowId>` を DI 経由で使用 |
 
 ### DI 設定（Program.cs）
 
@@ -544,10 +544,10 @@ services
     .AddEmployeeInfrastructureModels()
     ;
 
-// Identity BC
+// Authentication BC
 services
-    .AddIdentityApplicationModels()
-    .AddIdentityInfrastructureModels()
+    .AddAuthenticationApplicationModels()
+    .AddAuthenticationInfrastructureModels()
     // DI: IQueryService<Employee, EmployeeRowId> → EmployeeQueryService
     .AddScoped(typeof(IQueryService<>), typeof(EmployeeQueryService<>))
     ;
@@ -562,7 +562,7 @@ services
 アプリケーション終了時にログアウト処理を実行。logged_out_at を記録。
 
 ```csharp
-namespace SupportAdvance.Contexts.Identity.Application.UseCases;
+namespace SupportAdvance.Contexts.Authentication.Application.UseCases;
 
 /// <summary>
 /// ログアウト Use Case
@@ -785,7 +785,7 @@ static class Program
 
 ### フェーズ 1: Domain層の実装
 
-- [ ] Identity.Domain プロジェクト作成
+- [ ] Authentication.Domain プロジェクト作成
 - [ ] UserAuthSession Entity 実装
 - [ ] IdentityRowId, AuthorityRowId ValueObject 実装
 - [ ] Repository インターフェース定義
@@ -793,7 +793,7 @@ static class Program
 
 ### フェーズ 2: Application層の実装
 
-- [ ] Identity.Application プロジェクト作成
+- [ ] Authentication.Application プロジェクト作成
 - [ ] IAuthenticateLocalUserUseCase 実装
 - [ ] IFindEmployeeByADUseCase 実装
 - [ ] DTOs 定義
@@ -801,7 +801,7 @@ static class Program
 
 ### フェーズ 3: Infrastructure層の実装
 
-- [ ] Identity.Infrastructure プロジェクト作成
+- [ ] Authentication.Infrastructure プロジェクト作成
 - [ ] UserAuthSessionRepository 実装
 - [ ] LoginCredentialsRepository 実装（m_login_credentials テーブル）
 - [ ] DbModel マッピング（LocalDateTime ↔ DateTime）
