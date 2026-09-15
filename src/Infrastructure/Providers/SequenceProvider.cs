@@ -41,7 +41,7 @@ public class SequenceProvider : ISequenceProvider
                                 "No connection string is configured in appsettings.json");
     }
 
-    private static string? GetConnectionString(IAppSettings appSettings)
+    internal static string? GetConnectionString(IAppSettings appSettings)
     {
         // 優先順位: "Default" → "SupportAdvance" → 最初のキー
         if (appSettings.ConnectionStrings.TryGetValue("Default", out var result))

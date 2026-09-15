@@ -1,219 +1,211 @@
 namespace SupportAdvance.Infrastructure.Tests.Providers;
 
 using Xunit;
-using SupportAdvance.Application.Abstractions.Identifiers;
+using Moq;
+using SupportAdvance.Common.Configuration;
+using SupportAdvance.Infrastructure.Providers;
 
 /// <summary>
-/// ISequenceProvider の Mock 実装テスト
+/// SupportAdvance.Infrastructure.Providers.SequenceProvider のテスト
 ///
-/// 【テスト対象】MockSequenceProvider
-/// 【テスト方針】Unit テスト（DB アクセスなし、メモリベース）
+/// 【テスト対象】SequenceProvider（本実装）
+/// 【テスト方針】Unit テスト（接続文字列解決ロジック、パラメータ検証）
+/// 【スコープ】
+/// - DB接続を要する部分（GetNextValuesInternal）は結合テストで別途検証（Phase 5参照）
+/// - コンストラクタの接続文字列解決ロジック、GetNextValuesAsync のパラメータ検証をテスト
 /// 【テストケース】
-/// - GetNextValueAsync() 正常系
-/// - GetNextValuesAsync(count) 正常系
-/// - 複数呼び出しで重複なし
-/// - 値が昇順であることを確認
+/// - コンストラクタが appSettings=null で ArgumentNullException を投げる
+/// - コンストラクタが接続文字列を解決できない場合に InvalidOperationException を投げる
+/// - GetConnectionString の優先順位テスト
+/// - GetNextValuesAsync(0) / GetNextValuesAsync(-1) が ArgumentException を投げる
 /// </summary>
 public class SequenceProviderTests
 {
     /// <summary>
-    /// MockSequenceProvider のテスト用実装
+    /// Test1: GetConnectionString の優先順位テスト - "Default" キーが存在する場合
     ///
-    /// 【責務】テスト時に連続した RowId を返す
-    /// 【初期値】2147483648（テスト用開始値）
+    /// 【期待値】
+    /// - "Default" キーの値を返す
     /// </summary>
-    private class MockSequenceProvider : ISequenceProvider
+    [Fact]
+    public void GetConnectionString_ResolveDefault_WhenDefaultKeyExists()
     {
-        private long _counter = 2147483648;  // テスト用開始値
-
-        public async Task<long> GetNextValueAsync()
-        {
-            return await Task.FromResult(_counter++);
-        }
-
-        public async Task<IReadOnlyList<long>> GetNextValuesAsync(int count = 1)
-        {
-            if (count <= 0)
-                throw new ArgumentException("Count must be greater than 0.", nameof(count));
-
-            var result = new List<long>(capacity: count);
-            for (int i = 0; i < count; i++)
+        // Arrange
+        var mockAppSettings = new Mock<IAppSettings>();
+        mockAppSettings
+            .Setup(x => x.ConnectionStrings)
+            .Returns(new Dictionary<string, string>
             {
-                result.Add(_counter++);
-            }
-
-            return await Task.FromResult(result.AsReadOnly());
-        }
-    }
-
-    /// <summary>
-    /// Test1: GetNextValueAsync() 正常系
-    ///
-    /// 【期待値】
-    /// - 2147483648 を返す（初期値）
-    /// - 型は long
-    /// </summary>
-    [Fact]
-    public async Task GetNextValueAsync_ReturnsValidLong_WhenCalled()
-    {
-        // Arrange
-        var provider = new MockSequenceProvider();
+                { "Default", "DefaultConnectionString" },
+                { "SupportAdvance", "SupportAdvanceConnectionString" }
+            });
 
         // Act
-        var result = await provider.GetNextValueAsync();
+        var result = SequenceProvider.GetConnectionString(mockAppSettings.Object);
 
         // Assert
-        Assert.IsType<long>(result);
-        Assert.Equal(2147483648L, result);
+        Assert.Equal("DefaultConnectionString", result);
     }
 
     /// <summary>
-    /// Test2: GetNextValueAsync() 複数呼び出しで重複なし
+    /// Test2: GetConnectionString の優先順位テスト - "SupportAdvance" キーが存在する場合
     ///
     /// 【期待値】
-    /// - 3回呼び出すと 2147483648, 2147483649, 2147483650 を返す
-    /// - 値が昇順
+    /// - "Default" がなく "SupportAdvance" があれば、"SupportAdvance" の値を返す
     /// </summary>
     [Fact]
-    public async Task GetNextValueAsync_ReturnsIncrementingValues_OnMultipleCalls()
+    public void GetConnectionString_ResolveSupportAdvance_WhenDefaultNotExists()
     {
         // Arrange
-        var provider = new MockSequenceProvider();
-        var firstValue = await provider.GetNextValueAsync();
-        var secondValue = await provider.GetNextValueAsync();
-        var thirdValue = await provider.GetNextValueAsync();
-
-        // Assert
-        Assert.Equal(2147483648L, firstValue);
-        Assert.Equal(2147483649L, secondValue);
-        Assert.Equal(2147483650L, thirdValue);
-
-        // 値が昇順であることを確認
-        Assert.True(firstValue < secondValue);
-        Assert.True(secondValue < thirdValue);
-    }
-
-    /// <summary>
-    /// Test3: GetNextValuesAsync(count) 正常系、単一値
-    ///
-    /// 【期待値】
-    /// - count=1 の場合、長さ 1 のリストを返す
-    /// </summary>
-    [Fact]
-    public async Task GetNextValuesAsync_ReturnsSingleValue_WhenCountIsOne()
-    {
-        // Arrange
-        var provider = new MockSequenceProvider();
+        var mockAppSettings = new Mock<IAppSettings>();
+        mockAppSettings
+            .Setup(x => x.ConnectionStrings)
+            .Returns(new Dictionary<string, string>
+            {
+                { "SupportAdvance", "SupportAdvanceConnectionString" }
+            });
 
         // Act
-        var result = await provider.GetNextValuesAsync(count: 1);
+        var result = SequenceProvider.GetConnectionString(mockAppSettings.Object);
 
         // Assert
-        Assert.Single(result);
-        Assert.Equal(2147483648L, result[0]);
+        Assert.Equal("SupportAdvanceConnectionString", result);
     }
 
     /// <summary>
-    /// Test4: GetNextValuesAsync(count) 正常系、複数値
+    /// Test3: GetConnectionString の優先順位テスト - 最初のキーが存在する場合
     ///
     /// 【期待値】
-    /// - count=5 の場合、長さ 5 のリストを返す
-    /// - 値が昇順
-    /// - 重複なし
+    /// - "Default" "SupportAdvance" もなければ、最初のキー（任意）の値を返す
     /// </summary>
     [Fact]
-    public async Task GetNextValuesAsync_ReturnsMultipleValues_WhenCountIsGreaterThanOne()
+    public void GetConnectionString_ResolveFirstKey_WhenDefaultAndSupportAdvanceNotExists()
     {
         // Arrange
-        var provider = new MockSequenceProvider();
-        var count = 5;
+        var mockAppSettings = new Mock<IAppSettings>();
+        mockAppSettings
+            .Setup(x => x.ConnectionStrings)
+            .Returns(new Dictionary<string, string>
+            {
+                { "CustomConnection", "CustomConnectionString" }
+            });
 
         // Act
-        var result = await provider.GetNextValuesAsync(count);
+        var result = SequenceProvider.GetConnectionString(mockAppSettings.Object);
 
         // Assert
-        Assert.Equal(count, result.Count);
-
-        // 値が昇順であることを確認
-        for (int i = 0; i < result.Count - 1; i++)
-        {
-            Assert.True(result[i] < result[i + 1],
-                $"Values should be in ascending order. result[{i}]={result[i]}, result[{i+1}]={result[i+1]}");
-        }
-
-        // 重複がないことを確認
-        var uniqueCount = result.Distinct().Count();
-        Assert.Equal(count, uniqueCount);
+        Assert.Equal("CustomConnectionString", result);
     }
 
     /// <summary>
-    /// Test5: GetNextValuesAsync() デフォルト count パラメータ
+    /// Test4: GetConnectionString が null を返す場合 - ConnectionStrings が空
     ///
     /// 【期待値】
-    /// - count パラメータなしの場合、デフォルト count=1
-    /// - 長さ 1 のリストを返す
+    /// - null を返す（コンストラクタで InvalidOperationException に変わる）
     /// </summary>
     [Fact]
-    public async Task GetNextValuesAsync_ReturnsDefaultOne_WhenCountNotSpecified()
+    public void GetConnectionString_ReturnsNull_WhenConnectionStringsEmpty()
     {
         // Arrange
-        var provider = new MockSequenceProvider();
+        var mockAppSettings = new Mock<IAppSettings>();
+        mockAppSettings
+            .Setup(x => x.ConnectionStrings)
+            .Returns(new Dictionary<string, string>());
 
         // Act
-        var result = await provider.GetNextValuesAsync();
+        var result = SequenceProvider.GetConnectionString(mockAppSettings.Object);
 
         // Assert
-        Assert.Single(result);
+        Assert.Null(result);
     }
 
     /// <summary>
-    /// Test6: GetNextValuesAsync(count) 異常系、count が 0 以下
+    /// Test5: コンストラクタが appSettings=null で ArgumentNullException を投げる
     ///
     /// 【期待値】
-    /// - ArgumentException を throw
+    /// - ArgumentNullException を投げる
     /// </summary>
-    [Theory]
-    [InlineData(0)]
-    [InlineData(-1)]
-    [InlineData(-100)]
-    public async Task GetNextValuesAsync_ThrowsArgumentException_WhenCountIsLessOrEqualZero(int invalidCount)
+    [Fact]
+    public void Constructor_ThrowsArgumentNullException_WhenAppSettingsIsNull()
+    {
+        // Act & Assert
+        var ex = Assert.Throws<ArgumentNullException>(() => new SequenceProvider(null!));
+        Assert.Equal("appSettings", ex.ParamName);
+    }
+
+    /// <summary>
+    /// Test6: コンストラクタが接続文字列を解決できない場合に InvalidOperationException を投げる
+    ///
+    /// 【期待値】
+    /// - InvalidOperationException を投げる
+    /// - メッセージに "No connection string is configured" を含む
+    /// </summary>
+    [Fact]
+    public void Constructor_ThrowsInvalidOperationException_WhenNoConnectionStringResolved()
     {
         // Arrange
-        var provider = new MockSequenceProvider();
+        var mockAppSettings = new Mock<IAppSettings>();
+        mockAppSettings
+            .Setup(x => x.ConnectionStrings)
+            .Returns(new Dictionary<string, string>()); // 空の辞書
 
         // Act & Assert
-        await Assert.ThrowsAsync<ArgumentException>(
-            () => provider.GetNextValuesAsync(invalidCount));
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => new SequenceProvider(mockAppSettings.Object));
+        Assert.Contains("No connection string is configured", ex.Message);
     }
 
     /// <summary>
-    /// Test7: 複数の GetNextValuesAsync() 呼び出しで重複なし
+    /// Test7: GetNextValuesAsync が count=0 で ArgumentException を投げる
     ///
     /// 【期待値】
-    /// - 最初に 3 個取得、次に 2 個取得
-    /// - 合計 5 個の値すべてが重複なし
+    /// - ArgumentException を投げる
+    /// - パラメータ名は "count"
     /// </summary>
     [Fact]
-    public async Task GetNextValuesAsync_NoduplicatesAcrossMultipleCalls()
+    public async Task GetNextValuesAsync_ThrowsArgumentException_WhenCountIsZero()
     {
         // Arrange
-        var provider = new MockSequenceProvider();
+        var mockAppSettings = new Mock<IAppSettings>();
+        mockAppSettings
+            .Setup(x => x.ConnectionStrings)
+            .Returns(new Dictionary<string, string>
+            {
+                { "Default", "Data Source=.;Initial Catalog=test;" }
+            });
+        var provider = new SequenceProvider(mockAppSettings.Object);
 
-        // Act
-        var firstBatch = await provider.GetNextValuesAsync(count: 3);
-        var secondBatch = await provider.GetNextValuesAsync(count: 2);
+        // Act & Assert
+        var ex = await Assert.ThrowsAsync<ArgumentException>(
+            () => provider.GetNextValuesAsync(0));
+        Assert.Equal("count", ex.ParamName);
+        Assert.Contains("Count must be greater than 0", ex.Message);
+    }
 
-        // Assert
-        var allValues = firstBatch.Concat(secondBatch).ToList();
-        var uniqueValues = allValues.Distinct().ToList();
+    /// <summary>
+    /// Test8: GetNextValuesAsync が count=-1 で ArgumentException を投げる
+    ///
+    /// 【期待値】
+    /// - ArgumentException を投げる
+    /// - パラメータ名は "count"
+    /// </summary>
+    [Fact]
+    public async Task GetNextValuesAsync_ThrowsArgumentException_WhenCountIsNegative()
+    {
+        // Arrange
+        var mockAppSettings = new Mock<IAppSettings>();
+        mockAppSettings
+            .Setup(x => x.ConnectionStrings)
+            .Returns(new Dictionary<string, string>
+            {
+                { "Default", "Data Source=.;Initial Catalog=test;" }
+            });
+        var provider = new SequenceProvider(mockAppSettings.Object);
 
-        Assert.Equal(allValues.Count, uniqueValues.Count);
-        Assert.Equal(5, uniqueValues.Count);
-
-        // 昇順であることを確認
-        for (int i = 0; i < allValues.Count - 1; i++)
-        {
-            Assert.True(allValues[i] < allValues[i + 1]);
-        }
+        // Act & Assert
+        var ex = await Assert.ThrowsAsync<ArgumentException>(
+            () => provider.GetNextValuesAsync(-1));
+        Assert.Equal("count", ex.ParamName);
+        Assert.Contains("Count must be greater than 0", ex.Message);
     }
 }
