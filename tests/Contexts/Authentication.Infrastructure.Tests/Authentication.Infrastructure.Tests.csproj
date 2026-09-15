@@ -21,8 +21,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\src\Contexts\Identity\Identity.Infrastructure\Identity.Infrastructure.csproj" />
-    <ProjectReference Include="..\..\..\src\Contexts\Identity\Identity.Domain\Identity.Domain.csproj" />
+    <ProjectReference Include="..\..\..\src\Contexts\Authentication\Authentication.Infrastructure\Authentication.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\..\src\Contexts\Authentication\Authentication.Domain\Authentication.Domain.csproj" />
     <ProjectReference Include="..\..\..\src\Infrastructure\Infrastructure.csproj" />
     <ProjectReference Include="..\..\..\src\Common\Common.csproj" />
   </ItemGroup>

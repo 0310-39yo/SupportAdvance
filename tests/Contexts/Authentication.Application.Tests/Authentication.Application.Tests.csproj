@@ -8,10 +8,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="coverlet.collector" Version="10.0.1">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.8.1" />
     <PackageReference Include="xunit" Version="2.9.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
@@ -25,9 +21,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../../src/Common/Common.csproj" />
-    <ProjectReference Include="../../../src/SharedKernel/SharedKernel.csproj" />
-    <ProjectReference Include="../../../src/Contexts/Identity/Identity.Domain/Identity.Domain.csproj" />
+    <ProjectReference Include="..\..\..\src\Contexts\Authentication\Authentication.Application\Authentication.Application.csproj" />
+    <ProjectReference Include="..\..\..\src\Contexts\Authentication\Authentication.Infrastructure\Authentication.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\..\src\Contexts\Authentication\Authentication.Domain\Authentication.Domain.csproj" />
+    <ProjectReference Include="..\..\..\src\Infrastructure\Infrastructure.csproj" />
+    <ProjectReference Include="..\..\..\src\Common\Common.csproj" />
   </ItemGroup>
 
 </Project>
