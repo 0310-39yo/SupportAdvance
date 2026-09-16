@@ -15,7 +15,7 @@ public class DepartmentMapperTests
     #region グループ 1: ToDomainEntity - 正常系
 
     [Fact]
-    public void Test1_1_ToDomainEntity_WithValidDbModel_ReturnsDepartmentEntity()
+    public void VO_MAP_02_ToDomainEntity_WithValidDbModel_MapsAllFields()
     {
         // Arrange
         var mapper = new DepartmentMapper();
@@ -43,7 +43,7 @@ public class DepartmentMapperTests
     }
 
     [Fact]
-    public void Test1_2_ToDomainEntity_WithAllValueObjects_ConvertsSuccessfully()
+    public void VO_TYPE_03_ParentIdConversion_WithValidId_IsSetCorrectly()
     {
         // Arrange
         var mapper = new DepartmentMapper();
@@ -75,7 +75,7 @@ public class DepartmentMapperTests
     }
 
     [Fact]
-    public void Test1_3_ToDomainEntity_WithAbolishedOn_ConvertsSuccessfully()
+    public void VO_TYPE_05_NullConversion_WithNullFields_ConvertsToUnset()
     {
         // Arrange
         var mapper = new DepartmentMapper();
@@ -156,10 +156,39 @@ public class DepartmentMapperTests
 
     #endregion
 
+    #region グループ 2.5: コード変換
+
+    [Fact]
+    public void VO_TYPE_01_CodeConversion_WithValidCode_ConvertsSuccessfully()
+    {
+        // Arrange
+        var mapper = new DepartmentMapper();
+        var dbModel = new DepartmentDbModel
+        {
+            RowId = 1L,
+            Code = "D001",
+            Name = "営業部",
+            Level = 1,
+            ParentDepartmentRowId = null,
+            ManagerEmployeeRowId = null,
+            AbolishedOn = null,
+            RowVersion = []
+        };
+
+        // Act
+        var result = mapper.ToDomainEntity(dbModel);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal("D001", result.DeptCode.Value);
+    }
+
+    #endregion
+
     #region グループ 3: ToDbModel - 正常系
 
     [Fact]
-    public void Test3_1_ToDbModel_WithValidEntity_ReturnsDbModel()
+    public void VO_MAP_01_ToDbModel_WithValidEntity_ReturnsDbModel()
     {
         // Arrange
         var mapper = new DepartmentMapper();
@@ -185,7 +214,7 @@ public class DepartmentMapperTests
     }
 
     [Fact]
-    public void Test3_2_ToDbModel_WithParentAndManager_ConvertsSuccessfully()
+    public void VO_TYPE_04_ManagerIdConversion_WithValidId_IsSetCorrectly()
     {
         // Arrange
         var mapper = new DepartmentMapper();
@@ -210,28 +239,7 @@ public class DepartmentMapperTests
     }
 
     [Fact]
-    public void Test3_3_ToDbModel_WithUnsetParentAndManager_SetsNullValues()
-    {
-        // Arrange
-        var mapper = new DepartmentMapper();
-        var entity = Department.Create(
-            DepartmentRowId.From(3L),
-            DepartmentCode.From("D003"),
-            "トップ部門",
-            HierarchyLevel.From(0)
-        );
-
-        // Act
-        var result = mapper.ToDbModel(entity);
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.Null(result.ParentDepartmentRowId);
-        Assert.Null(result.ManagerEmployeeRowId);
-    }
-
-    [Fact]
-    public void Test3_4_ToDbModel_WithAbolishedEntity_ConvertsAbolishedOn()
+    public void VO_TYPE_02_LevelConversion_WithValidLevel_ConvertsSuccessfully()
     {
         // Arrange
         var mapper = new DepartmentMapper();
@@ -269,7 +277,7 @@ public class DepartmentMapperTests
     }
 
     [Fact]
-    public void Test4_2_ToDbModel_ShouldNotSetAuditFields()
+    public void VO_TYPE_06_AuditFields_NotSetByMapper()
     {
         // Arrange
         var mapper = new DepartmentMapper();
@@ -286,9 +294,9 @@ public class DepartmentMapperTests
         // Assert
         // Mapper は監査フィールドを設定しない（Repository の責務）
         Assert.Equal(default, result.CreatedAt);
-        Assert.Equal(default, result.UpdatedAt);
+        Assert.Null(result.UpdatedAt);
         Assert.Equal(default(long), result.CreatedBy);
-        Assert.Equal(default(long), result.UpdatedBy);
+        Assert.Null(result.UpdatedBy);
     }
 
     #endregion
@@ -296,7 +304,7 @@ public class DepartmentMapperTests
     #region グループ 5: ラウンドトリップ
 
     [Fact]
-    public void Test5_1_RoundTrip_DbModelToDomainAndBack_PreservesData()
+    public void VO_MAP_03_RoundTrip_PreservesData()
     {
         // Arrange
         var mapper = new DepartmentMapper();
