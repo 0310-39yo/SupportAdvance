@@ -15,7 +15,7 @@ public class DepartmentQueryServiceTests
     #region グループ 1: 正常系
 
     [Fact]
-    public async Task Test1_1_GetByIdAsync_WithValidId_DelegateToRepository()
+    public async Task VO_QUERY_01_GetByIdAsync_WithValidId_DelegateToRepository()
     {
         // Arrange
         var (queryService, repository) = CreateQueryService();
@@ -37,7 +37,7 @@ public class DepartmentQueryServiceTests
     }
 
     [Fact]
-    public async Task Test1_2_GetByIdAsync_WithValidId_ReturnsRepositoryResult()
+    public async Task VO_QUERY_02_GetByIdAsync_WithValidId_ReturnsRepositoryResult()
     {
         // Arrange
         var (queryService, repository) = CreateQueryService();
@@ -56,7 +56,7 @@ public class DepartmentQueryServiceTests
     #region グループ 2: 異常系
 
     [Fact]
-    public async Task Test2_1_GetByIdAsync_WithNullId_ThrowsArgumentNullException()
+    public async Task VO_QUERY_04_GetByIdAsync_WithNullId_ThrowsArgumentNullException()
     {
         // Arrange
         var (queryService, _) = CreateQueryService();

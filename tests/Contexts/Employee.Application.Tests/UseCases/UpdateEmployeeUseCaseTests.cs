@@ -20,7 +20,7 @@ public class UpdateEmployeeUseCaseTests
     #region グループ 1: 正常系
 
     [Fact(Skip = "要DB接続。Phase 5で結合テストとして再設計")]
-    public async Task Test1_1_UpdateEmployee_WithValidRequest_Updates()
+    public async Task VO_EXEC_01_UpdateEmployee_WithValidRequest_Updates()
     {
         // Arrange
         var (useCase, repository) = CreateUseCase();
@@ -57,7 +57,7 @@ public class UpdateEmployeeUseCaseTests
     #region グループ 2: 異常系
 
     [Fact(Skip = "要DB接続。Phase 5で結合テストとして再設計")]
-    public async Task Test2_1_UpdateEmployee_WithNonExistentId_ThrowsException()
+    public async Task VO_ERROR_01_UpdateEmployee_WithNonExistentId_ThrowsException()
     {
         // Arrange
         var (useCase, _) = CreateUseCase();
@@ -73,7 +73,7 @@ public class UpdateEmployeeUseCaseTests
     }
 
     [Fact(Skip = "要DB接続。Phase 5で結合テストとして再設計")]
-    public async Task Test2_2_UpdateEmployee_WithInvalidDivisionCode_ThrowsException()
+    public async Task VO_ERROR_02_UpdateEmployee_WithInvalidDivisionCode_ThrowsException()
     {
         // Arrange
         var (useCase, repository) = CreateUseCase();

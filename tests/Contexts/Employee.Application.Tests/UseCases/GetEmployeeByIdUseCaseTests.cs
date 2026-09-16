@@ -19,7 +19,7 @@ public class GetEmployeeByIdUseCaseTests
     #region グループ 1: 正常系
 
     [Fact(Skip = "要DB接続。Phase 5で結合テストとして再設計")]
-    public async Task Test1_1_GetEmployeeById_WithValidId_ReturnsEmployee()
+    public async Task VO_EXEC_01_GetEmployeeById_WithValidId_ReturnsEmployee()
     {
         // Arrange
         var (useCase, repository) = CreateUseCase();
@@ -49,7 +49,7 @@ public class GetEmployeeByIdUseCaseTests
     #region グループ 2: 異常系
 
     [Fact(Skip = "要DB接続。Phase 5で結合テストとして再設計")]
-    public async Task Test2_1_GetEmployeeById_WithNonExistentId_ReturnsNull()
+    public async Task VO_RESULT_01_GetEmployeeById_WithNonExistentId_ReturnsNull()
     {
         // Arrange
         var (useCase, _) = CreateUseCase();
@@ -63,7 +63,7 @@ public class GetEmployeeByIdUseCaseTests
     }
 
     [Fact(Skip = "要DB接続。Phase 5で結合テストとして再設計")]
-    public async Task Test2_2_GetEmployeeById_WithZeroId_ThrowsException()
+    public async Task VO_ERROR_01_GetEmployeeById_WithZeroId_ThrowsException()
     {
         // Arrange
         var (useCase, _) = CreateUseCase();

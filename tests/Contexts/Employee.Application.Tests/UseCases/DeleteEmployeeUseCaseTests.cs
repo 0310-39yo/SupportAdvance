@@ -19,7 +19,7 @@ public class DeleteEmployeeUseCaseTests
     #region グループ 1: 正常系
 
     [Fact(Skip = "要DB接続。Phase 5で結合テストとして再設計")]
-    public async Task Test1_1_DeleteEmployee_WithValidId_LogicallyDeletes()
+    public async Task VO_EXEC_01_DeleteEmployee_WithValidId_LogicallyDeletes()
     {
         // Arrange
         var (useCase, repository) = CreateUseCase();
@@ -51,7 +51,7 @@ public class DeleteEmployeeUseCaseTests
     #region グループ 2: 異常系
 
     [Fact(Skip = "要DB接続。Phase 5で結合テストとして再設計")]
-    public async Task Test2_1_DeleteEmployee_WithNonExistentId_ThrowsException()
+    public async Task VO_ERROR_01_DeleteEmployee_WithNonExistentId_ThrowsException()
     {
         // Arrange
         var (useCase, _) = CreateUseCase();
@@ -62,7 +62,7 @@ public class DeleteEmployeeUseCaseTests
     }
 
     [Fact(Skip = "要DB接続。Phase 5で結合テストとして再設計")]
-    public async Task Test2_2_DeleteEmployee_WithZeroId_ThrowsException()
+    public async Task VO_ERROR_02_DeleteEmployee_WithZeroId_ThrowsException()
     {
         // Arrange
         var (useCase, _) = CreateUseCase();

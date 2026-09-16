@@ -17,7 +17,7 @@ public class DepartmentRepositoryTests
     #region グループ 1: GetByIdAsync - 正常系
 
     [Fact(Skip = "要DB接続。Phase 5で結合テストとして再設計")]
-    public async Task Test1_1_GetByIdAsync_WithValidId_ReturnsDepartment()
+    public async Task VO_CRUD_03_GetByIdAsync_WithValidId_GetByIdAsync_WithValidId_ReturnsDepartment()
     {
         // Arrange
         var repository = CreateRepository();
@@ -32,7 +32,7 @@ public class DepartmentRepositoryTests
     }
 
     [Fact(Skip = "要DB接続。Phase 5で結合テストとして再設計")]
-    public async Task Test1_2_GetByIdAsync_WithNonExistentId_ReturnsNull()
+    public async Task VO_CRUD_04_GetByIdAsync_WithNonExistentId_GetByIdAsync_WithNonExistentId_ReturnsNull()
     {
         // Arrange
         var repository = CreateRepository();
@@ -50,7 +50,7 @@ public class DepartmentRepositoryTests
     #region グループ 2: GetByCodeAsync - 正常系
 
     [Fact(Skip = "要DB接続。Phase 5で結合テストとして再設計")]
-    public async Task Test2_1_GetByCodeAsync_WithValidCode_ReturnsDepartment()
+    public async Task VO_QUERY_01_GetByCodeAsync_WithValidCode_GetByCodeAsync_WithValidCode_ReturnsDepartment()
     {
         // Arrange
         var repository = CreateRepository();
@@ -69,7 +69,7 @@ public class DepartmentRepositoryTests
     #region グループ 3: GetAllAsync
 
     [Fact(Skip = "要DB接続。Phase 5で結合テストとして再設計")]
-    public async Task Test3_1_GetAllAsync_ReturnsAllDepartments()
+    public async Task VO_QUERY_02_GetAllAsync_GetAllAsync_ReturnsAllDepartments()
     {
         // Arrange
         var repository = CreateRepository();
@@ -87,7 +87,7 @@ public class DepartmentRepositoryTests
     #region グループ 4: SaveAsync - Insert
 
     [Fact(Skip = "要DB接続。Phase 5で結合テストとして再設計")]
-    public async Task Test4_1_SaveAsync_WithNewEntity_InsertsSuccessfully()
+    public async Task VO_CRUD_01_SaveAsync_WithNewEntity_InsertsSaveAsync_WithNewEntity_InsertsSuccessfully()
     {
         // Arrange
         var repository = CreateRepository();
@@ -108,7 +108,7 @@ public class DepartmentRepositoryTests
     }
 
     [Fact(Skip = "要DB接続。Phase 5で結合テストとして再設計")]
-    public async Task Test4_2_SaveAsync_WithNewEntity_SetsCratedAtAndBy()
+    public async Task VO_AUDIT_01_SaveAsync_WithNewEntity_SetsAuditSaveAsync_WithNewEntity_SetsCratedAtAndBy()
     {
         // Arrange
         var repository = CreateRepository();
@@ -133,7 +133,7 @@ public class DepartmentRepositoryTests
     #region グループ 5: SaveAsync - Update
 
     [Fact(Skip = "要DB接続。Phase 5で結合テストとして再設計")]
-    public async Task Test5_1_SaveAsync_WithExistingEntity_UpdatesSuccessfully()
+    public async Task VO_CRUD_05_SaveAsync_WithExistingEntity_UpdatesSaveAsync_WithExistingEntity_UpdatesSuccessfully()
     {
         // Arrange
         var repository = CreateRepository();
@@ -156,7 +156,7 @@ public class DepartmentRepositoryTests
     #region グループ 6: DeleteAsync
 
     [Fact(Skip = "要DB接続。Phase 5で結合テストとして再設計")]
-    public async Task Test6_1_DeleteAsync_WithValidId_PerformsLogicalDelete()
+    public async Task VO_CRUD_06_DeleteAsync_WithValidId_DeleteAsync_WithValidId_PerformsLogicalDelete()
     {
         // Arrange
         var repository = CreateRepository();
@@ -173,7 +173,7 @@ public class DepartmentRepositoryTests
     #region グループ 7: 異常系
 
     [Fact(Skip = "要DB接続。Phase 5で結合テストとして再設計")]
-    public async Task Test7_1_SaveAsync_WithNullEntity_ThrowsArgumentNullException()
+    public async Task VO_ERROR_01_SaveAsync_WithNullEntity_SaveAsync_WithNullEntity_ThrowsArgumentNullException()
     {
         // Arrange
         var repository = CreateRepository();
@@ -183,7 +183,7 @@ public class DepartmentRepositoryTests
     }
 
     [Fact(Skip = "要DB接続。Phase 5で結合テストとして再設計")]
-    public async Task Test7_2_GetByIdAsync_WithNullId_ThrowsArgumentNullException()
+    public async Task VO_ERROR_02_GetByIdAsync_WithNullId_GetByIdAsync_WithNullId_ThrowsArgumentNullException()
     {
         // Arrange
         var repository = CreateRepository();

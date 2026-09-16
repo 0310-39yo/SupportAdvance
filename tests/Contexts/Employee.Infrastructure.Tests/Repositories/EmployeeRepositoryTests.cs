@@ -19,7 +19,7 @@ public class EmployeeRepositoryTests
     #region グループ 1: GetByIdAsync - 存在する場合
 
     [Fact(Skip = "要DB接続。Phase 5で結合テストとして再設計")]
-    public async Task TestGetById01_WithValidIdReturnsEmployee()
+    public async Task VO_CRUD_03_GetByIdAsync_WithValidId_WithValidIdReturnsEmployee()
     {
         // Arrange
         var rowId = EmployeeRowId.From(1L);
@@ -45,7 +45,7 @@ public class EmployeeRepositoryTests
     }
 
     [Fact(Skip = "要DB接続。Phase 5で結合テストとして再設計")]
-    public async Task TestGetById02_WithMultipleEmployeesReturnsCorrectOne()
+    public async Task VO_CRUD_04_GetByIdAsync_WithMultipleEmployees_WithMultipleEmployeesReturnsCorrectOne()
     {
         // Arrange
         var rowId1 = EmployeeRowId.From(1L);
@@ -85,7 +85,7 @@ public class EmployeeRepositoryTests
     #region グループ 2: GetByIdAsync - 存在しない場合
 
     [Fact(Skip = "要DB接続。Phase 5で結合テストとして再設計")]
-    public async Task TestGetById03_WithInvalidIdReturnsNull()
+    public async Task VO_CRUD_04_GetByIdAsync_WithInvalidId_WithInvalidIdReturnsNull()
     {
         // Arrange
         var repository = CreateRepository();
@@ -102,7 +102,7 @@ public class EmployeeRepositoryTests
     #region グループ 3: GetByRowIdAsync
 
     [Fact(Skip = "要DB接続。Phase 5で結合テストとして再設計")]
-    public async Task TestGetByRowId01_WithValidRowIdReturnsEmployee()
+    public async Task VO_CRUD_03_GetByRowIdAsync_WithValidRowId_WithValidRowIdReturnsEmployee()
     {
         // Arrange
         var rowId = EmployeeRowId.From(100L);
@@ -128,7 +128,7 @@ public class EmployeeRepositoryTests
     }
 
     [Fact(Skip = "要DB接続。Phase 5で結合テストとして再設計")]
-    public async Task TestGetByRowId02_WithInvalidRowIdReturnsNull()
+    public async Task VO_CRUD_04_GetByRowIdAsync_WithInvalidRowId_WithInvalidRowIdReturnsNull()
     {
         // Arrange
         var repository = CreateRepository();
@@ -145,7 +145,7 @@ public class EmployeeRepositoryTests
     #region グループ 4: GetByPersonRowIdAsync
 
     [Fact(Skip = "要DB接続。Phase 5で結合テストとして再設計")]
-    public async Task TestGetByPersonRowId01_WithValidPersonRowIdReturnsEmployees()
+    public async Task VO_EXEC_01_GetByPersonRowIdAsync_WithValidPersonRowId_WithValidPersonRowIdReturnsEmployees()
     {
         // Arrange
         var personRowId = 100L;
@@ -180,7 +180,7 @@ public class EmployeeRepositoryTests
     }
 
     [Fact(Skip = "要DB接続。Phase 5で結合テストとして再設計")]
-    public async Task TestGetByPersonRowId02_WithInvalidPersonRowIdReturnsEmpty()
+    public async Task VO_EXEC_01_GetByPersonRowIdAsync_WithInvalidPersonRowId_WithInvalidPersonRowIdReturnsEmpty()
     {
         // Arrange
         var repository = CreateRepository();
@@ -197,7 +197,7 @@ public class EmployeeRepositoryTests
     #region グループ 5: AddAsync
 
     [Fact(Skip = "要DB接続。Phase 5で結合テストとして再設計")]
-    public async Task TestAdd01_WithValidEmployeeInsertsAndReturnsId()
+    public async Task VO_CRUD_01_AddAsync_WithValidEntity_WithValidEmployeeInsertsAndReturnsId()
     {
         // Arrange
         var rowId = EmployeeRowId.From(1L);
@@ -223,7 +223,7 @@ public class EmployeeRepositoryTests
     }
 
     [Fact(Skip = "要DB接続。Phase 5で結合テストとして再設計")]
-    public async Task TestAdd02_AuditColumnsAreSetAutomatically()
+    public async Task VO_AUDIT_01_AddAsync_AuditColumns_AuditColumnsAreSetAutomatically()
     {
         // Arrange
         var rowId = EmployeeRowId.From(1L);
@@ -254,7 +254,7 @@ public class EmployeeRepositoryTests
     #region グループ 6: UpdateAsync
 
     [Fact(Skip = "要DB接続。Phase 5で結合テストとして再設計")]
-    public async Task TestUpdate01_WithValidEmployeeUpdatesSuccessfully()
+    public async Task VO_CRUD_05_UpdateAsync_WithValidEntity_WithValidEmployeeUpdatesSuccessfully()
     {
         // Arrange
         var rowId = EmployeeRowId.From(1L);
@@ -281,7 +281,7 @@ public class EmployeeRepositoryTests
     #region グループ 7: DeleteAsync
 
     [Fact(Skip = "要DB接続。Phase 5で結合テストとして再設計")]
-    public async Task TestDelete01_WithValidIdSetsDeletedAtLogicallyDeletes()
+    public async Task VO_CRUD_06_DeleteAsync_WithValidId_WithValidIdSetsDeletedAtLogicallyDeletes()
     {
         // Arrange
         var rowId = EmployeeRowId.From(1L);
