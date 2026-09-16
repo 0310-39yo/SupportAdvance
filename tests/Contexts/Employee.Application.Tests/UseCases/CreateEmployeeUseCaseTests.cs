@@ -22,7 +22,7 @@ public class CreateEmployeeUseCaseTests
     #region グループ 1: 正常系 - 従業員作成成功
 
     [Fact(Skip = "要DB接続。Phase 5で結合テストとして再設計")]
-    public async Task Test1_1_CreateEmployee_WithValidRequest_ReturnsEmployeeDto()
+    public async Task VO_EXEC_01_CreateEmployee_WithValidRequest_ReturnsEmployeeDto()
     {
         // Arrange
         var (useCase, _) = CreateUseCase();
@@ -49,7 +49,7 @@ public class CreateEmployeeUseCaseTests
     }
 
     [Fact(Skip = "要DB接続。Phase 5で結合テストとして再設計")]
-    public async Task Test1_2_CreateEmployee_WithMultipleRequests_AllCreated()
+    public async Task VO_EXEC_02_CreateEmployee_WithMultipleRequests_AllCreated()
     {
         // Arrange
         var (useCase, _) = CreateUseCase();
@@ -89,7 +89,7 @@ public class CreateEmployeeUseCaseTests
     #region グループ 2: 異常系 - 入力値検証
 
     [Fact(Skip = "要DB接続。Phase 5で結合テストとして再設計")]
-    public async Task Test2_1_CreateEmployee_WithInvalidPersonRowId_ThrowsException()
+    public async Task VO_ERROR_01_CreateEmployee_WithInvalidPersonRowId_ThrowsException()
     {
         // Arrange
         var (useCase, _) = CreateUseCase();
@@ -109,7 +109,7 @@ public class CreateEmployeeUseCaseTests
     }
 
     [Fact(Skip = "要DB接続。Phase 5で結合テストとして再設計")]
-    public async Task Test2_2_CreateEmployee_WithInvalidDivisionCode_ThrowsException()
+    public async Task VO_ERROR_02_CreateEmployee_WithInvalidDivisionCode_ThrowsException()
     {
         // Arrange
         var (useCase, _) = CreateUseCase();
@@ -129,7 +129,7 @@ public class CreateEmployeeUseCaseTests
     }
 
     [Fact(Skip = "要DB接続。Phase 5で結合テストとして再設計")]
-    public async Task Test2_3_CreateEmployee_WithInvalidEmployeeNumber_ThrowsException()
+    public async Task VO_ERROR_03_CreateEmployee_WithInvalidEmployeeNumber_ThrowsException()
     {
         // Arrange
         var (useCase, _) = CreateUseCase();
@@ -149,7 +149,7 @@ public class CreateEmployeeUseCaseTests
     }
 
     [Fact(Skip = "要DB接続。Phase 5で結合テストとして再設計")]
-    public async Task Test2_4_CreateEmployee_WithEmployeeNumberTooHigh_ThrowsException()
+    public async Task VO_ERROR_04_CreateEmployee_WithEmployeeNumberTooHigh_ThrowsException()
     {
         // Arrange
         var (useCase, _) = CreateUseCase();
@@ -173,7 +173,7 @@ public class CreateEmployeeUseCaseTests
     #region グループ 3: 統合 - Repository との連携
 
     [Fact(Skip = "要DB接続。Phase 5で結合テストとして再設計")]
-    public async Task Test3_1_CreateEmployee_PersistsToRepository_CanBeRetrieved()
+    public async Task VO_SIDE_01_CreateEmployee_PersistsToRepository_CanBeRetrieved()
     {
         // Arrange
         var (createUseCase, repository) = CreateUseCase();
