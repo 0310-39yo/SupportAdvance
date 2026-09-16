@@ -61,9 +61,11 @@ public class UserAuthSessionDbModel
     public long? LoginCredentialsRowId { get; set; }
 
     /// <summary>
-    /// 楽観ロック用タイムスタンプ（INSERT では除外、DB が自動生成）
+    /// 楽観ロック用タイムスタンプ（INSERT/UPDATE では除外、DB が自動生成）
+    /// 【重要】row_version は SQL Server の timestamp 型で自動管理のため、
+    ///         明示的な値を INSERT/UPDATE の SET 句に含めてはいけない（Repository の fields で除外）
     /// </summary>
-    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+    [Column("row_version")]
     public byte[] RowVersion { get; set; } = [];
 
     /// <summary>

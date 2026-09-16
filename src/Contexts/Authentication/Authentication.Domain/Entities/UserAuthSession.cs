@@ -73,8 +73,9 @@ public sealed class UserAuthSession : AggregateRoot<UserAuthSessionRowId>
     /// <summary>
     /// 楽観ロックタイムスタンプ
     /// 【用途】Repository が UpdateAsync 時に row_version で競合検出
+    /// 【管理】Reconstruct() でのみ設定（DB から復元時）。Create() の新規作成では空配列のまま
     /// </summary>
-    public byte[] RowVersion { get; set; } = [];
+    public byte[] RowVersion { get; internal set; } = [];
 
     private UserAuthSession(
         UserAuthSessionRowId id,
@@ -124,6 +125,7 @@ public sealed class UserAuthSession : AggregateRoot<UserAuthSessionRowId>
     /// <summary>
     /// DB から復元（全フィールド指定）
     /// 【用途】Repository が DbModel から Domain Entity を構築時に使用
+    /// 【重要】rowVersion は楽観ロック用（更新時に競合検出）。DB から取得した値をそのまま渡す
     /// </summary>
     public static UserAuthSession Reconstruct(
         UserAuthSessionRowId id,
@@ -132,9 +134,10 @@ public sealed class UserAuthSession : AggregateRoot<UserAuthSessionRowId>
         bool loginSuccess,
         LocalDateTime loggedInAt,
         LocalDateTime? loggedOutAt,
-        LoginCredentialsRowId? loginCredentialsRowId)
+        LoginCredentialsRowId? loginCredentialsRowId,
+        byte[]? rowVersion = null)
     {
-        return new UserAuthSession(
+        var session = new UserAuthSession(
             id,
             authorityRowId,
             isAdAuthenticated,
@@ -142,6 +145,13 @@ public sealed class UserAuthSession : AggregateRoot<UserAuthSessionRowId>
             loggedInAt,
             loggedOutAt,
             loginCredentialsRowId);
+
+        if (rowVersion != null)
+        {
+            session.RowVersion = rowVersion;
+        }
+
+        return session;
     }
 
     /// <summary>

@@ -47,7 +47,8 @@ public sealed class UserAuthSessionMapper
             dbModel.LoginSuccess,
             loggedInAt,
             loggedOutAt,
-            loginCredentialsRowId);
+            loginCredentialsRowId,
+            dbModel.RowVersion);
     }
 
     /// <summary>

@@ -1,3 +1,4 @@
+using System.Linq;
 using Dapper;
 using RepoDb;
 using SupportAdvance.Application.Abstractions.Identifiers;
@@ -48,6 +49,23 @@ public class UserAuthSessionRepository : IUserAuthSessionRepository
         _sequenceProvider = sequenceProvider ?? throw new ArgumentNullException(nameof(sequenceProvider));
         _mapper = new UserAuthSessionMapper();
     }
+
+    /// <summary>
+    /// row_version（timestamp列）を除いた RepoDb Field 一覧を取得する
+    /// 【重要】SQL Server の timestamp は自動管理のため、明示的な値を INSERT/UPDATE に含められない。
+    /// </summary>
+    private static IEnumerable<Field> FieldsExcludingRowVersion() =>
+        Field.Parse(typeof(UserAuthSessionDbModel)).Where(f => f.Name != "row_version");
+
+    /// <summary>
+    /// UPDATE 対象から row_version・created_at・created_by を除いた RepoDb Field 一覧を取得する
+    /// 【重要】Mapper.ToDbModel() は CreatedAt/CreatedBy を設定しない（Mapper の責務外）ため、
+    ///         UPDATE 時に DbModel の CreatedAt が既定値（0001-01-01）のまま SET 句に含まれると
+    ///         SqlDateTime overflow が発生する。作成時刻は不変のため UPDATE 対象から除外する。
+    /// </summary>
+    private static IEnumerable<Field> FieldsExcludingRowVersionAndCreatedAudit() =>
+        Field.Parse(typeof(UserAuthSessionDbModel))
+            .Where(f => f.Name is not ("row_version" or "created_at" or "created_by"));
 
     /// <summary>
     /// RowId でセッションを取得
@@ -120,7 +138,7 @@ public class UserAuthSessionRepository : IUserAuthSessionRepository
         dbModel.DeletedBy = null;
 
         using var connection = _connectionFactory.CreateConnection();
-        await connection.InsertAsync<UserAuthSessionDbModel>(dbModel);
+        await connection.InsertAsync<UserAuthSessionDbModel>(dbModel, fields: FieldsExcludingRowVersion());
 
         return UserAuthSessionRowId.From(dbModel.RowId);
     }
@@ -142,19 +160,23 @@ public class UserAuthSessionRepository : IUserAuthSessionRepository
 
         using var connection = _connectionFactory.CreateConnection();
 
-        // 楽観ロック付き更新
+        // 楽観ロック付き更新（row_version で競合検出）
+        // 【重要】WHERE 句に row_version を含めることで、他ユーザーによる更新を検出
+        // 【重要】fields で row_version・created_at・created_by を SET 句から除外
         var affectedRows = await connection.UpdateAsync<UserAuthSessionDbModel>(
             dbModel,
             where: new QueryGroup(new[]
             {
-                new QueryField(nameof(UserAuthSessionDbModel.RowId), dbModel.RowId)
-            }));
+                new QueryField("row_id", dbModel.RowId),
+                new QueryField("row_version", session.RowVersion)
+            }),
+            fields: FieldsExcludingRowVersionAndCreatedAudit());
 
         if (affectedRows == 0)
         {
             throw new InvalidOperationException(
                 $"UserAuthSession update failed: RowId={session.RowId.Value}. " +
-                "Row not found.");
+                "Session was updated by another user (concurrency conflict detected by row_version).");
         }
     }
 
@@ -177,10 +199,14 @@ public class UserAuthSessionRepository : IUserAuthSessionRepository
         // 論理削除（deleted_at/deleted_by を設定）
         await connection.UpdateAsync<UserAuthSessionDbModel>(
             dbModel,
+            where: new QueryGroup(new[]
+            {
+                new QueryField("row_id", dbModel.RowId)
+            }),
             fields: new Field[]
             {
-                new(nameof(UserAuthSessionDbModel.DeletedAt)),
-                new(nameof(UserAuthSessionDbModel.DeletedBy))
+                new("deleted_at"),
+                new("deleted_by")
             });
     }
 }
