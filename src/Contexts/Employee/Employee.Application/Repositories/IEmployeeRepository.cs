@@ -10,7 +10,8 @@ using Domain.ValueObjects.Person;
 /// Employee 集約の Repository インターフェース
 ///
 /// 【責務】Employee エンティティのデータアクセス契約を定義
-/// 【提供メソッド】GetByIdAsync, GetByRowIdAsync, GetByPersonRowIdAsync, AddAsync, UpdateAsync, DeleteAsync
+/// 【提供メソッド】GetByIdAsync, GetByRowIdAsync, GetByPersonRowIdAsync, SaveAsync, AddAsync, UpdateAsync, DeleteAsync
+/// 【SaveAsync】RowVersion で自動判定し、新規作成なら AddAsync、更新なら UpdateAsync へ委譲
 /// </summary>
 public interface IEmployeeRepository
 {
@@ -41,6 +42,18 @@ public interface IEmployeeRepository
     /// <param name="personRowId">m_persons.row_id</param>
     /// <returns>見つかった Employee インスタンスのリスト</returns>
     Task<IReadOnlyList<Employee>> GetByPersonRowIdAsync(PersonRowId personRowId);
+
+    /// <summary>
+    /// Employee を保存する（新規作成または更新）
+    /// 【重要】RowVersion で自動判定し、AddAsync/UpdateAsync へ委譲
+    /// </summary>
+    /// <param name="employee">保存対象の Employee</param>
+    /// <remarks>
+    /// - 新規作成（RowVersion が空）： AddAsync を呼び出し、created_at/created_by を設定
+    /// - 更新（RowVersion が非空）： UpdateAsync を呼び出し、updated_at/updated_by を設定
+    /// - 楽観ロック（row_version）による競合検出（更新時）
+    /// </remarks>
+    Task SaveAsync(Employee employee);
 
     /// <summary>
     /// 新規 Employee を DB に登録する

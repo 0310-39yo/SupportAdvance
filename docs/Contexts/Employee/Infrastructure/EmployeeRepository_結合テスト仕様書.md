@@ -3,13 +3,22 @@
 **プロジェクト:** SupportAdvance  
 **テスト対象:** Application ↔ Infrastructure (EmployeeRepository)  
 **テストレベル:** 結合テスト  
-**版:** 1.0 / 2026-09-16
+**版:** 2.0 / 2026-09-17  
+**変更:** SaveAsync 統一化により観点ID体系を再編成（AddAsync/UpdateAsync 分岐 → SaveAsync 一本化）
 
 ---
 
 ## 0. 本書の位置づけ
 
-EmployeeRepository は、Employee 集約の永続化（Save/Get/Update/Delete）を担当する Infrastructure 層クラスです。複数テーブル（`m_employees`・`m_persons`・`m_department_memberships`）に対応します。
+EmployeeRepository は、Employee 集約の永続化（SaveAsync/GetByIdAsync/DeleteAsync）を担当する Infrastructure 層クラスです。複数テーブル（`m_employees`・`m_persons`・`m_department_memberships`）に対応します。
+
+### 【設計の特徴】
+
+- **SaveAsync（統一メソッド）**: RowVersion の有無で自動的に Insert/Update を判定
+  - RowVersion が空（byte[0]）→ Employee.Create() → INSERT（AddAsync）
+  - RowVersion が非空（8バイト）→ Employee.Reconstruct() → UPDATE（UpdateAsync）
+- **複数テーブル対応**: 単一トランザクション内で複数テーブルの一貫性を保証
+- **監査フィールド管理**: Repository が CreatedAt/CreatedBy/UpdatedAt/UpdatedBy/DeletedAt/DeletedBy を自動設定
 
 本結合テストは、**Application層が EmployeeRepository に依存して Employee 集約を永続化・取得する際、実SQL Serverとの統合が正常に動作すること** を検証します。
 
@@ -19,11 +28,11 @@ EmployeeRepository は、Employee 集約の永続化（Save/Get/Update/Delete）
 
 EmployeeRepository が以下を満たすことを確認する：
 
-- **SaveAsync**: Employee 集約を複数テーブルに正しく保存
+- **SaveAsync（新規）**: Employee 集約を複数テーブルに正しく保存し、CreatedAt/CreatedBy を設定
+- **SaveAsync（更新）**: 既存 Employee を複数テーブルで正しく更新し、UpdatedAt/UpdatedBy を設定
 - **GetByIdAsync**: 保存したデータを正しく復元
-- **UpdateAsync**: 既存データを正しく更新（監査フィールド含む）
-- **DeleteAsync**: 論理削除が正しく設定される
-- **監査フィールド**: CreatedAt/CreatedBy/UpdatedAt/UpdatedBy/DeletedAt/DeletedBy の自動設定
+- **DeleteAsync**: 論理削除が正しく設定される（DeletedAt/DeletedBy）
+- **RowVersion による判定**: SaveAsync が RowVersion の有無で Insert/Update を自動判定
 
 ---
 
@@ -47,9 +56,9 @@ EmployeeRepository が以下を満たすことを確認する：
 
 ## 4. テストケース
 
-### TC-1: SaveAsync → GetByIdAsync ラウンドトリップ
+### TC-1: SaveAsync（新規作成）
 
-**テスト名:** `SaveAsync_WithNewEmployee_GetByIdAsync_ReturnsExactEntity`
+**テスト名:** `VO_CRUD_01_SaveAsync_WithNewEmployee_InsertsSaveAsync_WithNewEmployeeInsertsSuccessfully`
 
 **実行:**
 ```csharp
@@ -57,45 +66,65 @@ var repository = new EmployeeRepository(dbConnectionFactory, clock);
 var employee = Employee.Create(/* parameters */);
 await repository.SaveAsync(employee);
 
-var retrieved = await repository.GetByIdAsync(employee.Id);
+var retrieved = await repository.GetByIdAsync(employee.RowId);
 ```
 
 **期待結果:**
 - retrieved != null
-- retrieved.Id == employee.Id
-- retrieved.RowId > 0
-- CreatedAt/CreatedBy が自動設定
+- retrieved.RowId == employee.RowId
+- 複数テーブル（m_employees, m_persons, m_department_memberships）に正しく INSERT
 
 ---
 
-### TC-2: UpdateAsync で監査フィールド更新
+### TC-2: SaveAsync（監査フィールド設定）
 
-**テスト名:** `UpdateAsync_WithExistingEmployee_SetsUpdatedAt`
+**テスト名:** `VO_AUDIT_01_SaveAsync_WithNewEmployee_SetsCratedAtAndBy`
 
 **実行:**
 ```csharp
-var repository = new EmployeeRepository(dbConnectionFactory, clock);
-var employee = /* saved employee */;
-employee.UpdateSomeField();
-await repository.UpdateAsync(employee);
-
-var updated = await repository.GetByIdAsync(employee.Id);
+var employee = Employee.Create(/* parameters */);
+await repository.SaveAsync(employee);
+// DB から直接確認
+var createdAt = QueryScalar("m_employees", employee.RowId, "created_at");
+var createdBy = QueryScalar("m_employees", employee.RowId, "created_by");
 ```
 
 **期待結果:**
-- UpdatedAt が新しい日時に設定
-- UpdatedBy が現在ユーザーに設定
+- createdAt が自動設定されている
+- createdBy が現在ユーザーに設定されている
 
 ---
 
-### TC-3: DeleteAsync で論理削除
+### TC-3: SaveAsync（既存データ更新）
 
-**テスト名:** `DeleteAsync_WithExistingEmployee_SetsDeletedAt`
+**テスト名:** `VO_CRUD_05_SaveAsync_WithExistingEmployee_UpdatesSaveAsync_WithExistingEmployeeUpdatesSuccessfully`
 
 **実行:**
 ```csharp
-await repository.DeleteAsync(employee.Id);
-var deleted = await repository.GetByIdAsync(employee.Id);
+var employee = /* saved employee */;
+var loaded = await repository.GetByIdAsync(employee.RowId);  // RowVersion が設定される
+var updated = Employee.Reconstruct(loaded.RowId, /* modified fields */, loaded.RowVersion);
+await repository.SaveAsync(updated);  // SaveAsync が RowVersion で UPDATE を判定
+
+var result = await repository.GetByIdAsync(employee.RowId);
+```
+
+**期待結果:**
+- SaveAsync が RowVersion の有無で自動的に UPDATE を実行
+- UpdatedAt/UpdatedBy が新しい値に設定
+- 複数テーブルが正しく更新される
+
+---
+
+### TC-4: DeleteAsync で論理削除
+
+**テスト名:** `VO_CRUD_06_DeleteAsync_WithValidId_WithValidIdSetsDeletedAtLogicallyDeletes`
+
+**実行:**
+```csharp
+await repository.DeleteAsync(employee.RowId);
+// DB から直接確認
+var deletedAt = QueryScalar("m_employees", employee.RowId, "deleted_at");
 ```
 
 **期待結果:**

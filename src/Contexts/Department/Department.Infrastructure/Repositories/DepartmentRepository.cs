@@ -133,10 +133,12 @@ public class DepartmentRepository(
         var now = _clock.JstNow.Value;
         var userId = _currentUser.EmployeeRowId;
 
-        // 新規作成判定：DB に既に存在するか確認
-        // （Domain に監査フィールドがないため、DB での存在確認で判定）
-        var existing = await GetByIdAsync(department.RowId);
-        bool isInsert = existing == null;
+        // 新規作成判定：RowVersion が未設定（空配列）なら Insert
+        // 【重要】RowVersion は GetByIdAsync 経由（Mapper.ToDomainEntity → Reconstruct）でのみ設定される。
+        //         Department.Create() による新規作成では空配列のまま。
+        //         この性質を利用することで、GetByIdAsync によるDB再読込を避けられる
+        //         （呼び出し元が Update 前に GetByIdAsync 済みであることが多く、二重読込を防止）。
+        bool isInsert = department.RowVersion.Length == 0;
 
         if (isInsert)
         {

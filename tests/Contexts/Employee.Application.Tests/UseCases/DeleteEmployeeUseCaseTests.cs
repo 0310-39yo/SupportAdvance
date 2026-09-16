@@ -103,6 +103,12 @@ public class DeleteEmployeeUseCaseTests
             return Task.CompletedTask;
         }
 
+        public Task SaveAsync(Employee employee)
+        {
+            _store[employee.RowId.Value] = employee;
+            return Task.CompletedTask;
+        }
+
         public Task<Employee?> GetByIdAsync(EmployeeRowId id) =>
             Task.FromResult(_store.GetValueOrDefault(id.Value));
 

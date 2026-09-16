@@ -306,6 +306,31 @@ public class EmployeeRepository(
         Field.Parse(typeof(T)).Where(f => f.Name is not ("row_version" or "created_at" or "created_by"));
 
     /// <summary>
+    /// Employee 集約を保存する（新規作成または更新）
+    /// 【責務】RowVersion で Insert/Update を判定し、適切なメソッドへ委譲
+    /// 【特徴】RowVersion が空（Create時）なら AddAsync、非空（Reconstruct時）なら UpdateAsync
+    /// 【メリット】呼び出し側は SaveAsync 1つで統一でき、Repository が内部で最適な実装を選択
+    /// </summary>
+    public async Task SaveAsync(Employee employee)
+    {
+        ArgumentNullException.ThrowIfNull(employee);
+
+        // 新規作成判定：RowVersion が未設定（空配列）なら Insert
+        // 【重要】RowVersion は Mapper.ToDomainEntity（Reconstruct）でのみ設定される。
+        //         Employee.Create() による新規作成では空配列のまま。
+        bool isInsert = employee.RowVersion.Length == 0;
+
+        if (isInsert)
+        {
+            await AddAsync(employee);
+        }
+        else
+        {
+            await UpdateAsync(employee);
+        }
+    }
+
+    /// <summary>
     /// Employee 集約を新規保存する
     /// 【責務】複数テーブル（m_employees, m_persons, m_department_memberships）をトランザクション内でINSERT
     /// 【特徴】CreatedAt/CreatedBy は Repository が設定（MultiTableRepositoryBase 経由）

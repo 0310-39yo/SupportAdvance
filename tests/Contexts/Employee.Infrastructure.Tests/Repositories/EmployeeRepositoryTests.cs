@@ -304,7 +304,7 @@ public class EmployeeRepositoryTests : RepositoryTestBase
     #region グループ 5: AddAsync
 
     [Fact]
-    public async Task VO_CRUD_01_AddAsync_WithValidEntity_WithValidEmployeeInsertsAndReturnsId()
+    public async Task VO_CRUD_01_SaveAsync_WithNewEmployee_InsertsSaveAsync_WithNewEmployeeInsertsSuccessfully()
     {
         try
         {
@@ -313,7 +313,7 @@ public class EmployeeRepositoryTests : RepositoryTestBase
             var employee = await BuildTestEmployeeAsync();
 
             // Act
-            await repository.AddAsync(employee);
+            await repository.SaveAsync(employee);
             _createdRowIds.Add(employee.RowId.Value);
 
             // Assert
@@ -328,7 +328,7 @@ public class EmployeeRepositoryTests : RepositoryTestBase
     }
 
     [Fact]
-    public async Task VO_AUDIT_01_AddAsync_AuditColumns_AuditColumnsAreSetAutomatically()
+    public async Task VO_AUDIT_01_SaveAsync_WithNewEmployee_SetsCratedAtAndBy()
     {
         try
         {
@@ -337,7 +337,7 @@ public class EmployeeRepositoryTests : RepositoryTestBase
             var employee = await BuildTestEmployeeAsync();
 
             // Act
-            await repository.AddAsync(employee);
+            await repository.SaveAsync(employee);
             _createdRowIds.Add(employee.RowId.Value);
 
             // Assert - CreatedAt/CreatedBy が設定されていることを直接SQLで確認（Entity には CreatedAt が露出しないため）
@@ -354,17 +354,17 @@ public class EmployeeRepositoryTests : RepositoryTestBase
 
     #endregion
 
-    #region グループ 6: UpdateAsync
+    #region グループ 6: SaveAsync（更新時）
 
     [Fact]
-    public async Task VO_CRUD_05_UpdateAsync_WithValidEntity_WithValidEmployeeUpdatesSuccessfully()
+    public async Task VO_CRUD_05_SaveAsync_WithExistingEmployee_UpdatesSaveAsync_WithExistingEmployeeUpdatesSuccessfully()
     {
         try
         {
             // Arrange
             var repository = CreateRepository();
             var employee = await BuildTestEmployeeAsync();
-            await repository.AddAsync(employee);
+            await repository.SaveAsync(employee);
             _createdRowIds.Add(employee.RowId.Value);
 
             var loaded = await repository.GetByIdAsync(employee.RowId);
@@ -383,7 +383,7 @@ public class EmployeeRepositoryTests : RepositoryTestBase
                 loaded.RowVersion);
 
             // Act
-            await repository.UpdateAsync(updated);
+            await repository.SaveAsync(updated);
 
             // Assert
             var retrieved = await repository.GetByIdAsync(employee.RowId);
