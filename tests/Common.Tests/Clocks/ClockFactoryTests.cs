@@ -134,7 +134,7 @@ public class ClockFactoryTests
     }
 
     /// <summary>
-    /// TICKING タイプで StartTime が無い場合、現在時刻が初期値として使用されることを検証
+    /// TICKING タイプで StartTime が null の場合、現在時刻が初期値として使用されることを検証
     /// </summary>
     [Fact]
     public void CreateClock_TickingWithoutStartTime_UsesCurrentTime()

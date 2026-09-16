@@ -17,6 +17,8 @@ using Xunit;
 /// </summary>
 public class EmployeeMapperTests
 {
+    private readonly IClock _clock = new SystemClock();
+
     #region グループ 1: Entity → DbModel 変換
 
     [Fact]
@@ -34,7 +36,7 @@ public class EmployeeMapperTests
             FirstName.From("太郎"),
             LastNameKana.From("ヤマダ"),
             FirstNameKana.From("タロウ"));
-        var employee = Employee.Create(rowId, typeDivision, bizId, bizCode, null, person, new List<DepartmentMembership>());
+        var employee = Employee.Create(rowId, typeDivision, bizId, bizCode, null, person, new List<DepartmentMembership>(), _clock);
 
         var mapper = CreateMapper();
 
@@ -69,7 +71,8 @@ public class EmployeeMapperTests
             bizCode,
             null,
             person,
-            new List<DepartmentMembership>());
+            new List<DepartmentMembership>(),
+            _clock);
 
         var mapper = CreateMapper();
 
@@ -101,7 +104,8 @@ public class EmployeeMapperTests
             bizCode,
             null,
             person,
-            new List<DepartmentMembership>());
+            new List<DepartmentMembership>(),
+            _clock);
 
         var mapper = CreateMapper();
 
@@ -249,7 +253,8 @@ public class EmployeeMapperTests
             originalBizCode,
             null,
             originalPerson,
-            new List<DepartmentMembership>());
+            new List<DepartmentMembership>(),
+            _clock);
 
         var mapper = CreateMapper();
 
@@ -306,7 +311,7 @@ public class EmployeeMapperTests
 
     private EmployeeMapper CreateMapper()
     {
-        return new EmployeeMapper();
+        return new EmployeeMapper(_clock);
     }
 
     #endregion

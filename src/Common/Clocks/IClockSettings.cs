@@ -9,7 +9,7 @@ public interface IClockSettings
     /// TickingClockの開始時刻（ISO 8601形式）
     /// 例: "2024-01-01T10:00:00"
     /// </summary>
-    string StartTime { get; init; }
+    string? StartTime { get; init; }
 
     /// <summary>
     /// ティック間隔（秒）
@@ -20,7 +20,7 @@ public interface IClockSettings
     /// <summary>
     /// クロックタイプ（"System"、"Ticking"、または "Offset"）
     /// </summary>
-    string ClockType { get; init; }
+    string? ClockType { get; init; }
 
     /// <summary>
     /// OffsetClock用のオフセット日時（ISO 8601形式）

@@ -13,7 +13,7 @@ public class FrameworkLoggingAdapter<T>(
     ICorrelationContext correlationContext,
     IClock clock) : IAppLogging<T>
 {
-    public void LogInformation(string message)
+    public void LogInformation(string? message)
     {
         SetContextToGdc();
         logger.LogInformation(message);

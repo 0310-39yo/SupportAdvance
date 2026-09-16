@@ -20,7 +20,7 @@ public sealed class Employee : AggregateRoot<EmployeeRowId>, IEmployee
     /// <summary>
     /// 唯一の時計インスタンス（ドメインイベント発行時の日時取得に使用）
     /// </summary>
-    private IClock Clock { get; set; }
+    public IClock Clock { get; internal set; } = null!;
 
     /// <summary>
     /// 楽観ロックタイムスタンプ（concurrency control 用）
@@ -32,27 +32,27 @@ public sealed class Employee : AggregateRoot<EmployeeRowId>, IEmployee
     /// <summary>
     /// 従業員種別区分（正社員/派遣/請負）
     /// </summary>
-    public BizDivision TypeDivision { get; private set; }
+    public BizDivision TypeDivision { get; private set; } = null!;
 
     /// <summary>
     /// ビジネスID（従業員番号）
     /// </summary>
-    public BizId BizId { get; private set; }
+    public BizId BizId { get; private set; } = null!;
 
     /// <summary>
     /// ビジネスコード（内部ID、表示用）
     /// </summary>
-    public BizCode BizCode { get; private set; }
+    public BizCode BizCode { get; private set; } = null!;
 
     /// <summary>
     /// 個人情報（内包子Entity）
     /// </summary>
-    public Person Person { get; private set; }
+    public Person Person { get; private set; } = null!;
 
     /// <summary>
     /// 退職日（現職時は Unset）
     /// </summary>
-    public RetiredOn RetiredOn { get; private set; }
+    public RetiredOn RetiredOn { get; private set; } = RetiredOn.Unset();
 
     /// <summary>
     /// 部署所属のコレクション（従業員が複数部署に所属可能）
@@ -78,8 +78,8 @@ public sealed class Employee : AggregateRoot<EmployeeRowId>, IEmployee
         BizCode bizCode,
         RetiredOn retiredOn,
         Person person,
-        List<DepartmentMembership> departmentMemberships
-    )
+        List<DepartmentMembership> departmentMemberships,
+        IClock clock)
     {
         RowId = rowId;
         TypeDivision = typeDivision;
@@ -88,6 +88,7 @@ public sealed class Employee : AggregateRoot<EmployeeRowId>, IEmployee
         RetiredOn = retiredOn;
         Person = person;
         _departmentMemberships = departmentMemberships;
+        Clock = clock;
     }
 
     /// <summary>
@@ -103,9 +104,10 @@ public sealed class Employee : AggregateRoot<EmployeeRowId>, IEmployee
         BizCode bizCode,
         RetiredOn? retiredOn,
         Person person,
-        IEnumerable<DepartmentMembership> departmentMemberships) =>
+        IEnumerable<DepartmentMembership> departmentMemberships,
+        IClock clock) =>
         new(rowId, typeDivision, bizId, bizCode, retiredOn ?? RetiredOn.Unset(), person,
-            departmentMemberships.ToList());
+            departmentMemberships.ToList(), clock);
 
     /// <summary>
     /// DB から読み込んだ値から Employee を復元する（ファクトリメソッド）
@@ -121,10 +123,11 @@ public sealed class Employee : AggregateRoot<EmployeeRowId>, IEmployee
         RetiredOn retiredOn,
         Person person,
         IEnumerable<DepartmentMembership> departmentMemberships,
+        IClock clock,
         byte[]? rowVersion = null)
     {
         var employee = new Employee(rowId, typeDivision, bizId, bizCode, retiredOn, person,
-            departmentMemberships.ToList());
+            departmentMemberships.ToList(), clock);
         if (rowVersion != null)
         {
             employee.RowVersion = rowVersion;

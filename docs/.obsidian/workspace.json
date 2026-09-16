@@ -188,8 +188,14 @@
       "bases:新規ベースを作成": false
     }
   },
-  "active": "6e586dc8099713c0",
+  "active": "a4a323d6c1e93a0c",
   "lastOpenFiles": [
+    "Assistance/Plans/20260916_Phase5実施計画.md.tmp.39700.69df7a708575",
+    "Assistance/Plans/20260916_Phase5実施計画.md.tmp.39700.b1c9186ea499",
+    "Assistance/Plans/20260916_Phase5実施計画.md.tmp.39700.a216b567c1a8",
+    "Assistance/Plans/20260916_Phase5実施計画.md.tmp.39700.440e96c6d550",
+    "Assistance/Plans/20260916_Phase5実施計画.md",
+    "Assistance/Plans/20260916_Phase5実施計画.md.tmp.39700.7372d92786ce",
     "Assistance/Templates/Test/TEMPLATE_単体テスト仕様書_Entity.md",
     "Assistance/Templates/Test/TEMPLATE_システムテスト仕様書.md",
     "Assistance/Guides/0_ドキュメントチェックリスト.md",
@@ -200,10 +206,6 @@
     "Assistance/Guides/Authentication_BC_設計ガイド.md.tmp.19864.4e08eca2f477",
     "Assistance/Guides/Authentication_BC_設計ガイド.md.tmp.19864.90212817e991",
     "Assistance/Guides/Authentication_BC_設計ガイド.md.tmp.19864.21843e73ac74",
-    "Assistance/Guides/Authentication_BC_設計ガイド.md.tmp.19864.86cb7e93c3d4",
-    "Assistance/Guides/Authentication_BC_設計ガイド.md.tmp.19864.78c6f9b80a0d",
-    "Assistance/Guides/SQL_ファイル管理_設計ガイド.md.tmp.19864.3302153ba547",
-    "Assistance/Guides/SQL_ファイル管理_設計ガイド.md.tmp.19864.5a9c5bb0f5ae",
     "Assistance/Plans/20260916_IdentityBCをAuthenticationBCへ名称変更_実装計画.md",
     "Assistance/Guides/Authentication_BC_設計ガイド.md",
     "Assistance/Guides/Identity_BC_設計ガイド.md",
@@ -223,8 +225,6 @@
     "Assistance/Plans/20260912_ValueObject設計ガイド齟齬修正計画.md",
     "Assistance/Guides/TABLE_DESIGN_STANDARDS.md",
     "WorkMemo/2026-09-10.md",
-    "Assistance/Guides/CLEAN_ARCHITECTURE_GUIDELINES.md",
-    "Assistance/Reports/20260910_comparison_report.md",
-    "Assistance/Guides/AggregateId_設計ガイド.md"
+    "Assistance/Guides/CLEAN_ARCHITECTURE_GUIDELINES.md"
   ]
 }

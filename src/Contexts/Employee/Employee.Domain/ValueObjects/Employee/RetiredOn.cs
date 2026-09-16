@@ -18,7 +18,7 @@ public sealed class RetiredOn : ValueObject, IEquatable<RetiredOn>
     public LocalDateTime Value { get; }
 
     /// <summary>未設定状態フラグ（isSet=true で退職済み）</summary>
-    public bool IsSet { get; }
+    public new bool IsSet { get; }
 
     /// <summary>退職状況フラグ（HasRetired=true で退職済み）</summary>
     public bool HasRetired => IsSet;

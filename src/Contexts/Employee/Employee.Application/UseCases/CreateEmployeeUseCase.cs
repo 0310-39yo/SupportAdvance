@@ -59,7 +59,8 @@ public class CreateEmployeeUseCase
             bizCode,
             null,
             person,
-            new List<DepartmentMembership>()
+            new List<DepartmentMembership>(),
+            _clock
         );
 
         // 【Step 6】Repository で永続化

@@ -236,11 +236,102 @@ public class EmployeeRepository(
     public Task<Employee?> GetByRowIdAsync(EmployeeRowId rowId) =>
         GetByIdAsync(rowId);
 
-    public Task<IReadOnlyList<Employee>> GetByPersonRowIdAsync(PersonRowId personRowId)
-        => throw new NotImplementedException("GetByPersonRowIdAsync is not yet implemented");
+    /// <summary>
+    /// PersonRowId で Employee を検索する（1:1 関係のため 0 件または 1 件）
+    /// 【責務】m_persons.row_id で m_employees を JOIN 検索
+    /// </summary>
+    public async Task<IReadOnlyList<Employee>> GetByPersonRowIdAsync(PersonRowId personRowId)
+    {
+        try
+        {
+            ArgumentNullException.ThrowIfNull(personRowId);
 
-    public Task AddAsync(Employee employee)
-        => throw new NotImplementedException("AddAsync is not yet implemented");
+            using var connection = _connectionFactory.CreateConnection();
+
+            var sql = _queryLoader.LoadQuery("Employees.GetEmployeeByPersonRowId", typeof(EmployeeRepository));
+            var employeeDbModels = await SqlMapper.QueryAsync<EmployeeDbModel>(
+                connection,
+                sql,
+                new { PersonRowId = personRowId.Value });
+
+            var results = new List<Employee>();
+            foreach (var employeeDbModel in employeeDbModels)
+            {
+                var personSql = _queryLoader.LoadQuery("Persons.GetPersonByEmployeeRowId", typeof(EmployeeRepository));
+                var personDbModel = await SqlMapper.QueryFirstOrDefaultAsync<PersonDbModel>(
+                    connection,
+                    personSql,
+                    new { EmployeeRowId = employeeDbModel.RowId });
+
+                if (personDbModel == null)
+                {
+                    throw new InvalidOperationException($"Person not found for Employee RowId={employeeDbModel.RowId}");
+                }
+
+                var membershipSql =
+                    _queryLoader.LoadQuery("Employees.GetEmployeeDepartmentMemberships", typeof(EmployeeRepository));
+                var membershipDbModels = await SqlMapper.QueryAsync<DepartmentMembershipDbModel>(
+                    connection,
+                    membershipSql,
+                    new { EmployeeRowId = employeeDbModel.RowId });
+
+                results.Add(_mapper.ToDomainEntity(employeeDbModel, personDbModel, membershipDbModels.ToList()));
+            }
+
+            return results.AsReadOnly();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"GetByPersonRowIdAsync failed for PersonRowId={personRowId.Value}", ex);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Employee 集約を新規保存する
+    /// 【責務】複数テーブル（m_employees, m_persons, m_department_memberships）をトランザクション内でINSERT
+    /// 【特徴】CreatedAt/CreatedBy は Repository が設定（MultiTableRepositoryBase 経由）
+    /// </summary>
+    public async Task AddAsync(Employee employee)
+    {
+        ArgumentNullException.ThrowIfNull(employee);
+
+        using var connection = _connectionFactory.CreateConnection();
+        using var transaction = connection.BeginTransaction(IsolationLevel.ReadCommitted);
+
+        try
+        {
+            // 1. m_employees へ INSERT
+            var empDbModel = _mapper.ToDbModel(employee);
+            SetCreatedAtAudit(empDbModel);
+            SetCreatedByAudit(empDbModel);
+
+            await connection.InsertAsync<EmployeeDbModel>(empDbModel, transaction: transaction);
+
+            // 2. m_persons へ INSERT（1:1 対応）
+            var personDbModel = _mapper.ToPersonDbModel(employee.Person, employee.RowId.Value);
+            SetAuditField(personDbModel, "CreatedAt", Clock.JstNow.Value);
+            SetAuditField(personDbModel, "CreatedBy", CurrentUser.EmployeeRowId);
+
+            await connection.InsertAsync<PersonDbModel>(personDbModel, transaction: transaction);
+
+            // 3. m_department_memberships へ INSERT（1:N 対応）
+            foreach (var membership in employee.DepartmentMemberships)
+            {
+                var membershipDbModel = _mapper.ToDepartmentMembershipDbModel(membership);
+                await connection.InsertAsync<DepartmentMembershipDbModel>(membershipDbModel, transaction: transaction);
+            }
+
+            transaction.Commit();
+            _logger.LogInformation($"Employee added: RowId={employee.RowId.Value}");
+        }
+        catch (Exception ex)
+        {
+            transaction.Rollback();
+            _logger.LogError($"AddAsync failed for RowId={employee.RowId.Value}", ex);
+            throw;
+        }
+    }
 
     /// <summary>
     /// Employee 集約を保存（更新）する
@@ -313,6 +404,51 @@ public class EmployeeRepository(
         }
     }
 
-    public Task DeleteAsync(EmployeeRowId id)
-        => throw new NotImplementedException("DeleteAsync is not yet implemented");
+    /// <summary>
+    /// Employee を論理削除する
+    /// 【責務】m_employees の deleted_at/deleted_by を設定（RepoDb UpdateAsync）
+    /// 【注意】m_persons は他のEntityから参照される可能性があるため論理削除しない（Employee側のみ）
+    /// </summary>
+    public async Task DeleteAsync(EmployeeRowId id)
+    {
+        ArgumentNullException.ThrowIfNull(id);
+
+        using var connection = _connectionFactory.CreateConnection();
+
+        try
+        {
+            var existing = await GetByIdAsync(id);
+            if (existing == null)
+            {
+                throw new InvalidOperationException($"Employee with RowId={id.Value} not found");
+            }
+
+            var empDbModel = _mapper.ToDbModel(existing);
+            SetDeletedAtAudit(empDbModel);
+            SetDeletedByAudit(empDbModel);
+            SetUpdatedAtAudit(empDbModel);
+            SetUpdatedByAudit(empDbModel);
+
+            var rowsAffected = await connection.UpdateAsync<EmployeeDbModel>(
+                empDbModel,
+                new QueryGroup(new[]
+                {
+                    new QueryField(nameof(EmployeeDbModel.RowId), empDbModel.RowId),
+                    new QueryField(nameof(EmployeeDbModel.RowVersion), existing.RowVersion)
+                })
+            );
+
+            if (rowsAffected == 0)
+            {
+                throw new InvalidOperationException("Employee was updated by another user (concurrency conflict)");
+            }
+
+            _logger.LogInformation($"Employee deleted (logical): RowId={id.Value}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"DeleteAsync failed for RowId={id.Value}", ex);
+            throw;
+        }
+    }
 }

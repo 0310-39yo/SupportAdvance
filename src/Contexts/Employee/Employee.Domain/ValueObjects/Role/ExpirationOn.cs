@@ -15,7 +15,7 @@ public sealed class ExpirationOn : ValueObject, IEquatable<ExpirationOn>
     public LocalDateTime Value { get; }
 
     /// <summary>設定状態フラグ（IsSet=true で有効期限あり）</summary>
-    public bool IsSet { get; }
+    public new bool IsSet { get; }
 
     /// <summary>無期限フラグ（HasExpiration=false で無期限）</summary>
     public bool HasExpiration => IsSet;

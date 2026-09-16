@@ -20,6 +20,13 @@ using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 /// </summary>
 public class EmployeeMapper
 {
+    private readonly IClock _clock;
+
+    public EmployeeMapper(IClock clock)
+    {
+        _clock = clock ?? throw new ArgumentNullException(nameof(clock));
+    }
+
     /// <summary>
     /// DbModel から Domain Entity に変換（読み込み用）
     /// 【責務】DB の プリミティブ型 → Domain の ValueObject に変換
@@ -79,6 +86,7 @@ public class EmployeeMapper
             retiredOn,
             person,
             memberships,
+            _clock,
             dbModel.RowVersion
         );
         return employee;
@@ -105,4 +113,20 @@ public class EmployeeMapper
     /// </summary>
     public PersonDbModel ToPersonDbModel(Person person, long employeeRowId) =>
         PersonMapper.ToDbModel(person, employeeRowId);
+
+    /// <summary>
+    /// Domain DepartmentMembership を DbModel に変換する際のヘルパーメソッド
+    /// 【責務】DepartmentMembership → DepartmentMembershipDbModel への変換
+    /// 【呼び出し元】Repository の AddAsync メソッド
+    /// </summary>
+    public DepartmentMembershipDbModel ToDepartmentMembershipDbModel(DepartmentMembership membership) =>
+        new()
+        {
+            RowId = membership.RowId.Value,
+            EmployeeRowId = membership.EmployeeRowId.Value,
+            DepartmentRowId = membership.DepartmentRowId.Value,
+            IsPrimary = membership.IsPrimary.Value,
+            EndOn = membership.EndOn.HasEnded ? membership.EndOn.Value!.Value.Value : null,
+            DepartmentName = membership.DepartmentName
+        };
 }

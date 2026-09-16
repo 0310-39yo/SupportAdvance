@@ -49,7 +49,8 @@ public class EmployeeTests
             bizCode,
             null,
             person,
-            new List<DepartmentMembership>()
+            new List<DepartmentMembership>(),
+            _clock
             );
     }
 
@@ -135,7 +136,8 @@ public class EmployeeTests
             bizCode,
             retiredOn,
             person,
-            new List<DepartmentMembership>()
+            new List<DepartmentMembership>(),
+            _clock
             );
 
         // Assert
@@ -280,7 +282,8 @@ public class EmployeeTests
             BizCode.From(BizDivision.RegularEmployee(), BizId.From(1234)),
             retiredOn,
             person,
-            new List<DepartmentMembership>()
+            new List<DepartmentMembership>(),
+            _clock
             );
 
         // Act

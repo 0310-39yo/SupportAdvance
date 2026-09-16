@@ -24,7 +24,7 @@ public sealed class AbolishedOn : ValueObject, IEquatable<AbolishedOn>
     /// <summary>
     /// IsSet フラグ
     /// </summary>
-    public bool IsSet { get; }
+    public new bool IsSet { get; }
 
     /// <summary>
     /// プライベートコンストラクタ（IsSet=false 用）
@@ -40,7 +40,6 @@ public sealed class AbolishedOn : ValueObject, IEquatable<AbolishedOn>
     /// </summary>
     private AbolishedOn(LocalDateTime value)
     {
-        ArgumentNullException.ThrowIfNull(value);
         IsSet = true;
         Value = value;
     }

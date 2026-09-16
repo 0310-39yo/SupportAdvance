@@ -135,4 +135,9 @@ public sealed class ParentDepartmentRowId : RowId, IEquatable<ParentDepartmentRo
 
         return IsSet == other.IsSet && Value == other.Value;
     }
+
+    /// <summary>
+    /// ハッシュコードを取得する
+    /// </summary>
+    public override int GetHashCode() => Value.GetHashCode();
 }
