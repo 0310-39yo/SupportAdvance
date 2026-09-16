@@ -59,14 +59,14 @@ DepartmentQueryService の各メソッドが、以下の仕様を満たすこと
 
 ## 4. テスト観点一覧
 
-### 観点グループ UC：Query Service 委譲テスト
+### VO-QUERY: Query Service メソッド
 
-| 観点ID | 観点（説明） | 分類 | 依拠仕様 | テスト用実装 |
-|--------|------|------|---------|------------|
-| UC-DEL-01 | GetByIdAsync が Repository に正しく委譲される | 正常系 | Query Service パターン | MockDepartmentRepository |
-| UC-RET-01 | 存在する ID で Department が返却される | 正常系 | Repository 実装仕様 | MockDepartmentRepository |
-| UC-RET-02 | 存在しない ID で null が返却される | 正常系（null 戻り値） | Repository 実装仕様 | MockDepartmentRepository |
-| UC-NULL-01 | null ID で ArgumentNullException が発生する | 異常系 | null ガード実装 | DIFixture |
+| 観点ID | 観点（説明） | 分類 | テスト実装 |
+|--------|------|------|-----------|
+| VO-QUERY-01 | GetByIdAsync が Repository に正しく委譲される | 正常系 | ✅ DepartmentQueryServiceTests.cs::VO_QUERY_01_GetByIdAsync_WithValidId_DelegateToRepository |
+| VO-QUERY-02 | 存在する ID で Department が返却される | 正常系 | ✅ DepartmentQueryServiceTests.cs::VO_QUERY_02_GetByIdAsync_WithValidId_ReturnsRepositoryResult |
+| VO-QUERY-03 | 存在しない ID で null が返却される | 正常系 | ⏸️ Skip: VO_QUERY_02 で null 返却を検証 |
+| VO-QUERY-04 | null ID で ArgumentNullException が発生する | 異常系 | ✅ DepartmentQueryServiceTests.cs::VO_QUERY_04_GetByIdAsync_WithNullId_ThrowsArgumentNullException |
 
 ---
 
