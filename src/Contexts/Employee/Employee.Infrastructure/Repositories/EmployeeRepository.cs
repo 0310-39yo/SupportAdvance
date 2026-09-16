@@ -3,6 +3,7 @@ using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 namespace SupportAdvance.Contexts.Employee.Infrastructure.Repositories;
 
 using System.Data;
+using System.Linq;
 using Dapper;
 using RepoDb;
 using SupportAdvance.Contexts.Employee.Application.Repositories;
@@ -288,9 +289,27 @@ public class EmployeeRepository(
     }
 
     /// <summary>
+    /// row_version（timestamp列）を除いた RepoDb Field 一覧を取得する
+    /// 【重要】SQL Server の timestamp は自動管理のため、明示的な値を INSERT/UPDATE に含められない。
+    ///         RepoDb の fields パラメータで対象列を絞り込むことで除外する。
+    /// </summary>
+    private static IEnumerable<Field> FieldsExcludingRowVersion<T>() =>
+        Field.Parse(typeof(T)).Where(f => f.Name != "row_version");
+
+    /// <summary>
+    /// UPDATE 対象から row_version・created_at・created_by を除いた RepoDb Field 一覧を取得する
+    /// 【重要】Mapper の ToDbModel/ToPersonDbModel は CreatedAt/CreatedBy を設定しない（Mapper の責務外）ため、
+    ///         UPDATE 時に DbModel の CreatedAt が既定値（0001-01-01）のまま SET 句に含まれると
+    ///         SqlDateTime overflow が発生する。作成時刻は不変のため UPDATE 対象から除外する。
+    /// </summary>
+    private static IEnumerable<Field> FieldsExcludingRowVersionAndCreatedAudit<T>() =>
+        Field.Parse(typeof(T)).Where(f => f.Name is not ("row_version" or "created_at" or "created_by"));
+
+    /// <summary>
     /// Employee 集約を新規保存する
     /// 【責務】複数テーブル（m_employees, m_persons, m_department_memberships）をトランザクション内でINSERT
     /// 【特徴】CreatedAt/CreatedBy は Repository が設定（MultiTableRepositoryBase 経由）
+    /// 【row_version 除外】RepoDb の fields パラメータで row_version 列を INSERT 対象から除外
     /// </summary>
     public async Task AddAsync(Employee employee)
     {
@@ -301,25 +320,34 @@ public class EmployeeRepository(
 
         try
         {
-            // 1. m_employees へ INSERT
+            // 1. m_employees へ INSERT（row_version は fields で除外）
             var empDbModel = _mapper.ToDbModel(employee);
             SetCreatedAtAudit(empDbModel);
             SetCreatedByAudit(empDbModel);
 
-            await connection.InsertAsync<EmployeeDbModel>(empDbModel, transaction: transaction);
+            await connection.InsertAsync(
+                empDbModel,
+                fields: FieldsExcludingRowVersion<EmployeeDbModel>(),
+                transaction: transaction);
 
-            // 2. m_persons へ INSERT（1:1 対応）
+            // 2. m_persons へ INSERT（row_version は fields で除外）
             var personDbModel = _mapper.ToPersonDbModel(employee.Person, employee.RowId.Value);
             SetAuditField(personDbModel, "CreatedAt", Clock.JstNow.Value);
             SetAuditField(personDbModel, "CreatedBy", CurrentUser.EmployeeRowId);
 
-            await connection.InsertAsync<PersonDbModel>(personDbModel, transaction: transaction);
+            await connection.InsertAsync(
+                personDbModel,
+                fields: FieldsExcludingRowVersion<PersonDbModel>(),
+                transaction: transaction);
 
-            // 3. m_department_memberships へ INSERT（1:N 対応）
+            // 3. m_department_memberships へ INSERT（row_version は fields で除外）
             foreach (var membership in employee.DepartmentMemberships)
             {
                 var membershipDbModel = _mapper.ToDepartmentMembershipDbModel(membership);
-                await connection.InsertAsync<DepartmentMembershipDbModel>(membershipDbModel, transaction: transaction);
+                await connection.InsertAsync(
+                    membershipDbModel,
+                    fields: FieldsExcludingRowVersion<DepartmentMembershipDbModel>(),
+                    transaction: transaction);
             }
 
             transaction.Commit();
@@ -337,6 +365,7 @@ public class EmployeeRepository(
     /// Employee 集約を保存（更新）する
     /// 【責務】複数テーブル（m_employees, m_persons, m_department_memberships）をトランザクション内で更新
     /// 【特徴】楽観ロック（row_version）による競合検出、自動タイムスタンプ管理（MultiTableRepositoryBase 経由）
+    /// 【row_version 除外】RepoDb の fields パラメータで row_version 列を UPDATE 対象から除外
     /// </summary>
     public async Task UpdateAsync(Employee employee)
     {
@@ -352,15 +381,16 @@ public class EmployeeRepository(
             SetUpdatedAtAudit(empDbModel);
             SetUpdatedByAudit(empDbModel);
 
-            // 1. m_employees を RepoDb UpdateAsync で UPDATE（楽観ロック付き）
+            // 1. m_employees を RepoDb UpdateAsync で UPDATE（楽観ロック付き、row_version・created_at・created_by は fields で除外）
             var oldRowVersion = employee.RowVersion;
-            var empRowsAffected = await connection.UpdateAsync<EmployeeDbModel>(
+            var empRowsAffected = await connection.UpdateAsync(
                 empDbModel,
                 new QueryGroup(new[]
                 {
-                    new QueryField(nameof(EmployeeDbModel.RowId), empDbModel.RowId),
-                    new QueryField(nameof(EmployeeDbModel.RowVersion), oldRowVersion)
+                    new QueryField("row_id", empDbModel.RowId),
+                    new QueryField("row_version", oldRowVersion)
                 }),
+                fields: FieldsExcludingRowVersionAndCreatedAudit<EmployeeDbModel>(),
                 transaction: transaction
             );
 
@@ -369,19 +399,20 @@ public class EmployeeRepository(
                 throw new InvalidOperationException("Employee was updated by another user (concurrency conflict)");
             }
 
-            // 2. m_persons を RepoDb UpdateAsync で UPDATE（楽観ロック付き）
+            // 2. m_persons を RepoDb UpdateAsync で UPDATE（楽観ロック付き、row_version・created_at・created_by は fields で除外）
             var personDbModel = _mapper.ToPersonDbModel(employee.Person, employee.RowId.Value);
             SetAuditField(personDbModel, "UpdatedAt", Clock.JstNow.Value);
             SetAuditField(personDbModel, "UpdatedBy", CurrentUser.EmployeeRowId);
 
             var oldPersonRowVersion = employee.Person.RowVersion;
-            var perRowsAffected = await connection.UpdateAsync<PersonDbModel>(
+            var perRowsAffected = await connection.UpdateAsync(
                 personDbModel,
                 new QueryGroup(new[]
                 {
-                    new QueryField(nameof(PersonDbModel.RowId), personDbModel.RowId),
-                    new QueryField(nameof(PersonDbModel.RowVersion), oldPersonRowVersion)
+                    new QueryField("row_id", personDbModel.RowId),
+                    new QueryField("row_version", oldPersonRowVersion)
                 }),
+                fields: FieldsExcludingRowVersionAndCreatedAudit<PersonDbModel>(),
                 transaction: transaction
             );
 
@@ -433,9 +464,10 @@ public class EmployeeRepository(
                 empDbModel,
                 new QueryGroup(new[]
                 {
-                    new QueryField(nameof(EmployeeDbModel.RowId), empDbModel.RowId),
-                    new QueryField(nameof(EmployeeDbModel.RowVersion), existing.RowVersion)
-                })
+                    new QueryField("row_id", empDbModel.RowId),
+                    new QueryField("row_version", existing.RowVersion)
+                }),
+                fields: FieldsExcludingRowVersionAndCreatedAudit<EmployeeDbModel>()
             );
 
             if (rowsAffected == 0)

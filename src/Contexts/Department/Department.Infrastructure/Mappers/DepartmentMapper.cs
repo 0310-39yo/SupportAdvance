@@ -33,14 +33,14 @@ public class DepartmentMapper
             throw new InvalidOperationException($"Failed to convert DepartmentRowId from DB value: {dbModel.RowId}");
         }
 
-        if (!DepartmentCode.TryFromDbValue(dbModel.Code, out var deptCode))
+        if (!DepartmentCode.TryFromDbValue(dbModel.DepartmentCode, out var deptCode))
         {
-            throw new InvalidOperationException($"Failed to convert DepartmentCode from DB value: {dbModel.Code}");
+            throw new InvalidOperationException($"Failed to convert DepartmentCode from DB value: {dbModel.DepartmentCode}");
         }
 
-        if (!HierarchyLevel.TryFromDbValue(dbModel.Level, out var level))
+        if (!HierarchyLevel.TryFromDbValue(dbModel.HierarchyLevel, out var level))
         {
-            throw new InvalidOperationException($"Failed to convert HierarchyLevel from DB value: {dbModel.Level}");
+            throw new InvalidOperationException($"Failed to convert HierarchyLevel from DB value: {dbModel.HierarchyLevel}");
         }
 
         if (!ParentDepartmentRowId.TryFromDbValue(dbModel.ParentDepartmentRowId, out var parentId))
@@ -62,7 +62,7 @@ public class DepartmentMapper
         return Department.Reconstruct(
             deptRowId,
             deptCode,
-            dbModel.Name,
+            dbModel.DepartmentName,
             level,
             parentId,
             managerId,
@@ -82,9 +82,9 @@ public class DepartmentMapper
         return new()
         {
             RowId = entity.RowId.Value,
-            Code = entity.DeptCode.Value,
-            Name = entity.Name,
-            Level = entity.Level.Value,
+            DepartmentCode = entity.DeptCode.Value,
+            DepartmentName = entity.Name,
+            HierarchyLevel = entity.Level.Value,
             ParentDepartmentRowId = entity.ParentId.IsSet ? entity.ParentId.Value : null,
             ManagerEmployeeRowId = entity.ManagerId.IsSet ? entity.ManagerId.Value : null,
             AbolishedOn = entity.AbolishedOn.IsAbolished ? entity.AbolishedOn.Value.Value : null

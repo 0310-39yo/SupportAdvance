@@ -22,9 +22,9 @@ public class DepartmentMapperTests
         var dbModel = new DepartmentDbModel
         {
             RowId = 1L,
-            Code = "D001",
-            Name = "営業部",
-            Level = 1,
+            DepartmentCode = "D001",
+            DepartmentName = "営業部",
+            HierarchyLevel = 1,
             ParentDepartmentRowId = null,
             ManagerEmployeeRowId = null,
             AbolishedOn = null,
@@ -50,9 +50,9 @@ public class DepartmentMapperTests
         var dbModel = new DepartmentDbModel
         {
             RowId = 2L,
-            Code = "D002",
-            Name = "企画部",
-            Level = 2,
+            DepartmentCode = "D002",
+            DepartmentName = "企画部",
+            HierarchyLevel = 2,
             ParentDepartmentRowId = 1L,
             ManagerEmployeeRowId = 100L,
             AbolishedOn = null,
@@ -83,9 +83,9 @@ public class DepartmentMapperTests
         var dbModel = new DepartmentDbModel
         {
             RowId = 3L,
-            Code = "D003",
-            Name = "旧製造部",
-            Level = 1,
+            DepartmentCode = "D003",
+            DepartmentName = "旧製造部",
+            HierarchyLevel = 1,
             ParentDepartmentRowId = null,
             ManagerEmployeeRowId = null,
             AbolishedOn = abolishedDate,
@@ -122,9 +122,9 @@ public class DepartmentMapperTests
         var dbModel = new DepartmentDbModel
         {
             RowId = 1L,
-            Code = "", // Invalid: empty code
-            Name = "テスト部",
-            Level = 1,
+            DepartmentCode = "", // Invalid: empty code
+            DepartmentName = "テスト部",
+            HierarchyLevel = 1,
             ParentDepartmentRowId = null,
             ManagerEmployeeRowId = null,
             AbolishedOn = null
@@ -142,9 +142,9 @@ public class DepartmentMapperTests
         var dbModel = new DepartmentDbModel
         {
             RowId = 1L,
-            Code = "D001",
-            Name = "テスト部",
-            Level = 99, // Invalid: out of range
+            DepartmentCode = "D001",
+            DepartmentName = "テスト部",
+            HierarchyLevel = 99, // Invalid: out of range
             ParentDepartmentRowId = null,
             ManagerEmployeeRowId = null,
             AbolishedOn = null
@@ -166,9 +166,9 @@ public class DepartmentMapperTests
         var dbModel = new DepartmentDbModel
         {
             RowId = 1L,
-            Code = "D001",
-            Name = "営業部",
-            Level = 1,
+            DepartmentCode = "D001",
+            DepartmentName = "営業部",
+            HierarchyLevel = 1,
             ParentDepartmentRowId = null,
             ManagerEmployeeRowId = null,
             AbolishedOn = null,
@@ -205,9 +205,9 @@ public class DepartmentMapperTests
         // Assert
         Assert.NotNull(result);
         Assert.Equal(1L, result.RowId);
-        Assert.Equal("D001", result.Code);
-        Assert.Equal("営業部", result.Name);
-        Assert.Equal(1, result.Level);
+        Assert.Equal("D001", result.DepartmentCode);
+        Assert.Equal("営業部", result.DepartmentName);
+        Assert.Equal(1, result.HierarchyLevel);
         Assert.Null(result.ParentDepartmentRowId);
         Assert.Null(result.ManagerEmployeeRowId);
         Assert.Null(result.AbolishedOn);
@@ -311,9 +311,9 @@ public class DepartmentMapperTests
         var originalDbModel = new DepartmentDbModel
         {
             RowId = 1L,
-            Code = "D001",
-            Name = "営業部",
-            Level = 1,
+            DepartmentCode = "D001",
+            DepartmentName = "営業部",
+            HierarchyLevel = 1,
             ParentDepartmentRowId = null,
             ManagerEmployeeRowId = null,
             AbolishedOn = null,
@@ -326,9 +326,9 @@ public class DepartmentMapperTests
 
         // Assert
         Assert.Equal(1L, resultDbModel.RowId);
-        Assert.Equal("D001", resultDbModel.Code);
-        Assert.Equal("営業部", resultDbModel.Name);
-        Assert.Equal(1, resultDbModel.Level);
+        Assert.Equal("D001", resultDbModel.DepartmentCode);
+        Assert.Equal("営業部", resultDbModel.DepartmentName);
+        Assert.Equal(1, resultDbModel.HierarchyLevel);
     }
 
     #endregion

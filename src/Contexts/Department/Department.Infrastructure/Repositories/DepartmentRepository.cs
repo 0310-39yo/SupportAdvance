@@ -102,8 +102,26 @@ public class DepartmentRepository(
     }
 
     /// <summary>
+    /// row_version（timestamp列）を除いた RepoDb Field 一覧を取得する
+    /// 【重要】SQL Server の timestamp は自動管理のため、明示的な値を INSERT/UPDATE に含められない。
+    ///         RepoDb の fields パラメータで対象列を絞り込むことで除外する。
+    /// </summary>
+    private static IEnumerable<Field> FieldsExcludingRowVersion() =>
+        Field.Parse(typeof(DepartmentDbModel)).Where(f => f.Name != "row_version");
+
+    /// <summary>
+    /// UPDATE 対象から row_version・created_at・created_by を除いた RepoDb Field 一覧を取得する
+    /// 【重要】_mapper.ToDbModel() は CreatedAt/CreatedBy を設定しない（Mapper の責務外）ため、
+    ///         UPDATE 時に DbModel の CreatedAt が既定値（0001-01-01）のまま SET 句に含まれると
+    ///         SqlDateTime overflow が発生する。作成時刻は不変のため UPDATE 対象から除外する。
+    /// </summary>
+    private static IEnumerable<Field> FieldsExcludingRowVersionAndCreatedAudit() =>
+        Field.Parse(typeof(DepartmentDbModel))
+            .Where(f => f.Name is not ("row_version" or "created_at" or "created_by"));
+
+    /// <summary>
     /// 部署を保存する（新規作成または更新）
-    /// 【責務】UpdatedAt/UpdatedBy を設定、RepoDb でDB操作
+    /// 【責務】UpdatedAt/UpdatedBy を設定、RepoDb でDB操作（row_version は fields で除外）
     /// </summary>
     public async Task SaveAsync(Department department)
     {
@@ -115,8 +133,12 @@ public class DepartmentRepository(
         var now = _clock.JstNow.Value;
         var userId = _currentUser.EmployeeRowId;
 
-        // 新規作成判定（CreatedAt が未設定の場合）
-        if (dbModel.CreatedAt == default)
+        // 新規作成判定：DB に既に存在するか確認
+        // （Domain に監査フィールドがないため、DB での存在確認で判定）
+        var existing = await GetByIdAsync(department.RowId);
+        bool isInsert = existing == null;
+
+        if (isInsert)
         {
             dbModel.CreatedAt = now;
             dbModel.CreatedBy = userId;
@@ -129,21 +151,22 @@ public class DepartmentRepository(
         }
 
         using var connection = _connectionFactory.CreateConnection();
-        if (dbModel.RowId == 0)
+
+        if (isInsert)
         {
-            // 新規作成：RepoDb InsertAsync
-            await connection.InsertAsync<DepartmentDbModel>(dbModel);
+            // 新規作成：RepoDb InsertAsync（row_version は fields で除外）
+            await connection.InsertAsync(dbModel, fields: FieldsExcludingRowVersion());
         }
         else
         {
-            // 更新：RepoDb UpdateAsync
-            await connection.UpdateAsync<DepartmentDbModel>(dbModel);
+            // 更新：RepoDb UpdateAsync（row_version・created_at・created_by は fields で除外）
+            await connection.UpdateAsync(dbModel, fields: FieldsExcludingRowVersionAndCreatedAudit());
         }
     }
 
     /// <summary>
     /// 部署を論理削除する
-    /// 【責務】DeletedAt/DeletedBy を設定、RepoDb で更新
+    /// 【責務】DeletedAt/DeletedBy を設定、RepoDb で更新（row_version は fields で除外）
     /// </summary>
     public async Task DeleteAsync(DepartmentRowId id)
     {
@@ -165,7 +188,7 @@ public class DepartmentRepository(
         dbModel.UpdatedBy = userId;
 
         using var connection = _connectionFactory.CreateConnection();
-        // RepoDb UpdateAsync で更新
-        await connection.UpdateAsync<DepartmentDbModel>(dbModel);
+        // RepoDb UpdateAsync で更新（row_version・created_at・created_by は fields で除外）
+        await connection.UpdateAsync(dbModel, fields: FieldsExcludingRowVersionAndCreatedAudit());
     }
 }

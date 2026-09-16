@@ -23,9 +23,10 @@ public class DepartmentMembershipDbModel
     /// 楽観ロックタイムスタンプ
     /// 【対応カラム】row_version
     /// 【責務】concurrency control（更新時に競合検出）
+    /// 【重要】SQL Server の timestamp は自動管理のため、RepoDb の fields パラメータで INSERT/UPDATE から除外
     /// </summary>
     [Column("row_version")]
-    public byte[] RowVersion { get; set; } = [];
+    public byte[]? RowVersion { get; set; }
 
     /// <summary>
     /// 従業員行ID（外部参照）

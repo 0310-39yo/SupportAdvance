@@ -24,20 +24,20 @@ public class DepartmentDbModel
     /// <summary>
     /// 部署コード（4文字、一意）
     /// </summary>
-    [Column("code")]
-    public string Code { get; set; } = string.Empty;
+    [Column("department_code")]
+    public string DepartmentCode { get; set; } = string.Empty;
 
     /// <summary>
     /// 部署名
     /// </summary>
-    [Column("name")]
-    public string Name { get; set; } = string.Empty;
+    [Column("department_name")]
+    public string DepartmentName { get; set; } = string.Empty;
 
     /// <summary>
     /// 階層レベル（0-4）
     /// </summary>
-    [Column("level")]
-    public int Level { get; set; }
+    [Column("hierarchy_level")]
+    public int HierarchyLevel { get; set; }
 
     /// <summary>
     /// 親部署の行ID（NULL で「トップレベル」）
@@ -59,9 +59,10 @@ public class DepartmentDbModel
 
     /// <summary>
     /// 楽観ロック用タイムスタンプ
+    /// 【重要】SQL Server の timestamp は自動管理のため、RepoDb の fields パラメータで INSERT/UPDATE から除外
     /// </summary>
     [Column("row_version")]
-    public byte[] RowVersion { get; set; } = [];
+    public byte[]? RowVersion { get; set; }
 
     /// <summary>
     /// 作成日時（JST）

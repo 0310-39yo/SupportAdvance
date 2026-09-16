@@ -1,6 +1,7 @@
 namespace SupportAdvance.Contexts.Employee.Infrastructure.Tests.Repositories;
 
 using System.Data;
+using RepoDb;
 using SupportAdvance.Common.Clocks;
 using SupportAdvance.Common.Configuration;
 using SupportAdvance.Contexts.Employee.Application.Repositories;
@@ -12,8 +13,11 @@ using SupportAdvance.Contexts.Employee.Infrastructure.Mappers;
 using SupportAdvance.Contexts.Employee.Infrastructure.Repositories;
 using SupportAdvance.Crosscutting.Logging;
 using SupportAdvance.Infrastructure.Persistence;
+using SupportAdvance.Infrastructure.Providers;
 using SupportAdvance.Infrastructure.Services;
+using SupportAdvance.Infrastructure.Tests.Utilities;
 using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
+using SupportAdvance.Application.Abstractions.Identifiers;
 using Xunit;
 
 /// <summary>
@@ -29,6 +33,15 @@ internal sealed class NoOpAppLogging<T> : IAppLogging<T>
     public void LogError(string messageTemplate, params object[] args) { }
 }
 
+internal sealed class TestCurrentUserService : ICurrentUserService
+{
+    private const long TestUserEmployeeRowId = 999999999L;
+    public long EmployeeRowId => TestUserEmployeeRowId;
+    public bool IsAuthenticated => true;
+    public void SetLoggedInUser(long employeeRowId, string loginId) { }
+    public void SetLoggedOut() { }
+}
+
 /// <summary>
 /// EmployeeRepository の結合テスト（実DB接続）
 ///
@@ -41,55 +54,72 @@ internal sealed class NoOpAppLogging<T> : IAppLogging<T>
 /// 【前提】本テストは EmployeeRepository.AddAsync / DeleteAsync / GetByPersonRowIdAsync の実装
 ///         （本Phaseで新規実装）を含めて検証する。
 /// </summary>
-public class EmployeeRepositoryTests : IAsyncLifetime
+public class EmployeeRepositoryTests : RepositoryTestBase
 {
     private const string ConnectionString =
         "Data Source=3160EPOTAK; Database=SupportAdvance; User ID=sa; Password=Misutamako4^; Encrypt=false";
 
-    private const long TestRowIdStart = 2147483648L;
     private const int TestBizIdStart = 1001;
 
     private readonly IClock _clock = new SystemClock();
     private IEmployeeRepository _repository = null!;
-    private IDbConnectionFactory _connectionFactory = null!;
-    private readonly List<long> _createdEmployeeRowIds = new();
-    private long _nextTestRowId = TestRowIdStart;
+    private TestSequenceProvider _testSequenceProvider = null!;
     private int _nextTestBizId = TestBizIdStart;
 
-    public Task InitializeAsync()
+    public override Task InitializeAsync()
     {
+        // RepoDb GlobalConfiguration 設定（SQL Server用）
+        GlobalConfiguration
+            .Setup()
+            .UseSqlServer();
+
+        // Dapper グローバル型マッピング設定（snake_case カラム ↔ PascalCase プロパティ変換に必須）
+        SupportAdvance.Infrastructure.ORM.Dapper.DapperTypeHandlerRegistration.Register();
+
         var appSettings = new AppSettings
         {
-            ConnectionStrings = new Dictionary<string, string> { { "Default", ConnectionString } },
+            ConnectionStrings = new Dictionary<string, string> { { "SupportAdvance", ConnectionString } },
             Database = new DatabaseSettings { Dialect = "SqlServer" }
         };
 
         _connectionFactory = new DbConnectionFactory(appSettings);
+        _testSequenceProvider = new TestSequenceProvider(appSettings);
         var queryLoader = new SqlQueryLoader(appSettings);
         var mapper = new EmployeeMapper(_clock);
-        var currentUser = new SystemCurrentUserService();
+        var currentUser = new TestCurrentUserService();
         var logger = new NoOpAppLogging<EmployeeRepository>();
 
         _repository = new EmployeeRepository(queryLoader, mapper, _connectionFactory, currentUser, _clock, logger);
         return Task.CompletedTask;
     }
 
-    public Task DisposeAsync()
+    /// <summary>
+    /// Employee・Person・DepartmentMembership テーブルのクリーンアップ
+    /// 【重要】m_persons から person_row_id を取得してから削除（FK制約順）
+    /// Employee-Person は 1対1のため、m_persons.employee_row_id で参照
+    /// </summary>
+    protected override async Task CleanupAsync(IDbConnection connection, long employeeRowId)
     {
-        if (_createdEmployeeRowIds.Count == 0)
+        await Task.Run(() =>
         {
-            return Task.CompletedTask;
-        }
+            // Step 1: m_persons から person_row_id を取得（employee_row_id で検索）
+            using var cmd = connection.CreateCommand();
+            cmd.CommandText = "SELECT row_id FROM m_persons WHERE employee_row_id = @employeeRowId";
+            AddParam(cmd, "@employeeRowId", employeeRowId);
+            var personRowId = (long?)cmd.ExecuteScalar();
 
-        using var connection = _connectionFactory.CreateConnection();
-        foreach (var rowId in _createdEmployeeRowIds)
-        {
-            ExecuteNonQuery(connection, "DELETE FROM m_department_memberships WHERE employee_row_id = @rowId", rowId);
-            ExecuteNonQuery(connection, "DELETE FROM m_persons WHERE employee_row_id = @rowId", rowId);
-            ExecuteNonQuery(connection, "DELETE FROM m_employees WHERE row_id = @rowId", rowId);
-        }
+            // Step 2: FK制約逆順で削除
+            // 【注意】ExecuteNonQuery ヘルパーは内部で常に "@rowId" という名前でパラメータをバインドするため、
+            //         SQL文中のプレースホルダーも "@rowId" に統一する
+            ExecuteNonQuery(connection, "DELETE FROM m_department_memberships WHERE employee_row_id = @rowId", employeeRowId);
 
-        return Task.CompletedTask;
+            if (personRowId.HasValue)
+            {
+                ExecuteNonQuery(connection, "DELETE FROM m_persons WHERE row_id = @rowId", personRowId.Value);
+            }
+
+            ExecuteNonQuery(connection, "DELETE FROM m_employees WHERE row_id = @rowId", employeeRowId);
+        });
     }
 
     #region グループ 1: GetByIdAsync - 存在する場合
@@ -97,38 +127,52 @@ public class EmployeeRepositoryTests : IAsyncLifetime
     [Fact]
     public async Task VO_CRUD_03_GetByIdAsync_WithValidId_WithValidIdReturnsEmployee()
     {
-        // Arrange
-        var repository = CreateRepository();
-        var employee = BuildTestEmployee();
-        await repository.AddAsync(employee);
-        _createdEmployeeRowIds.Add(employee.RowId.Value);
+        try
+        {
+            // Arrange
+            var repository = CreateRepository();
+            var employee = await BuildTestEmployeeAsync();
+            await repository.AddAsync(employee);
+            _createdRowIds.Add(employee.RowId.Value);
 
-        // Act
-        var result = await repository.GetByIdAsync(employee.RowId);
+            // Act
+            var result = await repository.GetByIdAsync(employee.RowId);
 
-        // Assert
-        Assert.NotNull(result);
-        Assert.Equal(employee.RowId.Value, result.RowId.Value);
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(employee.RowId.Value, result.RowId.Value);
+        }
+        finally
+        {
+            await DisposeAsync();
+        }
     }
 
     [Fact]
     public async Task VO_CRUD_04_GetByIdAsync_WithMultipleEmployees_WithMultipleEmployeesReturnsCorrectOne()
     {
-        // Arrange
-        var repository = CreateRepository();
-        var employee1 = BuildTestEmployee();
-        var employee2 = BuildTestEmployee();
-        await repository.AddAsync(employee1);
-        _createdEmployeeRowIds.Add(employee1.RowId.Value);
-        await repository.AddAsync(employee2);
-        _createdEmployeeRowIds.Add(employee2.RowId.Value);
+        try
+        {
+            // Arrange
+            var repository = CreateRepository();
+            var employee1 = await BuildTestEmployeeAsync();
+            var employee2 = await BuildTestEmployeeAsync();
+            await repository.AddAsync(employee1);
+            _createdRowIds.Add(employee1.RowId.Value);
+            await repository.AddAsync(employee2);
+            _createdRowIds.Add(employee2.RowId.Value);
 
-        // Act
-        var result = await repository.GetByIdAsync(employee1.RowId);
+            // Act
+            var result = await repository.GetByIdAsync(employee1.RowId);
 
-        // Assert
-        Assert.NotNull(result);
-        Assert.Equal(employee1.RowId.Value, result.RowId.Value);
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(employee1.RowId.Value, result.RowId.Value);
+        }
+        finally
+        {
+            await DisposeAsync();
+        }
     }
 
     #endregion
@@ -138,15 +182,22 @@ public class EmployeeRepositoryTests : IAsyncLifetime
     [Fact]
     public async Task VO_CRUD_04_GetByIdAsync_WithInvalidId_WithInvalidIdReturnsNull()
     {
-        // Arrange
-        var repository = CreateRepository();
-        var nonExistentId = EmployeeRowId.From(_nextTestRowId + 100_000);
+        try
+        {
+            // Arrange
+            var repository = CreateRepository();
+            var nonExistentId = EmployeeRowId.From(9999999999);
 
-        // Act
-        var result = await repository.GetByIdAsync(nonExistentId);
+            // Act
+            var result = await repository.GetByIdAsync(nonExistentId);
 
-        // Assert
-        Assert.Null(result);
+            // Assert
+            Assert.Null(result);
+        }
+        finally
+        {
+            await DisposeAsync();
+        }
     }
 
     #endregion
@@ -156,32 +207,46 @@ public class EmployeeRepositoryTests : IAsyncLifetime
     [Fact]
     public async Task VO_CRUD_03_GetByRowIdAsync_WithValidRowId_WithValidRowIdReturnsEmployee()
     {
-        // Arrange
-        var repository = CreateRepository();
-        var employee = BuildTestEmployee();
-        await repository.AddAsync(employee);
-        _createdEmployeeRowIds.Add(employee.RowId.Value);
+        try
+        {
+            // Arrange
+            var repository = CreateRepository();
+            var employee = await BuildTestEmployeeAsync();
+            await repository.AddAsync(employee);
+            _createdRowIds.Add(employee.RowId.Value);
 
-        // Act
-        var result = await repository.GetByRowIdAsync(employee.RowId);
+            // Act
+            var result = await repository.GetByRowIdAsync(employee.RowId);
 
-        // Assert
-        Assert.NotNull(result);
-        Assert.Equal(employee.RowId.Value, result.RowId.Value);
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(employee.RowId.Value, result.RowId.Value);
+        }
+        finally
+        {
+            await DisposeAsync();
+        }
     }
 
     [Fact]
     public async Task VO_CRUD_04_GetByRowIdAsync_WithInvalidRowId_WithInvalidRowIdReturnsNull()
     {
-        // Arrange
-        var repository = CreateRepository();
-        var nonExistentId = EmployeeRowId.From(_nextTestRowId + 100_000);
+        try
+        {
+            // Arrange
+            var repository = CreateRepository();
+            var nonExistentId = EmployeeRowId.From(9999999999);
 
-        // Act
-        var result = await repository.GetByRowIdAsync(nonExistentId);
+            // Act
+            var result = await repository.GetByRowIdAsync(nonExistentId);
 
-        // Assert
-        Assert.Null(result);
+            // Assert
+            Assert.Null(result);
+        }
+        finally
+        {
+            await DisposeAsync();
+        }
     }
 
     #endregion
@@ -191,36 +256,47 @@ public class EmployeeRepositoryTests : IAsyncLifetime
     [Fact]
     public async Task VO_EXEC_01_GetByPersonRowIdAsync_WithValidPersonRowId_WithValidPersonRowIdReturnsEmployees()
     {
-        // Arrange: 同一 PersonRowId を持つ Employee を2件作成
-        var repository = CreateRepository();
-        var personRowId = NextPersonRowId();
-        var employee1 = BuildTestEmployee(personRowId: personRowId);
-        var employee2 = BuildTestEmployee(personRowId: personRowId);
-        await repository.AddAsync(employee1);
-        _createdEmployeeRowIds.Add(employee1.RowId.Value);
-        await repository.AddAsync(employee2);
-        _createdEmployeeRowIds.Add(employee2.RowId.Value);
+        try
+        {
+            // Arrange: Employee と Person は1対1のため、1件のみ作成
+            var repository = CreateRepository();
+            var employee = await BuildTestEmployeeAsync();
+            await repository.AddAsync(employee);
+            _createdRowIds.Add(employee.RowId.Value);
 
-        // Act
-        var results = await repository.GetByPersonRowIdAsync(PersonRowId.From(personRowId));
+            // Act
+            var results = await repository.GetByPersonRowIdAsync(employee.Person.RowId);
 
-        // Assert
-        Assert.NotEmpty(results);
-        Assert.Equal(2, results.Count);
+            // Assert
+            Assert.NotEmpty(results);
+            Assert.Single(results);
+            Assert.Equal(employee.RowId.Value, results[0].RowId.Value);
+        }
+        finally
+        {
+            await DisposeAsync();
+        }
     }
 
     [Fact]
     public async Task VO_EXEC_01_GetByPersonRowIdAsync_WithInvalidPersonRowId_WithInvalidPersonRowIdReturnsEmpty()
     {
-        // Arrange
-        var repository = CreateRepository();
-        var nonExistentPersonRowId = NextPersonRowId() + 100_000;
+        try
+        {
+            // Arrange
+            var repository = CreateRepository();
+            var nonExistentPersonRowId = await _testSequenceProvider.GetNextValueAsync() + 100_000;
 
-        // Act
-        var results = await repository.GetByPersonRowIdAsync(PersonRowId.From(nonExistentPersonRowId));
+            // Act
+            var results = await repository.GetByPersonRowIdAsync(PersonRowId.From(nonExistentPersonRowId));
 
-        // Assert
-        Assert.Empty(results);
+            // Assert
+            Assert.Empty(results);
+        }
+        finally
+        {
+            await DisposeAsync();
+        }
     }
 
     #endregion
@@ -230,36 +306,50 @@ public class EmployeeRepositoryTests : IAsyncLifetime
     [Fact]
     public async Task VO_CRUD_01_AddAsync_WithValidEntity_WithValidEmployeeInsertsAndReturnsId()
     {
-        // Arrange
-        var repository = CreateRepository();
-        var employee = BuildTestEmployee();
+        try
+        {
+            // Arrange
+            var repository = CreateRepository();
+            var employee = await BuildTestEmployeeAsync();
 
-        // Act
-        await repository.AddAsync(employee);
-        _createdEmployeeRowIds.Add(employee.RowId.Value);
+            // Act
+            await repository.AddAsync(employee);
+            _createdRowIds.Add(employee.RowId.Value);
 
-        // Assert
-        var result = await repository.GetByIdAsync(employee.RowId);
-        Assert.NotNull(result);
-        Assert.Equal(employee.RowId.Value, result.RowId.Value);
+            // Assert
+            var result = await repository.GetByIdAsync(employee.RowId);
+            Assert.NotNull(result);
+            Assert.Equal(employee.RowId.Value, result.RowId.Value);
+        }
+        finally
+        {
+            await DisposeAsync();
+        }
     }
 
     [Fact]
     public async Task VO_AUDIT_01_AddAsync_AuditColumns_AuditColumnsAreSetAutomatically()
     {
-        // Arrange
-        var repository = CreateRepository();
-        var employee = BuildTestEmployee();
+        try
+        {
+            // Arrange
+            var repository = CreateRepository();
+            var employee = await BuildTestEmployeeAsync();
 
-        // Act
-        await repository.AddAsync(employee);
-        _createdEmployeeRowIds.Add(employee.RowId.Value);
+            // Act
+            await repository.AddAsync(employee);
+            _createdRowIds.Add(employee.RowId.Value);
 
-        // Assert - CreatedAt/CreatedBy が設定されていることを直接SQLで確認（Entity には CreatedAt が露出しないため）
-        var createdAt = QueryScalar<DateTime?>("m_employees", employee.RowId.Value, "created_at");
-        var createdBy = QueryScalar<long?>("m_employees", employee.RowId.Value, "created_by");
-        Assert.NotNull(createdAt);
-        Assert.NotNull(createdBy);
+            // Assert - CreatedAt/CreatedBy が設定されていることを直接SQLで確認（Entity には CreatedAt が露出しないため）
+            var createdAt = QueryScalar<DateTime?>("m_employees", employee.RowId.Value, "created_at");
+            var createdBy = QueryScalar<long?>("m_employees", employee.RowId.Value, "created_by");
+            Assert.NotNull(createdAt);
+            Assert.NotNull(createdBy);
+        }
+        finally
+        {
+            await DisposeAsync();
+        }
     }
 
     #endregion
@@ -269,34 +359,41 @@ public class EmployeeRepositoryTests : IAsyncLifetime
     [Fact]
     public async Task VO_CRUD_05_UpdateAsync_WithValidEntity_WithValidEmployeeUpdatesSuccessfully()
     {
-        // Arrange
-        var repository = CreateRepository();
-        var employee = BuildTestEmployee();
-        await repository.AddAsync(employee);
-        _createdEmployeeRowIds.Add(employee.RowId.Value);
+        try
+        {
+            // Arrange
+            var repository = CreateRepository();
+            var employee = await BuildTestEmployeeAsync();
+            await repository.AddAsync(employee);
+            _createdRowIds.Add(employee.RowId.Value);
 
-        var loaded = await repository.GetByIdAsync(employee.RowId);
-        Assert.NotNull(loaded);
+            var loaded = await repository.GetByIdAsync(employee.RowId);
+            Assert.NotNull(loaded);
 
-        var retiredOn = new LocalDateTime(DateTime.Now);
-        var updated = Employee.Reconstruct(
-            loaded.RowId,
-            loaded.TypeDivision,
-            loaded.BizId,
-            loaded.BizCode,
-            RetiredOn.From(retiredOn),
-            loaded.Person,
-            loaded.DepartmentMemberships,
-            _clock,
-            loaded.RowVersion);
+            var retiredOn = new LocalDateTime(DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Unspecified));
+            var updated = Employee.Reconstruct(
+                loaded.RowId,
+                loaded.TypeDivision,
+                loaded.BizId,
+                loaded.BizCode,
+                RetiredOn.From(retiredOn),
+                loaded.Person,
+                loaded.DepartmentMemberships,
+                _clock,
+                loaded.RowVersion);
 
-        // Act
-        await repository.UpdateAsync(updated);
+            // Act
+            await repository.UpdateAsync(updated);
 
-        // Assert
-        var retrieved = await repository.GetByIdAsync(employee.RowId);
-        Assert.NotNull(retrieved);
-        Assert.True(retrieved.RetiredOn.HasRetired);
+            // Assert
+            var retrieved = await repository.GetByIdAsync(employee.RowId);
+            Assert.NotNull(retrieved);
+            Assert.True(retrieved.RetiredOn.HasRetired);
+        }
+        finally
+        {
+            await DisposeAsync();
+        }
     }
 
     #endregion
@@ -306,21 +403,28 @@ public class EmployeeRepositoryTests : IAsyncLifetime
     [Fact]
     public async Task VO_CRUD_06_DeleteAsync_WithValidId_WithValidIdSetsDeletedAtLogicallyDeletes()
     {
-        // Arrange
-        var repository = CreateRepository();
-        var employee = BuildTestEmployee();
-        await repository.AddAsync(employee);
-        _createdEmployeeRowIds.Add(employee.RowId.Value);
+        try
+        {
+            // Arrange
+            var repository = CreateRepository();
+            var employee = await BuildTestEmployeeAsync();
+            await repository.AddAsync(employee);
+            _createdRowIds.Add(employee.RowId.Value);
 
-        // Act
-        await repository.DeleteAsync(employee.RowId);
+            // Act
+            await repository.DeleteAsync(employee.RowId);
 
-        // Assert - GetEmployeeByRowId.sql は deleted_at IS NULL でフィルタするため、論理削除後は取得不可
-        var result = await repository.GetByIdAsync(employee.RowId);
-        Assert.Null(result);
+            // Assert - GetEmployeeByRowId.sql は deleted_at IS NULL でフィルタするため、論理削除後は取得不可
+            var result = await repository.GetByIdAsync(employee.RowId);
+            Assert.Null(result);
 
-        var deletedAt = QueryScalar<DateTime?>("m_employees", employee.RowId.Value, "deleted_at");
-        Assert.NotNull(deletedAt);
+            var deletedAt = QueryScalar<DateTime?>("m_employees", employee.RowId.Value, "deleted_at");
+            Assert.NotNull(deletedAt);
+        }
+        finally
+        {
+            await DisposeAsync();
+        }
     }
 
     #endregion
@@ -329,16 +433,16 @@ public class EmployeeRepositoryTests : IAsyncLifetime
 
     private IEmployeeRepository CreateRepository() => _repository;
 
-    private long NextPersonRowId() => _nextTestRowId + 500_000;
-
     /// <summary>
-    /// テスト用 Employee エンティティを構築する（RowId/BizId はテスト専用範囲を自動採番）
+    /// テスト用 Employee エンティティを構築する（RowId/BizId をテスト用シーケンスから採番）
+    /// 【重要】RowId・PersonRowId は TestSequenceProvider.GetNextValueAsync() で採番
+    /// テストと本番データが ID 範囲で重複しないことを保証
     /// </summary>
-    private Employee BuildTestEmployee(long? personRowId = null)
+    private async Task<Employee> BuildTestEmployeeAsync(long? personRowId = null)
     {
-        var rowId = _nextTestRowId++;
+        var rowId = await _testSequenceProvider.GetNextValueAsync();
         var bizId = _nextTestBizId++;
-        var resolvedPersonRowId = personRowId ?? NextPersonRowId();
+        var resolvedPersonRowId = personRowId ?? await _testSequenceProvider.GetNextValueAsync();
 
         var person = Person.Create(
             PersonRowId.From(resolvedPersonRowId),
@@ -366,22 +470,6 @@ public class EmployeeRepositoryTests : IAsyncLifetime
         AddParam(cmd, "@rowId", rowId);
         var value = cmd.ExecuteScalar();
         return value is null or DBNull ? default! : (T)value;
-    }
-
-    private static void ExecuteNonQuery(IDbConnection connection, string sql, long rowId)
-    {
-        using var cmd = connection.CreateCommand();
-        cmd.CommandText = sql;
-        AddParam(cmd, "@rowId", rowId);
-        cmd.ExecuteNonQuery();
-    }
-
-    private static void AddParam(IDbCommand cmd, string name, object value)
-    {
-        var param = cmd.CreateParameter();
-        param.ParameterName = name;
-        param.Value = value;
-        cmd.Parameters.Add(param);
     }
 
     #endregion

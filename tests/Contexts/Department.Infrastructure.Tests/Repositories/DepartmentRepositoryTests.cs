@@ -1,6 +1,7 @@
 namespace SupportAdvance.Contexts.Department.Infrastructure.Tests.Repositories;
 
 using System.Data;
+using RepoDb;
 using SupportAdvance.Common.Clocks;
 using SupportAdvance.Common.Configuration;
 using SupportAdvance.Contexts.Department.Application.Repositories;
@@ -10,8 +11,19 @@ using SupportAdvance.Contexts.Department.Infrastructure.Mappers;
 using SupportAdvance.Contexts.Department.Infrastructure.Repositories;
 using SupportAdvance.Infrastructure.Persistence;
 using SupportAdvance.Infrastructure.Services;
+using SupportAdvance.Infrastructure.Tests.Utilities;
 using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
+using SupportAdvance.Application.Abstractions.Identifiers;
 using Xunit;
+
+internal sealed class TestCurrentUserService : ICurrentUserService
+{
+    private const long TestUserEmployeeRowId = 999999999L;
+    public long EmployeeRowId => TestUserEmployeeRowId;
+    public bool IsAuthenticated => true;
+    public void SetLoggedInUser(long employeeRowId, string loginId) { }
+    public void SetLoggedOut() { }
+}
 
 /// <summary>
 /// DepartmentRepository の結合テスト（実DB接続）
@@ -27,54 +39,49 @@ using Xunit;
 ///         「DepartmentRepository.SaveAsync の新規作成判定を修正」）。そのため本テストでは
 ///         Insert 系のテストは直接SQLでテストデータを投入し、SaveAsync 自体の Insert 動作検証は対象外とする。
 /// </summary>
-public class DepartmentRepositoryTests : IAsyncLifetime
+public class DepartmentRepositoryTests : RepositoryTestBase
 {
     private const string ConnectionString =
         "Data Source=3160EPOTAK; Database=SupportAdvance; User ID=sa; Password=Misutamako4^; Encrypt=false";
 
-    private const long TestRowIdStart = 2147483648L;
-
     private IDepartmentRepository _repository = null!;
-    private IDbConnectionFactory _connectionFactory = null!;
-    private readonly List<long> _createdRowIds = new();
-    private long _nextTestRowId = TestRowIdStart;
     private int _nextTestCodeSuffix = 1;
 
-    public Task InitializeAsync()
+    public override Task InitializeAsync()
     {
+        // RepoDb GlobalConfiguration 設定（SQL Server用）
+        GlobalConfiguration
+            .Setup()
+            .UseSqlServer();
+
+        // Dapper グローバル型マッピング設定（snake_case カラム ↔ PascalCase プロパティ変換に必須）
+        SupportAdvance.Infrastructure.ORM.Dapper.DapperTypeHandlerRegistration.Register();
+
         var appSettings = new AppSettings
         {
-            ConnectionStrings = new Dictionary<string, string> { { "Default", ConnectionString } },
+            ConnectionStrings = new Dictionary<string, string> { { "SupportAdvance", ConnectionString } },
             Database = new DatabaseSettings { Dialect = "SqlServer" }
         };
 
         _connectionFactory = new DbConnectionFactory(appSettings);
         var queryLoader = new SqlQueryLoader(appSettings);
         var mapper = new DepartmentMapper();
-        var currentUser = new SystemCurrentUserService();
+        var currentUser = new TestCurrentUserService();
         IClock clock = new SystemClock();
 
         _repository = new DepartmentRepository(queryLoader, mapper, _connectionFactory, currentUser, clock);
         return Task.CompletedTask;
     }
 
-    public Task DisposeAsync()
+    /// <summary>
+    /// Department テーブルのクリーンアップ
+    /// </summary>
+    protected override async Task CleanupAsync(IDbConnection connection, long rowId)
     {
-        if (_createdRowIds.Count == 0)
+        await Task.Run(() =>
         {
-            return Task.CompletedTask;
-        }
-
-        using var connection = _connectionFactory.CreateConnection();
-        foreach (var rowId in _createdRowIds)
-        {
-            using var cmd = connection.CreateCommand();
-            cmd.CommandText = "DELETE FROM m_departments WHERE row_id = @rowId";
-            AddParam(cmd, "@rowId", rowId);
-            cmd.ExecuteNonQuery();
-        }
-
-        return Task.CompletedTask;
+            ExecuteNonQuery(connection, "DELETE FROM m_departments WHERE row_id = @rowId", rowId);
+        });
     }
 
     #region グループ 1: GetByIdAsync - 正常系
@@ -82,30 +89,43 @@ public class DepartmentRepositoryTests : IAsyncLifetime
     [Fact]
     public async Task VO_CRUD_03_GetByIdAsync_WithValidId_GetByIdAsync_WithValidId_ReturnsDepartment()
     {
-        // Arrange: テストデータを直接SQLで投入（SaveAsyncのInsert不具合を回避）
-        var rowId = InsertTestDepartment(NextTestCode(), "結合テスト部署A", level: 1);
-        var repository = CreateRepository();
+        try
+        {
+            // Arrange: テストデータを直接SQLで投入（SaveAsyncのInsert不具合を回避）
+            var rowId = InsertTestDepartment(NextTestCode(), "結合テスト部署A", level: 1);
+            var repository = CreateRepository();
 
-        // Act
-        var result = await repository.GetByIdAsync(DepartmentRowId.From(rowId));
+            // Act
+            var result = await repository.GetByIdAsync(DepartmentRowId.From(rowId));
 
-        // Assert
-        Assert.NotNull(result);
-        Assert.Equal(rowId, result.RowId.Value);
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(rowId, result.RowId.Value);
+        }
+        finally
+        {
+            await DisposeAsync();
+        }
     }
 
     [Fact]
     public async Task VO_CRUD_04_GetByIdAsync_WithNonExistentId_GetByIdAsync_WithNonExistentId_ReturnsNull()
     {
-        // Arrange: テスト専用範囲内の未使用ID（作成していないID）を使う
-        var repository = CreateRepository();
-        var nonExistentId = DepartmentRowId.From(_nextTestRowId + 100_000);
+        try
+        {
+            // Arrange: テスト専用範囲内の未使用ID（作成していないID）を使う
+            var repository = CreateRepository();
 
-        // Act
-        var result = await repository.GetByIdAsync(nonExistentId);
+            // Act
+            var result = await repository.GetByIdAsync(DepartmentRowId.From(9999999999));
 
-        // Assert
-        Assert.Null(result);
+            // Assert
+            Assert.Null(result);
+        }
+        finally
+        {
+            await DisposeAsync();
+        }
     }
 
     #endregion
@@ -115,18 +135,25 @@ public class DepartmentRepositoryTests : IAsyncLifetime
     [Fact]
     public async Task VO_QUERY_01_GetByCodeAsync_WithValidCode_GetByCodeAsync_WithValidCode_ReturnsDepartment()
     {
-        // Arrange
-        var testCode = NextTestCode();
-        InsertTestDepartment(testCode, "結合テスト部署B", level: 1);
-        var repository = CreateRepository();
-        var code = DepartmentCode.From(testCode);
+        try
+        {
+            // Arrange
+            var testCode = NextTestCode();
+            InsertTestDepartment(testCode, "結合テスト部署B", level: 1);
+            var repository = CreateRepository();
+            var code = DepartmentCode.From(testCode);
 
-        // Act
-        var result = await repository.GetByCodeAsync(code);
+            // Act
+            var result = await repository.GetByCodeAsync(code);
 
-        // Assert
-        Assert.NotNull(result);
-        Assert.Equal(code, result.DeptCode);
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(code, result.DeptCode);
+        }
+        finally
+        {
+            await DisposeAsync();
+        }
     }
 
     #endregion
@@ -136,64 +163,96 @@ public class DepartmentRepositoryTests : IAsyncLifetime
     [Fact]
     public async Task VO_QUERY_02_GetAllAsync_GetAllAsync_ReturnsAllDepartments()
     {
-        // Arrange: 開発DBは既存データを含むため、件数の厳密一致ではなく型・非null・作成した行が含まれることを確認
-        var rowId = InsertTestDepartment(NextTestCode(), "結合テスト部署C", level: 1);
-        var repository = CreateRepository();
+        try
+        {
+            // Arrange: 開発DBは既存データを含むため、件数の厳密一致ではなく型・非null・作成した行が含まれることを確認
+            var rowId = InsertTestDepartment(NextTestCode(), "結合テスト部署C", level: 1);
+            var repository = CreateRepository();
 
-        // Act
-        var result = await repository.GetAllAsync();
+            // Act
+            var result = await repository.GetAllAsync();
 
-        // Assert
-        Assert.NotNull(result);
-        Assert.IsAssignableFrom<IReadOnlyList<Department>>(result);
-        Assert.Contains(result, d => d.RowId.Value == rowId);
+            // Assert
+            Assert.NotNull(result);
+            Assert.IsAssignableFrom<IReadOnlyList<Department>>(result);
+            Assert.Contains(result, d => d.RowId.Value == rowId);
+        }
+        finally
+        {
+            await DisposeAsync();
+        }
     }
 
     #endregion
 
     #region グループ 4: SaveAsync - Insert（既知の制約により Skip）
 
-    [Fact(Skip = "DepartmentRepository.SaveAsync の新規作成判定（RowId==0）に到達不可能な疑いのある不具合あり。別タスクで追跡中")]
+    [Fact]
     public async Task VO_CRUD_01_SaveAsync_WithNewEntity_InsertsSaveAsync_WithNewEntity_InsertsSuccessfully()
     {
-        // Arrange
-        var repository = CreateRepository();
-        var entity = Department.Create(
-            DepartmentRowId.From(_nextTestRowId++),
-            DepartmentCode.From(NextTestCode()),
-            "営業部",
-            HierarchyLevel.From(1)
-        );
+        try
+        {
+            // Arrange
+            var repository = CreateRepository();
+            var testRowId = await GetNextTestRowIdAsync();
+            var entity = Department.Create(
+                DepartmentRowId.From(testRowId),
+                DepartmentCode.From(NextTestCode()),
+                "営業部",
+                HierarchyLevel.From(1)
+            );
 
-        // Act
-        await repository.SaveAsync(entity);
-        _createdRowIds.Add(entity.RowId.Value);
+            // Act
+            await repository.SaveAsync(entity);
+            _createdRowIds.Add(entity.RowId.Value);
 
-        // Assert - DB から読み込んで確認
-        var retrieved = await repository.GetByIdAsync(entity.RowId);
-        Assert.NotNull(retrieved);
-        Assert.Equal(entity.DeptCode.Value, retrieved.DeptCode.Value);
+            // Assert - DB から読み込んで確認
+            var retrieved = await repository.GetByIdAsync(entity.RowId);
+            Assert.NotNull(retrieved);
+            Assert.Equal(entity.DeptCode.Value, retrieved.DeptCode.Value);
+        }
+        finally
+        {
+            await DisposeAsync();
+        }
     }
 
-    [Fact(Skip = "DepartmentRepository.SaveAsync の新規作成判定（RowId==0）に到達不可能な疑いのある不具合あり。別タスクで追跡中")]
+    [Fact]
     public async Task VO_AUDIT_01_SaveAsync_WithNewEntity_SetsAuditSaveAsync_WithNewEntity_SetsCratedAtAndBy()
     {
-        // Arrange
-        var repository = CreateRepository();
-        var entity = Department.Create(
-            DepartmentRowId.From(_nextTestRowId++),
-            DepartmentCode.From(NextTestCode()),
-            "企画部",
-            HierarchyLevel.From(2)
-        );
+        try
+        {
+            // Arrange
+            var repository = CreateRepository();
+            var testRowId = await GetNextTestRowIdAsync();
+            var entity = Department.Create(
+                DepartmentRowId.From(testRowId),
+                DepartmentCode.From(NextTestCode()),
+                "企画部",
+                HierarchyLevel.From(2)
+            );
 
-        // Act
-        await repository.SaveAsync(entity);
-        _createdRowIds.Add(entity.RowId.Value);
+            // Act
+            await repository.SaveAsync(entity);
+            _createdRowIds.Add(entity.RowId.Value);
 
-        // Assert - 監査フィールドが設定されていることを確認
-        var createdAt = QueryScalar<DateTime?>(entity.RowId.Value, "created_at");
-        Assert.NotNull(createdAt);
+            // Assert - 監査フィールドが設定されていることを確認
+            var createdAt = QueryScalar<DateTime?>(entity.RowId.Value, "created_at");
+            Assert.NotNull(createdAt);
+        }
+        finally
+        {
+            await DisposeAsync();
+        }
+    }
+
+    private async Task<long> GetNextTestRowIdAsync()
+    {
+        using var connection = _connectionFactory.CreateConnection();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT NEXT VALUE FOR [dbo].[s_test_row_id_sequence]";
+        var result = cmd.ExecuteScalar();
+        return result is long rowId ? rowId : Convert.ToInt64(result);
     }
 
     #endregion
@@ -203,29 +262,36 @@ public class DepartmentRepositoryTests : IAsyncLifetime
     [Fact]
     public async Task VO_CRUD_05_SaveAsync_WithExistingEntity_UpdatesSaveAsync_WithExistingEntity_UpdatesSuccessfully()
     {
-        // Arrange: 直接SQLで既存データを投入してから取得し、変更してSaveAsync（Update）
-        var rowId = InsertTestDepartment(NextTestCode(), "旧製造部", level: 1);
-        var repository = CreateRepository();
-        var existing = await repository.GetByIdAsync(DepartmentRowId.From(rowId));
-        Assert.NotNull(existing);
+        try
+        {
+            // Arrange: 直接SQLで既存データを投入してから取得し、変更してSaveAsync（Update）
+            var rowId = InsertTestDepartment(NextTestCode(), "旧製造部", level: 1);
+            var repository = CreateRepository();
+            var existing = await repository.GetByIdAsync(DepartmentRowId.From(rowId));
+            Assert.NotNull(existing);
 
-        var updated = Department.Reconstruct(
-            existing.RowId,
-            existing.DeptCode,
-            "新製造部",
-            existing.Level,
-            existing.ParentId,
-            existing.ManagerId,
-            existing.AbolishedOn,
-            existing.RowVersion);
+            var updated = Department.Reconstruct(
+                existing.RowId,
+                existing.DeptCode,
+                "新製造部",
+                existing.Level,
+                existing.ParentId,
+                existing.ManagerId,
+                existing.AbolishedOn,
+                existing.RowVersion);
 
-        // Act
-        await repository.SaveAsync(updated);
+            // Act
+            await repository.SaveAsync(updated);
 
-        // Assert
-        var retrieved = await repository.GetByIdAsync(DepartmentRowId.From(rowId));
-        Assert.NotNull(retrieved);
-        Assert.Equal("新製造部", retrieved.Name);
+            // Assert
+            var retrieved = await repository.GetByIdAsync(DepartmentRowId.From(rowId));
+            Assert.NotNull(retrieved);
+            Assert.Equal("新製造部", retrieved.Name);
+        }
+        finally
+        {
+            await DisposeAsync();
+        }
     }
 
     #endregion
@@ -235,18 +301,25 @@ public class DepartmentRepositoryTests : IAsyncLifetime
     [Fact]
     public async Task VO_CRUD_06_DeleteAsync_WithValidId_DeleteAsync_WithValidId_PerformsLogicalDelete()
     {
-        // Arrange
-        var rowId = InsertTestDepartment(NextTestCode(), "廃止予定部署", level: 1);
-        var repository = CreateRepository();
-        var departmentId = DepartmentRowId.From(rowId);
+        try
+        {
+            // Arrange
+            var rowId = InsertTestDepartment(NextTestCode(), "廃止予定部署", level: 1);
+            var repository = CreateRepository();
+            var departmentId = DepartmentRowId.From(rowId);
 
-        // Act
-        await repository.DeleteAsync(departmentId);
+            // Act
+            await repository.DeleteAsync(departmentId);
 
-        // Assert - 論理削除されていることを確認（deleted_at が設定されている）
-        // 【注意】GetDepartmentById.sql は deleted_at でフィルタしないため、直接SQLで検証する
-        var deletedAt = QueryScalar<DateTime?>(rowId, "deleted_at");
-        Assert.NotNull(deletedAt);
+            // Assert - 論理削除されていることを確認（deleted_at が設定されている）
+            // 【注意】GetDepartmentById.sql は deleted_at でフィルタしないため、直接SQLで検証する
+            var deletedAt = QueryScalar<DateTime?>(rowId, "deleted_at");
+            Assert.NotNull(deletedAt);
+        }
+        finally
+        {
+            await DisposeAsync();
+        }
     }
 
     #endregion
@@ -256,21 +329,35 @@ public class DepartmentRepositoryTests : IAsyncLifetime
     [Fact]
     public async Task VO_ERROR_01_SaveAsync_WithNullEntity_SaveAsync_WithNullEntity_ThrowsArgumentNullException()
     {
-        // Arrange
-        var repository = CreateRepository();
+        try
+        {
+            // Arrange
+            var repository = CreateRepository();
 
-        // Act & Assert
-        await Assert.ThrowsAsync<ArgumentNullException>(() => repository.SaveAsync(null!));
+            // Act & Assert
+            await Assert.ThrowsAsync<ArgumentNullException>(() => repository.SaveAsync(null!));
+        }
+        finally
+        {
+            await DisposeAsync();
+        }
     }
 
     [Fact]
     public async Task VO_ERROR_02_GetByIdAsync_WithNullId_GetByIdAsync_WithNullId_ThrowsArgumentNullException()
     {
-        // Arrange
-        var repository = CreateRepository();
+        try
+        {
+            // Arrange
+            var repository = CreateRepository();
 
-        // Act & Assert
-        await Assert.ThrowsAsync<ArgumentNullException>(() => repository.GetByIdAsync(null!));
+            // Act & Assert
+            await Assert.ThrowsAsync<ArgumentNullException>(() => repository.GetByIdAsync(null!));
+        }
+        finally
+        {
+            await DisposeAsync();
+        }
     }
 
     #endregion
@@ -288,6 +375,7 @@ public class DepartmentRepositoryTests : IAsyncLifetime
     /// テストデータを直接SQLでDBに投入する
     /// 【理由】DepartmentRepository.SaveAsync の新規作成分岐に既知の不具合疑いがあるため、
     ///         Repository を経由せずテストデータを準備する
+    /// 【重要】row_version は SQL Server timestamp で自動管理なため、INSERT では除外
     /// </summary>
     private long InsertTestDepartment(
         string code,
@@ -297,27 +385,25 @@ public class DepartmentRepositoryTests : IAsyncLifetime
         long? managerId = null,
         DateTime? abolishedOn = null)
     {
-        var rowId = _nextTestRowId++;
-
         using var connection = _connectionFactory.CreateConnection();
         using var cmd = connection.CreateCommand();
         cmd.CommandText = @"
             INSERT INTO m_departments
-                (row_id, code, name, level, parent_department_row_id, manager_employee_row_id, abolished_on, created_at, created_by)
+                (row_id, department_code, department_name, hierarchy_level, parent_department_row_id, manager_employee_row_id, abolished_on, created_at, created_by)
+            OUTPUT INSERTED.row_id
             VALUES
-                (@rowId, @code, @name, @level, @parentId, @managerId, @abolishedOn, @createdAt, @createdBy)";
+                (NEXT VALUE FOR s_test_row_id_sequence, @code, @name, @level, @parentId, @managerId, @abolishedOn, @createdAt, @createdBy)";
 
-        AddParam(cmd, "@rowId", rowId);
         AddParam(cmd, "@code", code);
         AddParam(cmd, "@name", name);
         AddParam(cmd, "@level", level);
         AddParam(cmd, "@parentId", (object?)parentId ?? DBNull.Value);
         AddParam(cmd, "@managerId", (object?)managerId ?? DBNull.Value);
         AddParam(cmd, "@abolishedOn", (object?)abolishedOn ?? DBNull.Value);
-        AddParam(cmd, "@createdAt", DateTime.Now);
+        AddParam(cmd, "@createdAt", DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Unspecified));
         AddParam(cmd, "@createdBy", SystemCurrentUserService.SystemUserEmployeeRowId);
 
-        cmd.ExecuteNonQuery();
+        var rowId = (long?)cmd.ExecuteScalar() ?? throw new InvalidOperationException("Failed to retrieve inserted RowId");
         _createdRowIds.Add(rowId);
         return rowId;
     }
@@ -333,14 +419,6 @@ public class DepartmentRepositoryTests : IAsyncLifetime
         AddParam(cmd, "@rowId", rowId);
         var value = cmd.ExecuteScalar();
         return value is null or DBNull ? default! : (T)value;
-    }
-
-    private static void AddParam(IDbCommand cmd, string name, object value)
-    {
-        var param = cmd.CreateParameter();
-        param.ParameterName = name;
-        param.Value = value;
-        cmd.Parameters.Add(param);
     }
 
     #endregion
