@@ -72,6 +72,52 @@ DepartmentMapper の各メソッドが、以下の仕様を満たすことを確
 
 ---
 
+## 1. テスト観点一覧
+
+### DepartmentMapper
+
+#### VO-MAP: マッピング（Entity ↔ DbModel）
+
+| 観点ID | 観点（説明） | 分類 | テスト実装 |
+|--------|------|------|-----------|
+| VO-MAP-01 | Entity → DbModel で全フィールドが正しくマップされる | 正常系 | ✅ DepartmentMapperTests.cs::VO_MAP_01_ToDbModel_WithValidEntity_ReturnsDbModel |
+| VO-MAP-02 | DbModel → Entity で全フィールドが正しくマップされる | 正常系 | ✅ DepartmentMapperTests.cs::VO_MAP_02_ToDomainEntity_WithValidDbModel_MapsAllFields |
+| VO-MAP-03 | ラウンドトリップ（Entity → DbModel → Entity）でデータが保持される | 正常系 | ✅ DepartmentMapperTests.cs::VO_MAP_03_RoundTrip_PreservesData |
+
+#### VO-TYPE: 型変換（ValueObject 構築・null 処理）
+
+| 観点ID | 観点（説明） | 分類 | テスト実装 |
+|--------|------|------|-----------|
+| VO-TYPE-01 | DepartmentCode が正しく構築される | 正常系 | ✅ DepartmentMapperTests.cs::VO_TYPE_01_CodeConversion_WithValidCode_ConvertsSuccessfully |
+| VO-TYPE-02 | HierarchyLevel が正しく構築される | 正常系 | ✅ DepartmentMapperTests.cs::VO_TYPE_02_LevelConversion_WithValidLevel_ConvertsSuccessfully |
+| VO-TYPE-03 | ParentDepartmentRowId（Optional）が IsSet フラグ正確に管理される | 正常系 | ✅ DepartmentMapperTests.cs::VO_TYPE_03_ParentIdConversion_WithValidId_IsSetCorrectly |
+| VO-TYPE-04 | ManagerEmployeeRowId（Optional）が IsSet フラグ正確に管理される | 正常系 | ✅ DepartmentMapperTests.cs::VO_TYPE_04_ManagerIdConversion_WithValidId_IsSetCorrectly |
+| VO-TYPE-05 | DB null が Unset 状態に正確に変換される | 正常系 | ✅ DepartmentMapperTests.cs::VO_TYPE_05_NullConversion_WithNullFields_ConvertsToUnset |
+| VO-TYPE-06 | 監査フィールドが Mapper では設定されない（Repository 責務） | 正常系 | ✅ DepartmentMapperTests.cs::VO_TYPE_06_AuditFields_NotSetByMapper |
+
+---
+
+### DepartmentRepository
+
+#### VO-CRUD: CRUD 操作
+
+| 観点ID | 観点（説明） | 分類 | テスト実装 |
+|--------|------|------|-----------|
+| VO-CRUD-01 | SaveAsync で Entity が DB に保存される | 正常系 | ⏸️ Skip: Phase 5 結合テスト化予定 |
+| VO-CRUD-02 | GetByIdAsync で存在する ID から Entity が返される | 正常系 | ⏸️ Skip: Phase 5 結合テスト化予定 |
+| VO-CRUD-03 | UpdateAsync で Entity が DB で更新される | 正常系 | ⏸️ Skip: Phase 5 結合テスト化予定 |
+| VO-CRUD-04 | DeleteAsync で Entity が論理削除される | 正常系 | ⏸️ Skip: Phase 5 結合テスト化予定 |
+
+#### VO-AUDIT: 監査フィールド
+
+| 観点ID | 観点（説明） | 分類 | テスト実装 |
+|--------|------|------|-----------|
+| VO-AUDIT-01 | SaveAsync で created_at と created_by が自動設定される | 正常系 | ⏸️ Skip: Phase 5 結合テスト化予定 |
+| VO-AUDIT-02 | UpdateAsync で updated_at が更新される | 正常系 | ⏸️ Skip: Phase 5 結合テスト化予定 |
+| VO-AUDIT-03 | DeleteAsync で deleted_at と deleted_by が設定される | 正常系 | ⏸️ Skip: Phase 5 結合テスト化予定 |
+
+---
+
 ## 2. テスト対象クラス
 
 ### 2.1 DepartmentMapper

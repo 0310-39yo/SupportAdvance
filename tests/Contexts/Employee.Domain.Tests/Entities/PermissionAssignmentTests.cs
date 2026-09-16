@@ -19,7 +19,7 @@ public class PermissionAssignmentTests
     #region グループ 1: 生成メソッド（Create）
 
     [Fact]
-    public void TestCreate01_WithExpirationDateReturnsValidPermissionAssignment()
+    public void VO_CONS_01_WithExpirationDateReturnsValidPermissionAssignment()
     {
         // Arrange
         var assignmentRowId = PermissionAssignmentRowId.From(1L);
@@ -41,7 +41,7 @@ public class PermissionAssignmentTests
     }
 
     [Fact]
-    public void TestCreate02_WithoutExpirationDateReturnsValidPermissionAssignment()
+    public void VO_CONS_02_WithoutExpirationDateReturnsValidPermissionAssignment()
     {
         // Arrange
         var assignmentRowId = PermissionAssignmentRowId.From(2L);
@@ -66,7 +66,7 @@ public class PermissionAssignmentTests
     #region グループ 2: 復元メソッド（Reconstruct）
 
     [Fact]
-    public void TestReconstruct01_ReconstructFromDbValuesReturnsValidPermissionAssignment()
+    public void VO_CONS_04_ReconstructFromDbValuesReturnsValidPermissionAssignment()
     {
         // Arrange
         var assignmentRowId = PermissionAssignmentRowId.From(100L);
@@ -91,7 +91,7 @@ public class PermissionAssignmentTests
     #region グループ 3: IsActive メソッド
 
     [Fact]
-    public void TestIsActive01_BeforeEffectiveDateReturnsFalse()
+    public void VO_METHOD_02_BeforeEffectiveDateReturnsFalse()
     {
         // Arrange
         var assignmentRowId = PermissionAssignmentRowId.From(3L);
@@ -109,7 +109,7 @@ public class PermissionAssignmentTests
     }
 
     [Fact]
-    public void TestIsActive02_OnOrAfterEffectiveDateReturnsTrue()
+    public void VO_METHOD_05_OnOrAfterEffectiveDateReturnsTrue()
     {
         // Arrange
         var assignmentRowId = PermissionAssignmentRowId.From(4L);
@@ -126,7 +126,7 @@ public class PermissionAssignmentTests
     }
 
     [Fact]
-    public void TestIsActive03_AfterExpirationDateReturnsFalse()
+    public void VO_METHOD_03_AfterExpirationDateReturnsFalse()
     {
         // Arrange
         var assignmentRowId = PermissionAssignmentRowId.From(5L);

@@ -27,7 +27,67 @@
 
 ---
 
-## 🧪 テストケース
+## 1. テスト観点一覧
+
+### VO-CONS: コンストラクタ・生成
+
+| 観点ID | 観点（説明） | 分類 | テスト実装 |
+|--------|------|------|-----------|
+| VO-CONS-01 | 有効期間ありで生成できる | 正常系 | ✅ RoleAssignmentTests.cs::VO_CONS_01_WithExpirationDateReturnsValidRoleAssignment |
+| VO-CONS-02 | 無期限（ExpirationDate = null）で生成できる | 正常系 | ✅ RoleAssignmentTests.cs::VO_CONS_02_WithoutExpirationDateReturnsValidRoleAssignment |
+| VO-CONS-03 | 複数生成時に異なるID が採番される | 正常系 | ✅ RoleAssignmentTests.cs::VO_CONS_03_MultipleCreatesGenerateDifferentIds |
+| VO-CONS-04 | 有効期間ありで復元できる | 正常系 | ✅ RoleAssignmentTests.cs::VO_CONS_04_WithExpirationDateReturnsValidRoleAssignment |
+| VO-CONS-05 | 無期限で復元できる | 正常系 | ✅ RoleAssignmentTests.cs::VO_CONS_05_WithoutExpirationDateReturnsValidRoleAssignment |
+
+### VO-PROP: プロパティアクセス
+
+| 観点ID | 観点（説明） | 分類 | テスト実装 |
+|--------|------|------|-----------|
+| VO-PROP-01 | RoleCode プロパティが正しい値を返す | 正常系 | ✅ RoleAssignmentTests.cs::VO_PROP_01_PropertiesAreReadOnly |
+| VO-PROP-02 | すべてのプロパティが読み取り専用である | 不変性 | ✅ RoleAssignmentTests.cs::VO_PROP_02_PropertiesAreReadOnly |
+| VO-PROP-03 | プロパティ値が複数回アクセスで変わらない | 不変性 | ✅ RoleAssignmentTests.cs::VO_PROP_03_PropertyImmutability |
+
+### VO-METHOD: ドメインメソッド（IsActive）
+
+| 観点ID | 観点（説明） | 分類 | テスト実装 |
+|--------|------|------|-----------|
+| VO-METHOD-01 | 有効期間内で IsActive = true を返す | 正常系 | ✅ RoleAssignmentTests.cs::VO_METHOD_01_WithinEffectivePeriodReturnsTrue |
+| VO-METHOD-02 | 開始日より前で IsActive = false を返す | 異常系 | ✅ RoleAssignmentTests.cs::VO_METHOD_02_BeforeEffectiveDateReturnsFalse |
+| VO-METHOD-03 | 終了日以後で IsActive = false を返す | 異常系 | ✅ RoleAssignmentTests.cs::VO_METHOD_03_AfterExpirationDateReturnsFalse |
+| VO-METHOD-04 | 無期限で開始日以後は常に IsActive = true を返す | 正常系 | ✅ RoleAssignmentTests.cs::VO_METHOD_04_WithoutExpirationDateAlwaysReturnsTrueAfterEffectiveDate |
+| VO-METHOD-05 | 開始日と同日で IsActive = true を返す | 正常系（境界値） | ✅ RoleAssignmentTests.cs::VO_METHOD_05_OnEffectiveDateReturnsTrue |
+
+### VO-EQ: Equals — 等価判定
+
+| 観点ID | 観点（説明） | 分類 | テスト実装 |
+|--------|------|------|-----------|
+| VO-EQ-01 | 同じ ID を持つ RoleAssignment は等価である | 正常系 | ✅ RoleAssignmentTests.cs::VO_EQ_01_SameIdAreEqual |
+| VO-EQ-02 | object 型で比較しても等価である | 正常系 | ⚠️ 記載なし（等価性テストに含まれる可能性） |
+
+### VO-NE: Equals — 非等価判定
+
+| 観点ID | 観点（説明） | 分類 | テスト実装 |
+|--------|------|------|-----------|
+| VO-NE-01 | 異なる ID を持つ RoleAssignment は非等価である | 異常系 | ✅ RoleAssignmentTests.cs::VO_NE_01_DifferentIdAreNotEqual |
+| VO-NE-02 | null との比較は非等価である | 異常系 | ✅ RoleAssignmentTests.cs::VO_NE_02_EqualsNullReturnsFalse |
+
+### VO-HC: GetHashCode
+
+| 観点ID | 観点（説明） | 分類 | テスト実装 |
+|--------|------|------|-----------|
+| VO-HC-01 | 同一 ID のハッシュコードが一致する | 正常系 | ✅ RoleAssignmentTests.cs::VO_HC_01_HashCodesAreEqual |
+| VO-HC-02 | Dictionary のキーとして使用可能である | 正常系 | ✅ RoleAssignmentTests.cs::VO_HC_02_CanBeUsedAsDictionaryKey |
+
+### VO-INTEG: 統合テスト
+
+| 観点ID | 観点（説明） | 分類 | テスト実装 |
+|--------|------|------|-----------|
+| VO-INTEG-01 | すべてのプロパティが整合性を持つ | 正常系 | ✅ RoleAssignmentTests.cs::VO_INTEG_01_AllPropertiesAreCoherent |
+| VO-INTEG-02 | Create と Reconstruct が一貫性を持つ | 正常系 | ✅ RoleAssignmentTests.cs::VO_INTEG_02_CreateAndReconstructAreConsistent |
+
+---
+
+## 🧪 テストケース詳細
 
 ### グループ 1: 生成メソッド（Create）
 
