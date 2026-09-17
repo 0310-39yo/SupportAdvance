@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Assistance/Consider/SupportAdvance 監査方式 設計方針案.md",
+                "file": "Assistance/Guides/Authentication_BC_設計ガイド.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "SupportAdvance 監査方式 設計方針案"
+              "title": "Authentication_BC_設計ガイド"
             }
           }
         ]
@@ -190,23 +190,25 @@
   },
   "active": "5375283f2a122053",
   "lastOpenFiles": [
+    "Assistance/Guides/Authentication_BC_設計ガイド.md.tmp.53580.62e004750282",
+    "Assistance/Guides/Authentication_BC_設計ガイド.md.tmp.53580.6c2b74616d58",
+    "Assistance/Guides/Authentication_BC_設計ガイド.md.tmp.53580.18112701f9c6",
+    "Assistance/Guides/Authentication_BC_設計ガイド.md.tmp.53580.f12926cb0fea",
+    "Assistance/Guides/Authentication_BC_設計ガイド.md.tmp.53580.875202184aee",
+    "Assistance/Guides/Authentication_BC_設計ガイド.md.tmp.53580.e87dad17cb98",
+    "Assistance/Guides/Authentication_BC_設計ガイド.md.tmp.53580.ee43610a487e",
+    "Database/SQL/SEED_ReservedSystemAccounts.sql",
+    "Database/SQL/SEED_ReservedSystemAccounts.sql.tmp.53580.4f7a25d47624",
+    "Assistance/Guides/Authentication_BC_設計ガイド.md.tmp.53580.3409931918a9",
+    "Assistance/Guides/Authentication_BC_設計ガイド.md.tmp.53580.b1f2ed80337d",
+    "Assistance/Guides/0_ドキュメントチェックリスト.md",
+    "Assistance/Consider/SupportAdvance 監査方式 設計方針案.md",
     "Assistance/DraftIdeas/トランザクション分離レベル・業務排他制御方針.md",
     "WorkMemo/2026-09-18.md",
-    "Assistance/Guides/Authentication_BC_設計ガイド.md.tmp.53580.d16b2939606d",
-    "Assistance/Guides/Authentication_BC_設計ガイド.md.tmp.53580.c883030cafb0",
-    "Assistance/Guides/Authentication_BC_設計ガイド.md.tmp.53580.e5ce295d90ad",
-    "Contexts/Authentication/Infrastructure/UserAuthSessionRepository_結合テスト仕様書.md.tmp.20520.deac6456117b",
-    "Contexts/Authentication/Infrastructure/UserAuthSessionRepository_結合テスト仕様書.md.tmp.20520.1d074c0b001f",
-    "Contexts/Authentication/Infrastructure/UserAuthSessionRepository_結合テスト仕様書.md.tmp.20520.ebea153a5bdb",
     "Assistance/Templates/Test/TEMPLATE_単体テスト仕様書_UseCase.md",
-    "Assistance/Plans/20260916_Phase5実施計画.md.tmp.39700.69df7a708575",
-    "Assistance/Plans/20260916_Phase5実施計画.md.tmp.39700.b1c9186ea499",
-    "Assistance/Plans/20260916_Phase5実施計画.md.tmp.39700.a216b567c1a8",
-    "Assistance/Plans/20260916_Phase5実施計画.md.tmp.39700.440e96c6d550",
     "Assistance/Plans/20260916_Phase5実施計画.md",
     "Assistance/Templates/Test/TEMPLATE_単体テスト仕様書_Entity.md",
     "Assistance/Templates/Test/TEMPLATE_システムテスト仕様書.md",
-    "Assistance/Guides/0_ドキュメントチェックリスト.md",
     "WorkMemo/2026-09-16.md",
     "Assistance/Plans/20260916_IdentityBCをAuthenticationBCへ名称変更_実装計画.md",
     "Assistance/Guides/Authentication_BC_設計ガイド.md",
@@ -217,14 +219,12 @@
     "WorkMemo/2026-09-13.md",
     "Assistance/Consider/AGENTS.md",
     "Assistance/DraftIdeas/認証について.md",
-    "Assistance/Consider/SupportAdvance 監査方式 設計方針案.md",
     "WorkMemo/2026-09-12.md",
     "Assistance/Guides/集約の設計ガイド.md",
     "Assistance/Guides/RowId_設計ガイド.md",
     "Assistance/Guides/ValueObject別名プロパティガイド.md",
     "Assistance/Guides/IValidateWithClock_パターンガイド.md",
     "Assistance/Guides/FromDbValue_ToDbValue_パターンガイド.md",
-    "Assistance/Plans/20260912_ValueObject設計ガイド齟齬修正計画.md",
-    "Assistance/Guides/TABLE_DESIGN_STANDARDS.md"
+    "Assistance/Plans/20260912_ValueObject設計ガイド齟齬修正計画.md"
   ]
 }

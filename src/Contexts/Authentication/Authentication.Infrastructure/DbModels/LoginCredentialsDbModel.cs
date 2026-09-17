@@ -24,6 +24,11 @@ public class LoginCredentialsDbModel
     /// <summary>
     /// 紐づいた従業員行ID
     /// 【制約】NOT NULL、FK → m_employees(row_id)
+    /// 【意味】社外から m_login_credentials 経由でローカル認証ログインする人物が、
+    /// 社内の Employee 情報上では誰にあたるかを示すマッピング。
+    /// すなわち「社外からログインした人物」と「社内の Employee として認識される人物」は
+    /// この値（m_employees.row_id）を介して同一人物であることが保証される。
+    /// 認証成功後の権限判定・監査記録（AuthorityRowId）は常にこの EmployeeRowId に対して行われる。
     /// </summary>
     [Column("mapping_employee_row_id")]
     public long MappingEmployeeRowId { get; set; }

@@ -1,6 +1,6 @@
 # Authentication BC 設計ガイド
 
-**最終更新**: 2026-09-18（監査フィールド（CreatedBy/UpdatedBy/DeletedBy）に AuthorityRowId を使う設計判断を追記。SystemUserId のハードコード重複を Common.WellKnownIds に一元化したコード例に修正）
+**最終更新**: 2026-09-18（監査フィールド（CreatedBy/UpdatedBy/DeletedBy）に AuthorityRowId を使う設計判断を追記。SystemUserId のハードコード重複を Common.WellKnownIds に一元化したコード例に修正。mapping_employee_row_id の意味（社外ログインする人物と社内Employeeが同一人物であることの保証）を明記。IUserAuthSessionRepository を Domain層 から Application層（`Authentication.Application/Repositories/`）へ移動し、Employee/Department と配置を統一。login_id不一致時のフォールバックを SystemUserEmployeeRowId から新設の UnknownUserEmployeeRowId（正体不明の人物を表す別の予約ID）に変更し、seedスクリプト `docs/Database/SQL/SEED_ReservedSystemAccounts.sql` を追加。t_user_auth_sessionsの標準8監査カラムを維持する方針を明記（代替案として例外化・削除も検討したが不採用と決定））
 **作成者**: Claude + User (tyokkoto@hotmail.com)
 
 ---
@@ -49,6 +49,11 @@ Authentication BC は **認証（Authentication）に特化した Bounded Contex
 ```
 
 **役割**: ローカル認証の認証情報を保持。認証時に参照される。
+
+**カラム説明**:
+- `mapping_employee_row_id` — 社外から `m_login_credentials` 経由でローカル認証ログインする人物が、社内の Employee 情報上では誰にあたるかを示すマッピング。**社外からログインした人物と、社内から Employee 情報（AD認証等）でログインする人物は、この値（`m_employees.row_id`）を介して同一人物であることが保証される**。認証成功後の権限判定・監査記録（`AuthorityRowId`）は常にこの EmployeeRowId に対して行われる
+- `login_id` — ローカル認証専用のログインID（社内の Employee 情報とは独立した識別子。従業員番号等を想定）
+- `is_active` — この認証情報自体の有効/無効（`m_employees` 側の在籍状況とは別管理）
 
 ### 2. t_user_auth_sessions（トランザクション）
 
@@ -170,7 +175,8 @@ Domain 層の実際の ValueObject は以下の5つ（[ValueObjects/](../../../s
    │  │     login_success=1, login_credentials_row_id=LoginCredentials.RowId
    │  │
    │  └─ NG な場合
-   │     └─ t_user_auth_sessions に INSERT（失敗記録、current_user_row_id=SYSTEM_USER_ID）
+   │     └─ t_user_auth_sessions に INSERT（失敗記録、current_user_row_id=
+   │        credentials 取得済みなら MappingEmployeeRowId、login_id 不一致なら UNKNOWN_USER_ID）
    │        続けて InvalidOperationException をスロー（エラーメッセージは次セクション）
 ```
 
@@ -184,7 +190,12 @@ Domain 層の実際の ValueObject は以下の5つ（[ValueObjects/](../../../s
 | 2 | is_active | false（アカウント無効） | "このアカウントは無効です" |
 | 3 | password_hash | `IPasswordHashService.VerifyPassword` が false | "パスワードが間違っています" |
 
-いずれの失敗時も、失敗ログ（`login_success=false`, `current_user_row_id=SYSTEM_USER_ID`）をまず保存してから例外をスローする。`mapping_employee_row_id` は DB上 NOT NULL のため null チェックや Employee 存在確認は行っていない（設計初期段階で検討されていたが実装では省略されている）。
+いずれの失敗時も、失敗ログ（`login_success=false`）をまず保存してから例外をスローする。`current_user_row_id` に記録する値は失敗理由によって異なる：
+
+- **#1（login_id不一致）**: `credentials` が取得できず対象の従業員を特定できないため、`UNKNOWN_USER_ID`（`WellKnownIds.UnknownUserEmployeeRowId`）にフォールバック。`SystemUserEmployeeRowId`（自動処理を表す）とは意味が異なるため区別している
+- **#2（is_active=false）/ #3（パスワード不一致）**: `credentials` は取得済みのため、狙われた実在アカウントの `credentials.MappingEmployeeRowId` を記録する（不正/誤ログイン試行の追跡に使える）
+
+`mapping_employee_row_id` は DB上 NOT NULL のため null チェックや Employee 存在確認は行っていない（設計初期段階で検討されていたが実装では省略されている）。
 
 **実装パターン（要点抜粋）:**
 
@@ -196,15 +207,15 @@ public sealed class AuthenticateLocalUserUseCase
     private readonly IUserAuthSessionRepository _sessionRepository;
     private readonly IClock _clock;
     private readonly ISequenceProvider _sequenceProvider;
-    private const long SystemUserId = WellKnownIds.SystemUserEmployeeRowId; // 失敗ログの current_user_row_id（値の実体は Common.WellKnownIds に一元化）
+    private const long UnknownUserId = WellKnownIds.UnknownUserEmployeeRowId; // login_id不一致時のみ使うフォールバック（値の実体は Common.WellKnownIds に一元化）
 
     public async Task<AuthenticateLocalUserResponse> ExecuteAsync(AuthenticateLocalUserRequest request)
     {
-        // Step 1: ログインID で認証情報を取得（null → 失敗ログ保存 + 例外）
+        // Step 1: ログインID で認証情報を取得（null → 失敗ログ保存（current_user_row_id=UnknownUserId）+ 例外）
         var credentials = await _loginCredentialsQuery.GetByLoginIdAsync(request.LoginId);
 
-        // Step 2: is_active 確認（false → 失敗ログ保存 + 例外）
-        // Step 3: パスワード検証（不一致 → 失敗ログ保存 + 例外）
+        // Step 2: is_active 確認（false → 失敗ログ保存（current_user_row_id=credentials.MappingEmployeeRowId）+ 例外）
+        // Step 3: パスワード検証（不一致 → 失敗ログ保存（current_user_row_id=credentials.MappingEmployeeRowId）+ 例外）
         // Step 4: 成功時の UserAuthSession を生成して保存
         // Step 5: AuthenticateLocalUserResponse を返す
     }
@@ -217,11 +228,11 @@ public sealed class AuthenticateLocalUserUseCase
 
 ### IUserAuthSessionRepository
 
-Domain 層が定義する永続化インターフェース。実装は
-[IUserAuthSessionRepository.cs](../../../src/Contexts/Authentication/Authentication.Domain/Repositories/IUserAuthSessionRepository.cs) を参照。
+Application 層が定義する永続化インターフェース（[Bounded_Context_テンプレート.md](Bounded_Context_テンプレート.md) 標準に準拠。Employee/Department と同じく `<Context>.Application/Repositories/` に配置）。実装は
+[IUserAuthSessionRepository.cs](../../../src/Contexts/Authentication/Authentication.Application/Repositories/IUserAuthSessionRepository.cs) を参照。
 
 ```csharp
-namespace SupportAdvance.Contexts.Authentication.Domain.Repositories;
+namespace SupportAdvance.Contexts.Authentication.Application.Repositories;
 
 public interface IUserAuthSessionRepository
 {
@@ -249,13 +260,16 @@ public interface IUserAuthSessionRepository
 | ケース | AuthorityRowId の値 |
 |---|---|
 | ログイン成功 | `credentials.MappingEmployeeRowId`（実際に認証された従業員） |
-| ログイン失敗（ID不明・無効・パスワード不一致） | `WellKnownIds.SystemUserEmployeeRowId`（[AuthenticateLocalUserUseCase.cs](../../../src/Contexts/Authentication/Authentication.Application/UseCases/AuthenticateLocalUserUseCase.cs) の `SystemUserId` 定数経由） |
+| ログイン失敗（login_id不一致、credentials 自体が取得できない） | `WellKnownIds.UnknownUserEmployeeRowId`（[AuthenticateLocalUserUseCase.cs](../../../src/Contexts/Authentication/Authentication.Application/UseCases/AuthenticateLocalUserUseCase.cs) の `UnknownUserId` 定数経由。対象アカウントを特定できないためのフォールバック。`SystemUserEmployeeRowId`（自動処理）とは意味が異なる別の予約ID） |
+| ログイン失敗（アカウント無効・パスワード不一致、credentials は取得済み） | `credentials.MappingEmployeeRowId`（狙われた実在アカウントを記録。不正/誤ログイン試行の追跡に使える） |
 | セッション更新（ログアウト等） | 更新対象セッション自身の `AuthorityRowId`（ログアウト操作を行った本人と一致する前提） |
 | 論理削除（`DeleteAsync`） | 削除対象セッションの `AuthorityRowId`。`DeleteAsync` は `UserAuthSessionRowId` しか受け取らないため、事前に `GetByIdAsync` で対象セッションを取得してから使用する |
 
 **この BC 固有の判断である理由**: `AuthorityRowId` は UserAuthSession が「誰の認証試行か」を表す集約自身のデータであり、「今操作しているユーザー」を表す `ICurrentUserService` とは意味が異なる（ログイン処理の主体と、ログイン処理を実行しているユーザーは、認証完了前は一致しないケースがある）。他 BC で同様に「認証/ログイン前の書き込み」が発生する場合はこのパターンを再利用できるが、通常の CRUD（Employee/Department 等）では標準の `RepositoryBase` + `ICurrentUserService` パターンに従うこと。
 
 詳細な変更経緯は [UserAuthSessionRepository_結合テスト仕様書.md](../../Contexts/Authentication/Infrastructure/UserAuthSessionRepository_結合テスト仕様書.md)（v2.1）を参照。
+
+**検討した代替案（不採用）**: `t_user_auth_sessions` は `current_user_row_id`/`logged_in_at`/`logged_out_at` を既に持つため、標準8監査カラムのうち `created_by`/`updated_by`/`deleted_by`/`created_at`/`updated_at` は意味的に重複している（`created_by`は常に`current_user_row_id`と同値、`created_at`は実質`logged_in_at`と同一事象）という指摘があった。このテーブルを「8カラムルールの例外」として`created_by`等を削除する案も検討したが、**全テーブル一律の監査カラム構成を優先し、現状維持（標準8カラムをそのまま持たせる）と決定した**（2026-09-18）。理由は、DBツール・汎用クエリ・将来の監査要件との互換性を、個別テーブルごとの最適化より優先するため。なお `DeleteAsync`（論理削除）は現時点でどの Use Case からも呼び出されておらず、`deleted_at`/`deleted_by` は実質未使用のまま残る。
 
 ---
 

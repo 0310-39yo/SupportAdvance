@@ -1,8 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
 using RepoDb;
 using SupportAdvance.Contexts.Authentication.Application.Queries;
+using SupportAdvance.Contexts.Authentication.Application.Repositories;
 using SupportAdvance.Contexts.Authentication.Application.Services;
-using SupportAdvance.Contexts.Authentication.Domain.Repositories;
 using SupportAdvance.Contexts.Authentication.Infrastructure.DbModels;
 using SupportAdvance.Contexts.Authentication.Infrastructure.Mappers;
 using SupportAdvance.Contexts.Authentication.Infrastructure.Queries;

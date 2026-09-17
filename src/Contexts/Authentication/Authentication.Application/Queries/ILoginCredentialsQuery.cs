@@ -51,6 +51,10 @@ public sealed class LoginCredentialsQueryResult
 
     /// <summary>
     /// 紐づいた従業員 RowId
+    /// 【意味】社外から m_login_credentials 経由でローカル認証ログインする人物が、
+    /// 社内の Employee 情報上では誰にあたるかを示すマッピング。
+    /// 社外からログインした人物と社内で Employee として認識される人物は、
+    /// この値を介して同一人物であることが保証される。
     /// </summary>
     public long MappingEmployeeRowId { get; init; }
 

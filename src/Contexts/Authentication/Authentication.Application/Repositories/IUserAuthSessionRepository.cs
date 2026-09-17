@@ -1,14 +1,14 @@
 using SupportAdvance.Contexts.Authentication.Domain.Entities;
 using SupportAdvance.Contexts.Authentication.Domain.ValueObjects;
 
-namespace SupportAdvance.Contexts.Authentication.Domain.Repositories;
+namespace SupportAdvance.Contexts.Authentication.Application.Repositories;
 
 /// <summary>
 /// ユーザー認証セッション Repository インターフェース
 ///
 /// 【責務】
 /// - UserAuthSession 集約の永続化（保存・取得・更新・削除）
-/// - ドメインロジックと Infrastructure 層の間の境界
+/// - Application層と Infrastructure層の間の境界
 /// - 監査情報（CreatedAt, UpdatedAt, DeletedAt）の管理
 ///
 /// 【実装】Infrastructure層で Dapper/RepoDb を使用

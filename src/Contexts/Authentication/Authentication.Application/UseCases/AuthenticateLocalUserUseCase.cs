@@ -3,9 +3,9 @@ using SupportAdvance.Common;
 using SupportAdvance.Common.Clocks;
 using SupportAdvance.Contexts.Authentication.Application.Dtos;
 using SupportAdvance.Contexts.Authentication.Application.Queries;
+using SupportAdvance.Contexts.Authentication.Application.Repositories;
 using SupportAdvance.Contexts.Authentication.Application.Services;
 using SupportAdvance.Contexts.Authentication.Domain.Entities;
-using SupportAdvance.Contexts.Authentication.Domain.Repositories;
 using SupportAdvance.Contexts.Authentication.Domain.ValueObjects;
 
 namespace SupportAdvance.Contexts.Authentication.Application.UseCases;
@@ -42,12 +42,16 @@ public sealed class AuthenticateLocalUserUseCase
     private readonly ISequenceProvider _sequenceProvider;
 
     /// <summary>
-    /// システムユーザー RowId（ログイン失敗時に使用）
+    /// 正体不明ユーザー RowId（ログインID自体が存在しない場合にのみ使用）
     /// 【用途】失敗ログの current_user_row_id として記録
-    /// 【重要】値の実体は WellKnownIds（Common）で一元管理。Infrastructure の
-    /// SystemCurrentUserService と同じ値を参照するため、ここでは再定義せず委譲する
+    /// 【重要】ログインID不一致時は credentials が取得できず対象の従業員が特定できないため、
+    /// このフォールバック値を使う。credentials が取得できている失敗（アカウント無効・
+    /// パスワード不一致）では、狙われた実在アカウントの credentials.MappingEmployeeRowId を使う
+    /// 【重要】システム自身が行った自動処理を表す SystemUserEmployeeRowId とは意味が異なる。
+    /// こちらは「実在するが特定できない人物によるログイン試行」を表すため UnknownUserEmployeeRowId を使う
+    /// 【重要】値の実体は WellKnownIds（Common）で一元管理
     /// </summary>
-    private const long SystemUserId = WellKnownIds.SystemUserEmployeeRowId;
+    private const long UnknownUserId = WellKnownIds.UnknownUserEmployeeRowId;
 
     public AuthenticateLocalUserUseCase(
         ILoginCredentialsQuery loginCredentialsQuery,
@@ -84,7 +88,7 @@ public sealed class AuthenticateLocalUserUseCase
             // 失敗ログを記録
             var failureSession = UserAuthSession.Create(
                 id: sessionRowId,
-                AuthorityRowId.From(SystemUserId),
+                AuthorityRowId.From(UnknownUserId),
                 isAdAuthenticated: false,
                 loginSuccess: false,
                 loggedInAt: now,
@@ -98,9 +102,11 @@ public sealed class AuthenticateLocalUserUseCase
         if (!credentials.IsActive)
         {
             // 失敗ログを記録
+            // 【重要】credentials は取得済みのため、狙われたアカウントの MappingEmployeeRowId を記録する
+            // （SystemUserId ではなく実在の従業員を記録することで、不正/誤ログイン試行の追跡に使える）
             var failureSession = UserAuthSession.Create(
                 id: sessionRowId,
-                AuthorityRowId.From(SystemUserId),
+                AuthorityRowId.From(credentials.MappingEmployeeRowId),
                 isAdAuthenticated: false,
                 loginSuccess: false,
                 loggedInAt: now,
@@ -114,9 +120,10 @@ public sealed class AuthenticateLocalUserUseCase
         if (!_passwordHashService.VerifyPassword(request.Password, credentials.PasswordHash))
         {
             // 失敗ログを記録
+            // 【重要】credentials は取得済みのため、狙われたアカウントの MappingEmployeeRowId を記録する
             var failureSession = UserAuthSession.Create(
                 id: sessionRowId,
-                AuthorityRowId.From(SystemUserId),
+                AuthorityRowId.From(credentials.MappingEmployeeRowId),
                 isAdAuthenticated: false,
                 loginSuccess: false,
                 loggedInAt: now,

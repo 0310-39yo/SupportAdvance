@@ -1,5 +1,5 @@
 using SupportAdvance.Common.Clocks;
-using SupportAdvance.Contexts.Authentication.Domain.Repositories;
+using SupportAdvance.Contexts.Authentication.Application.Repositories;
 using SupportAdvance.Contexts.Authentication.Domain.ValueObjects;
 
 namespace SupportAdvance.Contexts.Authentication.Application.UseCases;
