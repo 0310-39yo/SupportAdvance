@@ -3,8 +3,8 @@
 **プロジェクト:** SupportAdvance
 **テスト対象:** Application ↔ Infrastructure (UserAuthSessionRepository)
 **テストレベル:** 結合テスト
-**版:** 2.0 / 2026-09-17
-**変更:** スケルトンから本実装へ。楽観ロック（row_version）バグ修正に伴い全面改訂
+**版:** 2.1 / 2026-09-18
+**変更:** CreatedBy/UpdatedBy/DeletedBy のハードコード（`= 1`）を session.AuthorityRowId に修正
 
 ---
 
@@ -17,6 +17,10 @@ UserAuthSessionRepository は、UserAuthSession 集約の永続化（SaveAsync/G
 - **SaveAsync（新規作成専用）**: UserAuthSessionRowId を戻り値として返す（Department/Employee の SaveAsync とは異なり、Insert/Update 自動判定は行わない）
 - **UpdateAsync（更新専用）**: 主にログアウト日時（LoggedOutAt）設定用。楽観ロック（row_version）による競合検出
 - **監査フィールド管理**: Repository が CreatedAt/CreatedBy/UpdatedAt/UpdatedBy/DeletedAt/DeletedBy を自動設定
+  - **CreatedBy/UpdatedBy/DeletedBy には `session.AuthorityRowId`（このセッションの主体）を使用**。
+    ログイン試行中は `ICurrentUserService`（ログイン済みユーザー情報）が未設定の場合があるため、
+    Entity 自身が保持する AuthorityRowId を記録する（Employee/Department の「操作した現在のユーザー」とは異なる設計判断）
+  - DeleteAsync は RowId のみ受け取るため、事前に GetByIdAsync で対象セッションを取得し AuthorityRowId を得る
 - **AuthorityRowId**: `m_employees.row_id` への FK 制約あり
 
 本結合テストは、**Application層が UserAuthSessionRepository に依存して UserAuthSession 集約を永続化・取得する際、実SQL Serverとの統合が正常に動作すること** を検証します。
@@ -195,8 +199,9 @@ await repository.UpdateAsync(loaded2);  // 失敗（古い RowVersion のまま�
 | 3 | `UpdateAsync`/`DeleteAsync` の `QueryField`/`Field` に `nameof()`（PascalCase）を使用しSQL列名と不一致 | DBカラム名（snake_case文字列）に修正 |
 | 4 | `UpdateAsync` が `created_at`/`created_by` を SET 句から除外していない（SqlDateTime overflow リスク） | `FieldsExcludingRowVersionAndCreatedAudit()` を追加 |
 | 5 | `UpdateAsync` の WHERE 句に `row_version` がなく楽観ロックが機能していなかった | WHERE 句に `row_version` を追加 |
+| 6 | `CreatedBy`/`UpdatedBy`/`DeletedBy` がハードコード `= 1` のまま（v2.1で修正） | `session.AuthorityRowId.Value` を使用。DeleteAsync は事前に GetByIdAsync で取得 |
 
-**結果**: これらの修正により、楽観ロックによる同時更新競合の検出が正しく機能するようになった（TC-7 で検証）。
+**結果**: これらの修正により、楽観ロックによる同時更新競合の検出が正しく機能するようになった（TC-7 で検証）。監査フィールドも実際のセッション主体を正しく記録するようになった（TC-2/TC-6/TC-8 で値検証を追加）。
 
 ---
 

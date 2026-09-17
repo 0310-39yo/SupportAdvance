@@ -20,6 +20,8 @@ namespace SupportAdvance.Contexts.Authentication.Infrastructure.Repositories;
 /// - SELECT: Dapper + SQL ファイル
 /// - INSERT/UPDATE/DELETE: RepoDb Entity-based API
 /// - 監査フィールド（CreatedAt/CreatedBy/UpdatedAt/UpdatedBy/DeletedAt/DeletedBy）の管理
+///   【重要】CreatedBy/UpdatedBy/DeletedBy には session.AuthorityRowId（このセッションの主体）を使用。
+///           ログイン試行中は ICurrentUserService が未設定の場合があるため採用しない
 ///
 /// 【パターン】
 /// - GetByIdAsync: Dapper + SQL
@@ -118,6 +120,9 @@ public class UserAuthSessionRepository : IUserAuthSessionRepository
     /// - RowId が 0 の場合は Sequence で採番
     /// - RepoDb.InsertAsync でセッションを保存
     /// - 監査フィールド（CreatedAt/CreatedBy）を設定
+    /// 【CreatedBy】session.AuthorityRowId（このセッションの主体）を使用。
+    ///              ログイン試行中は ICurrentUserService が未設定の場合があるため、
+    ///              Entity 自身が保持する AuthorityRowId を記録する
     /// </summary>
     public async Task<UserAuthSessionRowId> SaveAsync(UserAuthSession session)
     {
@@ -131,7 +136,7 @@ public class UserAuthSessionRepository : IUserAuthSessionRepository
 
         // 監査情報を設定（新規作成時）
         dbModel.CreatedAt = _clock.JstNow.Value;
-        dbModel.CreatedBy = 1; // TODO: 現在のユーザーを取得する仕組みが必要
+        dbModel.CreatedBy = session.AuthorityRowId.Value;
         dbModel.UpdatedAt = null;
         dbModel.UpdatedBy = null;
         dbModel.DeletedAt = null;
@@ -149,6 +154,7 @@ public class UserAuthSessionRepository : IUserAuthSessionRepository
     /// - RepoDb.UpdateAsync で更新
     /// - 楽観ロック（RowVersion）による競合検出
     /// - 監査フィールド（UpdatedAt/UpdatedBy）を設定
+    /// 【UpdatedBy】session.AuthorityRowId（このセッションの主体）を使用
     /// </summary>
     public async Task UpdateAsync(UserAuthSession session)
     {
@@ -156,7 +162,7 @@ public class UserAuthSessionRepository : IUserAuthSessionRepository
 
         // 監査情報を設定（更新時）
         dbModel.UpdatedAt = _clock.JstNow.Value;
-        dbModel.UpdatedBy = 1; // TODO: 現在のユーザーを取得する仕組みが必要
+        dbModel.UpdatedBy = session.AuthorityRowId.Value;
 
         using var connection = _connectionFactory.CreateConnection();
 
@@ -184,14 +190,19 @@ public class UserAuthSessionRepository : IUserAuthSessionRepository
     /// セッションを削除（論理削除）
     /// 【責務】
     /// - RepoDb.UpdateAsync で論理削除フラグ（DeletedAt/DeletedBy）を設定
+    /// 【DeletedBy】対象セッションの AuthorityRowId（このセッションの主体）を使用。
+    ///              DeleteAsync は RowId のみ受け取るため、事前に GetByIdAsync で取得する
     /// </summary>
     public async Task DeleteAsync(UserAuthSessionRowId id)
     {
+        var existingSession = await GetByIdAsync(id)
+            ?? throw new InvalidOperationException($"UserAuthSession with RowId={id.Value} not found");
+
         var dbModel = new UserAuthSessionDbModel
         {
             RowId = id.Value,
             DeletedAt = _clock.JstNow.Value,
-            DeletedBy = 1 // TODO: 現在のユーザーを取得する仕組みが必要
+            DeletedBy = existingSession.AuthorityRowId.Value
         };
 
         using var connection = _connectionFactory.CreateConnection();

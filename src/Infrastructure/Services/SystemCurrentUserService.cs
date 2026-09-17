@@ -1,3 +1,5 @@
+using SupportAdvance.Common;
+
 namespace SupportAdvance.Infrastructure.Services;
 
 /// <summary>
@@ -18,8 +20,10 @@ public sealed class SystemCurrentUserService : ICurrentUserService
     /// <summary>
     /// システム処理用の予約 EmployeeRowId
     /// m_persons.row_id=2147483659, m_employees.row_id=2147483667 に対応する System User
+    /// 【重要】値の実体は WellKnownIds（Common）で一元管理。Infrastructure/Application 両方から
+    /// 同じ値を参照するため、ここでは再定義せず委譲する
     /// </summary>
-    public const long SystemUserEmployeeRowId = 2147483667;
+    public const long SystemUserEmployeeRowId = WellKnownIds.SystemUserEmployeeRowId;
 
     public long EmployeeRowId => SystemUserEmployeeRowId;
 

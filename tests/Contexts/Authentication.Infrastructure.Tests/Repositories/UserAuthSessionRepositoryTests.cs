@@ -132,10 +132,11 @@ public class UserAuthSessionRepositoryTests : RepositoryTestBase
             _createdRowIds.Add(savedRowId.Value);
 
             // Assert - CreatedAt/CreatedBy が設定されていることを直接SQLで確認（Entity には露出しないため）
+            // 【重要】CreatedBy は session.AuthorityRowId（このセッションの主体）と一致すること
             var createdAt = QueryScalar<DateTime?>(savedRowId.Value, "created_at");
             var createdBy = QueryScalar<long?>(savedRowId.Value, "created_by");
             Assert.NotNull(createdAt);
-            Assert.NotNull(createdBy);
+            Assert.Equal(session.AuthorityRowId.Value, createdBy);
         }
         finally
         {
@@ -268,11 +269,11 @@ public class UserAuthSessionRepositoryTests : RepositoryTestBase
             loaded.SetLoggedOutAt(_clock.JstNow);
             await _repository.UpdateAsync(loaded);
 
-            // Assert
+            // Assert - 【重要】UpdatedBy は session.AuthorityRowId（このセッションの主体）と一致すること
             var updatedAt = QueryScalar<DateTime?>(savedRowId.Value, "updated_at");
             var updatedBy = QueryScalar<long?>(savedRowId.Value, "updated_by");
             Assert.NotNull(updatedAt);
-            Assert.NotNull(updatedBy);
+            Assert.Equal(loaded.AuthorityRowId.Value, updatedBy);
         }
         finally
         {
@@ -327,8 +328,11 @@ public class UserAuthSessionRepositoryTests : RepositoryTestBase
             await _repository.DeleteAsync(savedRowId);
 
             // Assert - 論理削除されていることを直接SQLで確認
+            // 【重要】DeletedBy は session.AuthorityRowId（このセッションの主体）と一致すること
             var deletedAt = QueryScalar<DateTime?>(savedRowId.Value, "deleted_at");
+            var deletedBy = QueryScalar<long?>(savedRowId.Value, "deleted_by");
             Assert.NotNull(deletedAt);
+            Assert.Equal(session.AuthorityRowId.Value, deletedBy);
         }
         finally
         {

@@ -1,4 +1,5 @@
 using SupportAdvance.Application.Abstractions.Identifiers;
+using SupportAdvance.Common;
 using SupportAdvance.Common.Clocks;
 using SupportAdvance.Contexts.Authentication.Application.Dtos;
 using SupportAdvance.Contexts.Authentication.Application.Queries;
@@ -43,8 +44,10 @@ public sealed class AuthenticateLocalUserUseCase
     /// <summary>
     /// システムユーザー RowId（ログイン失敗時に使用）
     /// 【用途】失敗ログの current_user_row_id として記録
+    /// 【重要】値の実体は WellKnownIds（Common）で一元管理。Infrastructure の
+    /// SystemCurrentUserService と同じ値を参照するため、ここでは再定義せず委譲する
     /// </summary>
-    private const long SystemUserId = 2147483667;
+    private const long SystemUserId = WellKnownIds.SystemUserEmployeeRowId;
 
     public AuthenticateLocalUserUseCase(
         ILoginCredentialsQuery loginCredentialsQuery,

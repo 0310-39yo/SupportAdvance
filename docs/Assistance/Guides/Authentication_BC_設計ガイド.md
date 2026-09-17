@@ -1,6 +1,6 @@
 # Authentication BC 設計ガイド
 
-**最終更新**: 2026-09-16（実装状況セクションを追加、実装と乖離していたコード例を修正）
+**最終更新**: 2026-09-18（監査フィールド（CreatedBy/UpdatedBy/DeletedBy）に AuthorityRowId を使う設計判断を追記。SystemUserId のハードコード重複を Common.WellKnownIds に一元化したコード例に修正）
 **作成者**: Claude + User (tyokkoto@hotmail.com)
 
 ---
@@ -196,7 +196,7 @@ public sealed class AuthenticateLocalUserUseCase
     private readonly IUserAuthSessionRepository _sessionRepository;
     private readonly IClock _clock;
     private readonly ISequenceProvider _sequenceProvider;
-    private const long SystemUserId = 2147483667; // 失敗ログの current_user_row_id
+    private const long SystemUserId = WellKnownIds.SystemUserEmployeeRowId; // 失敗ログの current_user_row_id（値の実体は Common.WellKnownIds に一元化）
 
     public async Task<AuthenticateLocalUserResponse> ExecuteAsync(AuthenticateLocalUserRequest request)
     {
@@ -235,6 +235,27 @@ public interface IUserAuthSessionRepository
 ```
 
 **注**: `m_login_credentials` へのアクセスは Domain 層の Repository ではなく、Application 層の `ILoginCredentialsQuery`（[ILoginCredentialsQuery.cs](../../../src/Contexts/Authentication/Authentication.Application/Queries/ILoginCredentialsQuery.cs)）として定義され、Infrastructure 層の `LoginCredentialsQueryService` が実装する（SELECT専用の Query Service パターン。ILoginCredentialsRepository という Domain Repository は存在しない）。
+
+### 監査フィールド管理（CreatedBy/UpdatedBy/DeletedBy）の設計判断
+
+他 BC（Employee/Department）の Repository は `RepositoryBase`（[RepositoryBase.cs](../../../src/Infrastructure/Repositories/RepositoryBase.cs)）を継承し、`ICurrentUserService.EmployeeRowId`（DI 経由でログイン中のユーザー）を `CreatedBy`/`UpdatedBy`/`DeletedBy` に自動設定する。
+
+`UserAuthSessionRepository`（[UserAuthSessionRepository.cs](../../../src/Contexts/Authentication/Authentication.Infrastructure/Repositories/UserAuthSessionRepository.cs)）はこの標準パターンに **意図的に従わない**。`RepositoryBase` を継承せず、コンストラクタで `ICurrentUserService` も注入していない。
+
+**理由**: 本番実装の `RealCurrentUserService.EmployeeRowId` は、`SetLoggedInUser` 呼び出し前（未ログイン時）にアクセスすると `InvalidOperationException` を投げる（[RealCurrentUserService.cs](../../../src/Presentation/WinTrial/Services/RealCurrentUserService.cs)）。`UserAuthSessionRepository.SaveAsync` はログイン試行の成否を問わず呼び出される（認証成功時だけでなく、ログインID不一致・パスワード不一致等の失敗ログ記録でも呼ばれる）ため、`ICurrentUserService` に依存すると失敗ログの保存時点で例外が発生してしまう。
+
+**採用した方式**: `CreatedBy`/`UpdatedBy`/`DeletedBy` には、Entity 自身が保持する `session.AuthorityRowId`（このセッションの権限主体）をそのまま使用する。
+
+| ケース | AuthorityRowId の値 |
+|---|---|
+| ログイン成功 | `credentials.MappingEmployeeRowId`（実際に認証された従業員） |
+| ログイン失敗（ID不明・無効・パスワード不一致） | `WellKnownIds.SystemUserEmployeeRowId`（[AuthenticateLocalUserUseCase.cs](../../../src/Contexts/Authentication/Authentication.Application/UseCases/AuthenticateLocalUserUseCase.cs) の `SystemUserId` 定数経由） |
+| セッション更新（ログアウト等） | 更新対象セッション自身の `AuthorityRowId`（ログアウト操作を行った本人と一致する前提） |
+| 論理削除（`DeleteAsync`） | 削除対象セッションの `AuthorityRowId`。`DeleteAsync` は `UserAuthSessionRowId` しか受け取らないため、事前に `GetByIdAsync` で対象セッションを取得してから使用する |
+
+**この BC 固有の判断である理由**: `AuthorityRowId` は UserAuthSession が「誰の認証試行か」を表す集約自身のデータであり、「今操作しているユーザー」を表す `ICurrentUserService` とは意味が異なる（ログイン処理の主体と、ログイン処理を実行しているユーザーは、認証完了前は一致しないケースがある）。他 BC で同様に「認証/ログイン前の書き込み」が発生する場合はこのパターンを再利用できるが、通常の CRUD（Employee/Department 等）では標準の `RepositoryBase` + `ICurrentUserService` パターンに従うこと。
+
+詳細な変更経緯は [UserAuthSessionRepository_結合テスト仕様書.md](../../Contexts/Authentication/Infrastructure/UserAuthSessionRepository_結合テスト仕様書.md)（v2.1）を参照。
 
 ---
 
