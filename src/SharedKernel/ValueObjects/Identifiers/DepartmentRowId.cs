@@ -109,10 +109,7 @@ public sealed class DepartmentRowId : RowId, IEquatable<DepartmentRowId>
         return Value == other.Value;
     }
 
-    /// <summary>
-    /// ハッシュコードを取得する
-    /// </summary>
-    /// <returns>オブジェクトのハッシュコード</returns>
+    /// <inheritdoc/>
     public override int GetHashCode() => Value.GetHashCode();
 
     /// <summary>

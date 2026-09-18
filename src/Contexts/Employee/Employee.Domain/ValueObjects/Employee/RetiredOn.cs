@@ -12,18 +12,33 @@ namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
 /// </summary>
 public sealed class RetiredOn : ValueObject, IEquatable<RetiredOn>
 {
+    /// <summary>
+    /// Unset 時のダミー値
+    /// </summary>
+    /// <remarks>
+    /// <para>【注意】現在どこからも参照されていない値。未設定の判定には <see cref="HasRetired"/> を使用</para>
+    /// </remarks>
     public const long UnsetValue = 0L; // Unset 時のダミー値
 
-    /// <summary>退職日（未設定時は LocalDateTime.MinValue）</summary>
+    /// <summary>
+    /// 退職日（未設定時は LocalDateTime.MinValue）
+    /// </summary>
     public LocalDateTime Value { get; }
 
-    /// <summary>未設定状態フラグ（isSet=true で退職済み）</summary>
+    /// <summary>
+    /// 未設定状態フラグ（isSet=true で退職済み）
+    /// </summary>
     public new bool IsSet { get; }
 
-    /// <summary>退職状況フラグ（HasRetired=true で退職済み）</summary>
+    /// <summary>
+    /// 退職状況フラグ（HasRetired=true で退職済み）
+    /// </summary>
     public bool HasRetired => IsSet;
 
-    /// <summary>Unset 状態（現職）を表す静的メソッド</summary>
+    /// <summary>
+    /// Unset 状態（現職）を表す静的メソッド
+    /// </summary>
+    /// <returns>在職中（<see cref="HasRetired"/> が <see langword="false"/>）のインスタンス（<see langword="null"/> なし）</returns>
     public static RetiredOn Unset() => new(LocalDateTime.MinValue, false);
 
     /// <summary>
@@ -69,14 +84,10 @@ public sealed class RetiredOn : ValueObject, IEquatable<RetiredOn>
         }
     }
 
-    /// <summary>
-    /// 指定された RetiredOn と等価かどうかを判定する
-    /// </summary>
+    /// <inheritdoc/>
     public override bool Equals(object? obj) => Equals(obj as RetiredOn);
 
-    /// <summary>
-    /// 指定された RetiredOn と等価かどうかを判定する
-    /// </summary>
+    /// <inheritdoc/>
     public bool Equals(RetiredOn? other)
     {
         if (other is null)
@@ -92,19 +103,16 @@ public sealed class RetiredOn : ValueObject, IEquatable<RetiredOn>
         return IsSet == other.IsSet && Value == other.Value;
     }
 
-    /// <summary>
-    /// ハッシュコードを取得する
-    /// </summary>
+    /// <inheritdoc/>
     public override int GetHashCode() => HashCode.Combine(IsSet, Value);
 
     /// <summary>
     /// 文字列表現を取得する
     /// </summary>
+    /// <returns>退職日の文字列。未設定（在職中）の場合は <c>現職</c></returns>
     public override string ToString() => IsSet ? Value.ToString() : "現職";
 
-    /// <summary>
-    /// 等価性判定のための値コンポーネントを返す
-    /// </summary>
+    /// <inheritdoc/>
     protected override IEnumerable<object?> GetValueComponents()
     {
         yield return IsSet;

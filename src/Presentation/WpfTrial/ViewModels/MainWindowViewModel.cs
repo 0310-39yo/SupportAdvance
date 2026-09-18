@@ -29,15 +29,33 @@ public partial class MainWindowViewModel : ObservableObject
     private readonly IAppLogging<MainWindowViewModel> _logger;
     private readonly GetEmployeeByBizIdIntegrationUseCase _getEmployeeByBizIdUseCase;
 
+    /// <summary>
+    /// BizId 検索欄の入力値（数値以外の入力は検索時にエラー表示）
+    /// </summary>
     [ObservableProperty]
     private string _bizIdSearchInput = string.Empty;
 
+    /// <summary>
+    /// 検索結果の従業員氏名（「姓 名」形式）。見つからない場合やエラー時は、その旨のメッセージ
+    /// </summary>
     [ObservableProperty]
     private string _employeeFullName = string.Empty;
 
+    /// <summary>
+    /// 検索結果の従業員の所属部署名
+    /// </summary>
     [ObservableProperty]
     private string _departmentNames = string.Empty;
 
+    /// <summary>
+    /// <see cref="MainWindowViewModel"/> クラスの新しいインスタンスの初期化
+    /// </summary>
+    /// <param name="logger">ログの出力先</param>
+    /// <param name="appSettings">アプリケーション設定（<see cref="AppSettings"/> であること）</param>
+    /// <param name="clock">現在日時（JST）の取得元</param>
+    /// <param name="getEmployeeByBizIdUseCase">BizId による従業員検索のユースケース</param>
+    /// <exception cref="ArgumentNullException">いずれかの引数が <see langword="null"/> の場合</exception>
+    /// <exception cref="InvalidCastException"><paramref name="appSettings"/> が <see cref="AppSettings"/> 以外の実装の場合</exception>
     public MainWindowViewModel(IAppLogging<MainWindowViewModel> logger,
         IAppSettings appSettings,
         IClock clock,

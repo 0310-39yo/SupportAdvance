@@ -23,6 +23,10 @@ public class DepartmentMapper
     /// DbModel から Domain Entity に変換（読み込み用）
     /// 【責務】DB の プリミティブ型 → Domain の ValueObject に変換
     /// </summary>
+    /// <param name="dbModel">DB から読み込んだ DB モデル</param>
+    /// <returns>復元した部署</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="dbModel"/> が <see langword="null"/> の場合</exception>
+    /// <exception cref="InvalidOperationException">DB の値を値オブジェクトに変換できない場合（DB の整合性エラー）</exception>
     public Department ToDomainEntity(DepartmentDbModel dbModel)
     {
         ArgumentNullException.ThrowIfNull(dbModel);
@@ -75,6 +79,9 @@ public class DepartmentMapper
     /// 【責務】Domain の ValueObject → DB の プリミティブ型に変換
     /// 【注意】監査フィールド（UpdatedAt/UpdatedBy）は Repository で設定
     /// </summary>
+    /// <param name="entity">変換する部署</param>
+    /// <returns>業務データのみ設定した DB モデル（監査列は未設定）</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="entity"/> が <see langword="null"/> の場合</exception>
     public DepartmentDbModel ToDbModel(Department entity)
     {
         ArgumentNullException.ThrowIfNull(entity);

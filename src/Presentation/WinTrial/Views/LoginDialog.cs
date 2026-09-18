@@ -25,6 +25,11 @@ public partial class LoginDialog : Form
 {
     private readonly LoginDialogViewModel _viewModel;
 
+    /// <summary>
+    /// <see cref="LoginDialog"/> クラスの新しいインスタンスの初期化
+    /// </summary>
+    /// <param name="viewModel">バインドする ViewModel</param>
+    /// <exception cref="ArgumentNullException"><paramref name="viewModel"/> が <see langword="null"/> の場合</exception>
     public LoginDialog(LoginDialogViewModel viewModel)
     {
         ArgumentNullException.ThrowIfNull(viewModel);

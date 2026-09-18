@@ -15,6 +15,7 @@ public static class DependencyInjection
     /// </summary>
     /// <param name="services">サービスコレクション</param>
     /// <returns>サービスコレクション</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="services"/> が <see langword="null"/> の場合</exception>
     public static IServiceCollection AddWinTrialModules(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);

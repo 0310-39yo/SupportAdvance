@@ -11,16 +11,24 @@ namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Role;
 /// </summary>
 public sealed class ExpirationOn : ValueObject, IEquatable<ExpirationOn>
 {
-    /// <summary>有効終了日時（未設定時は LocalDateTime.MinValue）</summary>
+    /// <summary>
+    /// 有効終了日時（未設定時は LocalDateTime.MinValue）
+    /// </summary>
     public LocalDateTime Value { get; }
 
-    /// <summary>設定状態フラグ（IsSet=true で有効期限あり）</summary>
+    /// <summary>
+    /// 設定状態フラグ（IsSet=true で有効期限あり）
+    /// </summary>
     public new bool IsSet { get; }
 
-    /// <summary>無期限フラグ（HasExpiration=false で無期限）</summary>
+    /// <summary>
+    /// 無期限フラグ（HasExpiration=false で無期限）
+    /// </summary>
     public bool HasExpiration => IsSet;
 
-    /// <summary>無期限状態（IsSet=false）を表す静的プロパティ</summary>
+    /// <summary>
+    /// 無期限状態（IsSet=false）を表す静的プロパティ
+    /// </summary>
     public static ExpirationOn Unlimited => new(LocalDateTime.MinValue, false);
 
     /// <summary>
@@ -66,14 +74,10 @@ public sealed class ExpirationOn : ValueObject, IEquatable<ExpirationOn>
         }
     }
 
-    /// <summary>
-    /// 指定された ExpirationOn と等価かどうかを判定する
-    /// </summary>
+    /// <inheritdoc/>
     public override bool Equals(object? obj) => Equals(obj as ExpirationOn);
 
-    /// <summary>
-    /// 指定された ExpirationOn と等価かどうかを判定する
-    /// </summary>
+    /// <inheritdoc/>
     public bool Equals(ExpirationOn? other)
     {
         if (other is null)
@@ -89,19 +93,16 @@ public sealed class ExpirationOn : ValueObject, IEquatable<ExpirationOn>
         return IsSet == other.IsSet && Value == other.Value;
     }
 
-    /// <summary>
-    /// ハッシュコードを取得する
-    /// </summary>
+    /// <inheritdoc/>
     public override int GetHashCode() => HashCode.Combine(IsSet, Value);
 
     /// <summary>
     /// 文字列表現を取得する
     /// </summary>
+    /// <returns>有効期限の文字列。未設定の場合は <c>無期限</c></returns>
     public override string ToString() => IsSet ? Value.ToString() : "無期限";
 
-    /// <summary>
-    /// 等価性判定のための値コンポーネントを返す
-    /// </summary>
+    /// <inheritdoc/>
     protected override IEnumerable<object?> GetValueComponents()
     {
         yield return IsSet;

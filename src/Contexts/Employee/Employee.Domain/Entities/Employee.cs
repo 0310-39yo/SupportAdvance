@@ -97,6 +97,15 @@ public sealed class Employee : AggregateRoot<EmployeeRowId>, IEmployee
     /// 【入力】RowId 事前採番済み、Person は新規生成される
     /// 【独立性】departmentMemberships は配属情報を指定（RetiredOn と独立して管理される）
     /// </summary>
+    /// <param name="rowId">採番済みの従業員の行ID</param>
+    /// <param name="typeDivision">従業員種別区分</param>
+    /// <param name="bizId">従業員番号</param>
+    /// <param name="bizCode">従業員コード（区分 + 番号）</param>
+    /// <param name="retiredOn">退職日。<see langword="null"/> の場合は在職中（<see cref="RetiredOn.Unset"/>）</param>
+    /// <param name="person">個人情報</param>
+    /// <param name="departmentMemberships">部署への所属。0 件も可</param>
+    /// <param name="clock">ドメインイベントの日時の取得元</param>
+    /// <returns>生成した従業員（<c>RowVersion</c> は空）</returns>
     public static Employee Create(
         EmployeeRowId rowId,
         BizDivision typeDivision,
@@ -115,6 +124,16 @@ public sealed class Employee : AggregateRoot<EmployeeRowId>, IEmployee
     /// 【パラメータ】rowVersion は楽観ロック用（更新時に競合検出）
     /// 【独立性】departmentMemberships は配属情報（RetiredOn と独立して管理される）
     /// </summary>
+    /// <param name="rowId">従業員の行ID</param>
+    /// <param name="typeDivision">従業員種別区分</param>
+    /// <param name="bizId">従業員番号</param>
+    /// <param name="bizCode">従業員コード（区分 + 番号）</param>
+    /// <param name="retiredOn">退職日（在職中の場合は Unset）</param>
+    /// <param name="person">個人情報</param>
+    /// <param name="departmentMemberships">部署への所属</param>
+    /// <param name="clock">ドメインイベントの日時の取得元</param>
+    /// <param name="rowVersion">楽観ロック用の値。<see langword="null"/> の場合は設定なし</param>
+    /// <returns>復元した従業員</returns>
     public static Employee Reconstruct(
         EmployeeRowId rowId,
         BizDivision typeDivision,
@@ -156,6 +175,8 @@ public sealed class Employee : AggregateRoot<EmployeeRowId>, IEmployee
     /// 従業員を退職させる
     /// 【責務】退職日の記録、ドメインイベント発行
     /// </summary>
+    /// <param name="retiredOn">退職日（JST）。この日時以降、<see cref="IsActive"/> の結果は <see langword="false"/></param>
+    /// <exception cref="InvalidOperationException">設定済みの退職日が <paramref name="retiredOn"/> 以前の場合（その時点で退職済みの場合）</exception>
     public void RetireEmployee(LocalDateTime retiredOn)
     {
         if (!IsActive(retiredOn))
@@ -180,6 +201,8 @@ public sealed class Employee : AggregateRoot<EmployeeRowId>, IEmployee
     /// 【呼び出し元】Application層の Use Case（例：TransferDepartmentUseCase）
     /// 【DB永続化】Repository.SaveAsync() で集約全体を保存時に DepartmentMemberships テーブルに反映
     /// </summary>
+    /// <param name="membership">追加する部署メンバーシップ</param>
+    /// <exception cref="InvalidOperationException"><paramref name="membership"/> がこの従業員に属していない場合</exception>
     public void AddDepartmentMembership(DepartmentMembership membership)
     {
         if (membership.EmployeeRowId != RowId)
@@ -196,6 +219,7 @@ public sealed class Employee : AggregateRoot<EmployeeRowId>, IEmployee
     /// 【呼び出し元】Application層の Use Case（例：TerminateDepartmentUseCase）
     /// 【DB永続化】Repository.SaveAsync() で集約全体を保存時に DepartmentMemberships テーブルから削除
     /// </summary>
+    /// <param name="membershipRowId">削除する部署メンバーシップの行ID。該当なしの場合は何もしない</param>
     public void RemoveDepartmentMembership(DepartmentMembershipRowId membershipRowId)
     {
         _departmentMemberships.RemoveAll(m => m.RowId == membershipRowId);
@@ -204,5 +228,6 @@ public sealed class Employee : AggregateRoot<EmployeeRowId>, IEmployee
     /// <summary>
     /// Employee の文字列表現を取得する
     /// </summary>
+    /// <returns><c>Employee(RowId=…, TypeDivision=…, BizId=…)</c> 形式のデバッグ用文字列。画面表示やデータの解析には使用禁止</returns>
     public override string ToString() => $"Employee(RowId={RowId.Value}, TypeDivision={TypeDivision}, BizId={BizId})";
 }

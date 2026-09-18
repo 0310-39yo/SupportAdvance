@@ -122,6 +122,8 @@ public abstract class Entity<TId> : IEquatable<Entity<TId>>
     /// var user2 = new User(userId: "123");
     /// Assert.True(user1.Equals(user2));  // ID が同じなら等価
     /// </summary>
+    /// <param name="obj">比較対象</param>
+    /// <returns><paramref name="obj"/> が同じ型引数の Entity で、<see cref="Entity{TId}.RowId"/> が等しい場合は <see langword="true"/></returns>
     public override bool Equals(object? obj) => Equals(obj as Entity<TId>);
 
     /// <summary>
@@ -134,6 +136,8 @@ public abstract class Entity<TId> : IEquatable<Entity<TId>>
     ///
     /// 【null 対応】other が null なら false
     /// </summary>
+    /// <param name="other">比較対象</param>
+    /// <returns>同じインスタンス、または <see cref="Entity{TId}.RowId"/> が等しい場合は <see langword="true"/></returns>
     public bool Equals(Entity<TId>? other)
     {
         if (other is null)
@@ -156,6 +160,7 @@ public abstract class Entity<TId> : IEquatable<Entity<TId>>
     /// 【実装】RowId.GetHashCode() をそのまま返す
     /// 【注記】Equals をオーバーライドしたので必ず実装
     /// </summary>
+    /// <returns><see cref="Entity{TId}.RowId"/> のハッシュコード</returns>
     public override int GetHashCode() => RowId.GetHashCode();
 
     /// <summary>
@@ -164,5 +169,6 @@ public abstract class Entity<TId> : IEquatable<Entity<TId>>
     /// 【形式】"{ClassName} {{ RowId = {RowId} }}"
     /// 【用途】デバッグ時の表示
     /// </summary>
+    /// <returns><c>{型名} { RowId = … }</c> 形式のデバッグ用文字列</returns>
     public override string ToString() => $"{GetType().Name} {{ RowId = {RowId} }}";
 }

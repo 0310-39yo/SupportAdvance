@@ -25,20 +25,25 @@ public sealed class IsPrimary : PrimitiveValueObject<bool>
     /// <summary>
     /// 主部署を表す IsPrimary を生成する
     /// </summary>
+    /// <returns>主所属を表すインスタンス</returns>
     public static IsPrimary Primary() => new(true);
 
     /// <summary>
     /// 副部署を表す IsPrimary を生成する
     /// </summary>
+    /// <returns>副所属を表すインスタンス</returns>
     public static IsPrimary Secondary() => new(false);
 
     /// <summary>
     /// bool 値から IsPrimary を生成する
     /// </summary>
+    /// <param name="value">主所属の場合は <see langword="true"/></param>
+    /// <returns>生成したインスタンス</returns>
     public static IsPrimary From(bool value) => new(value);
 
     /// <summary>
     /// 文字列表現を取得する
     /// </summary>
+    /// <returns>主所属の場合は <c>主部署</c>、それ以外は <c>副部署</c></returns>
     public override string ToString() => Value ? "主部署" : "副部署";
 }

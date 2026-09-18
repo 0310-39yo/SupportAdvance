@@ -3,71 +3,44 @@ using SupportAdvance.SharedKernel.Entities;
 namespace SupportAdvance.Application.Queries;
 
 /// <summary>
-/// ジェネリック Query Service インターフェース
-///
-/// 【責務】Context間でのドメインモデル（Aggregate）の参照
-/// 【用途】複数の Bounded Context がリアルタイムに別の Context のドメインモデル情報を読み取る際に使用
-/// 【アーキテクチャ】
-///   - TAggregate は各 Context の Application層で定義されたインターフェース（IEmployee など）
-///   - Domain Entity は隠蔽され、Application層インターフェース経由でのみ参照
-///   - これにより、他 Context が Domain Entity に直接依存することを防止
-///
-/// 【メリット】
-///   - 汎用層が肥大化しない（ジェネリック定義のみ）
-///   - スケーラブル（Aggregate追加時も構造不変）
-///   - Context独立（各Context が自身の Aggregate を管理）
-///   - 依存方向が正しい（Context別 Application → 汎用 Application）
-///   - アーキテクチャ準拠（Application層インターフェース経由の参照）
-///
-/// 【実装パターン】
-/// 1. Aggregate の Application層インターフェースを定義：
-/// ```csharp
-/// public interface IEmployee : IAggregateRoot { }
-/// ```
-///
-/// 2. Domain Entity がインターフェースを実装：
-/// ```csharp
-/// public sealed class Employee : AggregateRoot<EmployeeRowId>, IEmployee { }
-/// ```
-///
-/// 3. Query Service を実装：
-/// ```csharp
-/// public class EmployeeQueryService : IQueryService<IEmployee, EmployeeRowId>
+/// 集約を ID で読み取る、Context 間共通の問い合わせサービスの抽象
+/// </summary>
+/// <typeparam name="TAggregate">読み取る集約。Domain の Entity ではなく、各 Context の Application 層で公開するインターフェース（例: <c>IEmployee</c>）</typeparam>
+/// <typeparam name="TId">集約ID の型（<c>RowId</c> の派生型）</typeparam>
+/// <remarks>
+/// <para>【用途】他の Bounded Context の集約の最新状態の同期的な読み取り。変更の通知にはドメインイベントを使用</para>
+/// <para>【設計】Domain の Entity は隠蔽し、Application 層のインターフェース経由でのみ公開。他 Context が Domain の Entity に直接依存することの防止</para>
+/// <para>【メリット】汎用層の肥大化なし（ジェネリック定義のみ）。集約の追加時も構造不変。依存方向は Context別 Application → 汎用 Application</para>
+/// <para>【重要】他 Context からは Entity を参照せず、公開インターフェース（<c>IEmployee</c> など）経由でのみアクセス</para>
+/// <para>【参照】CLAUDE.md「Context間のデータ共有パターン」</para>
+/// </remarks>
+/// <example>
+/// 実装と DI 登録
+/// <code>
+/// public class EmployeeQueryService : IQueryService&lt;IEmployee, EmployeeRowId&gt;
 /// {
 ///     private readonly IEmployeeRepository _repository;
 ///
-///     public async Task<IEmployee?> GetByIdAsync(EmployeeRowId id)
-///     {
-///         return await _repository.GetByIdAsync(id);
-///     }
+///     public async Task&lt;IEmployee?&gt; GetByIdAsync(EmployeeRowId id)
+///         =&gt; await _repository.GetByIdAsync(id);
 /// }
-/// ```
 ///
-/// 4. DI登録：
-/// ```csharp
-/// services.AddScoped<IQueryService<IEmployee, EmployeeRowId>, EmployeeQueryService>();
-/// ```
-///
-/// 5. 利用例（他の Context）：
-/// ```csharp
-/// // CarPreferences Context が Employee 情報を取得（IEmployee インターフェース経由）
+/// services.AddScoped&lt;IQueryService&lt;IEmployee, EmployeeRowId&gt;, EmployeeQueryService&gt;();
+/// </code>
+/// 他の Context からの利用
+/// <code>
 /// public class UpdateCarPreferencesUseCase
 /// {
-///     private readonly IQueryService<IEmployee, EmployeeRowId> _employeeQuery;
+///     private readonly IQueryService&lt;IEmployee, EmployeeRowId&gt; _employeeQuery;
 ///
 ///     public async Task Execute(EmployeeRowId employeeId, CarModelRequest request)
 ///     {
-///         var employee = await _employeeQuery.GetByIdAsync(employeeId);
-///         if (employee == null)
-///             throw new EmployeeNotFoundException();
-///         // ... employee は IEmployee インターフェース経由で使用
+///         var employee = await _employeeQuery.GetByIdAsync(employeeId)
+///             ?? throw new EmployeeNotFoundException();
 ///     }
 /// }
-/// ```
-/// 重要: 他 Context は Employee Entity を参照せず、IEmployee インターフェース経由でのみアクセス
-/// </summary>
-/// <typeparam name="TAggregate">ドメインモデルの型（IAggregateRoot を実装）</typeparam>
-/// <typeparam name="TId">集約ID の型（RowId を継承）</typeparam>
+/// </code>
+/// </example>
 public interface IQueryService<TAggregate, TId>
     where TAggregate : IAggregateRoot
     where TId : notnull

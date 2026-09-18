@@ -44,6 +44,9 @@ public class DepartmentRepository(
     /// <summary>
     /// 部署を行IDで取得する
     /// </summary>
+    /// <param name="id">取得する部署の行ID</param>
+    /// <returns>見つかった部署。見つからない場合は <see langword="null"/></returns>
+    /// <exception cref="ArgumentNullException"><paramref name="id"/> が <see langword="null"/> の場合</exception>
     public async Task<Department?> GetByIdAsync(DepartmentRowId id)
     {
         ArgumentNullException.ThrowIfNull(id);
@@ -66,6 +69,9 @@ public class DepartmentRepository(
     /// <summary>
     /// 部署をコードで取得する
     /// </summary>
+    /// <param name="code">取得する部署のコード</param>
+    /// <returns>見つかった部署。見つからない場合は <see langword="null"/></returns>
+    /// <exception cref="ArgumentNullException"><paramref name="code"/> が <see langword="null"/> の場合</exception>
     public async Task<Department?> GetByCodeAsync(DepartmentCode code)
     {
         ArgumentNullException.ThrowIfNull(code);
@@ -88,6 +94,7 @@ public class DepartmentRepository(
     /// <summary>
     /// すべての部署を取得する（廃止済みを含む）
     /// </summary>
+    /// <returns>すべての部署（廃止済みを含む）。部署なしの場合は空の一覧</returns>
     public async Task<IReadOnlyList<Department>> GetAllAsync()
     {
         var sql = _queryLoader.LoadQuery("Departments.GetAllDepartments", typeof(DepartmentRepository));
@@ -123,6 +130,11 @@ public class DepartmentRepository(
     /// 部署を保存する（新規作成または更新）
     /// 【責務】UpdatedAt/UpdatedBy を設定、RepoDb でDB操作（row_version は fields で除外）
     /// </summary>
+    /// <param name="department">保存する部署。<c>RowVersion</c> が空の場合は新規作成、それ以外は更新</param>
+    /// <exception cref="ArgumentNullException"><paramref name="department"/> が <see langword="null"/> の場合</exception>
+    /// <remarks>
+    /// <para>【注意】更新時の楽観ロック（<c>row_version</c> の照合）なし</para>
+    /// </remarks>
     public async Task SaveAsync(Department department)
     {
         ArgumentNullException.ThrowIfNull(department);
@@ -170,6 +182,9 @@ public class DepartmentRepository(
     /// 部署を論理削除する
     /// 【責務】DeletedAt/DeletedBy を設定、RepoDb で更新（row_version は fields で除外）
     /// </summary>
+    /// <param name="id">削除する部署の行ID</param>
+    /// <exception cref="ArgumentNullException"><paramref name="id"/> が <see langword="null"/> の場合</exception>
+    /// <exception cref="InvalidOperationException">部署が見つからない場合</exception>
     public async Task DeleteAsync(DepartmentRowId id)
     {
         ArgumentNullException.ThrowIfNull(id);

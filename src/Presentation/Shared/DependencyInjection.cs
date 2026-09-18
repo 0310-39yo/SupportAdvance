@@ -15,6 +15,12 @@ public static class DependencyInjection
     /// <summary>
     /// Shared Presentation の共通サービスを登録します。
     /// </summary>
+    /// <param name="services">登録先のサービスコレクション</param>
+    /// <returns>メソッドチェーン用の <paramref name="services"/> 自身</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="services"/> が <see langword="null"/> の場合</exception>
+    /// <remarks>
+    /// <para>【注意】現在は登録するサービスなし</para>
+    /// </remarks>
     public static IServiceCollection AddSharedPresentationModels(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);
@@ -30,6 +36,11 @@ public static class DependencyInjection
     /// <typeparam name="TImplementation">UseCase実装の型</typeparam>
     /// <param name="services">サービスコレクション</param>
     /// <param name="warningThresholdMs">PerformanceDecoratorの警告閾値（ミリ秒）</param>
+    /// <returns>メソッドチェーン用の <paramref name="services"/> 自身</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="services"/> が <see langword="null"/> の場合</exception>
+    /// <remarks>
+    /// <para>【登録内容】<typeparamref name="TImplementation"/> 自体と、デコレーターで包んだ <see cref="IUseCase{TRequest, TResponse}"/>（いずれも Scoped）</para>
+    /// </remarks>
     public static IServiceCollection RegisterUseCaseWithDecorators<TRequest, TResponse, TImplementation>(
         this IServiceCollection services,
         int warningThresholdMs = 1000)
@@ -73,6 +84,12 @@ public static class DependencyInjection
     /// ロギング機能のみを持つUseCaseを登録します。
     /// PerformanceDecoratorやErrorHandlingDecoratorは不要な場合に使用します。
     /// </summary>
+    /// <typeparam name="TRequest">ユースケースのリクエストの型</typeparam>
+    /// <typeparam name="TResponse">ユースケースのレスポンスの型</typeparam>
+    /// <typeparam name="TImplementation">ユースケースの実装の型</typeparam>
+    /// <param name="services">登録先のサービスコレクション</param>
+    /// <returns>メソッドチェーン用の <paramref name="services"/> 自身</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="services"/> が <see langword="null"/> の場合</exception>
     public static IServiceCollection RegisterUseCaseWithLogging<TRequest, TResponse, TImplementation>(
         this IServiceCollection services)
         where TRequest : IRequest
@@ -101,6 +118,12 @@ public static class DependencyInjection
     /// エラーハンドリング機能のみを持つUseCaseを登録します。
     /// 軽量な登録が必要な場合に使用します。
     /// </summary>
+    /// <typeparam name="TRequest">ユースケースのリクエストの型</typeparam>
+    /// <typeparam name="TResponse">ユースケースのレスポンスの型</typeparam>
+    /// <typeparam name="TImplementation">ユースケースの実装の型</typeparam>
+    /// <param name="services">登録先のサービスコレクション</param>
+    /// <returns>メソッドチェーン用の <paramref name="services"/> 自身</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="services"/> が <see langword="null"/> の場合</exception>
     public static IServiceCollection RegisterUseCaseWithErrorHandling<TRequest, TResponse, TImplementation>(
         this IServiceCollection services)
         where TRequest : IRequest
@@ -129,6 +152,16 @@ public static class DependencyInjection
     /// ロギングとパフォーマンス計測機能を持つUseCaseを登録します。
     /// エラーハンドリングは不要な場合に使用します。
     /// </summary>
+    /// <typeparam name="TRequest">ユースケースのリクエストの型</typeparam>
+    /// <typeparam name="TResponse">ユースケースのレスポンスの型</typeparam>
+    /// <typeparam name="TImplementation">ユースケースの実装の型</typeparam>
+    /// <param name="services">登録先のサービスコレクション</param>
+    /// <param name="warningThresholdMs"><see cref="PerformanceDecorator{TRequest, TResponse}"/> が Warning ログを出力する実行時間のしきい値（ミリ秒）</param>
+    /// <returns>メソッドチェーン用の <paramref name="services"/> 自身</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="services"/> が <see langword="null"/> の場合</exception>
+    /// <remarks>
+    /// <para>【チェーン順序】（外側から）PerformanceDecorator → LoggingDecorator → 実装</para>
+    /// </remarks>
     public static IServiceCollection RegisterUseCaseWithPerformance<TRequest, TResponse, TImplementation>(
         this IServiceCollection services,
         int warningThresholdMs = 1000)
@@ -164,6 +197,12 @@ public static class DependencyInjection
     /// デコレーターなしでUseCaseを直接登録します。
     /// テストやシンプルな実装で不要な場合に使用します。
     /// </summary>
+    /// <typeparam name="TRequest">ユースケースのリクエストの型</typeparam>
+    /// <typeparam name="TResponse">ユースケースのレスポンスの型</typeparam>
+    /// <typeparam name="TImplementation">ユースケースの実装の型</typeparam>
+    /// <param name="services">登録先のサービスコレクション</param>
+    /// <returns>メソッドチェーン用の <paramref name="services"/> 自身</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="services"/> が <see langword="null"/> の場合</exception>
     public static IServiceCollection RegisterUseCase<TRequest, TResponse, TImplementation>(
         this IServiceCollection services)
         where TRequest : IRequest

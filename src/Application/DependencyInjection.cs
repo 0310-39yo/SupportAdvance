@@ -13,6 +13,9 @@ public static class DependencyInjection
     /// 【注記】各 Context の Application 層との依存を避けるため、
     /// 具体的な Context の登録は Program.cs で直接呼び出します。
     /// </summary>
+    /// <param name="services">登録先のサービスコレクション</param>
+    /// <returns>メソッドチェーン用の <paramref name="services"/> 自身</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="services"/> が <see langword="null"/> の場合</exception>
     public static IServiceCollection AddApplicationModels(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);

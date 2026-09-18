@@ -29,6 +29,12 @@ public sealed class LogoutUseCase
     private readonly IUserAuthSessionRepository _sessionRepository;
     private readonly IClock _clock;
 
+    /// <summary>
+    /// <see cref="LogoutUseCase"/> クラスの新しいインスタンスの初期化
+    /// </summary>
+    /// <param name="sessionRepository">ログアウトするセッションの取得・保存先</param>
+    /// <param name="clock">ログアウト日時（JST）の取得元</param>
+    /// <exception cref="ArgumentNullException">いずれかの引数が <see langword="null"/> の場合</exception>
     public LogoutUseCase(
         IUserAuthSessionRepository sessionRepository,
         IClock clock)
@@ -42,6 +48,10 @@ public sealed class LogoutUseCase
     /// </summary>
     /// <param name="sessionRowId">ログアウト対象のセッション RowId</param>
     /// <exception cref="InvalidOperationException">セッションが見つからない</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="sessionRowId"/> が <see langword="null"/> の場合</exception>
+    /// <remarks>
+    /// <para>【副作用】セッションのログアウト日時（JST）を設定して更新</para>
+    /// </remarks>
     public async Task ExecuteAsync(UserAuthSessionRowId sessionRowId)
     {
         ArgumentNullException.ThrowIfNull(sessionRowId);

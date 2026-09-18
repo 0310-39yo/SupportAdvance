@@ -22,6 +22,12 @@ public class MigrationRunner
     private readonly string _connectionString;
     private readonly IClock _clock;
 
+    /// <summary>
+    /// <see cref="MigrationRunner"/> クラスの新しいインスタンスの初期化
+    /// </summary>
+    /// <param name="connectionString">マイグレーションを実行する SQL Server への接続文字列</param>
+    /// <param name="clock">マイグレーション履歴に記録する実行日時（JST）の取得元</param>
+    /// <exception cref="ArgumentNullException">いずれかの引数が <see langword="null"/> の場合</exception>
     public MigrationRunner(string connectionString, IClock clock)
     {
         ArgumentNullException.ThrowIfNull(connectionString);

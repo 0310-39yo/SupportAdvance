@@ -25,6 +25,10 @@ public sealed class SystemCurrentUserService : ICurrentUserService
     /// </summary>
     public const long SystemUserEmployeeRowId = WellKnownIds.SystemUserEmployeeRowId;
 
+    /// <summary>
+    /// 現在のユーザーの従業員rowId
+    /// </summary>
+    /// <value>常に <see cref="SystemUserEmployeeRowId"/>（ログイン状態に関係なく固定）</value>
     public long EmployeeRowId => SystemUserEmployeeRowId;
 
     /// <summary>
@@ -36,6 +40,8 @@ public sealed class SystemCurrentUserService : ICurrentUserService
     /// SetLoggedInUser は暫定実装のため何もしない（no-op）
     /// Authentication BC 実装時は RealCurrentUserService に置き換え
     /// </summary>
+    /// <param name="employeeRowId">ログインした従業員の行ID（未使用）</param>
+    /// <param name="loginId">ログインID（未使用）</param>
     public void SetLoggedInUser(long employeeRowId, string loginId)
     {
         // 暫定実装のため何もしない

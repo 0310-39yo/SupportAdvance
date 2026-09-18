@@ -53,6 +53,15 @@ public sealed class AuthenticateLocalUserUseCase
     /// </summary>
     private const long UnknownUserId = WellKnownIds.UnknownUserEmployeeRowId;
 
+    /// <summary>
+    /// <see cref="AuthenticateLocalUserUseCase"/> クラスの新しいインスタンスの初期化
+    /// </summary>
+    /// <param name="loginCredentialsQuery">ログインID から認証情報を取得する問い合わせサービス</param>
+    /// <param name="passwordHashService">パスワードの照合を行うサービス</param>
+    /// <param name="sessionRepository">認証セッション（成功・失敗とも）の保存先</param>
+    /// <param name="clock">ログイン日時（JST）の取得元</param>
+    /// <param name="sequenceProvider">認証セッションの行ID の採番元</param>
+    /// <exception cref="ArgumentNullException">いずれかの引数が <see langword="null"/> の場合</exception>
     public AuthenticateLocalUserUseCase(
         ILoginCredentialsQuery loginCredentialsQuery,
         IPasswordHashService passwordHashService,

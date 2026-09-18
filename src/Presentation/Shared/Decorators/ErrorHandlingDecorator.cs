@@ -21,6 +21,13 @@ public sealed class ErrorHandlingDecorator<TRequest, TResponse> : IUseCase<TRequ
     private readonly IAppLogging<ErrorHandlingDecorator<TRequest, TResponse>> _logger;
     private readonly ICorrelationContext _correlationContext;
 
+    /// <summary>
+    /// <see cref="ErrorHandlingDecorator{TRequest, TResponse}"/> クラスの新しいインスタンスの初期化
+    /// </summary>
+    /// <param name="innerUseCase">装飾対象のユースケース（次に実行されるデコレーターまたは本体）</param>
+    /// <param name="logger">ログの出力先</param>
+    /// <param name="correlationContext">ログに付与する CorrelationId の取得元</param>
+    /// <exception cref="ArgumentNullException">いずれかの引数が <see langword="null"/> の場合</exception>
     public ErrorHandlingDecorator(
         IUseCase<TRequest, TResponse> innerUseCase,
         IAppLogging<ErrorHandlingDecorator<TRequest, TResponse>> logger,
@@ -42,6 +49,10 @@ public sealed class ErrorHandlingDecorator<TRequest, TResponse> : IUseCase<TRequ
     /// </summary>
     /// <param name="request">リクエストの内容</param>
     /// <returns>レスポンスの内容</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="request"/> が <see langword="null"/> の場合</exception>
+    /// <remarks>
+    /// <para>【注意】例外はエラーログの記録後、そのまま再送出（握りつぶさない）</para>
+    /// </remarks>
     public async Task<TResponse> ExecuteAsync(TRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);

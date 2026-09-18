@@ -24,6 +24,11 @@ public sealed class RealCurrentUserService : ICurrentUserService
     private long _employeeRowId;
     private string? _loginId;
 
+    /// <inheritdoc/>
+    /// <exception cref="InvalidOperationException">ログインしていない場合（<see cref="SetLoggedInUser"/> の呼び出し前、または <see cref="SetLoggedOut"/> の後）</exception>
+    /// <remarks>
+    /// <para>【注意】ログイン前に監査列を設定する処理（リポジトリの保存など）を行うと例外</para>
+    /// </remarks>
     public long EmployeeRowId
     {
         get
@@ -34,6 +39,10 @@ public sealed class RealCurrentUserService : ICurrentUserService
         }
     }
 
+    /// <summary>
+    /// ログイン中のユーザーのログインID
+    /// </summary>
+    /// <exception cref="InvalidOperationException">ログインしていない場合</exception>
     public string LoginId
     {
         get
@@ -44,10 +53,20 @@ public sealed class RealCurrentUserService : ICurrentUserService
         }
     }
 
+    /// <summary>
+    /// ログイン中かどうかを示す値
+    /// </summary>
+    /// <value>従業員rowId とログインID の両方が設定済みの場合は <see langword="true"/></value>
     public bool IsLoggedIn => _employeeRowId > 0 && !string.IsNullOrEmpty(_loginId);
 
+    /// <inheritdoc/>
+    /// <value><see cref="IsLoggedIn"/> と同じ値</value>
     public bool IsAuthenticated => IsLoggedIn;
 
+    /// <inheritdoc/>
+    /// <exception cref="ArgumentException">
+    /// <paramref name="employeeRowId"/> が 1 未満の場合、または <paramref name="loginId"/> が空文字・空白のみの場合
+    /// </exception>
     public void SetLoggedInUser(long employeeRowId, string loginId)
     {
         // EmployeeRowId ValueObject の検証ロジック（1以上）を再利用。
@@ -62,6 +81,10 @@ public sealed class RealCurrentUserService : ICurrentUserService
         _loginId = loginId;
     }
 
+    /// <inheritdoc/>
+    /// <remarks>
+    /// <para>【副作用】以降の <see cref="EmployeeRowId"/>／<see cref="LoginId"/> の取得は例外</para>
+    /// </remarks>
     public void SetLoggedOut()
     {
         _employeeRowId = 0;

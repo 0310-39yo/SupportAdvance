@@ -1,4 +1,7 @@
 <Project>
+  <!-- src/Directory.Build.props の共通設定（XMLドキュメントコメントなど）を継承 -->
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+
   <PropertyGroup>
     <RootNamespace>SupportAdvance.Presentation.$(MSBuildProjectName)</RootNamespace>
   </PropertyGroup>

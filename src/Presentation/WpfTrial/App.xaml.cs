@@ -31,6 +31,19 @@ public partial class App : System.Windows.Application
 {
     private IHost? _host;
 
+    /// <summary>
+    /// DI ホストの構築と、ログインウィンドウ → メインウィンドウの起動
+    /// </summary>
+    /// <param name="e">起動イベントの引数</param>
+    /// <remarks>
+    /// <para>【処理の流れ】</para>
+    /// <list type="number">
+    /// <item><description>DI ホストの構築と開始（Composition Root）</description></item>
+    /// <item><description><see cref="LoginWindow"/> のモーダル表示</description></item>
+    /// <item><description>ログイン成功の場合は <see cref="MainWindow"/> の表示、キャンセルの場合はアプリケーションの終了</description></item>
+    /// </list>
+    /// <para>【注意】ログイン中は <see cref="ShutdownMode.OnExplicitShutdown"/>。ログインウィンドウを閉じた時点でのアプリケーション終了の防止</para>
+    /// </remarks>
     protected override void OnStartup(StartupEventArgs e)
     {
         DebugConsoleHelper.OpenConsoleForDebug();
@@ -87,6 +100,10 @@ public partial class App : System.Windows.Application
         base.OnStartup(e);
     }
 
+    /// <summary>
+    /// DI ホストの停止と破棄
+    /// </summary>
+    /// <param name="e">終了イベントの引数</param>
     protected override void OnExit(ExitEventArgs e)
     {
         _host?.StopAsync().GetAwaiter().GetResult();

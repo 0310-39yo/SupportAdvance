@@ -80,36 +80,37 @@ public sealed class HierarchyLevel : EnumValueObject<int>, IEquatable<HierarchyL
     /// <summary>
     /// 会社レベル（0）を生成する
     /// </summary>
+    /// <returns>値が 0 の <see cref="HierarchyLevel"/></returns>
     public static HierarchyLevel Company() => From(0);
 
     /// <summary>
     /// 本部レベル（1）を生成する
     /// </summary>
+    /// <returns>値が 1 の <see cref="HierarchyLevel"/></returns>
     public static HierarchyLevel Division() => From(1);
 
     /// <summary>
     /// 部レベル（2）を生成する
     /// </summary>
+    /// <returns>値が 2 の <see cref="HierarchyLevel"/></returns>
     public static HierarchyLevel Department() => From(2);
 
     /// <summary>
     /// グループレベル（3）を生成する
     /// </summary>
+    /// <returns>値が 3 の <see cref="HierarchyLevel"/></returns>
     public static HierarchyLevel Group() => From(3);
 
     /// <summary>
     /// チームレベル（4）を生成する
     /// </summary>
+    /// <returns>値が 4 の <see cref="HierarchyLevel"/></returns>
     public static HierarchyLevel Team() => From(4);
 
-    /// <summary>
-    /// 指定されたオブジェクトと等価かどうかを判定する
-    /// </summary>
+    /// <inheritdoc/>
     public override bool Equals(object? obj) => Equals(obj as HierarchyLevel);
 
-    /// <summary>
-    /// 指定された HierarchyLevel と等価かどうかを判定する
-    /// </summary>
+    /// <inheritdoc/>
     public bool Equals(HierarchyLevel? other)
     {
         if (other is null)
@@ -125,9 +126,7 @@ public sealed class HierarchyLevel : EnumValueObject<int>, IEquatable<HierarchyL
         return IsSet == other.IsSet && Value == other.Value;
     }
 
-    /// <summary>
-    /// ハッシュコードを取得する
-    /// </summary>
+    /// <inheritdoc/>
     public override int GetHashCode() => HashCode.Combine(IsSet, Value);
 
     /// <summary>

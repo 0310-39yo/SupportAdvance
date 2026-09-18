@@ -91,6 +91,8 @@ public sealed class BizDivision : EnumValueObject<char>, IEquatable<BizDivision>
     /// </summary>
     /// <param name="value">区分値（M, T, C）</param>
     /// <returns>指定された区分のEmployeeTypeDivisionのインスタンス</returns>
+    /// <exception cref="ArgumentException"><paramref name="value"/> が <see langword="null"/> または空文字の場合</exception>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="value"/> の先頭文字が M／T／C 以外の場合</exception>
     public static BizDivision FromDbValue(string value)
     {
         if (string.IsNullOrEmpty(value) || value.Length == 0)
@@ -216,11 +218,7 @@ public sealed class BizDivision : EnumValueObject<char>, IEquatable<BizDivision>
         return ValueField == other.ValueField;
     }
 
-    /// <summary>
-    /// ハッシュコードを取得する
-    /// 【責務】オブジェクトのハッシュコードを取得する
-    /// </summary>
-    /// <returns>オブジェクトのハッシュコード</returns>
+    /// <inheritdoc/>
     public override int GetHashCode() => ValueField.GetHashCode();
 
     /// <summary>

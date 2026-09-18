@@ -116,14 +116,10 @@ public sealed class UpdatedBy : PrimitiveValueObject<long?>, IEquatable<UpdatedB
     /// </summary>
     public bool HasUpdated => IsSet;
 
-    /// <summary>
-    /// オブジェクト等価性を判定する
-    /// </summary>
+    /// <inheritdoc/>
     public override bool Equals(object? obj) => Equals(obj as UpdatedBy);
 
-    /// <summary>
-    /// UpdatedBy 間の等価性を判定する
-    /// </summary>
+    /// <inheritdoc/>
     public bool Equals(UpdatedBy? other)
     {
         if (other is null)
@@ -139,19 +135,16 @@ public sealed class UpdatedBy : PrimitiveValueObject<long?>, IEquatable<UpdatedB
         return IsSet == other.IsSet && Value == other.Value;
     }
 
-    /// <summary>
-    /// ハッシュコードを取得する
-    /// </summary>
+    /// <inheritdoc/>
     public override int GetHashCode() => HashCode.Combine(IsSet, Value);
 
     /// <summary>
     /// 文字列表現を取得する
     /// </summary>
+    /// <returns>更新者の従業員rowId の文字列。未設定の場合は <c>Unset</c></returns>
     public override string ToString() => IsSet ? Value?.ToString() ?? string.Empty : "Unset";
 
-    /// <summary>
-    /// 等価性判定のための値コンポーネントを返す
-    /// </summary>
+    /// <inheritdoc/>
     protected override IEnumerable<object?> GetValueComponents()
     {
         yield return Value;
@@ -161,6 +154,7 @@ public sealed class UpdatedBy : PrimitiveValueObject<long?>, IEquatable<UpdatedB
     /// 値を検証する
     /// </summary>
     /// <param name="normalized">検証対象の値</param>
+    /// <exception cref="ArgumentException"><paramref name="normalized"/> が 0 以下の場合（<see langword="null"/> は許容）</exception>
     public override void Validate(long? normalized)
     {
         base.Validate(normalized);

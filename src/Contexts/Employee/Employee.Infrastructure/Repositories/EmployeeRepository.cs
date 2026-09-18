@@ -55,6 +55,10 @@ public class EmployeeRepository(
     /// BizId（従業員番号）で Employee を検索する
     /// 【責務】SQL ファイルを読み込んで Dapper で実行、DepartmentMembership も取得
     /// </summary>
+    /// <param name="bizId">検索する従業員番号（1 以上）</param>
+    /// <returns>見つかった従業員集約。見つからない場合は <see langword="null"/></returns>
+    /// <exception cref="ArgumentException"><paramref name="bizId"/> が 0 以下の場合</exception>
+    /// <exception cref="InvalidOperationException">対応する人物（<c>m_persons</c>）がない場合、または監査列の値が不正な場合</exception>
     public async Task<Employee?> GetByBizIdAsync(int bizId)
     {
         try
@@ -145,6 +149,10 @@ public class EmployeeRepository(
     /// EmployeeRowId で Employee を検索する
     /// 【責務】複数テーブル（m_employees, m_persons, m_department_memberships）から統合データを読み込み
     /// </summary>
+    /// <param name="id">検索する従業員の行ID</param>
+    /// <returns>見つかった従業員集約。見つからない場合は <see langword="null"/></returns>
+    /// <exception cref="ArgumentNullException"><paramref name="id"/> が <see langword="null"/> の場合</exception>
+    /// <exception cref="InvalidOperationException">対応する人物（<c>m_persons</c>）がない場合、または監査列の値が不正な場合</exception>
     public async Task<Employee?> GetByIdAsync(EmployeeRowId id)
     {
         try
@@ -234,6 +242,8 @@ public class EmployeeRepository(
     /// GetByIdAsync の別名メソッド（互換性維持用）
     /// 【責務】EmployeeRowId で Employee を検索
     /// </summary>
+    /// <param name="rowId">検索する従業員の行ID</param>
+    /// <returns>見つかった従業員集約。見つからない場合は <see langword="null"/></returns>
     public Task<Employee?> GetByRowIdAsync(EmployeeRowId rowId) =>
         GetByIdAsync(rowId);
 
@@ -241,6 +251,10 @@ public class EmployeeRepository(
     /// PersonRowId で Employee を検索する（1:1 関係のため 0 件または 1 件）
     /// 【責務】m_persons.row_id で m_employees を JOIN 検索
     /// </summary>
+    /// <param name="personRowId">検索する人物の行ID</param>
+    /// <returns>該当する従業員集約の一覧（0 件または 1 件）</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="personRowId"/> が <see langword="null"/> の場合</exception>
+    /// <exception cref="InvalidOperationException">対応する人物（<c>m_persons</c>）がない場合</exception>
     public async Task<IReadOnlyList<Employee>> GetByPersonRowIdAsync(PersonRowId personRowId)
     {
         try
@@ -311,6 +325,9 @@ public class EmployeeRepository(
     /// 【特徴】RowVersion が空（Create時）なら AddAsync、非空（Reconstruct時）なら UpdateAsync
     /// 【メリット】呼び出し側は SaveAsync 1つで統一でき、Repository が内部で最適な実装を選択
     /// </summary>
+    /// <param name="employee">保存する従業員集約。<c>RowVersion</c> が空の場合は新規作成、それ以外は更新</param>
+    /// <exception cref="ArgumentNullException"><paramref name="employee"/> が <see langword="null"/> の場合</exception>
+    /// <exception cref="InvalidOperationException">他のユーザーによる更新・削除で <c>row_version</c> が一致しない場合（楽観ロックの競合）</exception>
     public async Task SaveAsync(Employee employee)
     {
         ArgumentNullException.ThrowIfNull(employee);
@@ -336,6 +353,11 @@ public class EmployeeRepository(
     /// 【特徴】CreatedAt/CreatedBy は Repository が設定（MultiTableRepositoryBase 経由）
     /// 【row_version 除外】RepoDb の fields パラメータで row_version 列を INSERT 対象から除外
     /// </summary>
+    /// <param name="employee">新規保存する従業員集約</param>
+    /// <exception cref="ArgumentNullException"><paramref name="employee"/> が <see langword="null"/> の場合</exception>
+    /// <remarks>
+    /// <para>【副作用】失敗した場合はトランザクションをロールバックし、エラーログを出力して例外を再送出</para>
+    /// </remarks>
     public async Task AddAsync(Employee employee)
     {
         ArgumentNullException.ThrowIfNull(employee);
@@ -392,6 +414,12 @@ public class EmployeeRepository(
     /// 【特徴】楽観ロック（row_version）による競合検出、自動タイムスタンプ管理（MultiTableRepositoryBase 経由）
     /// 【row_version 除外】RepoDb の fields パラメータで row_version 列を UPDATE 対象から除外
     /// </summary>
+    /// <param name="employee">更新する従業員集約。<c>RowVersion</c> は読み込み時の値であること</param>
+    /// <exception cref="ArgumentNullException"><paramref name="employee"/> が <see langword="null"/> の場合</exception>
+    /// <exception cref="InvalidOperationException">他のユーザーによる更新・削除で <c>row_version</c> が一致しない場合（楽観ロックの競合）</exception>
+    /// <remarks>
+    /// <para>【注意】部署メンバーシップ（<c>m_department_memberships</c>）の追加・削除・更新は未実装。<c>m_employees</c> と <c>m_persons</c> のみ更新</para>
+    /// </remarks>
     public async Task UpdateAsync(Employee employee)
     {
         ArgumentNullException.ThrowIfNull(employee);
@@ -465,6 +493,9 @@ public class EmployeeRepository(
     /// 【責務】m_employees の deleted_at/deleted_by を設定（RepoDb UpdateAsync）
     /// 【注意】m_persons は他のEntityから参照される可能性があるため論理削除しない（Employee側のみ）
     /// </summary>
+    /// <param name="id">削除する従業員の行ID</param>
+    /// <exception cref="ArgumentNullException"><paramref name="id"/> が <see langword="null"/> の場合</exception>
+    /// <exception cref="InvalidOperationException">従業員が見つからない場合、または楽観ロックの競合の場合</exception>
     public async Task DeleteAsync(EmployeeRowId id)
     {
         ArgumentNullException.ThrowIfNull(id);

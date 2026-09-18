@@ -16,7 +16,9 @@ using SupportAdvance.SharedKernel.Entities;
 /// </summary>
 public sealed class RoleAssignment : Entity<RoleAssignmentRowId>
 {
-    /// <summary>所属従業員の ID</summary>
+    /// <summary>
+    /// 所属従業員の ID
+    /// </summary>
     public EmployeeRowId EmployeeRowId { get; private set; }
 
     /// <summary>
@@ -59,6 +61,12 @@ public sealed class RoleAssignment : Entity<RoleAssignmentRowId>
     /// <summary>
     /// 新しい RoleAssignment を生成する（ファクトリメソッド）
     /// </summary>
+    /// <param name="assignmentRowId">ロール割り当ての行ID</param>
+    /// <param name="employeeRowId">割り当て先の従業員の行ID</param>
+    /// <param name="roleCode">ロールコード</param>
+    /// <param name="effectiveDate">有効開始日時（JST）</param>
+    /// <param name="expirationDate">有効期限。<see langword="null"/> の場合は無期限（<see cref="ExpirationOn.Unlimited"/>）</param>
+    /// <returns>生成したロール割り当て</returns>
     public static RoleAssignment Create(
         RoleAssignmentRowId assignmentRowId,
         EmployeeRowId employeeRowId,
@@ -70,6 +78,12 @@ public sealed class RoleAssignment : Entity<RoleAssignmentRowId>
     /// <summary>
     /// DB から読み込んだ値から RoleAssignment を復元する（ファクトリメソッド）
     /// </summary>
+    /// <param name="assignmentRowId">ロール割り当ての行ID</param>
+    /// <param name="employeeRowId">割り当て先の従業員の行ID</param>
+    /// <param name="roleCode">ロールコード</param>
+    /// <param name="effectiveDate">有効開始日時（JST）</param>
+    /// <param name="expirationDate">有効期限（無期限の場合は <see cref="ExpirationOn.Unlimited"/>）</param>
+    /// <returns>復元したロール割り当て</returns>
     public static RoleAssignment Reconstruct(
         RoleAssignmentRowId assignmentRowId,
         EmployeeRowId employeeRowId,
@@ -104,6 +118,7 @@ public sealed class RoleAssignment : Entity<RoleAssignmentRowId>
     /// <summary>
     /// RoleAssignment の文字列表現を取得する
     /// </summary>
+    /// <returns><c>RoleAssignment(RowId=…, Code=…, Effective=…, Expiration=…)</c> 形式のデバッグ用文字列</returns>
     public override string ToString()
         =>
             $"RoleAssignment(RowId={RowId.Value}, Code={RoleCode}, Effective={EffectiveDate}, Expiration={ExpirationDate})";

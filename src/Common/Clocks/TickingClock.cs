@@ -147,6 +147,7 @@ public class TickingClock : IClock, IDisposable
     /// 時刻を指定した量だけ進める
     /// </summary>
     /// <param name="count">ティック回数</param>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="count"/> が 0 未満の場合</exception>
     public void Tick(int count)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(count, 0);

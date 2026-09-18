@@ -76,16 +76,13 @@ public abstract class RowId : PrimitiveValueObject<long>, IEquatable<RowId>
     /// <summary>
     /// 文字列表現を返す
     /// </summary>
+    /// <returns>行ID の数値の文字列</returns>
     public override string ToString() => ValueField.ToString();
 
-    /// <summary>
-    /// 指定されたオブジェクトと等価かどうかを判定する
-    /// </summary>
+    /// <inheritdoc/>
     public override bool Equals(object? obj) => Equals(obj as RowId);
 
-    /// <summary>
-    /// 指定された RowId と等価かどうかを判定する
-    /// </summary>
+    /// <inheritdoc/>
     public bool Equals(RowId? other)
     {
         if (other is null)
@@ -101,8 +98,6 @@ public abstract class RowId : PrimitiveValueObject<long>, IEquatable<RowId>
         return GetType() == other.GetType() && Value == other.Value;
     }
 
-    /// <summary>
-    /// ハッシュコードを取得する
-    /// </summary>
+    /// <inheritdoc/>
     public override int GetHashCode() => ValueField.GetHashCode();
 }

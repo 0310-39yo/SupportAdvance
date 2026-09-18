@@ -82,6 +82,16 @@ public sealed class Department : AggregateRoot<DepartmentRowId>, IDepartment
     /// 【責務】Application/Infrastructure 層での Department 生成
     /// 【パラメータ】rowId は事前採番済み、parentId/managerId/abolishedOn はオプション
     /// </summary>
+    /// <param name="rowId">採番済みの部署の行ID</param>
+    /// <param name="deptCode">部署コード</param>
+    /// <param name="name">部署名</param>
+    /// <param name="level">階層レベル</param>
+    /// <param name="parentId">親部署の行ID。<see langword="null"/> の場合は親なし（<see cref="ParentDepartmentRowId.Unset"/>）</param>
+    /// <param name="managerId">管理者の従業員行ID。<see langword="null"/> の場合は未設定（<see cref="ManagerEmployeeRowId.Unset"/>）</param>
+    /// <param name="abolishedOn">廃止日。<see langword="null"/> の場合は未廃止（<see cref="AbolishedOn.Unset"/>）</param>
+    /// <returns>生成した部署（<c>RowVersion</c> は空。リポジトリは空の場合を新規作成として扱う）</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="deptCode"/> または <paramref name="name"/> が <see langword="null"/> の場合</exception>
+    /// <exception cref="ArgumentException"><paramref name="name"/> が空文字の場合</exception>
     public static Department Create(
         DepartmentRowId rowId,
         DepartmentCode deptCode,
@@ -109,6 +119,18 @@ public sealed class Department : AggregateRoot<DepartmentRowId>, IDepartment
     /// 【責務】DB の プリミティブ型 → Domain Entity に変換
     /// 【パラメータ】rowVersion は楽観ロック用（更新時に競合検出）
     /// </summary>
+    /// <param name="rowId">部署の行ID</param>
+    /// <param name="deptCode">部署コード</param>
+    /// <param name="name">部署名</param>
+    /// <param name="level">階層レベル</param>
+    /// <param name="parentId">親部署の行ID（親なしの場合は Unset）</param>
+    /// <param name="managerId">管理者の従業員行ID（未設定の場合は Unset）</param>
+    /// <param name="abolishedOn">廃止日（未廃止の場合は Unset）</param>
+    /// <param name="rowVersion">楽観ロック用の値。<see langword="null"/> の場合は設定なし</param>
+    /// <returns>復元した部署</returns>
+    /// <remarks>
+    /// <para>【注意】引数の検証なし（DB の値を信頼）</para>
+    /// </remarks>
     public static Department Reconstruct(
         DepartmentRowId rowId,
         DepartmentCode deptCode,
@@ -150,6 +172,8 @@ public sealed class Department : AggregateRoot<DepartmentRowId>, IDepartment
     /// 【責務】親部署の妥当性を検証（循環参照チェックなど）
     /// 【注意】実装では Repository が親部署の存在確認を担当
     /// </summary>
+    /// <param name="newParentId">新しい親部署の行ID。Unset の場合はトップレベル化</param>
+    /// <exception cref="InvalidOperationException"><paramref name="newParentId"/> が自分自身の場合</exception>
     public void UpdateParent(ParentDepartmentRowId newParentId)
     {
         // Unset（トップレベル化）は常に許可
@@ -172,6 +196,7 @@ public sealed class Department : AggregateRoot<DepartmentRowId>, IDepartment
     /// <summary>
     /// 管理者を更新する
     /// </summary>
+    /// <param name="newManagerId">新しい管理者の従業員行ID。Unset の場合は管理者なし</param>
     public void UpdateManager(ManagerEmployeeRowId newManagerId)
     {
         ManagerId = newManagerId;
@@ -180,6 +205,8 @@ public sealed class Department : AggregateRoot<DepartmentRowId>, IDepartment
     /// <summary>
     /// 廃止日を設定する
     /// </summary>
+    /// <param name="abolishedOn">廃止日</param>
+    /// <exception cref="ArgumentNullException"><paramref name="abolishedOn"/> が <see langword="null"/> の場合</exception>
     public void Abolish(AbolishedOn abolishedOn)
     {
         ArgumentNullException.ThrowIfNull(abolishedOn);
@@ -197,6 +224,7 @@ public sealed class Department : AggregateRoot<DepartmentRowId>, IDepartment
     /// <summary>
     /// 文字列表現を取得する
     /// </summary>
+    /// <returns><c>Department(RowId=…, Code=…, Name=…)</c> 形式のデバッグ用文字列</returns>
     public override string ToString()
         => $"Department(RowId={RowId.Value}, Code={DeptCode}, Name={Name})";
 }

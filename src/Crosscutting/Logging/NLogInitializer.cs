@@ -13,6 +13,11 @@ public static class NLogInitializer
     /// </summary>
     /// <param name="appsettings">アプリケーション設定</param>
     /// <param name="baseDirectory">ベースディレクトリ</param>
+    /// <exception cref="ArgumentNullException"><paramref name="appsettings"/> が <see langword="null"/> の場合</exception>
+    /// <exception cref="ArgumentException"><paramref name="baseDirectory"/> が <see langword="null"/>・空文字・空白のみの場合</exception>
+    /// <remarks>
+    /// <para>【注意】NLog.config が見つからない場合も例外なし（NLog の既定設定のまま）</para>
+    /// </remarks>
     public static void Initialize(AppSettings appsettings, string baseDirectory)
     {
         ArgumentNullException.ThrowIfNull(appsettings);

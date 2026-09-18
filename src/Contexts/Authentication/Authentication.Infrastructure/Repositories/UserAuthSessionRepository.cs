@@ -39,6 +39,14 @@ public class UserAuthSessionRepository : IUserAuthSessionRepository
     private readonly ISequenceProvider _sequenceProvider;
     private readonly UserAuthSessionMapper _mapper;
 
+    /// <summary>
+    /// <see cref="UserAuthSessionRepository"/> クラスの新しいインスタンスの初期化
+    /// </summary>
+    /// <param name="connectionFactory">DB 接続の生成元</param>
+    /// <param name="clock">監査列（<c>*_at</c>）に記録する現在時刻（JST）の取得元</param>
+    /// <param name="sqlQueryLoader">検索用 SQL ファイルの読み込み元</param>
+    /// <param name="sequenceProvider">行ID の採番元</param>
+    /// <exception cref="ArgumentNullException">いずれかの引数が <see langword="null"/> の場合</exception>
     public UserAuthSessionRepository(
         IDbConnectionFactory connectionFactory,
         IClock clock,
@@ -72,6 +80,8 @@ public class UserAuthSessionRepository : IUserAuthSessionRepository
     /// <summary>
     /// RowId でセッションを取得
     /// </summary>
+    /// <param name="id">取得するセッションの行ID</param>
+    /// <returns>見つかったセッション。見つからない場合は <see langword="null"/></returns>
     public async Task<UserAuthSession?> GetByIdAsync(UserAuthSessionRowId id)
     {
         var sql = _sqlQueryLoader.LoadQuery("Sessions.GetUserAuthSessionById", typeof(UserAuthSessionRepository));
@@ -87,6 +97,8 @@ public class UserAuthSessionRepository : IUserAuthSessionRepository
     /// <summary>
     /// 従業員の最新セッションを取得
     /// </summary>
+    /// <param name="authorityRowId">権限主体（従業員）の行ID</param>
+    /// <returns>最新のセッション。見つからない場合は <see langword="null"/></returns>
     public async Task<UserAuthSession?> GetLatestByAuthorityRowIdAsync(AuthorityRowId authorityRowId)
     {
         var sql = _sqlQueryLoader.LoadQuery("Sessions.GetLatestUserAuthSessionByAuthorityRowId", typeof(UserAuthSessionRepository));
@@ -102,6 +114,8 @@ public class UserAuthSessionRepository : IUserAuthSessionRepository
     /// <summary>
     /// ローカル認証マスターの最新セッションを取得
     /// </summary>
+    /// <param name="loginCredentialsRowId">認証情報の行ID</param>
+    /// <returns>最新のセッション。見つからない場合は <see langword="null"/></returns>
     public async Task<UserAuthSession?> GetLatestByLoginCredentialsRowIdAsync(LoginCredentialsRowId loginCredentialsRowId)
     {
         var sql = _sqlQueryLoader.LoadQuery("Sessions.GetLatestUserAuthSessionByLoginCredentialsRowId", typeof(UserAuthSessionRepository));
@@ -124,6 +138,8 @@ public class UserAuthSessionRepository : IUserAuthSessionRepository
     ///              ログイン試行中は ICurrentUserService が未設定の場合があるため、
     ///              Entity 自身が保持する AuthorityRowId を記録する
     /// </summary>
+    /// <param name="session">保存するセッション</param>
+    /// <returns>保存したセッションの行ID（採番した場合は採番後の値）</returns>
     public async Task<UserAuthSessionRowId> SaveAsync(UserAuthSession session)
     {
         var dbModel = _mapper.ToDbModel(session);
@@ -156,6 +172,8 @@ public class UserAuthSessionRepository : IUserAuthSessionRepository
     /// - 監査フィールド（UpdatedAt/UpdatedBy）を設定
     /// 【UpdatedBy】session.AuthorityRowId（このセッションの主体）を使用
     /// </summary>
+    /// <param name="session">更新するセッション。<c>RowVersion</c> は読み込み時の値であること</param>
+    /// <exception cref="InvalidOperationException">更新対象の行がない場合（他のユーザーによる更新・削除で <c>row_version</c> が一致しない場合を含む）</exception>
     public async Task UpdateAsync(UserAuthSession session)
     {
         var dbModel = _mapper.ToDbModel(session);
@@ -193,6 +211,8 @@ public class UserAuthSessionRepository : IUserAuthSessionRepository
     /// 【DeletedBy】対象セッションの AuthorityRowId（このセッションの主体）を使用。
     ///              DeleteAsync は RowId のみ受け取るため、事前に GetByIdAsync で取得する
     /// </summary>
+    /// <param name="id">削除するセッションの行ID</param>
+    /// <exception cref="InvalidOperationException">セッションが見つからない場合</exception>
     public async Task DeleteAsync(UserAuthSessionRowId id)
     {
         var existingSession = await GetByIdAsync(id)

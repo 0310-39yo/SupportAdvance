@@ -87,14 +87,10 @@ public sealed class DepartmentCode : PrimitiveValueObject<string>, IEquatable<De
         }
     }
 
-    /// <summary>
-    /// オブジェクト等価性を判定する
-    /// </summary>
+    /// <inheritdoc/>
     public override bool Equals(object? obj) => Equals(obj as DepartmentCode);
 
-    /// <summary>
-    /// DepartmentCode 間の等価性を判定する
-    /// </summary>
+    /// <inheritdoc/>
     public bool Equals(DepartmentCode? other)
     {
         if (other is null)
@@ -110,19 +106,16 @@ public sealed class DepartmentCode : PrimitiveValueObject<string>, IEquatable<De
         return Value == other.Value; // 大文字小文字区別
     }
 
-    /// <summary>
-    /// ハッシュコードを取得する
-    /// </summary>
+    /// <inheritdoc/>
     public override int GetHashCode() => Value.GetHashCode();
 
     /// <summary>
     /// 文字列表現を取得する
     /// </summary>
+    /// <returns>部署コードの値そのもの</returns>
     public override string ToString() => Value;
 
-    /// <summary>
-    /// 等価性判定のための値コンポーネントを返す
-    /// </summary>
+    /// <inheritdoc/>
     protected override IEnumerable<object?> GetValueComponents()
     {
         yield return Value;

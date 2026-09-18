@@ -19,6 +19,12 @@ public static class InfrastructureServiceCollectionExtensions
     /// <summary>
     /// Authentication Context の Infrastructure Models を DI コンテナに登録する
     /// </summary>
+    /// <param name="services">登録先のサービスコレクション</param>
+    /// <returns>メソッドチェーン用の <paramref name="services"/> 自身</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="services"/> が <see langword="null"/> の場合</exception>
+    /// <remarks>
+    /// <para>【副作用】RepoDb の <c>UserAuthSessionDbModel</c> のテーブルマッピングをプロセス全体に登録（失敗時は無視）</para>
+    /// </remarks>
     public static IServiceCollection AddAuthenticationInfrastructureModels(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);

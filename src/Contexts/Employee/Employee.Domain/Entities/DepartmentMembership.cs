@@ -64,6 +64,13 @@ public sealed class DepartmentMembership : Entity<DepartmentMembershipRowId>
     /// <summary>
     /// 新しい DepartmentMembership を生成する
     /// </summary>
+    /// <param name="membershipRowId">採番済みの部署メンバーシップの行ID</param>
+    /// <param name="employeeRowId">所属する従業員の行ID</param>
+    /// <param name="departmentRowId">所属先の部署の行ID</param>
+    /// <param name="isPrimary">主所属かどうか</param>
+    /// <param name="endOn">所属の終了日。<see langword="null"/> の場合は無期限（<see cref="EndOn.Unset"/>）</param>
+    /// <param name="departmentName">表示用の部署名（任意）</param>
+    /// <returns>生成した部署メンバーシップ</returns>
     public static DepartmentMembership Create(
         DepartmentMembershipRowId membershipRowId,
         EmployeeRowId employeeRowId,
@@ -76,6 +83,13 @@ public sealed class DepartmentMembership : Entity<DepartmentMembershipRowId>
     /// <summary>
     /// DB から読み込んだ値から DepartmentMembership を復元する
     /// </summary>
+    /// <param name="membershipRowId">部署メンバーシップの行ID</param>
+    /// <param name="employeeRowId">所属する従業員の行ID</param>
+    /// <param name="departmentRowId">所属先の部署の行ID</param>
+    /// <param name="isPrimary">主所属かどうか</param>
+    /// <param name="endOn">所属の終了日（無期限の場合は Unset）</param>
+    /// <param name="departmentName">表示用の部署名（DB で結合して取得した値。任意）</param>
+    /// <returns>復元した部署メンバーシップ</returns>
     public static DepartmentMembership Reconstruct(
         DepartmentMembershipRowId membershipRowId,
         EmployeeRowId employeeRowId,
@@ -88,6 +102,8 @@ public sealed class DepartmentMembership : Entity<DepartmentMembershipRowId>
     /// <summary>
     /// このメンバーシップが指定時点で有効かどうかを判定する
     /// </summary>
+    /// <param name="asOf">判定する日時（JST）</param>
+    /// <returns>終了日が未設定の場合、または <paramref name="asOf"/> が終了日より前の場合は <see langword="true"/></returns>
     public bool IsActive(LocalDateTime asOf)
     {
         // EndOn が null（無期限）なら常に有効
@@ -103,6 +119,7 @@ public sealed class DepartmentMembership : Entity<DepartmentMembershipRowId>
     /// <summary>
     /// 文字列表現を取得する
     /// </summary>
+    /// <returns><c>DepartmentMembership(RowId=…, DeptRowId=…, Primary=…)</c> 形式のデバッグ用文字列</returns>
     public override string ToString()
         => $"DepartmentMembership(RowId={RowId.Value}, DeptRowId={DepartmentRowId}, Primary={IsPrimary})";
 }

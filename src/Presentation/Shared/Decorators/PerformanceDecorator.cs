@@ -24,6 +24,15 @@ public sealed class PerformanceDecorator<TRequest, TResponse> : IUseCase<TReques
     private readonly IClock _clock;
     private readonly int _warningThresholdMs;
 
+    /// <summary>
+    /// <see cref="PerformanceDecorator{TRequest, TResponse}"/> クラスの新しいインスタンスの初期化
+    /// </summary>
+    /// <param name="innerUseCase">装飾対象のユースケース（次に実行されるデコレーターまたは本体）</param>
+    /// <param name="logger">ログの出力先</param>
+    /// <param name="correlationContext">ログに付与する CorrelationId の取得元</param>
+    /// <param name="clock">実行時間の計測に使う現在時刻（JST）の取得元</param>
+    /// <param name="warningThresholdMs">Warning ログを出力する実行時間のしきい値（ミリ秒）。この値を超えた場合に Warning</param>
+    /// <exception cref="ArgumentNullException"><paramref name="warningThresholdMs"/> 以外のいずれかの引数が <see langword="null"/> の場合</exception>
     public PerformanceDecorator(
         IUseCase<TRequest, TResponse> innerUseCase,
         IAppLogging<PerformanceDecorator<TRequest, TResponse>> logger,
@@ -50,6 +59,7 @@ public sealed class PerformanceDecorator<TRequest, TResponse> : IUseCase<TReques
     /// </summary>
     /// <param name="request">リクエストの内容</param>
     /// <returns>レスポンスの内容</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="request"/> が <see langword="null"/> の場合</exception>
     public async Task<TResponse> ExecuteAsync(TRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);

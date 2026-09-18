@@ -13,6 +13,9 @@ public static class InfrastructureServiceCollectionExtensions
     /// <summary>
     /// Department Context の Infrastructure Models を DI コンテナに登録する
     /// </summary>
+    /// <param name="services">登録先のサービスコレクション</param>
+    /// <returns>メソッドチェーン用の <paramref name="services"/> 自身</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="services"/> が <see langword="null"/> の場合</exception>
     public static IServiceCollection AddDepartmentInfrastructureModels(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);

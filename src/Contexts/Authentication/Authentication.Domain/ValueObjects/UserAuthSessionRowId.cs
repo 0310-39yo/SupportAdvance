@@ -85,14 +85,10 @@ public sealed class UserAuthSessionRowId : RowId, IEquatable<UserAuthSessionRowI
     /// <returns>数値文字列</returns>
     public override string ToString() => Value.ToString();
 
-    /// <summary>
-    /// 指定されたオブジェクトと等価かどうかを判定する
-    /// </summary>
+    /// <inheritdoc/>
     public override bool Equals(object? obj) => Equals(obj as UserAuthSessionRowId);
 
-    /// <summary>
-    /// 指定された UserAuthSessionRowId と等価かどうかを判定する
-    /// </summary>
+    /// <inheritdoc/>
     public bool Equals(UserAuthSessionRowId? other)
     {
         if (other is null)
@@ -104,14 +100,14 @@ public sealed class UserAuthSessionRowId : RowId, IEquatable<UserAuthSessionRowI
         return Value == other.Value;
     }
 
-    /// <summary>
-    /// ハッシュコードを取得する
-    /// </summary>
+    /// <inheritdoc/>
     public override int GetHashCode() => Value.GetHashCode();
 
     /// <summary>
     /// ユーザー認証セッションレコード行IDが有効か検証する
     /// </summary>
+    /// <param name="normalized">検証する行ID</param>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="normalized"/> が <see cref="MinValue"/> 未満の場合</exception>
     public override void Validate(long normalized)
     {
         if (normalized < MinValue)

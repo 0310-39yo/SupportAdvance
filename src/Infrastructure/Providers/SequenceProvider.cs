@@ -31,6 +31,15 @@ public class SequenceProvider : ISequenceProvider
     private readonly string _connectionString;
     private readonly Lock _lockObject = new();
 
+    /// <summary>
+    /// <see cref="SequenceProvider"/> クラスの新しいインスタンスの初期化
+    /// </summary>
+    /// <param name="appSettings">接続文字列の取得元</param>
+    /// <exception cref="ArgumentNullException"><paramref name="appSettings"/> が <see langword="null"/> の場合</exception>
+    /// <exception cref="InvalidOperationException">接続文字列が 1 つも設定されていない場合</exception>
+    /// <remarks>
+    /// <para>【接続文字列の選択】<c>ConnectionStrings</c> の <c>Default</c> → <c>SupportAdvance</c> → 最初のキーの順</para>
+    /// </remarks>
     public SequenceProvider(IAppSettings appSettings)
     {
         ArgumentNullException.ThrowIfNull(appSettings);
@@ -66,6 +75,8 @@ public class SequenceProvider : ISequenceProvider
     /// <summary>
     /// 次の RowId 単一値を取得する
     /// </summary>
+    /// <returns>採番した行ID（<c>s_row_id_sequence</c> の次の値）</returns>
+    /// <exception cref="SequenceProviderException">DB への接続やシーケンスの取得に失敗した場合</exception>
     public async Task<long> GetNextValueAsync()
     {
         var values = await GetNextValuesAsync(1);
@@ -75,6 +86,10 @@ public class SequenceProvider : ISequenceProvider
     /// <summary>
     /// 複数個の連続した RowId を取得する
     /// </summary>
+    /// <param name="count">採番する個数（1 以上）</param>
+    /// <returns>採番した行ID の一覧（要素数は <paramref name="count"/>）。連番とは限らない値</returns>
+    /// <exception cref="ArgumentException"><paramref name="count"/> が 0 以下の場合</exception>
+    /// <exception cref="SequenceProviderException">DB への接続やシーケンスの取得に失敗した場合</exception>
     public async Task<IReadOnlyList<long>> GetNextValuesAsync(int count = 1)
     {
         if (count <= 0)

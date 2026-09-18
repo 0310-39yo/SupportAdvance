@@ -25,6 +25,12 @@ public class GetEmployeeByBizIdIntegrationUseCase
     private readonly IEmployeeQueryService _employeeQuery;
     private readonly IAppLogging<GetEmployeeByBizIdIntegrationUseCase> _logger;
 
+    /// <summary>
+    /// <see cref="GetEmployeeByBizIdIntegrationUseCase"/> クラスの新しいインスタンスの初期化
+    /// </summary>
+    /// <param name="employeeQuery">汎用層経由で従業員を検索する問い合わせサービス</param>
+    /// <param name="logger">ログの出力先</param>
+    /// <exception cref="ArgumentNullException">いずれかの引数が <see langword="null"/> の場合</exception>
     public GetEmployeeByBizIdIntegrationUseCase(
         IEmployeeQueryService employeeQuery,
         IAppLogging<GetEmployeeByBizIdIntegrationUseCase> logger)

@@ -114,14 +114,10 @@ public sealed class AbolishedOn : ValueObject, IEquatable<AbolishedOn>
         }
     }
 
-    /// <summary>
-    /// オブジェクト等価性を判定する
-    /// </summary>
+    /// <inheritdoc/>
     public override bool Equals(object? obj) => Equals(obj as AbolishedOn);
 
-    /// <summary>
-    /// AbolishedOn 間の等価性を判定する
-    /// </summary>
+    /// <inheritdoc/>
     public bool Equals(AbolishedOn? other)
     {
         if (other is null)
@@ -137,22 +133,19 @@ public sealed class AbolishedOn : ValueObject, IEquatable<AbolishedOn>
         return IsSet == other.IsSet && Value == other.Value;
     }
 
-    /// <summary>
-    /// ハッシュコードを取得する
-    /// </summary>
+    /// <inheritdoc/>
     public override int GetHashCode() => HashCode.Combine(IsSet, Value);
 
     /// <summary>
     /// 文字列表現を取得する
     /// </summary>
+    /// <returns>廃止日の文字列。未設定（廃止されていない）場合は <c>Not Abolished</c></returns>
     public override string ToString()
     {
         return IsSet ? Value.ToString() : "Not Abolished";
     }
 
-    /// <summary>
-    /// 等価性判定のための値コンポーネントを返す
-    /// </summary>
+    /// <inheritdoc/>
     protected override IEnumerable<object?> GetValueComponents()
     {
         yield return IsSet;

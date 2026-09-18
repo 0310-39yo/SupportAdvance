@@ -20,7 +20,7 @@
 7. [`<inheritdoc/>` の使い方](#7-inheritdoc-の使い方)
 8. [避けるべき書き方（実コードの例）](#8-避けるべき書き方実コードの例)
 9. [レビュー用チェックリスト](#9-レビュー用チェックリスト)
-10. [ビルド設定の推奨（未適用）](#10-ビルド設定の推奨未適用)
+10. [ビルド設定（適用済み）](#10-ビルド設定適用済み)
 
 ---
 
@@ -32,7 +32,7 @@
 | 2 | **名前を言い換えただけの文は書かない**。名前から分からないこと（意図・約束事・制約・根拠）を書く | `GetHashCode` に「ハッシュコードの取得」と書いても、読む人は何も新しく知ることができない |
 | 3 | **約束事（コントラクト）をはっきり書く**: null／Unset の意味、例外、副作用、時刻（JST）、単位、スレッド安全性 | 呼び出す人が実装を読まずに正しく使えるようにする。これがドキュメントコメントを書く最大の目的 |
 | 4 | **型名・メンバー名は `<see cref="..."/>` で参照する**（普通の文字列で書かない） | 名前を変更すると一緒に変わる。F12 で定義に移動できる。参照先がなければビルド警告（CS1574）で気づける。Identity BC → Authentication BC の名前変更のときのように、文字列で書いた名前は古いまま残ってしまう |
-| 5 | **正しい XML として書く**。`<` `>` `&` を地の文にそのまま書かない | XML として壊れたコメントは IntelliSense に**何も表示されない**。現在 7 か所で壊れている（→ [§8-1](#8-1-xml-として壊れている7-か所)） |
+| 5 | **正しい XML として書く**。`<` `>` `&` を地の文にそのまま書かない | XML として壊れたコメントは IntelliSense に**何も表示されない**。現在はビルドエラーで検出（→ [§10](#10-ビルド設定適用済み)） |
 
 ---
 
@@ -99,7 +99,7 @@ IntelliSense は `///` の改行を**すべて空白1つにまとめて**表示�
 | override／インターフェースの実装 | `<inheritdoc/>` を使う（→ [§7](#7-inheritdoc-の使い方)） ||||||||
 
 - ※1 プライマリコンストラクターの引数は、**型の** `<param>` に書く
-- ※2 1行形式 `/// <summary>…</summary>` で書いてよい
+- ※2 短い説明でも、`<summary>` は必ず 3 行形式（→ [§4-1](#4-1-体言止めに統一する)）
 - ※3 `void`／`Task` を返すメソッドには書かない
 - ※4 取りうる値の意味（null、Unset、空、単位）を書くときに使う。**プロパティには `<returns>` を使わない**
 
@@ -107,7 +107,7 @@ IntelliSense は `///` の改行を**すべて空白1つにまとめて**表示�
 
 | タグ | 用途 | このプロジェクトでのルール |
 |---|---|---|
-| `<summary>` | 要約 | 1〜2文。体言止め。最後の文に「。」なし |
+| `<summary>` | 要約 | 1〜2文。体言止め。最後の文に「。」なし。**必ず 3 行形式**（1 行形式は禁止） |
 | `<remarks>` | 詳しい説明 | `<para>【見出し】…</para>` の形で書く（→ [§5](#5-見出しで使う言葉プロジェクト固有)） |
 | `<param name="x">` | 引数の説明 | 型名を繰り返さない。**意味・単位・null のときの扱い**を書く |
 | `<typeparam name="T">` | 型引数の説明 | 制約の**理由**を書く |
@@ -155,7 +155,24 @@ IntelliSense は `///` の改行を**すべて空白1つにまとめて**表示�
 | 文が 2 つ以上あるときも、それぞれを体言止めにする | 在職中は Unset。null なし | 在職中は Unset。null にはならない |
 | 文の区切りには「。」を使う | 在職中は Unset。null なし | 在職中は Unset、null なし／在職中は Unset null なし |
 | 最後の文には「。」を付けない | 退職日（JST） | 退職日（JST）。 |
-| 1 行形式でも同じ | `/// <summary>退職日（JST）</summary>` | `/// <summary>退職日（JST）。</summary>` |
+| 最後の文に「。」なしは、1 文だけの場合も同じ | 退職日（JST） | 退職日（JST）。 |
+
+### `<summary>` は必ず 3 行形式
+
+`<summary>` は、中身が 1 行でも開始タグ・本文・終了タグをそれぞれ別の行に書く。1 行形式（`/// <summary>…</summary>`）は使わない。
+
+```csharp
+// ✅ 良い例
+/// <summary>
+/// ログイン中のユーザーのログインID
+/// </summary>
+
+// ❌ 悪い例
+/// <summary>ログイン中のユーザーのログインID</summary>
+```
+
+- 理由: 本文の追加・修正で差分が 1 行に収まり、すべての `<summary>` の見た目がそろうため
+- `<param>`／`<returns>`／`<value>`／`<exception>` などの他のタグは 1 行形式のままでよい
 
 - **無理に体言止めにしない**: 「〜ない」「〜できる」など、否定や可能を名詞にすると不自然になる場合は、「〜不可」「〜可能」「〜なし」を使う。
   - 例: 「null にはならない」→「null になることのない値」のような回りくどい形ではなく、「null なし」
@@ -411,12 +428,16 @@ public abstract class RepositoryBase<TEntity, TDbModel, TId>(
 [Table("t_xxx")]
 public class ［Name］DbModel
 {
-    /// <summary>ログアウト日時（JST）</summary>
+    /// <summary>
+    /// ログアウト日時（JST）
+    /// </summary>
     /// <value><see langword="null"/> の場合、ログアウト操作なしで終了したセッション（異常終了など）</value>
     [Column("logged_out_at")]
     public DateTime? LoggedOutAt { get; set; }
 
-    /// <summary>ローカル認証で使用した認証情報の行ID</summary>
+    /// <summary>
+    /// ローカル認証で使用した認証情報の行ID
+    /// </summary>
     /// <value>AD 認証の場合は <see langword="null"/></value>
     /// <remarks>【DB】FK → <c>m_login_credentials.row_id</c></remarks>
     [Column("login_credentials_row_id")]
@@ -435,7 +456,9 @@ public class ［Name］DbModel
 /// </remarks>
 public sealed class ［Name］Request
 {
-    /// <summary>ログインID</summary>
+    /// <summary>
+    /// ログインID
+    /// </summary>
     /// <value>必須。前後の空白を除いて 50 文字以内</value>
     public string LoginId { get; init; } = string.Empty;
 }
@@ -527,10 +550,14 @@ public const long UnknownUserEmployeeRowId = 2147483649;
 /// </remarks>
 public enum ［Name］
 {
-    /// <summary>ID とパスワードによるローカル認証</summary>
+    /// <summary>
+    /// ID とパスワードによるローカル認証
+    /// </summary>
     LocalAuth = 0,
 
-    /// <summary>Windows Active Directory 認証</summary>
+    /// <summary>
+    /// Windows Active Directory 認証
+    /// </summary>
     WindowsAD = 1,
 }
 ```
@@ -613,15 +640,21 @@ public static bool TryFromDbValue(DateTime? input, out UpdatedAt result)
 #### ファクトリーメソッド（From／Unset／FromDbValue／Reconstruct）
 
 ```csharp
-/// <summary>指定日時を持つ <see cref="UpdatedAt"/> の生成</summary>
+/// <summary>
+/// 指定日時を持つ <see cref="UpdatedAt"/> の生成
+/// </summary>
 /// <param name="value">更新日時（JST）。通常は <see cref="IClock.JstNow"/> から取得した値</param>
 /// <returns>設定済み（<see cref="HasUpdated"/> が <see langword="true"/>）のインスタンス</returns>
 /// <exception cref="ArgumentException"><paramref name="value"/> が <see cref="LocalDateTime.MinValue"/> または <see cref="LocalDateTime.MaxValue"/> の場合</exception>
 
-/// <summary>未更新の状態を表す <see cref="UpdatedAt"/> の生成</summary>
+/// <summary>
+/// 未更新の状態を表す <see cref="UpdatedAt"/> の生成
+/// </summary>
 /// <returns><see cref="HasUpdated"/> が <see langword="false"/> のインスタンス（<see langword="null"/> なし）</returns>
 
-/// <summary>DB から読み込んだ値による <see cref="Employee"/> の復元</summary>
+/// <summary>
+/// DB から読み込んだ値による <see cref="Employee"/> の復元
+/// </summary>
 /// <remarks>
 /// <para>【用途】Infrastructure 層のマッパーからの呼び出し専用。新規作成は <see cref="Create"/></para>
 /// <para>【注意】検証とドメインイベントの発行なし（保存済みの値を信頼）</para>
@@ -640,7 +673,9 @@ public override bool Equals(object? obj) => Equals(obj as UpdatedAt);
 public override int GetHashCode() => HashCode.Combine(ValueField, IsSet);
 
 // ToString は出力の形式に意味がある場合だけ、自分で書く
-/// <summary>デバッグ用の文字列表現</summary>
+/// <summary>
+/// デバッグ用の文字列表現
+/// </summary>
 /// <returns><c>Employee(RowId=…, TypeDivision=…, BizId=…)</c> 形式の文字列。画面表示やデータの解析には使用禁止</returns>
 public override string ToString()
 ```
@@ -648,15 +683,21 @@ public override string ToString()
 ### 6-15. プロパティ
 
 ```csharp
-/// <summary>退職日（JST）</summary>
+/// <summary>
+/// 退職日（JST）
+/// </summary>
 /// <value>在職中の場合は <see cref="RetiredOn.Unset"/>（<see langword="null"/> なし）</value>
 public RetiredOn RetiredOn { get; private set; }
 
-/// <summary>更新済みかどうかを示す値</summary>
+/// <summary>
+/// 更新済みかどうかを示す値
+/// </summary>
 /// <value>更新済みの場合は <see langword="true"/>。<see cref="ValueObject.IsSet"/> の、業務上の意味に合わせた別名</value>
 public bool HasUpdated => IsSet;
 
-/// <summary>この従業員の所属部署の一覧</summary>
+/// <summary>
+/// この従業員の所属部署の一覧
+/// </summary>
 /// <value>読み取り専用。所属なしの場合は空（<see langword="null"/> なし）</value>
 /// <remarks>
 /// <para>【注意】所属の終了日（<c>EndOn</c>）と雇用の終了日（<see cref="RetiredOn"/>）は別管理。
@@ -676,14 +717,20 @@ public IReadOnlyCollection<DepartmentMembership> DepartmentMemberships => _depar
 | `[ObservableProperty]` を付けたフィールド | **必ず書く**。生成されるプロパティにそのまま引き継がれ、画面にバインドするときに参照される |
 
 ```csharp
-/// <summary>保持している値。<see cref="ValueObject.IsSet"/> が <see langword="true"/> の場合のみ有効</summary>
+/// <summary>
+/// 保持している値。<see cref="ValueObject.IsSet"/> が <see langword="true"/> の場合のみ有効
+/// </summary>
 protected readonly TValue ValueField;
 
-/// <summary>ログインID の入力値</summary>
+/// <summary>
+/// ログインID の入力値
+/// </summary>
 [ObservableProperty]
 private string loginId = string.Empty;
 
-/// <summary>ログイン処理中かどうかを示す値。<see langword="true"/> の間は入力欄とボタンが無効</summary>
+/// <summary>
+/// ログイン処理中かどうかを示す値。<see langword="true"/> の間は入力欄とボタンが無効
+/// </summary>
 [ObservableProperty]
 private bool isLoading;
 ```
@@ -691,7 +738,9 @@ private bool isLoading;
 ### 6-17. イベント
 
 ```csharp
-/// <summary>ログイン成功時に発生するイベント</summary>
+/// <summary>
+/// ログイン成功時に発生するイベント
+/// </summary>
 /// <remarks>
 /// <para>【用途】View でのウィンドウを閉じる処理のきっかけ</para>
 /// <para>【スレッド安全性】UI スレッドで発生</para>
@@ -717,7 +766,9 @@ public async Task Login()
 ### 6-19. 演算子
 
 ```csharp
-/// <summary>2 つの <see cref="AuthMethod"/> が等しいかどうかの判定</summary>
+/// <summary>
+/// 2 つの <see cref="AuthMethod"/> が等しいかどうかの判定
+/// </summary>
 /// <param name="left">比較する 1 つ目の値</param>
 /// <param name="right">比較する 2 つ目の値</param>
 /// <returns>両方とも <see langword="null"/> の場合、または値が等しい場合は <see langword="true"/></returns>
@@ -768,6 +819,8 @@ public bool VerifyPassword(string plainPassword, string passwordHash)
 
 ### 8-1. XML として壊れている（7 か所）
 
+> 2026-09-18 に 7 か所とも修正済み。現在はビルドエラー（CS1570）で検出される。
+
 `Entity<TId>` や、Markdown のコードブロックの中の `IQueryService<IEmployee, EmployeeRowId>` が XML のタグと解釈され、**コメント全体が IntelliSense に表示されない**。
 
 | ファイル | 原因 |
@@ -790,6 +843,8 @@ public bool VerifyPassword(string plainPassword, string passwordHash)
 /// </summary>
 public string Division { get; }    // EmployeeRetiredEvent.cs:21
 ```
+
+> 2026-09-18 に修正済み（`従業員種別区分（参考情報）` に変更）。
 
 コメントが間違っていると、コメントがない場合よりも悪い結果になる。**実装を変えたら、コメントも同じコミットで直す。**
 
@@ -814,8 +869,8 @@ public override int GetHashCode()                    // UpdatedAt.cs:153
 | コンストラクターに `<returns>` を書いている | `UpdatedAt` の private コンストラクター | 削除する |
 | 空の `<param>` | `PrimitiveValueObject(bool isSet)` | 意味を書く |
 | 例外の条件を書いていない | `<exception cref="InvalidOperationException">認証失敗</exception>` | 「ログインID が存在しない場合、アカウントが無効な場合、またはパスワードが一致しない場合」 |
-| `throw` しているのに `<exception>` がない | `Employee.RetireEmployee`、`AddDepartmentMembership` | 書き足す |
-| 引数があるのに `<param>` がない | `Employee.RetireEmployee`、`RepositoryBase` のメソッド | 書き足す |
+| `throw` しているのに `<exception>` がない | `Employee.RetireEmployee`、`AddDepartmentMembership`（2026-09-18 修正済み） | 書き足す |
+| 引数があるのに `<param>` がない | `Employee.RetireEmployee`、`RepositoryBase` のメソッド（2026-09-18 修正済み） | 書き足す |
 
 ### 8-5. 値をそのまま書いている
 
@@ -826,7 +881,14 @@ public override int GetHashCode()                    // UpdatedAt.cs:153
 public const string DebugBuild = "Debug";
 ```
 
-→ `/// <summary><see cref="IAppSettings.ApplicationBuildType"/> における Debug ビルドを表す値</summary>`
+→ 次のように修正（2026-09-18 修正済み）
+
+```csharp
+/// <summary>
+/// <see cref="IAppSettings.ApplicationBuildType"/> における Debug ビルドを表す値
+/// </summary>
+public const string DebugBuild = "Debug";
+```
 
 ### 8-6. 文体が体言止めになっていない
 
@@ -841,7 +903,9 @@ public const string DebugBuild = "Debug";
 
 ### 8-7. コメントがない
 
-public なのにコメントがないもの: 型 8、メソッド 77、プロパティ・フィールド 20、定数 6。多いのは次のファイル。
+> 2026-09-18 にすべて追加済み（CS1591 は 0 件）。あわせて、コメントはあるが `<param>`／`<returns>`／`<exception>` が足りなかった約 260 件も補完済み。
+
+当時 public なのにコメントがなかったもの: 型 8、メソッド 77、プロパティ・フィールド 20、定数 6。多いのは次のファイル。
 `AuthMethod.cs`（11）、`BizId.cs`（8）、`BizCode.cs`（7）、`LoginId.cs`（6）、`FrameworkLoggingAdapter.cs`（6）、`RealCurrentUserService.cs`（WinTrial・WpfTrial とも 6）、`PasswordBoxAssistant.cs`（6）。
 型そのものにコメントがないもの: `IClock`、`AppSettings` など。
 
@@ -856,6 +920,7 @@ public なのにコメントがないもの: 型 8、メソッド 77、プロパ
 - [ ] 型名は `<see cref>`、`null`／`true`／`false` は `<see langword>` で書いている
 - [ ] 地の文に `<` `>` `&` をそのまま書いていない
 - [ ] **すべての文が体言止めで、文の区切りだけに「。」があり、最後の文には「。」がない**
+- [ ] `<summary>` はすべて 3 行形式（`/// <summary>` ／ 本文 ／ `/// </summary>`）
 
 **メソッド**
 - [ ] すべての引数に `<param>` がある（型名の繰り返しではなく、意味・単位・null の扱いを書いている）
@@ -872,12 +937,12 @@ public なのにコメントがないもの: 型 8、メソッド 77、プロパ
 
 ---
 
-## 10. ビルド設定の推奨（未適用）
+## 10. ビルド設定（適用済み）
 
-現在 `GenerateDocumentationFile` が有効なのは `SharedKernel.csproj` だけで、ほかのプロジェクトではコメントの間違い（壊れた XML、存在しない cref、引数名の間違い）が**ビルドで検出されない**。次の設定にすることを推奨する（**適用するには承認が必要。先に §8-1 の 7 か所を直すこと**）。
+2026-09-18 に `src/` 配下の全プロジェクトに適用済み。コメントの間違い（壊れた XML、存在しない cref、引数名の間違い）は**ビルドエラー**になる。
 
 ```xml
-<!-- src/Directory.Build.props に追加 -->
+<!-- src/Directory.Build.props -->
 <PropertyGroup>
   <GenerateDocumentationFile>true</GenerateDocumentationFile>
   <!-- コメントの間違いはエラーにする -->
@@ -895,6 +960,10 @@ public なのにコメントがないもの: 型 8、メソッド 77、プロパ
 | CS1591 | public なメンバーにコメントがない |
 | CS1734 | `<paramref>` の引数名が間違っている |
 
+> **注意**: `Directory.Build.props` は最も近い 1 つしか自動で読み込まれない。そのため `src/Contexts` と `src/Presentation` の `Directory.Build.props` は、先頭の `<Import>` で `src/Directory.Build.props` を取り込んでいる。新しく `src/` 配下に `Directory.Build.props` を作る場合も、同じ `<Import>` を入れること。
+>
+> CS1591（コメントなし）は警告のまま。新しい public メンバーにコメントを書き忘れると、ビルドの警告に出る。
+
 > `.editorconfig` の `resharper_xmldoc_*` の設定（子要素をインデントしない、`summary`／`remarks`／`para` などの前で改行する）は、このガイドのテンプレートと合っている。
 
 ---
@@ -903,6 +972,8 @@ public なのにコメントがないもの: 型 8、メソッド 77、プロパ
 
 | 日付 | 内容 |
 |---|---|
+| 2026-09-18 | `<summary>` は必ず 3 行形式とするルールを追加（§3-1・§3-2・§4-1・チェックリスト）。すべての例を 3 行形式に変更 |
+| 2026-09-18 | §8 の実例に修正済みの旨を追記。§10 のビルド設定を適用済みに変更（子の Directory.Build.props からの Import を追記） |
 | 2026-09-18 | 句点のルールを「文の区切りには「。」、最後の文には付けない」に決定。すべての例から最後の「。」を削除 |
 | 2026-09-18 | 文体を体言止めに統一。§4 を改訂し、すべてのテンプレートと実例を体言止めに変更。§8-6（文体の誤り例）とチェックリストの項目を追加 |
 | 2026-09-18 | 初版。既存コード（186 ファイル）の調査に基づいてルールとテンプレートを作成 |

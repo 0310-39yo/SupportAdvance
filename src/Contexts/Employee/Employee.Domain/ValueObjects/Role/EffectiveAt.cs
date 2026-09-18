@@ -11,7 +11,9 @@ namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Role;
 /// </summary>
 public sealed class EffectiveAt : ValueObject, IEquatable<EffectiveAt>
 {
-    /// <summary>有効開始日時（JST）</summary>
+    /// <summary>
+    /// 有効開始日時（JST）
+    /// </summary>
     public LocalDateTime Value { get; }
 
     /// <summary>
@@ -50,14 +52,10 @@ public sealed class EffectiveAt : ValueObject, IEquatable<EffectiveAt>
         }
     }
 
-    /// <summary>
-    /// 指定された EffectiveAt と等価かどうかを判定する
-    /// </summary>
+    /// <inheritdoc/>
     public override bool Equals(object? obj) => Equals(obj as EffectiveAt);
 
-    /// <summary>
-    /// 指定された EffectiveAt と等価かどうかを判定する
-    /// </summary>
+    /// <inheritdoc/>
     public bool Equals(EffectiveAt? other)
     {
         if (other is null)
@@ -68,19 +66,16 @@ public sealed class EffectiveAt : ValueObject, IEquatable<EffectiveAt>
         return Value == other.Value;
     }
 
-    /// <summary>
-    /// ハッシュコードを取得する
-    /// </summary>
+    /// <inheritdoc/>
     public override int GetHashCode() => Value.GetHashCode();
 
     /// <summary>
     /// 文字列表現を取得する
     /// </summary>
+    /// <returns>有効開始日時の文字列</returns>
     public override string ToString() => Value.ToString();
 
-    /// <summary>
-    /// 等価性判定のための値コンポーネントを返す
-    /// </summary>
+    /// <inheritdoc/>
     protected override IEnumerable<object?> GetValueComponents()
     {
         yield return Value;

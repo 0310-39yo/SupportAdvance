@@ -61,6 +61,12 @@ public sealed class PermissionAssignment : Entity<PermissionAssignmentRowId>
     /// <summary>
     /// 新しい PermissionAssignment を生成する（ファクトリメソッド）
     /// </summary>
+    /// <param name="assignmentRowId">権限割り当ての行ID</param>
+    /// <param name="employeeRowId">割り当て先の従業員の行ID</param>
+    /// <param name="permissionCode">権限コード</param>
+    /// <param name="effectiveDate">有効開始日時（JST）</param>
+    /// <param name="expirationDate">有効期限。<see langword="null"/> の場合は無期限（<see cref="ExpirationOn.Unlimited"/>）</param>
+    /// <returns>生成した権限割り当て</returns>
     public static PermissionAssignment Create(
         PermissionAssignmentRowId assignmentRowId,
         EmployeeRowId employeeRowId,
@@ -72,6 +78,12 @@ public sealed class PermissionAssignment : Entity<PermissionAssignmentRowId>
     /// <summary>
     /// DB から読み込んだ値から PermissionAssignment を復元する（ファクトリメソッド）
     /// </summary>
+    /// <param name="assignmentRowId">権限割り当ての行ID</param>
+    /// <param name="employeeRowId">割り当て先の従業員の行ID</param>
+    /// <param name="permissionCode">権限コード</param>
+    /// <param name="effectiveDate">有効開始日時（JST）</param>
+    /// <param name="expirationDate">有効期限（無期限の場合は <see cref="ExpirationOn.Unlimited"/>）</param>
+    /// <returns>復元した権限割り当て</returns>
     public static PermissionAssignment Reconstruct(
         PermissionAssignmentRowId assignmentRowId,
         EmployeeRowId employeeRowId,
@@ -106,6 +118,7 @@ public sealed class PermissionAssignment : Entity<PermissionAssignmentRowId>
     /// <summary>
     /// PermissionAssignment の文字列表現を取得する
     /// </summary>
+    /// <returns><c>PermissionAssignment(RowId=…, Code=…, Effective=…, Expiration=…)</c> 形式のデバッグ用文字列</returns>
     public override string ToString()
         =>
             $"PermissionAssignment(RowId={RowId.Value}, Code={PermissionCode}, Effective={EffectiveDate}, Expiration={ExpirationDate})";

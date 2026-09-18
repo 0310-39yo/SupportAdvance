@@ -11,13 +11,20 @@ namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.DepartmentMembers
 /// </summary>
 public sealed class EndOn : ValueObject, IEquatable<EndOn>
 {
-    /// <summary>終了日時（未設定時は null）</summary>
+    /// <summary>
+    /// 終了日時（未設定時は null）
+    /// </summary>
     public LocalDateTime? Value { get; }
 
-    /// <summary>終了が設定されているか（Value != null）</summary>
+    /// <summary>
+    /// 終了が設定されているか（Value != null）
+    /// </summary>
     public bool HasEnded => Value.HasValue;
 
-    /// <summary>無期限状態（Value == null）を生成する</summary>
+    /// <summary>
+    /// 無期限状態（Value == null）を生成する
+    /// </summary>
+    /// <returns>終了日が未設定（無期限）のインスタンス（<see langword="null"/> なし）</returns>
     public static EndOn Unset() => new(null);
 
     /// <summary>
@@ -62,14 +69,10 @@ public sealed class EndOn : ValueObject, IEquatable<EndOn>
         }
     }
 
-    /// <summary>
-    /// 指定された EndOn と等価かどうかを判定する
-    /// </summary>
+    /// <inheritdoc/>
     public override bool Equals(object? obj) => Equals(obj as EndOn);
 
-    /// <summary>
-    /// 指定された EndOn と等価かどうかを判定する
-    /// </summary>
+    /// <inheritdoc/>
     public bool Equals(EndOn? other)
     {
         if (other is null)
@@ -85,19 +88,16 @@ public sealed class EndOn : ValueObject, IEquatable<EndOn>
         return Value == other.Value;
     }
 
-    /// <summary>
-    /// ハッシュコードを取得する
-    /// </summary>
+    /// <inheritdoc/>
     public override int GetHashCode() => Value?.GetHashCode() ?? 0;
 
     /// <summary>
     /// 文字列表現を取得する
     /// </summary>
+    /// <returns>終了日の文字列。未設定の場合は <c>無期限</c></returns>
     public override string ToString() => Value?.ToString() ?? "無期限";
 
-    /// <summary>
-    /// 等価性判定のための値コンポーネントを返す
-    /// </summary>
+    /// <inheritdoc/>
     protected override IEnumerable<object?> GetValueComponents()
     {
         yield return Value;

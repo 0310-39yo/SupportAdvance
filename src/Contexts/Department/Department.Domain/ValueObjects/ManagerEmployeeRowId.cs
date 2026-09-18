@@ -113,14 +113,10 @@ public sealed class ManagerEmployeeRowId : RowId, IEquatable<ManagerEmployeeRowI
         }
     }
 
-    /// <summary>
-    /// オブジェクト等価性を判定する
-    /// </summary>
+    /// <inheritdoc/>
     public override bool Equals(object? obj) => Equals(obj as ManagerEmployeeRowId);
 
-    /// <summary>
-    /// ManagerEmployeeRowId 間の等価性を判定する
-    /// </summary>
+    /// <inheritdoc/>
     public bool Equals(ManagerEmployeeRowId? other)
     {
         if (other is null)
@@ -136,8 +132,6 @@ public sealed class ManagerEmployeeRowId : RowId, IEquatable<ManagerEmployeeRowI
         return IsSet == other.IsSet && Value == other.Value;
     }
 
-    /// <summary>
-    /// ハッシュコードを取得する
-    /// </summary>
+    /// <inheritdoc/>
     public override int GetHashCode() => Value.GetHashCode();
 }

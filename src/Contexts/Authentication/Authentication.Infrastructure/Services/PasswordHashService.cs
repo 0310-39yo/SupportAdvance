@@ -35,6 +35,9 @@ public sealed class PasswordHashService : IPasswordHashService
     /// 2. 入力パスワードを同じ Salt で PBKDF2 ハッシュ化
     /// 3. 生成されたハッシュ部分と DB のハッシュ部分を比較
     /// </summary>
+    /// <param name="plainPassword">入力されたパスワード（平文）</param>
+    /// <param name="passwordHash"><see cref="HashPassword"/> で生成した Base64 文字列（Salt 16 バイト + ハッシュ 32 バイト）</param>
+    /// <returns>一致した場合は <see langword="true"/>。不一致、いずれかが空、またはハッシュの形式が不正な場合は <see langword="false"/>（例外の送出なし）</returns>
     public bool VerifyPassword(string plainPassword, string passwordHash)
     {
         if (string.IsNullOrEmpty(plainPassword) || string.IsNullOrEmpty(passwordHash))
@@ -82,6 +85,10 @@ public sealed class PasswordHashService : IPasswordHashService
     /// <summary>
     /// パスワードをハッシュ化（PBKDF2+Salt）
     /// </summary>
+    /// <param name="plainPassword">ハッシュ化するパスワード（平文）</param>
+    /// <returns>ランダムな Salt（16 バイト）と PBKDF2-SHA256 のハッシュ（32 バイト）を連結した Base64 文字列。同じパスワードでも毎回異なる値</returns>
+    /// <exception cref="ArgumentException"><paramref name="plainPassword"/> が <see langword="null"/> または空文字の場合</exception>
+    /// <exception cref="InvalidOperationException">ハッシュ化の処理に失敗した場合</exception>
     public string HashPassword(string plainPassword)
     {
         if (string.IsNullOrEmpty(plainPassword))

@@ -104,6 +104,7 @@ public sealed class UserAuthSession : AggregateRoot<UserAuthSessionRowId>
     /// <param name="loginSuccess">認証成功/失敗</param>
     /// <param name="loggedInAt">ログイン操作日時</param>
     /// <param name="loginCredentialsRowId">ローカル認証時のマスター RowId（NULLable）</param>
+    /// <returns>ログアウト日時が未設定（<see langword="null"/>）の新しいセッション</returns>
     public static UserAuthSession Create(
         UserAuthSessionRowId id,
         AuthorityRowId authorityRowId,
@@ -127,6 +128,15 @@ public sealed class UserAuthSession : AggregateRoot<UserAuthSessionRowId>
     /// 【用途】Repository が DbModel から Domain Entity を構築時に使用
     /// 【重要】rowVersion は楽観ロック用（更新時に競合検出）。DB から取得した値をそのまま渡す
     /// </summary>
+    /// <param name="id">セッションの行ID</param>
+    /// <param name="authorityRowId">権限主体（従業員）の行ID</param>
+    /// <param name="isAdAuthenticated">AD 認証の場合は <see langword="true"/>、ローカル認証の場合は <see langword="false"/></param>
+    /// <param name="loginSuccess">認証に成功した場合は <see langword="true"/></param>
+    /// <param name="loggedInAt">ログイン操作日時（JST）</param>
+    /// <param name="loggedOutAt">ログアウト日時（JST）。<see langword="null"/> はログアウト操作なし</param>
+    /// <param name="loginCredentialsRowId">ローカル認証で使用した認証情報の行ID。AD 認証の場合は <see langword="null"/></param>
+    /// <param name="rowVersion">楽観ロック用の値。<see langword="null"/> の場合は設定なし</param>
+    /// <returns>復元したセッション</returns>
     public static UserAuthSession Reconstruct(
         UserAuthSessionRowId id,
         AuthorityRowId authorityRowId,

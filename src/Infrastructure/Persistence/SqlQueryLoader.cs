@@ -18,6 +18,11 @@ public class SqlQueryLoader
 {
     private readonly IAppSettings _appSettings;
 
+    /// <summary>
+    /// <see cref="SqlQueryLoader"/> クラスの新しいインスタンスの初期化
+    /// </summary>
+    /// <param name="appSettings">DB 方言（<c>Database.Dialect</c>）の取得元</param>
+    /// <exception cref="ArgumentNullException"><paramref name="appSettings"/> が <see langword="null"/> の場合</exception>
     public SqlQueryLoader(IAppSettings appSettings)
     {
         _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
@@ -30,6 +35,12 @@ public class SqlQueryLoader
     /// <param name="repositoryType">Repository の Type（リソース検索用）</param>
     /// <returns>SQL クエリ文字列</returns>
     /// <exception cref="FileNotFoundException">SQL ファイルが見つからない場合</exception>
+    /// <exception cref="ArgumentException"><paramref name="queryPath"/> が <see langword="null"/>・空文字の場合、または <c>分類.クエリ名</c> の形式でない場合</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="repositoryType"/> が <see langword="null"/> の場合</exception>
+    /// <exception cref="InvalidOperationException"><paramref name="repositoryType"/> の名前空間を取得できない場合</exception>
+    /// <remarks>
+    /// <para>【検索場所】<paramref name="repositoryType"/> のアセンブリの埋め込みリソース <c>{Context}.Persistence.Sql.{方言}.{分類}.{クエリ名}.sql</c></para>
+    /// </remarks>
     public string LoadQuery(string queryPath, Type repositoryType)
     {
         ArgumentException.ThrowIfNullOrEmpty(queryPath, nameof(queryPath));
@@ -85,6 +96,7 @@ public class SqlQueryLoader
     /// <summary>
     /// 現在の DB方言を取得
     /// </summary>
+    /// <returns>設定の <c>Database.Dialect</c>。未設定の場合は <c>SqlServer</c></returns>
     public string GetCurrentDialect()
     {
         return _appSettings.Database.Dialect ?? "SqlServer";

@@ -85,14 +85,10 @@ public sealed class LoginCredentialsRowId : RowId, IEquatable<LoginCredentialsRo
     /// <returns>数値文字列</returns>
     public override string ToString() => Value.ToString();
 
-    /// <summary>
-    /// 指定されたオブジェクトと等価かどうかを判定する
-    /// </summary>
+    /// <inheritdoc/>
     public override bool Equals(object? obj) => Equals(obj as LoginCredentialsRowId);
 
-    /// <summary>
-    /// 指定された LoginCredentialsRowId と等価かどうかを判定する
-    /// </summary>
+    /// <inheritdoc/>
     public bool Equals(LoginCredentialsRowId? other)
     {
         if (other is null)
@@ -104,14 +100,14 @@ public sealed class LoginCredentialsRowId : RowId, IEquatable<LoginCredentialsRo
         return Value == other.Value;
     }
 
-    /// <summary>
-    /// ハッシュコードを取得する
-    /// </summary>
+    /// <inheritdoc/>
     public override int GetHashCode() => Value.GetHashCode();
 
     /// <summary>
     /// ログイン認証情報マスター行IDが有効か検証する
     /// </summary>
+    /// <param name="normalized">検証する行ID</param>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="normalized"/> が <see cref="MinValue"/> 未満の場合</exception>
     public override void Validate(long normalized)
     {
         if (normalized < MinValue)

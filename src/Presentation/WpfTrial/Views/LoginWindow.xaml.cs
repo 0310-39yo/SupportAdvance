@@ -17,6 +17,11 @@ public partial class LoginWindow : Window
 {
     private readonly LoginWindowViewModel _viewModel;
 
+    /// <summary>
+    /// <see cref="LoginWindow"/> クラスの新しいインスタンスの初期化
+    /// </summary>
+    /// <param name="viewModel">DataContext に設定する ViewModel</param>
+    /// <exception cref="ArgumentNullException"><paramref name="viewModel"/> が <see langword="null"/> の場合</exception>
     public LoginWindow(LoginWindowViewModel viewModel)
     {
         ArgumentNullException.ThrowIfNull(viewModel);

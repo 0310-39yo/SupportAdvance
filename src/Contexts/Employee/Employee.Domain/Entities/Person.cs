@@ -59,6 +59,12 @@ public sealed class Person : Entity<PersonRowId>
     /// <summary>
     /// 新しい Person を生成する（ファクトリメソッド）
     /// </summary>
+    /// <param name="personRowId">採番済みの人物の行ID</param>
+    /// <param name="lastName">姓</param>
+    /// <param name="firstName">名</param>
+    /// <param name="lastNameKana">姓（カナ）</param>
+    /// <param name="firstNameKana">名（カナ）</param>
+    /// <returns>生成した人物（<c>RowVersion</c> は空）</returns>
     public static Person Create(
         PersonRowId personRowId,
         LastName lastName,
@@ -72,6 +78,13 @@ public sealed class Person : Entity<PersonRowId>
     /// 【責務】DB の プリミティブ型 → Domain Entity に変換
     /// 【パラメータ】rowVersion は楽観ロック用（更新時に競合検出）
     /// </summary>
+    /// <param name="personRowId">人物の行ID</param>
+    /// <param name="lastName">姓</param>
+    /// <param name="firstName">名</param>
+    /// <param name="lastNameKana">姓（カナ）</param>
+    /// <param name="firstNameKana">名（カナ）</param>
+    /// <param name="rowVersion">楽観ロック用の値。<see langword="null"/> の場合は設定なし</param>
+    /// <returns>復元した人物</returns>
     public static Person Reconstruct(
         PersonRowId personRowId,
         LastName lastName,
@@ -92,11 +105,13 @@ public sealed class Person : Entity<PersonRowId>
     /// <summary>
     /// 氏名の完全な表記を取得する（姓 名）
     /// </summary>
+    /// <returns>姓と名を半角スペースでつないだ文字列（例: <c>山田 太郎</c>）</returns>
     public string GetFullName() => $"{LastName.Value} {FirstName.Value}";
 
     /// <summary>
     /// 氏名のカナ表記を取得する（姓カナ 名カナ）
     /// </summary>
+    /// <returns>姓（カナ）と名（カナ）を半角スペースでつないだ文字列</returns>
     public string GetFullNameKana() => $"{LastNameKana.Value} {FirstNameKana.Value}";
 
     /// <summary>
@@ -105,6 +120,7 @@ public sealed class Person : Entity<PersonRowId>
     /// 【呼び出し元】Application層の Use Case（例：UpdateEmployeeNameUseCase）
     /// 【DB永続化】Employee.Repository.SaveAsync() で集約全体を保存時に反映
     /// </summary>
+    /// <param name="lastName">新しい姓</param>
     public void UpdateLastName(LastName lastName)
     {
         LastName = lastName;
@@ -116,6 +132,7 @@ public sealed class Person : Entity<PersonRowId>
     /// 【呼び出し元】Application層の Use Case
     /// 【DB永続化】Employee.Repository.SaveAsync() で集約全体を保存時に反映
     /// </summary>
+    /// <param name="firstName">新しい名</param>
     public void UpdateFirstName(FirstName firstName)
     {
         FirstName = firstName;
@@ -127,6 +144,7 @@ public sealed class Person : Entity<PersonRowId>
     /// 【呼び出し元】Application層の Use Case
     /// 【DB永続化】Employee.Repository.SaveAsync() で集約全体を保存時に反映
     /// </summary>
+    /// <param name="lastNameKana">新しい姓（カナ）</param>
     public void UpdateLastNameKana(LastNameKana lastNameKana)
     {
         LastNameKana = lastNameKana;
@@ -138,6 +156,7 @@ public sealed class Person : Entity<PersonRowId>
     /// 【呼び出し元】Application層の Use Case
     /// 【DB永続化】Employee.Repository.SaveAsync() で集約全体を保存時に反映
     /// </summary>
+    /// <param name="firstNameKana">新しい名（カナ）</param>
     public void UpdateFirstNameKana(FirstNameKana firstNameKana)
     {
         FirstNameKana = firstNameKana;
@@ -146,6 +165,7 @@ public sealed class Person : Entity<PersonRowId>
     /// <summary>
     /// Person の文字列表現を取得する
     /// </summary>
+    /// <returns><c>Person(RowId=…, Name=…)</c> 形式のデバッグ用文字列</returns>
     public override string ToString()
         => $"Person(RowId={RowId.Value}, Name={GetFullName()})";
 }

@@ -21,6 +21,9 @@ public static class HostBuilderFactory
     /// <param name="configureServices">サービス構成アクション</param>
     /// <param name="loggingExtra">追加ロギング構成アクション</param>
     /// <returns>IHostBuilderインスタンス</returns>
+    /// <remarks>
+    /// <para>【注意】構成に <c>AppSettings</c> セクションがない場合、返したビルダーの <c>Build()</c> 時に <see cref="InvalidOperationException"/></para>
+    /// </remarks>
     public static IHostBuilder Create(string? environmentName = null,
         Action<HostBuilderContext, IServiceCollection>? configureServices = null,
         Action<ILoggingBuilder>? loggingExtra = null)

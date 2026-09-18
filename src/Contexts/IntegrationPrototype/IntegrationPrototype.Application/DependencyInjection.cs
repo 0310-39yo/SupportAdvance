@@ -11,6 +11,9 @@ public static class DependencyInjection
     /// <summary>
     /// IntegrationPrototype Context の Use Cases を DI に登録
     /// </summary>
+    /// <param name="services">登録先のサービスコレクション</param>
+    /// <returns>メソッドチェーン用の <paramref name="services"/> 自身</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="services"/> が <see langword="null"/> の場合</exception>
     public static IServiceCollection AddIntegrationPrototypeApplicationModels(
         this IServiceCollection services)
     {

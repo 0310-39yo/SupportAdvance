@@ -87,14 +87,10 @@ public sealed class AuthorityRowId : RowId, IEquatable<AuthorityRowId>
     /// <returns>数値文字列</returns>
     public override string ToString() => Value.ToString();
 
-    /// <summary>
-    /// 指定されたオブジェクトと等価かどうかを判定する
-    /// </summary>
+    /// <inheritdoc/>
     public override bool Equals(object? obj) => Equals(obj as AuthorityRowId);
 
-    /// <summary>
-    /// 指定された AuthorityRowId と等価かどうかを判定する
-    /// </summary>
+    /// <inheritdoc/>
     public bool Equals(AuthorityRowId? other)
     {
         if (other is null)
@@ -106,14 +102,14 @@ public sealed class AuthorityRowId : RowId, IEquatable<AuthorityRowId>
         return Value == other.Value;
     }
 
-    /// <summary>
-    /// ハッシュコードを取得する
-    /// </summary>
+    /// <inheritdoc/>
     public override int GetHashCode() => Value.GetHashCode();
 
     /// <summary>
     /// 権限主体行IDが有効か検証する
     /// </summary>
+    /// <param name="normalized">検証する行ID</param>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="normalized"/> が <see cref="MinValue"/> 未満の場合</exception>
     public override void Validate(long normalized)
     {
         if (normalized < MinValue)

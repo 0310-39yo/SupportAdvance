@@ -51,6 +51,7 @@ public sealed class DeletedAt : PrimitiveValueObject<LocalDateTime?>, IEquatable
     /// 【責務】Mapper で Entity → DbModel への変換時に使用
     /// </summary>
     /// <returns>内部保持の LocalDateTime から DateTime を抽出（IsDeleted=true の場合のみ有効）</returns>
+    /// <exception cref="InvalidOperationException">未削除（<see cref="IsDeleted"/> が <see langword="false"/>）の場合</exception>
     public DateTime ToDbValue() => IsSet && ValueField.HasValue ? ValueField.Value.Value : throw new InvalidOperationException("DeletedAt is not set.");
 
     /// <summary>

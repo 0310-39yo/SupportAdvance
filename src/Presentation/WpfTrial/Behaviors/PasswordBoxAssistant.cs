@@ -24,6 +24,13 @@ namespace SupportAdvance.Presentation.WpfTrial.Behaviors;
 /// </summary>
 public static class PasswordBoxAssistant
 {
+    /// <summary>
+    /// <c>BoundPassword</c> 添付プロパティの識別子（<see cref="PasswordBox.Password"/> と双方向に同期する文字列）
+    /// </summary>
+    /// <remarks>
+    /// <para>【事前条件】同期には <c>Attach="True"</c> の指定が必要</para>
+    /// <para>【注意】既定で双方向バインド（<see cref="FrameworkPropertyMetadataOptions.BindsTwoWayByDefault"/>）</para>
+    /// </remarks>
     public static readonly DependencyProperty BoundPasswordProperty =
         DependencyProperty.RegisterAttached(
             "BoundPassword",
@@ -31,6 +38,12 @@ public static class PasswordBoxAssistant
             typeof(PasswordBoxAssistant),
             new FrameworkPropertyMetadata(string.Empty, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, OnBoundPasswordChanged));
 
+    /// <summary>
+    /// <c>Attach</c> 添付プロパティの識別子（<see langword="true"/> で <see cref="PasswordBox.PasswordChanged"/> の購読を開始）
+    /// </summary>
+    /// <remarks>
+    /// <para>【設計】購読の開始を <c>BoundPassword</c> の初期値と切り離すための専用プロパティ（詳細は型の説明）</para>
+    /// </remarks>
     public static readonly DependencyProperty AttachProperty =
         DependencyProperty.RegisterAttached(
             "Attach",
@@ -41,16 +54,39 @@ public static class PasswordBoxAssistant
     private static readonly DependencyProperty IsUpdatingProperty =
         DependencyProperty.RegisterAttached("IsUpdating", typeof(bool), typeof(PasswordBoxAssistant));
 
+    /// <summary>
+    /// <c>BoundPassword</c> 添付プロパティの値の取得
+    /// </summary>
+    /// <param name="dp">対象の要素（通常は <see cref="PasswordBox"/>）</param>
+    /// <returns>現在のパスワード文字列</returns>
     public static string GetBoundPassword(DependencyObject dp) => (string)dp.GetValue(BoundPasswordProperty);
 
+    /// <summary>
+    /// <c>BoundPassword</c> 添付プロパティの値の設定
+    /// </summary>
+    /// <param name="dp">対象の要素（通常は <see cref="PasswordBox"/>）</param>
+    /// <param name="value">設定するパスワード文字列</param>
+    /// <remarks>
+    /// <para>【重要】バインディングを切断しないよう <see cref="DependencyObject.SetCurrentValue"/> で設定</para>
+    /// </remarks>
     // SetValue ではなく SetCurrentValue を使う。
     // SetValue はバインディングをローカル値で上書きして切断してしまうため、
     // PasswordChanged イベントごとに呼ぶとバインディングが失われ、
     // ViewModel.Password が更新されなくなる。
     public static void SetBoundPassword(DependencyObject dp, string value) => dp.SetCurrentValue(BoundPasswordProperty, value);
 
+    /// <summary>
+    /// <c>Attach</c> 添付プロパティの値の取得
+    /// </summary>
+    /// <param name="dp">対象の要素</param>
+    /// <returns>同期が有効な場合は <see langword="true"/></returns>
     public static bool GetAttach(DependencyObject dp) => (bool)dp.GetValue(AttachProperty);
 
+    /// <summary>
+    /// <c>Attach</c> 添付プロパティの値の設定
+    /// </summary>
+    /// <param name="dp">対象の要素（<see cref="PasswordBox"/> 以外の場合、値は設定されるが同期なし）</param>
+    /// <param name="value"><see langword="true"/> で同期の開始、<see langword="false"/> で同期の停止</param>
     public static void SetAttach(DependencyObject dp, bool value) => dp.SetValue(AttachProperty, value);
 
     private static bool GetIsUpdating(DependencyObject dp) => (bool)dp.GetValue(IsUpdatingProperty);

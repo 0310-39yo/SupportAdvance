@@ -12,6 +12,8 @@ public static class EmployeeExtensions
     /// Employee Entity を EmployeeDto に変換
     /// 【責務】部署名をカンマ区切りで連結（主部署を先頭に）
     /// </summary>
+    /// <param name="entity">変換する従業員</param>
+    /// <returns>変換した DTO。<c>DepartmentNames</c> は主所属を先頭にしたカンマ区切り（所属なしの場合は空文字）</returns>
     public static EmployeeDto ToDto(this Employee entity)
     {
         // DepartmentMembership から部署名を取得（主部署を先頭に）

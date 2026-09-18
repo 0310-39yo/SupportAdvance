@@ -22,6 +22,11 @@ public class EmployeeMapper
 {
     private readonly IClock _clock;
 
+    /// <summary>
+    /// <see cref="EmployeeMapper"/> クラスの新しいインスタンスの初期化
+    /// </summary>
+    /// <param name="clock">復元する <c>Employee</c> に渡す時計（ドメインイベントの日時取得用）</param>
+    /// <exception cref="ArgumentNullException"><paramref name="clock"/> が <see langword="null"/> の場合</exception>
     public EmployeeMapper(IClock clock)
     {
         _clock = clock ?? throw new ArgumentNullException(nameof(clock));
@@ -35,6 +40,12 @@ public class EmployeeMapper
     ///   - personDbModel: m_persons テーブルのデータ（1:1 対応）
     ///   - departmentMemberships: m_department_memberships テーブルのデータ（1:N 対応）
     /// </summary>
+    /// <param name="dbModel"><c>m_employees</c> の行</param>
+    /// <param name="personDbModel"><c>m_persons</c> の行（1:1）</param>
+    /// <param name="departmentMemberships"><c>m_department_memberships</c> の行（1:N）。<see langword="null"/> の場合は所属なし</param>
+    /// <returns>復元した従業員集約</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="dbModel"/> または <paramref name="personDbModel"/> が <see langword="null"/> の場合</exception>
+    /// <exception cref="ArgumentException">DB の値が値オブジェクトの検証に通らない場合（DB の整合性エラー。<see cref="ArgumentOutOfRangeException"/> を含む）</exception>
     public Employee ToDomainEntity(
         EmployeeDbModel dbModel,
         PersonDbModel personDbModel,
@@ -97,6 +108,8 @@ public class EmployeeMapper
     /// 【責務】Domain の ValueObject → DB の プリミティブ型に変換
     /// 【注意】監査フィールド（UpdatedAt/UpdatedBy）は Repository で設定
     /// </summary>
+    /// <param name="entity">変換する従業員</param>
+    /// <returns><c>m_employees</c> の業務データのみ設定した DB モデル（監査列は未設定）</returns>
     public EmployeeDbModel ToDbModel(Employee entity) =>
         new()
         {
@@ -111,6 +124,9 @@ public class EmployeeMapper
     /// 【責務】Employee.Person → PersonDbModel への変換
     /// 【呼び出し元】Repository の SaveAsync メソッド
     /// </summary>
+    /// <param name="person">変換する人物</param>
+    /// <param name="employeeRowId">紐づく従業員の行ID（<c>employee_row_id</c>）</param>
+    /// <returns><c>m_persons</c> の業務データのみ設定した DB モデル（監査列は未設定）</returns>
     public PersonDbModel ToPersonDbModel(Person person, long employeeRowId) =>
         PersonMapper.ToDbModel(person, employeeRowId);
 
@@ -119,6 +135,8 @@ public class EmployeeMapper
     /// 【責務】DepartmentMembership → DepartmentMembershipDbModel への変換
     /// 【呼び出し元】Repository の AddAsync メソッド
     /// </summary>
+    /// <param name="membership">変換する部署メンバーシップ</param>
+    /// <returns><c>m_department_memberships</c> の業務データのみ設定した DB モデル（監査列は未設定）</returns>
     public DepartmentMembershipDbModel ToDepartmentMembershipDbModel(DepartmentMembership membership) =>
         new()
         {

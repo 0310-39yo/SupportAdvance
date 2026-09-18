@@ -16,6 +16,13 @@ public partial class MainWindow : Window
 {
     private readonly IAppLogging<MainWindow> _logger;
 
+    /// <summary>
+    /// <see cref="MainWindow"/> クラスの新しいインスタンスの初期化
+    /// </summary>
+    /// <param name="viewModel">DataContext に設定する ViewModel</param>
+    /// <param name="logger">ログの出力先</param>
+    /// <param name="settings">アプリケーション設定（ビルド種別のログ出力用）</param>
+    /// <exception cref="ArgumentNullException">いずれかの引数が <see langword="null"/> の場合</exception>
     public MainWindow(MainWindowViewModel viewModel, IAppLogging<MainWindow> logger, IAppSettings settings)
     {
         ArgumentNullException.ThrowIfNull(viewModel);

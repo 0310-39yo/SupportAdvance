@@ -19,6 +19,10 @@ public static class PersonMapper
     /// DbModel から Domain Entity に変換（読み込み用）
     /// 【責務】DB の プリミティブ型 → Domain の ValueObject に変換
     /// </summary>
+    /// <param name="dbModel"><c>m_persons</c> の行</param>
+    /// <returns>復元した人物</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="dbModel"/> が <see langword="null"/> の場合</exception>
+    /// <exception cref="ArgumentException">DB の値が値オブジェクトの検証に通らない場合（DB の整合性エラー。<see cref="ArgumentOutOfRangeException"/> を含む）</exception>
     public static Person ToDomainEntity(PersonDbModel dbModel)
     {
         ArgumentNullException.ThrowIfNull(dbModel);
@@ -38,6 +42,10 @@ public static class PersonMapper
     /// 【責務】Domain の ValueObject → DB の プリミティブ型に変換
     /// 【パラメータ】employeeRowId は 1:1 リンク用（employee_row_id FK）
     /// </summary>
+    /// <param name="entity">変換する人物</param>
+    /// <param name="employeeRowId">紐づく従業員の行ID（<c>employee_row_id</c>）</param>
+    /// <returns>業務データのみ設定した DB モデル（監査列は未設定）</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="entity"/> が <see langword="null"/> の場合</exception>
     public static PersonDbModel ToDbModel(Person entity, long employeeRowId)
     {
         ArgumentNullException.ThrowIfNull(entity);

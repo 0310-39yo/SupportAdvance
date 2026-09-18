@@ -113,14 +113,10 @@ public sealed class ParentDepartmentRowId : RowId, IEquatable<ParentDepartmentRo
         }
     }
 
-    /// <summary>
-    /// オブジェクト等価性を判定する
-    /// </summary>
+    /// <inheritdoc/>
     public override bool Equals(object? obj) => Equals(obj as ParentDepartmentRowId);
 
-    /// <summary>
-    /// ParentDepartmentRowId 間の等価性を判定する
-    /// </summary>
+    /// <inheritdoc/>
     public bool Equals(ParentDepartmentRowId? other)
     {
         if (other is null)
@@ -136,8 +132,6 @@ public sealed class ParentDepartmentRowId : RowId, IEquatable<ParentDepartmentRo
         return IsSet == other.IsSet && Value == other.Value;
     }
 
-    /// <summary>
-    /// ハッシュコードを取得する
-    /// </summary>
+    /// <inheritdoc/>
     public override int GetHashCode() => Value.GetHashCode();
 }

@@ -114,11 +114,7 @@ public sealed class EmployeeRowId : RowId, IEquatable<EmployeeRowId>
         return Value == other.Value;
     }
 
-    /// <summary>
-    /// ハッシュコードを取得する
-    /// 【責務】オブジェクトのハッシュコードを取得する
-    /// </summary>
-    /// <returns>オブジェクトのハッシュコード</returns>
+    /// <inheritdoc/>
     public override int GetHashCode() => Value.GetHashCode();
 
     /// <summary>

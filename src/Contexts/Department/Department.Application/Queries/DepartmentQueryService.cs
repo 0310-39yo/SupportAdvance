@@ -24,6 +24,7 @@ public class DepartmentQueryService : IQueryService<Department, DepartmentRowId>
     /// コンストラクタ
     /// </summary>
     /// <param name="repository">部署リポジトリ</param>
+    /// <exception cref="ArgumentNullException"><paramref name="repository"/> が <see langword="null"/> の場合</exception>
     public DepartmentQueryService(IDepartmentRepository repository)
     {
         ArgumentNullException.ThrowIfNull(repository);
@@ -35,6 +36,7 @@ public class DepartmentQueryService : IQueryService<Department, DepartmentRowId>
     /// </summary>
     /// <param name="id">部署行ID</param>
     /// <returns>部署（存在しない場合は null）</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="id"/> が <see langword="null"/> の場合</exception>
     public async Task<Department?> GetByIdAsync(DepartmentRowId id)
     {
         ArgumentNullException.ThrowIfNull(id);

@@ -1,27 +1,23 @@
 namespace SupportAdvance.Application.Queries;
 
 /// <summary>
-/// Employee 専用 Query Service インターフェース（汎用層）
-///
-/// 【責務】Employee Context の Query Service 契約を定義
-/// 【用途】他の Bounded Context が Employee を取得する際に使用
-/// 【特徴】汎用層に定義により、BC間の直接参照を回避
-///
-/// 【実装】Employee Context の EmployeeQueryService が実装
-///
-/// 【利用例】
-/// ```csharp
+/// 他の Bounded Context から従業員を読み取るための、Employee 専用の問い合わせサービス（汎用層）
+/// </summary>
+/// <remarks>
+/// <para>【設計】汎用層での定義による、BC 間の直接参照の回避。戻り値は Domain の型ではなく <see cref="IEmployeeQueryResult"/></para>
+/// <para>【実装】Employee Context の <c>EmployeeQueryService</c></para>
+/// </remarks>
+/// <example>
+/// <code>
 /// public class GetEmployeeByBizIdIntegrationUseCase
 /// {
 ///     private readonly IEmployeeQueryService _employeeQuery;
 ///
-///     public async Task<IEmployeeQueryResult?> ExecuteAsync(int bizId)
-///     {
-///         return await _employeeQuery.GetByBizIdAsync(bizId);
-///     }
+///     public async Task&lt;IEmployeeQueryResult?&gt; ExecuteAsync(int bizId)
+///         =&gt; await _employeeQuery.GetByBizIdAsync(bizId);
 /// }
-/// ```
-/// </summary>
+/// </code>
+/// </example>
 public interface IEmployeeQueryService
 {
     /// <summary>

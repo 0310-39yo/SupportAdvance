@@ -160,28 +160,21 @@ public readonly struct LocalDateTime : IComparable<LocalDateTime>, IEquatable<Lo
     /// </summary>
     public static bool operator <=(LocalDateTime left, LocalDateTime right) => left.Value <= right.Value;
 
-    /// <summary>
-    /// このインスタンスと指定したオブジェクトが等しいかどうかを判定します
-    /// </summary>
+    /// <inheritdoc/>
     public override bool Equals(object? obj) => obj is LocalDateTime other && Equals(other);
 
-    /// <summary>
-    /// このインスタンスと指定した LocalDateTime が等しいかどうかを判定します
-    /// </summary>
+    /// <inheritdoc/>
     public bool Equals(LocalDateTime other) => Value == other.Value;
 
-    /// <summary>
-    /// このインスタンスのハッシュコードを取得します
-    /// </summary>
+    /// <inheritdoc/>
     public override int GetHashCode() => Value.GetHashCode();
 
     /// <summary>
     /// このインスタンスの文字列表現を取得します
     /// </summary>
+    /// <returns><c>yyyy-MM-dd HH:mm:ss</c> 形式の文字列（JST）</returns>
     public override string ToString() => Value.ToString("yyyy-MM-dd HH:mm:ss");
 
-    /// <summary>
-    /// このインスタンスと指定した LocalDateTime を比較します
-    /// </summary>
+    /// <inheritdoc/>
     public int CompareTo(LocalDateTime other) => Value.CompareTo(other.Value);
 }
