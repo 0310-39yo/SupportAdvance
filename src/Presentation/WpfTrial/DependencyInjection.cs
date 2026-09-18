@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using SupportAdvance.Presentation.Shared.ViewModels;
 using SupportAdvance.Presentation.WpfTrial.ViewModels;
 using SupportAdvance.Presentation.WpfTrial.Views;
 
@@ -22,6 +23,9 @@ public static class DependencyInjection
         // ViewModels（Window に ViewModel を DI する）
         services.AddScoped<MainWindowViewModel>();
         services.AddScoped<LoginWindowViewModel>();
+
+        // 業務日クロックの操作パネル（Presentation.Shared の共通 ViewModel）
+        services.AddScoped<BusinessDayClockViewModel>();
 
         // Views（Window を DI コンテナから解決する）
         services.AddScoped<MainWindow>();

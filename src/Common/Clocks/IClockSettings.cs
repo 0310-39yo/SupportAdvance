@@ -18,7 +18,7 @@ public interface IClockSettings
     int TickIntervalSeconds { get; init; }
 
     /// <summary>
-    /// クロックタイプ（"System"、"Ticking"、または "Offset"）
+    /// クロックタイプ（"System"、"Ticking"、"Offset"、または "BusinessDay"）
     /// </summary>
     string? ClockType { get; init; }
 
@@ -28,4 +28,16 @@ public interface IClockSettings
     /// ClockType が "Offset" の場合に使用
     /// </summary>
     string? OffsetDateTime { get; init; }
+
+    /// <summary>
+    /// BusinessDayClock の基点日（<c>yyyy-MM-dd</c> 形式）
+    /// </summary>
+    /// <value>一番最初の ON で始まる業務日。ClockType が "BusinessDay" の場合は必須</value>
+    string? BusinessDayStartDate { get; init; }
+
+    /// <summary>
+    /// BusinessDayClock の状態ファイルのパス
+    /// </summary>
+    /// <value><see langword="null"/> の場合は <see cref="BusinessDayClock.DefaultStateFilePath"/></value>
+    string? BusinessDayStateFilePath { get; init; }
 }

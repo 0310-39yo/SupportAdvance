@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using SupportAdvance.Application;
+using SupportAdvance.Common.Clocks;
 using SupportAdvance.Common.Configuration;
 using SupportAdvance.Contexts.Authentication.Application;
 using SupportAdvance.Contexts.Authentication.Infrastructure;
@@ -58,6 +59,11 @@ internal static class Program
 
         host.Start();
 
+        // 業務日クロック（ClockType=BusinessDay）の場合のみ、起動を業務日の開始とする（それ以外は未登録で何もしない）
+        var businessDayClock =
+            ServiceProviderServiceExtensions.GetService<IBusinessDayClockControl>(host.Services);
+        businessDayClock?.TurnOn();
+
         using var scope = host.Services.CreateScope();
         var loginDialog = ServiceProviderServiceExtensions.GetRequiredService<LoginDialog>(scope.ServiceProvider);
         var dialogResult = loginDialog.ShowDialog();
@@ -70,6 +76,9 @@ internal static class Program
             System.Windows.Forms.Application.Run(mainForm);
         }
         // ログインキャンセル時はアプリを終了
+
+        // 業務日クロックの場合のみ、終了を業務日の終了とする
+        businessDayClock?.TurnOff();
 
         host.StopAsync().GetAwaiter().GetResult();
     }

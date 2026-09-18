@@ -5,14 +5,18 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SupportAdvance.Presentation.WpfTrial.Views"
         mc:Ignorable="d"
-        Title="WpfTrial" Height="302" Width="484"
+        Title="WpfTrial" Height="380" Width="484"
         WindowStartupLocation="CenterScreen">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+    </Window.Resources>
     <Grid Margin="12">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <Button Grid.Row="0"
@@ -39,5 +43,43 @@
         <TextBlock Grid.Row="2"
                    Text="{Binding DepartmentNames}"
                    Margin="0,16,0,0" />
+
+        <!-- 業務日クロックの操作パネル（ClockType が BusinessDay の場合のみ表示） -->
+        <GroupBox Grid.Row="4"
+                  Header="業務日クロック（検証用）"
+                  DataContext="{Binding BusinessDayClock}"
+                  Visibility="{Binding IsAvailable, Converter={StaticResource BoolToVisibility}}">
+            <StackPanel Margin="4">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="業務日: " VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding CurrentBusinessDateText}"
+                               FontWeight="Bold"
+                               VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding StatusText, StringFormat='（{0}）'}"
+                               Margin="4,0,0,0"
+                               VerticalAlignment="Center" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                    <Button Content="業務日を開始"
+                            Width="96"
+                            Padding="4"
+                            Command="{Binding TurnOnCommand}" />
+                    <Button Content="業務日を終了"
+                            Width="96"
+                            Margin="8,0,0,0"
+                            Padding="4"
+                            Command="{Binding TurnOffCommand}" />
+                    <Button Content="最初からやり直す"
+                            Width="110"
+                            Margin="8,0,0,0"
+                            Padding="4"
+                            Command="{Binding ResetCommand}" />
+                </StackPanel>
+                <TextBlock Text="{Binding ErrorMessage}"
+                           Foreground="Red"
+                           TextWrapping="Wrap"
+                           Margin="0,4,0,0" />
+            </StackPanel>
+        </GroupBox>
     </Grid>
 </Window>

@@ -23,7 +23,7 @@ public class ClockSettings : IClockSettings
     public int TickIntervalSeconds { get; init; } = 1;
 
     /// <summary>
-    /// クロックタイプ（"System"、"Ticking"、または "Offset"）
+    /// クロックタイプ（"System"、"Ticking"、"Offset"、または "BusinessDay"）
     /// </summary>
     public string ClockType { get; init; } = "System";
 
@@ -32,4 +32,10 @@ public class ClockSettings : IClockSettings
     /// ClockType が "Offset" の場合に使用
     /// </summary>
     public string? OffsetDateTime { get; init; } = null;
+
+    /// <inheritdoc/>
+    public string? BusinessDayStartDate { get; init; } = null;
+
+    /// <inheritdoc/>
+    public string? BusinessDayStateFilePath { get; init; } = null;
 }

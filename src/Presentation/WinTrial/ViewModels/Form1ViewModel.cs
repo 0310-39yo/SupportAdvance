@@ -4,6 +4,7 @@ using SupportAdvance.Common.Clocks;
 using SupportAdvance.Common.Configuration;
 using SupportAdvance.Contexts.IntegrationPrototype.Application.UseCases;
 using SupportAdvance.Crosscutting.Logging;
+using SupportAdvance.Presentation.Shared.ViewModels;
 
 namespace SupportAdvance.Presentation.WinTrial.ViewModels;
 
@@ -45,17 +46,22 @@ public partial class Form1ViewModel : ObservableObject
     /// <param name="appSettings">アプリケーション設定（<see cref="AppSettings"/> であること）</param>
     /// <param name="clock">現在日時（JST）の取得元</param>
     /// <param name="getEmployeeByBizIdUseCase">BizId による従業員検索のユースケース</param>
+    /// <param name="businessDayClock">業務日クロックの操作パネルの ViewModel</param>
     /// <exception cref="ArgumentNullException">いずれかの引数が <see langword="null"/> の場合</exception>
     /// <exception cref="InvalidCastException"><paramref name="appSettings"/> が <see cref="AppSettings"/> 以外の実装の場合</exception>
     public Form1ViewModel(IAppLogging<Form1ViewModel> logger,
         IAppSettings appSettings,
         IClock clock,
-        GetEmployeeByBizIdIntegrationUseCase getEmployeeByBizIdUseCase)
+        GetEmployeeByBizIdIntegrationUseCase getEmployeeByBizIdUseCase,
+        BusinessDayClockViewModel businessDayClock)
     {
         ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(appSettings);
         ArgumentNullException.ThrowIfNull(clock);
         ArgumentNullException.ThrowIfNull(getEmployeeByBizIdUseCase);
+        ArgumentNullException.ThrowIfNull(businessDayClock);
+
+        BusinessDayClock = businessDayClock;
 
         _logger = logger;
         _appSettings = (AppSettings)appSettings;
@@ -63,6 +69,12 @@ public partial class Form1ViewModel : ObservableObject
         _getEmployeeByBizIdUseCase = getEmployeeByBizIdUseCase;
         _logger.LogInformation("Form1ViewModel initialized.");
     }
+
+    /// <summary>
+    /// 業務日クロックの操作パネルの ViewModel
+    /// </summary>
+    /// <value>ClockType が BusinessDay 以外の場合、<see cref="BusinessDayClockViewModel.IsAvailable"/> は <see langword="false"/>（パネルは非表示）</value>
+    public BusinessDayClockViewModel BusinessDayClock { get; }
 
     /// <summary>
     /// BizId で従業員を検索
