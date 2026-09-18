@@ -34,21 +34,19 @@ namespace SupportAdvance.Presentation.WinTrial.Views
             label2 = new Label();
             ((System.ComponentModel.ISupportInitialize)textBoxExt1).BeginInit();
             SuspendLayout();
-            // 
+            //
             // sfButton1
-            // 
+            //
             sfButton1.FlatStyle = FlatStyle.Popup;
-            sfButton1.Font = new Font("Segoe UI Semibold", 9F);
             sfButton1.Location = new Point(35, 35);
             sfButton1.Name = "sfButton1";
             sfButton1.Size = new Size(96, 28);
             sfButton1.TabIndex = 1;
             sfButton1.Text = "テストボタン";
-            // 
+            //
             // sfButton2
-            // 
+            //
             sfButton2.FlatStyle = FlatStyle.Popup;
-            sfButton2.Font = new Font("Segoe UI Semibold", 9F);
             sfButton2.Location = new Point(137, 89);
             sfButton2.Name = "sfButton2";
             sfButton2.Size = new Size(96, 28);
@@ -83,10 +81,11 @@ namespace SupportAdvance.Presentation.WinTrial.Views
             label2.Text = "label2";
             // 
             // Form1
-            // 
+            //
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(484, 302);
+            Font = new Font("Yu Gothic UI", 9F);
             Controls.Add(label2);
             Controls.Add(label1);
             Controls.Add(textBoxExt1);

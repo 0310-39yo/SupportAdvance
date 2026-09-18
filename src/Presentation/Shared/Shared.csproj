@@ -8,7 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
-    <PackageReference Include="Syncfusion.Licensing" Version="34.1.33" />
+    <PackageReference Include="Syncfusion.Licensing" Version="34.2.8" />
   </ItemGroup>
 
   <ItemGroup>

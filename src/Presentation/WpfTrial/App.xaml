@@ -3,6 +3,33 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:SupportAdvance.Presentation.WpfTrial">
     <Application.Resources>
-
+        <Style TargetType="Window">
+            <Setter Property="FontFamily" Value="Yu Gothic UI" />
+            <Setter Property="FontSize" Value="11" />
+        </Style>
+        <Style TargetType="Button">
+            <Setter Property="FontFamily" Value="Yu Gothic UI" />
+            <Setter Property="FontSize" Value="11" />
+        </Style>
+        <Style TargetType="TextBox">
+            <Setter Property="FontFamily" Value="Yu Gothic UI" />
+            <Setter Property="FontSize" Value="11" />
+        </Style>
+        <Style TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="Yu Gothic UI" />
+            <Setter Property="FontSize" Value="11" />
+        </Style>
+        <Style TargetType="Label">
+            <Setter Property="FontFamily" Value="Yu Gothic UI" />
+            <Setter Property="FontSize" Value="11" />
+        </Style>
+        <Style TargetType="GroupBox">
+            <Setter Property="FontFamily" Value="Yu Gothic UI" />
+            <Setter Property="FontSize" Value="11" />
+        </Style>
+        <Style TargetType="Control">
+            <Setter Property="FontFamily" Value="Yu Gothic UI" />
+            <Setter Property="FontSize" Value="11" />
+        </Style>
     </Application.Resources>
 </Application>
