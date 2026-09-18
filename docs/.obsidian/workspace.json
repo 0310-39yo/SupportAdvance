@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Assistance/Guides/Authentication_BC_設計ガイド.md",
+                "file": "WorkMemo/2026-09-18.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Authentication_BC_設計ガイド"
+              "title": "2026-09-18"
             }
           }
         ]
@@ -190,6 +190,7 @@
   },
   "active": "5375283f2a122053",
   "lastOpenFiles": [
+    "Assistance/Guides/Authentication_BC_設計ガイド.md",
     "Assistance/Guides/Authentication_BC_設計ガイド.md.tmp.53580.62e004750282",
     "Assistance/Guides/Authentication_BC_設計ガイド.md.tmp.53580.6c2b74616d58",
     "Assistance/Guides/Authentication_BC_設計ガイド.md.tmp.53580.18112701f9c6",
@@ -200,7 +201,6 @@
     "Database/SQL/SEED_ReservedSystemAccounts.sql",
     "Database/SQL/SEED_ReservedSystemAccounts.sql.tmp.53580.4f7a25d47624",
     "Assistance/Guides/Authentication_BC_設計ガイド.md.tmp.53580.3409931918a9",
-    "Assistance/Guides/Authentication_BC_設計ガイド.md.tmp.53580.b1f2ed80337d",
     "Assistance/Guides/0_ドキュメントチェックリスト.md",
     "Assistance/Consider/SupportAdvance 監査方式 設計方針案.md",
     "Assistance/DraftIdeas/トランザクション分離レベル・業務排他制御方針.md",
@@ -211,7 +211,6 @@
     "Assistance/Templates/Test/TEMPLATE_システムテスト仕様書.md",
     "WorkMemo/2026-09-16.md",
     "Assistance/Plans/20260916_IdentityBCをAuthenticationBCへ名称変更_実装計画.md",
-    "Assistance/Guides/Authentication_BC_設計ガイド.md",
     "Assistance/Guides/Identity_BC_設計ガイド.md",
     "Assistance/Guides/SQL_ファイル管理_設計ガイド.md",
     "Assistance/Guides/Bounded_Context_テンプレート.md",

@@ -83,7 +83,7 @@ USE [SupportAdvance];
 2. [ログイン] ボタンをクリック
 
 #### 期待結果
-❌ エラーメッセージ表示: 「ログイン失敗: パスワードが一致しません」
+❌ エラーメッセージ表示: 「パスワードが間違っています」
 - LoginDialog は閉じない
 - パスワードフィールドがクリアされる
 
@@ -99,7 +99,7 @@ USE [SupportAdvance];
 2. [ログイン] ボタンをクリック
 
 #### 期待結果
-❌ エラーメッセージ表示: 「ログイン失敗: このユーザーはアクティブではありません」
+❌ エラーメッセージ表示: 「このアカウントは無効です」
 
 ---
 
@@ -113,7 +113,7 @@ USE [SupportAdvance];
 2. [ログイン] ボタンをクリック
 
 #### 期待結果
-❌ エラーメッセージ表示: 「ログイン失敗: ユーザーが見つかりません」
+❌ エラーメッセージ表示: 「ログインIDが見つかりません」
 
 ---
 
@@ -136,7 +136,7 @@ USE [SupportAdvance];
 - [ ] テストケース 4（ユーザー不在）合格
 - [ ] テストケース 5（キャンセル）合格
 - [ ] ログイン後 RealCurrentUserService.IsLoggedIn == true
-- [ ] ログイン後 RealCurrentUserService.EmployeeRowId == 1
+- [ ] ログイン後 RealCurrentUserService.EmployeeRowId == 2147483730
 - [ ] ログイン後 RealCurrentUserService.LoginId == "test_user_001"
 
 ---
