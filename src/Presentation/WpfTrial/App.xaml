@@ -2,37 +2,43 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:SupportAdvance.Presentation.WpfTrial"
-             xmlns:syncfusionskin="clr-namespace:Syncfusion.SfSkinManager;assembly=Syncfusion.SfSkinManager.WPF"
-             xmlns:syncfusion="http://schemas.syncfusion.com/wpf"
-             syncfusionskin:SfSkinManager.Theme="Office2019White">
+             xmlns:syncfusion="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
     <Application.Resources>
-        <Style TargetType="Window">
-            <Setter Property="FontFamily" Value="Yu Gothic UI" />
-            <Setter Property="FontSize" Value="11" />
-        </Style>
-        <Style TargetType="Button">
-            <Setter Property="FontFamily" Value="Yu Gothic UI" />
-            <Setter Property="FontSize" Value="11" />
-        </Style>
-        <Style TargetType="TextBox">
-            <Setter Property="FontFamily" Value="Yu Gothic UI" />
-            <Setter Property="FontSize" Value="11" />
-        </Style>
-        <Style TargetType="TextBlock">
-            <Setter Property="FontFamily" Value="Yu Gothic UI" />
-            <Setter Property="FontSize" Value="11" />
-        </Style>
-        <Style TargetType="Label">
-            <Setter Property="FontFamily" Value="Yu Gothic UI" />
-            <Setter Property="FontSize" Value="11" />
-        </Style>
-        <Style TargetType="GroupBox">
-            <Setter Property="FontFamily" Value="Yu Gothic UI" />
-            <Setter Property="FontSize" Value="11" />
-        </Style>
-        <Style TargetType="Control">
-            <Setter Property="FontFamily" Value="Yu Gothic UI" />
-            <Setter Property="FontSize" Value="11" />
-        </Style>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- Syncfusion Office 2019 White テーマ -->
+                <ResourceDictionary Source="pack://application:,,,/Syncfusion.Themes.Office2019White.WPF;component/Office2019White.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <!-- Yu Gothic UI フォント設定 -->
+            <Style TargetType="Window">
+                <Setter Property="FontFamily" Value="Yu Gothic UI" />
+                <Setter Property="FontSize" Value="11" />
+            </Style>
+            <Style TargetType="Button">
+                <Setter Property="FontFamily" Value="Yu Gothic UI" />
+                <Setter Property="FontSize" Value="11" />
+            </Style>
+            <Style TargetType="TextBox">
+                <Setter Property="FontFamily" Value="Yu Gothic UI" />
+                <Setter Property="FontSize" Value="11" />
+            </Style>
+            <Style TargetType="TextBlock">
+                <Setter Property="FontFamily" Value="Yu Gothic UI" />
+                <Setter Property="FontSize" Value="11" />
+            </Style>
+            <Style TargetType="Label">
+                <Setter Property="FontFamily" Value="Yu Gothic UI" />
+                <Setter Property="FontSize" Value="11" />
+            </Style>
+            <Style TargetType="GroupBox">
+                <Setter Property="FontFamily" Value="Yu Gothic UI" />
+                <Setter Property="FontSize" Value="11" />
+            </Style>
+            <Style TargetType="Control">
+                <Setter Property="FontFamily" Value="Yu Gothic UI" />
+                <Setter Property="FontSize" Value="11" />
+            </Style>
+        </ResourceDictionary>
     </Application.Resources>
 </Application>
