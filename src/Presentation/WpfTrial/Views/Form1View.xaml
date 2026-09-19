@@ -10,6 +10,8 @@
         mc:Ignorable="d"
         Title="Form1 View" Height="380" Width="484"
         WindowStartupLocation="CenterScreen"
+        FontFamily="Yu Gothic UI"
+        FontSize="14"
         syncfusionskin:SfSkinManager.Theme="{syncfusionskin:SkinManagerExtension ThemeName=Office2019White}">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
@@ -30,11 +32,15 @@
                 SizeMode="Normal"
                 IconWidth="0"
                 IconHeight="0"
+                FontFamily="Yu Gothic UI"
+                FontSize="18"
                 Command="{Binding ExecuteSampleUseCaseCommand}" />
 
         <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,16,0,0">
             <input:SfTextBoxExt Width="100"
                      VerticalContentAlignment="Center"
+                     FontFamily="Yu Gothic UI"
+                     FontSize="18"
                      Text="{Binding BizIdSearchInput, UpdateSourceTrigger=PropertyChanged}" />
             <syncfusion:ButtonAdv Label="検索"
                     Width="96"
@@ -42,6 +48,8 @@
                     SizeMode="Normal"
                     IconWidth="0"
                     IconHeight="0"
+                    FontFamily="Yu Gothic UI"
+                    FontSize="18"
                     Command="{Binding SearchEmployeeByBizIdCommand}" />
             <TextBlock Text="{Binding EmployeeFullName}"
                        VerticalAlignment="Center"
@@ -73,6 +81,8 @@
                             SizeMode="Normal"
                             IconWidth="0"
                             IconHeight="0"
+                            FontFamily="Yu Gothic UI"
+                            FontSize="18"
                             Command="{Binding TurnOnCommand}" />
                     <syncfusion:ButtonAdv Label="業務日を終了"
                             Width="96"
@@ -80,6 +90,8 @@
                             SizeMode="Normal"
                             IconWidth="0"
                             IconHeight="0"
+                            FontFamily="Yu Gothic UI"
+                            FontSize="18"
                             Command="{Binding TurnOffCommand}" />
                     <syncfusion:ButtonAdv Label="最初からやり直す"
                             Width="110"
@@ -87,6 +99,8 @@
                             SizeMode="Normal"
                             IconWidth="0"
                             IconHeight="0"
+                            FontFamily="Yu Gothic UI"
+                            FontSize="18"
                             Command="{Binding ResetCommand}" />
                 </StackPanel>
                 <TextBlock Text="{Binding ErrorMessage}"
