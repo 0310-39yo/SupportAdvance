@@ -4,8 +4,8 @@
              xmlns:local="clr-namespace:SupportAdvance.Presentation.WpfTrial"
              xmlns:syncfusion="http://schemas.syncfusion.com/wpf">
     <Application.Resources>
-        <!-- Yu Gothic UI フォント設定 -->
-        <Style TargetType="Window">
+        <!-- Yu Gothic UI フォント設定 - Window 依存関係プロパティをオーバーライドするための基本スタイル -->
+        <Style x:Key="DefaultWindowStyle" TargetType="Window">
             <Setter Property="FontFamily" Value="Yu Gothic UI" />
             <Setter Property="FontSize" Value="11" />
         </Style>
