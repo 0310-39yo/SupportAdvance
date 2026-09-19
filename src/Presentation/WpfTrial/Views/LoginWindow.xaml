@@ -11,7 +11,7 @@
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
         ShowInTaskbar="False"
-        syncfusionskin:SfSkinManager.Theme="{syncfusionskin:SkinManagerExtension ThemeName=Office2019DarkGray}">
+        syncfusionskin:SfSkinManager.Theme="{syncfusionskin:SkinManagerExtension ThemeName=Office2019White}">
     <Window.Resources>
         <converters:StringEmptyToVisibilityConverter x:Key="StringEmptyToVisibilityConverter" />
     </Window.Resources>
