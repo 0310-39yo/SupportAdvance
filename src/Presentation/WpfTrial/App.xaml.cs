@@ -33,23 +33,6 @@ public partial class App : System.Windows.Application
     private IHost? _host;
 
     /// <summary>
-    /// <see cref="App"/> クラスの新しいインスタンスの初期化
-    /// </summary>
-    /// <remarks>
-    /// <para>Window クラスの依存関係プロパティをオーバーライドして、すべての Window にデフォルトスタイルを適用</para>
-    /// </remarks>
-    public App()
-    {
-        // すべての Window に DefaultWindowStyle を適用（各 Window で個別に FontFamily を設定する必要がなくなる）
-        FrameworkElement.StyleProperty.OverrideMetadata(
-            typeof(Window),
-            new FrameworkPropertyMetadata
-            {
-                DefaultValue = (Style)Resources["DefaultWindowStyle"]
-            });
-    }
-
-    /// <summary>
     /// DI ホストの構築と、ログインウィンドウ → メインウィンドウの起動
     /// </summary>
     /// <param name="e">起動イベントの引数</param>
