@@ -40,6 +40,7 @@
         <input:SfTextBoxExt Grid.Row="0" Grid.Column="1"
                  Margin="0,4"
                  VerticalContentAlignment="Center"
+                 FontFamily="Yu Gothic UI"
                  FontSize="18"
                  Text="{Binding LoginId, UpdateSourceTrigger=PropertyChanged}"
                  IsEnabled="{Binding IsNotLoading}" />
@@ -49,6 +50,7 @@
                      x:Name="PasswordBoxControl"
                      Margin="0,4,0,4"
                      VerticalContentAlignment="Center"
+                     FontFamily="Yu Gothic UI"
                      FontSize="18"
                      behaviors:PasswordBoxAssistant.Attach="True"
                      behaviors:PasswordBoxAssistant.BoundPassword="{Binding Password, Mode=TwoWay}"
@@ -70,6 +72,7 @@
                     SizeMode="Normal"
                     IconWidth="0"
                     IconHeight="0"
+                    FontFamily="Yu Gothic UI"
                     FontSize="18"
                     IsDefault="True"
                     IsEnabled="{Binding IsNotLoading}"
@@ -81,6 +84,7 @@
                     SizeMode="Normal"
                     IconWidth="0"
                     IconHeight="0"
+                    FontFamily="Yu Gothic UI"
                     FontSize="18"
                     Command="{Binding CancelCommand}" />
         </StackPanel>
