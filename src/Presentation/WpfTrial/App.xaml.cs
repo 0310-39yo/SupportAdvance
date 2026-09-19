@@ -89,11 +89,11 @@ public partial class App : System.Windows.Application
 
         if (loginResult == true)
         {
-            // ログイン成功時は MainWindow を表示
-            var mainWindow = scope.ServiceProvider.GetRequiredService<MainWindow>();
-            MainWindow = mainWindow;
+            // ログイン成功時は Form1View を表示
+            var form1View = scope.ServiceProvider.GetRequiredService<Form1View>();
+            MainWindow = form1View;
             ShutdownMode = ShutdownMode.OnMainWindowClose;
-            mainWindow.Show();
+            form1View.Show();
         }
         else
         {

@@ -1,0 +1,84 @@
+<Window x:Class="SupportAdvance.Presentation.WpfTrial.Views.Form1View"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:SupportAdvance.Presentation.WpfTrial.Views"
+        xmlns:input="clr-namespace:Syncfusion.Windows.Controls.Input;assembly=Syncfusion.SfInput.WPF"
+        xmlns:syncfusion="http://schemas.syncfusion.com/wpf"
+        xmlns:syncfusionskin="clr-namespace:Syncfusion.SfSkinManager;assembly=Syncfusion.SfSkinManager.WPF"
+        mc:Ignorable="d"
+        Title="Form1 View" Height="380" Width="484"
+        WindowStartupLocation="CenterScreen"
+        syncfusionskin:SfSkinManager.Theme="{syncfusionskin:SkinManagerExtension ThemeName=Office2019White}">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+    </Window.Resources>
+    <Grid Margin="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <syncfusion:ButtonAdv Grid.Row="0"
+                Label="テストボタン"
+                HorizontalAlignment="Left"
+                Width="96"
+                Command="{Binding ExecuteSampleUseCaseCommand}" />
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,16,0,0">
+            <input:SfTextBoxExt Width="100"
+                     VerticalContentAlignment="Center"
+                     Text="{Binding BizIdSearchInput, UpdateSourceTrigger=PropertyChanged}" />
+            <syncfusion:ButtonAdv Label="検索"
+                    Width="96"
+                    Margin="8,0,0,0"
+                    Command="{Binding SearchEmployeeByBizIdCommand}" />
+            <TextBlock Text="{Binding EmployeeFullName}"
+                       VerticalAlignment="Center"
+                       Margin="16,0,0,0" />
+        </StackPanel>
+
+        <TextBlock Grid.Row="2"
+                   Text="{Binding DepartmentNames}"
+                   Margin="0,16,0,0" />
+
+        <!-- 業務日クロックの操作パネル（ClockType が BusinessDay の場合のみ表示） -->
+        <GroupBox Grid.Row="4"
+                  Header="業務日クロック（検証用）"
+                  DataContext="{Binding BusinessDayClock}"
+                  Visibility="{Binding IsAvailable, Converter={StaticResource BoolToVisibility}}">
+            <StackPanel Margin="4">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="業務日: " VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding CurrentBusinessDateText}"
+                               FontWeight="Bold"
+                               VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding StatusText, StringFormat='（{0}）'}"
+                               Margin="4,0,0,0"
+                               VerticalAlignment="Center" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                    <syncfusion:ButtonAdv Label="業務日を開始"
+                            Width="96"
+                            Command="{Binding TurnOnCommand}" />
+                    <syncfusion:ButtonAdv Label="業務日を終了"
+                            Width="96"
+                            Margin="8,0,0,0"
+                            Command="{Binding TurnOffCommand}" />
+                    <syncfusion:ButtonAdv Label="最初からやり直す"
+                            Width="110"
+                            Margin="8,0,0,0"
+                            Command="{Binding ResetCommand}" />
+                </StackPanel>
+                <TextBlock Text="{Binding ErrorMessage}"
+                           Foreground="Red"
+                           TextWrapping="Wrap"
+                           Margin="0,4,0,0" />
+            </StackPanel>
+        </GroupBox>
+    </Grid>
+</Window>
