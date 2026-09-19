@@ -49,6 +49,7 @@
                      x:Name="PasswordBoxControl"
                      Margin="0,4,0,4"
                      VerticalContentAlignment="Center"
+                     FontSize="20"
                      behaviors:PasswordBoxAssistant.Attach="True"
                      behaviors:PasswordBoxAssistant.BoundPassword="{Binding Password, Mode=TwoWay}"
                      IsEnabled="{Binding IsNotLoading}" />
