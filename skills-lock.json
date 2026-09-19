@@ -1,0 +1,83 @@
+{
+  "version": 1,
+  "skills": {
+    "syncfusion-angular-pdf-viewer": {
+      "source": "syncfusion/pdf-viewer-sdk-skills",
+      "sourceType": "github",
+      "skillPath": "skills/syncfusion-angular-pdf-viewer/SKILL.md",
+      "computedHash": "e2f32ee582d50af88a77225f7498d586edde18636acbab1ba2bafa8a1166408a"
+    },
+    "syncfusion-aspnetcore-pdf-viewer": {
+      "source": "syncfusion/pdf-viewer-sdk-skills",
+      "sourceType": "github",
+      "skillPath": "skills/syncfusion-aspnetcore-pdf-viewer/SKILL.md",
+      "computedHash": "1ffd7ec2dc65404812a64944496c1df9721788471ec11c77b7d97dc7210a96a1"
+    },
+    "syncfusion-aspnetmvc-pdf-viewer": {
+      "source": "syncfusion/pdf-viewer-sdk-skills",
+      "sourceType": "github",
+      "skillPath": "skills/syncfusion-aspnetmvc-pdf-viewer/SKILL.md",
+      "computedHash": "44c60a173468b1d29ec13aa70e02fd04808800ac6fd54084f374a7a59465a696"
+    },
+    "syncfusion-blazor-pdf-viewer": {
+      "source": "syncfusion/pdf-viewer-sdk-skills",
+      "sourceType": "github",
+      "skillPath": "skills/syncfusion-blazor-pdf-viewer/SKILL.md",
+      "computedHash": "81d010e064ed8d1ca543eff0e9ac1f7aac4f7cd2d3cdb7ac71f8d7a22af126b5"
+    },
+    "syncfusion-blazor-smart-pdf-viewer": {
+      "source": "syncfusion/pdf-viewer-sdk-skills",
+      "sourceType": "github",
+      "skillPath": "skills/syncfusion-blazor-smart-pdf-viewer/SKILL.md",
+      "computedHash": "09dfdc640f99811a1e3af9d8830a7660c20ef29048ab7058add9a93556f12735"
+    },
+    "syncfusion-flutter-pdf-viewer": {
+      "source": "syncfusion/pdf-viewer-sdk-skills",
+      "sourceType": "github",
+      "skillPath": "skills/syncfusion-flutter-pdf-viewer/SKILL.md",
+      "computedHash": "bf531436575765e59c934e2adfd39ebbff2db50783808bae8677b5b12b192894"
+    },
+    "syncfusion-javascript-pdf-viewer": {
+      "source": "syncfusion/pdf-viewer-sdk-skills",
+      "sourceType": "github",
+      "skillPath": "skills/syncfusion-javascript-pdf-viewer/SKILL.md",
+      "computedHash": "1852f7502be77fe1198d217e5c9a3f0a5d5f21285d03efa2a2a09fe8aac69a13"
+    },
+    "syncfusion-maui-pdf-viewer": {
+      "source": "syncfusion/pdf-viewer-sdk-skills",
+      "sourceType": "github",
+      "skillPath": "skills/syncfusion-maui-pdf-viewer/SKILL.md",
+      "computedHash": "f253b089e193b2792abfce86de73f28f06c3057b6a669090d766c579086cfe55"
+    },
+    "syncfusion-react-pdf-viewer": {
+      "source": "syncfusion/pdf-viewer-sdk-skills",
+      "sourceType": "github",
+      "skillPath": "skills/syncfusion-react-pdf-viewer/SKILL.md",
+      "computedHash": "f4bb9e31a2d8ac97109037f6aaa11100f77a515b376b1b431ee2a7a8df6cb53d"
+    },
+    "syncfusion-uwp-pdf-viewer": {
+      "source": "syncfusion/pdf-viewer-sdk-skills",
+      "sourceType": "github",
+      "skillPath": "skills/syncfusion-uwp-pdf-viewer/SKILL.md",
+      "computedHash": "8d7dae00a5776e810db5996d5540bede96de732106740c1b3d2e589d14e40e93"
+    },
+    "syncfusion-vue-pdf-viewer": {
+      "source": "syncfusion/pdf-viewer-sdk-skills",
+      "sourceType": "github",
+      "skillPath": "skills/syncfusion-vue-pdf-viewer/SKILL.md",
+      "computedHash": "237e44749d47da9803a18900ff69365f4ee31479ecc9d5c9f8514690d99d82b0"
+    },
+    "syncfusion-winforms-pdf-viewer": {
+      "source": "syncfusion/pdf-viewer-sdk-skills",
+      "sourceType": "github",
+      "skillPath": "skills/syncfusion-winforms-pdf-viewer/SKILL.md",
+      "computedHash": "cd9ac703f7b3ec1d62e813bd85119d2da24f6f9545886dda6025ec0fd1f3906f"
+    },
+    "syncfusion-wpf-pdf-viewer": {
+      "source": "syncfusion/pdf-viewer-sdk-skills",
+      "sourceType": "github",
+      "skillPath": "skills/syncfusion-wpf-pdf-viewer/SKILL.md",
+      "computedHash": "ef7ea1c792f303885ec3614bafc651e45579d40a0287d47a1cb7c6b45cd4c6ec"
+    }
+  }
+}

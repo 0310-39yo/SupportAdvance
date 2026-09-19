@@ -28,7 +28,7 @@
         <syncfusion:ButtonAdv Grid.Row="0"
                 Label="テストボタン"
                 HorizontalAlignment="Left"
-                Width="96"
+                Width="125"
                 SizeMode="Normal"
                 IconWidth="0"
                 IconHeight="0"

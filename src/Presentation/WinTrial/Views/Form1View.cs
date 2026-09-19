@@ -11,20 +11,20 @@ namespace SupportAdvance.Presentation.WinTrial.Views;
 /// <remarks>
 /// <para>【責務】<see cref="Form1ViewModel"/> とのデータバインディングとコマンドの配線のみ</para>
 /// </remarks>
-public partial class Form1 : Form
+public partial class Form1View : Form
 {
     private readonly IAppSettings _appSettings = null!;
-    private readonly IAppLogging<Form1> _logger = null!;
+    private readonly IAppLogging<Form1View> _logger = null!;
     private readonly Form1ViewModel _viewModel = null!;
 
     /// <summary>
-    /// <see cref="Form1"/> クラスの新しいインスタンスの初期化
+    /// <see cref="Form1View"/> クラスの新しいインスタンスの初期化
     /// </summary>
     /// <param name="viewModel">バインドする ViewModel</param>
     /// <param name="logger">ログの出力先</param>
     /// <param name="settings">アプリケーション設定（ビルド種別のログ出力用）</param>
     /// <exception cref="ArgumentNullException">いずれかの引数が <see langword="null"/> の場合</exception>
-    public Form1(Form1ViewModel viewModel, IAppLogging<Form1> logger, IAppSettings settings)
+    public Form1View(Form1ViewModel viewModel, IAppLogging<Form1View> logger, IAppSettings settings)
     {
         InitializeComponent();
 
@@ -50,7 +50,7 @@ public partial class Form1 : Form
 
         AddBusinessDayClockPanel(_viewModel.BusinessDayClock);
 
-        _logger.LogInformation("Form1 initialized.");
+        _logger.LogInformation("Form1View initialized.");
         _logger.LogInformation("情報");
         _logger.LogWarning("警告");
         _logger.LogInformation(_appSettings?.ApplicationBuildType ?? "Unknown");
@@ -61,7 +61,7 @@ public partial class Form1 : Form
     /// </summary>
     /// <param name="clockViewModel">パネルにバインドする ViewModel</param>
     /// <remarks>
-    /// <para>【設計】デザイナーのファイル（Form1.Designer.cs）を変更しないよう、コードで配置。フォームの高さはパネルの分だけ拡張</para>
+    /// <para>【設計】デザイナーのファイル（Form1View.Designer.cs）を変更しないよう、コードで配置。フォームの高さはパネルの分だけ拡張</para>
     /// </remarks>
     private void AddBusinessDayClockPanel(BusinessDayClockViewModel clockViewModel)
     {

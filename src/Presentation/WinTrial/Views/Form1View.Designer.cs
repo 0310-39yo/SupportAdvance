@@ -1,6 +1,6 @@
 namespace SupportAdvance.Presentation.WinTrial.Views
 {
-    partial class Form1
+    partial class Form1View
     {
         /// <summary>
         /// Required designer variable.
@@ -52,35 +52,35 @@ namespace SupportAdvance.Presentation.WinTrial.Views
             sfButton2.Size = new Size(96, 28);
             sfButton2.TabIndex = 2;
             sfButton2.Text = "検索";
-            // 
+            //
             // textBoxExt1
-            // 
+            //
             textBoxExt1.BeforeTouchSize = new Size(100, 23);
             textBoxExt1.Location = new Point(31, 94);
             textBoxExt1.Name = "textBoxExt1";
             textBoxExt1.Size = new Size(100, 23);
             textBoxExt1.TabIndex = 3;
             textBoxExt1.Text = "textBoxExt1";
-            // 
+            //
             // label1
-            // 
+            //
             label1.AutoSize = true;
             label1.Location = new Point(246, 99);
             label1.Name = "label1";
             label1.Size = new Size(38, 15);
             label1.TabIndex = 4;
             label1.Text = "label1";
-            // 
+            //
             // label2
-            // 
+            //
             label2.AutoSize = true;
             label2.Location = new Point(174, 136);
             label2.Name = "label2";
             label2.Size = new Size(38, 15);
             label2.TabIndex = 5;
             label2.Text = "label2";
-            // 
-            // Form1
+            //
+            // Form1View
             //
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
@@ -91,9 +91,9 @@ namespace SupportAdvance.Presentation.WinTrial.Views
             Controls.Add(textBoxExt1);
             Controls.Add(sfButton2);
             Controls.Add(sfButton1);
-            Name = "Form1";
+            Name = "Form1View";
             StartPosition = FormStartPosition.CenterScreen;
-            Text = "Form1";
+            Text = "Form1View";
             ((System.ComponentModel.ISupportInitialize)textBoxExt1).EndInit();
             ResumeLayout(false);
             PerformLayout();

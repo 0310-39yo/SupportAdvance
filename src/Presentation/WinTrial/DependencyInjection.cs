@@ -31,7 +31,7 @@ public static class DependencyInjection
         services.AddScoped<BusinessDayClockViewModel>();
 
         // Views（Form に ViewModel を DI する）
-        services.AddScoped<Form1>();
+        services.AddScoped<Form1View>();
 
         return services;
     }

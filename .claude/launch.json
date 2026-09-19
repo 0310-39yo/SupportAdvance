@@ -10,6 +10,16 @@
         "src/Presentation/WinTrial/WinTrial.csproj",
         "--no-build"
       ]
+    },
+    {
+      "name": "WpfTrial",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": [
+        "run",
+        "--project",
+        "src/Presentation/WpfTrial/WpfTrial.csproj",
+        "--no-build"
+      ]
     }
   ]
 }
