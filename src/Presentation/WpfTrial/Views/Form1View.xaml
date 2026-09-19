@@ -10,6 +10,8 @@
         mc:Ignorable="d"
         Title="Form1 View" Height="380" Width="484"
         WindowStartupLocation="CenterScreen"
+        FontFamily="Yu Gothic UI"
+        FontSize="11"
         syncfusionskin:SfSkinManager.Theme="{syncfusionskin:SkinManagerExtension ThemeName=Office2019White}">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
