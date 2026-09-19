@@ -27,6 +27,7 @@
                 Label="テストボタン"
                 HorizontalAlignment="Left"
                 Width="96"
+                SizeMode="Normal"
                 Command="{Binding ExecuteSampleUseCaseCommand}" />
 
         <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,16,0,0">
@@ -36,6 +37,7 @@
             <syncfusion:ButtonAdv Label="検索"
                     Width="96"
                     Margin="8,0,0,0"
+                    SizeMode="Normal"
                     Command="{Binding SearchEmployeeByBizIdCommand}" />
             <TextBlock Text="{Binding EmployeeFullName}"
                        VerticalAlignment="Center"
@@ -64,14 +66,17 @@
                 <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                     <syncfusion:ButtonAdv Label="業務日を開始"
                             Width="96"
+                            SizeMode="Normal"
                             Command="{Binding TurnOnCommand}" />
                     <syncfusion:ButtonAdv Label="業務日を終了"
                             Width="96"
                             Margin="8,0,0,0"
+                            SizeMode="Normal"
                             Command="{Binding TurnOffCommand}" />
                     <syncfusion:ButtonAdv Label="最初からやり直す"
                             Width="110"
                             Margin="8,0,0,0"
+                            SizeMode="Normal"
                             Command="{Binding ResetCommand}" />
                 </StackPanel>
                 <TextBlock Text="{Binding ErrorMessage}"
