@@ -32,21 +32,21 @@
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
-        <Label Grid.Row="0" Grid.Column="0" Content="ログインID:" VerticalAlignment="Center" />
+        <TextBlock Grid.Row="0" Grid.Column="0" Text="ログインID:" VerticalAlignment="Center" FontSize="20" />
         <TextBox Grid.Row="0" Grid.Column="1"
                  Margin="0,4"
                  VerticalContentAlignment="Center"
                  Text="{Binding LoginId, UpdateSourceTrigger=PropertyChanged}"
-                 IsEnabled="{Binding IsNotLoading}" />
+                 IsEnabled="{Binding IsNotLoading}" FontSize="20" />
 
-        <Label Grid.Row="1" Grid.Column="0" Content="パスワード:" VerticalAlignment="Center" />
+        <TextBlock Grid.Row="1" Grid.Column="0" Text="パスワード:" VerticalAlignment="Center" FontSize="20" />
         <PasswordBox Grid.Row="1" Grid.Column="1"
                      x:Name="PasswordBoxControl"
-                     Margin="0,4"
+                     Margin="0,4,0,4"
                      VerticalContentAlignment="Center"
                      behaviors:PasswordBoxAssistant.Attach="True"
                      behaviors:PasswordBoxAssistant.BoundPassword="{Binding Password, Mode=TwoWay}"
-                     IsEnabled="{Binding IsNotLoading}" />
+                     IsEnabled="{Binding IsNotLoading}" FontSize="20" />
 
         <TextBlock Grid.Row="2" Grid.Column="1"
                    Text="{Binding ErrorMessage}"
@@ -63,12 +63,12 @@
                     Height="30"
                     IsDefault="True"
                     IsEnabled="{Binding IsNotLoading}"
-                    Command="{Binding LoginCommand}" />
+                    Command="{Binding LoginCommand}" FontSize="20" />
             <Button Content="キャンセル"
                     Width="100"
                     Height="30"
                     Margin="8,0,0,0"
-                    Command="{Binding CancelCommand}" />
+                    Command="{Binding CancelCommand}" FontSize="20" />
         </StackPanel>
     </Grid>
 </Window>
