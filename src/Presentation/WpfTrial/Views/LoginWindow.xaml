@@ -13,6 +13,8 @@
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
         ShowInTaskbar="False"
+        FontFamily="Yu Gothic UI"
+        FontSize="14"
         syncfusionskin:SfSkinManager.Theme="{syncfusionskin:SkinManagerExtension ThemeName=Office2019White}">
     <Window.Resources>
         <converters:StringEmptyToVisibilityConverter x:Key="StringEmptyToVisibilityConverter" />
@@ -38,6 +40,7 @@
         <input:SfTextBoxExt Grid.Row="0" Grid.Column="1"
                  Margin="0,4"
                  VerticalContentAlignment="Center"
+                 FontSize="20"
                  Text="{Binding LoginId, UpdateSourceTrigger=PropertyChanged}"
                  IsEnabled="{Binding IsNotLoading}" />
 
@@ -66,6 +69,7 @@
                     SizeMode="Normal"
                     IconWidth="0"
                     IconHeight="0"
+                    FontSize="20"
                     IsDefault="True"
                     IsEnabled="{Binding IsNotLoading}"
                     Command="{Binding LoginCommand}" />
@@ -76,6 +80,7 @@
                     SizeMode="Normal"
                     IconWidth="0"
                     IconHeight="0"
+                    FontSize="20"
                     Command="{Binding CancelCommand}" />
         </StackPanel>
     </Grid>
