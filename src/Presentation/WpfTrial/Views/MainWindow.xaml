@@ -4,6 +4,8 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SupportAdvance.Presentation.WpfTrial.Views"
+        xmlns:input="clr-namespace:Syncfusion.Windows.Controls.Input;assembly=Syncfusion.SfInput.WPF"
+        xmlns:syncfusion="http://schemas.syncfusion.com/wpf"
         mc:Ignorable="d"
         Title="WpfTrial" Height="380" Width="484"
         WindowStartupLocation="CenterScreen">
@@ -19,21 +21,19 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <Button Grid.Row="0"
-                Content="テストボタン"
+        <syncfusion:ButtonAdv Grid.Row="0"
+                Label="テストボタン"
                 HorizontalAlignment="Left"
                 Width="96"
-                Padding="4"
                 Command="{Binding ExecuteSampleUseCaseCommand}" />
 
         <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,16,0,0">
-            <TextBox Width="100"
+            <input:SfTextBoxExt Width="100"
                      VerticalContentAlignment="Center"
                      Text="{Binding BizIdSearchInput, UpdateSourceTrigger=PropertyChanged}" />
-            <Button Content="検索"
+            <syncfusion:ButtonAdv Label="検索"
                     Width="96"
                     Margin="8,0,0,0"
-                    Padding="4"
                     Command="{Binding SearchEmployeeByBizIdCommand}" />
             <TextBlock Text="{Binding EmployeeFullName}"
                        VerticalAlignment="Center"
@@ -60,19 +60,16 @@
                                VerticalAlignment="Center" />
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                    <Button Content="業務日を開始"
+                    <syncfusion:ButtonAdv Label="業務日を開始"
                             Width="96"
-                            Padding="4"
                             Command="{Binding TurnOnCommand}" />
-                    <Button Content="業務日を終了"
+                    <syncfusion:ButtonAdv Label="業務日を終了"
                             Width="96"
                             Margin="8,0,0,0"
-                            Padding="4"
                             Command="{Binding TurnOffCommand}" />
-                    <Button Content="最初からやり直す"
+                    <syncfusion:ButtonAdv Label="最初からやり直す"
                             Width="110"
                             Margin="8,0,0,0"
-                            Padding="4"
                             Command="{Binding ResetCommand}" />
                 </StackPanel>
                 <TextBlock Text="{Binding ErrorMessage}"
