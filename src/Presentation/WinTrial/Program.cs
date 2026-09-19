@@ -70,9 +70,9 @@ internal static class Program
 
         if (dialogResult == DialogResult.OK)
         {
-            // ログイン成功時は Form1View を表示
-            var mainForm = ServiceProviderServiceExtensions.GetRequiredService<Form1View>(scope.ServiceProvider) ??
-                           ActivatorUtilities.CreateInstance<Form1View>(scope.ServiceProvider);
+            // ログイン成功時は MainWindow を表示
+            var mainForm = ServiceProviderServiceExtensions.GetRequiredService<MainWindow>(scope.ServiceProvider) ??
+                           ActivatorUtilities.CreateInstance<MainWindow>(scope.ServiceProvider);
             System.Windows.Forms.Application.Run(mainForm);
         }
         // ログインキャンセル時はアプリを終了
