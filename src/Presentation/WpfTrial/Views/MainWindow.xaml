@@ -10,7 +10,7 @@
         mc:Ignorable="d"
         Title="WpfTrial" Height="380" Width="484"
         WindowStartupLocation="CenterScreen"
-        syncfusionskin:SfSkinManager.Theme="{syncfusionskin:SkinManagerExtension ThemeName=Office2019White}">
+        syncfusionskin:SfSkinManager.Theme="{syncfusionskin:SkinManagerExtension ThemeName=Office2019DarkGray}">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
     </Window.Resources>
