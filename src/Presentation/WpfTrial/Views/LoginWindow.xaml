@@ -6,6 +6,7 @@
         xmlns:behaviors="clr-namespace:SupportAdvance.Presentation.WpfTrial.Behaviors"
         xmlns:converters="clr-namespace:SupportAdvance.Presentation.WpfTrial.Converters"
         xmlns:input="clr-namespace:Syncfusion.Windows.Controls.Input;assembly=Syncfusion.SfInput.WPF"
+        xmlns:syncfusion="http://schemas.syncfusion.com/wpf"
         xmlns:syncfusionskin="clr-namespace:Syncfusion.SfSkinManager;assembly=Syncfusion.SfSkinManager.WPF"
         mc:Ignorable="d"
         Title="ログイン" Height="220" Width="400"
@@ -59,16 +60,22 @@
         <StackPanel Grid.Row="4" Grid.Column="1"
                     Orientation="Horizontal"
                     HorizontalAlignment="Right">
-            <Button Content="ログイン"
+            <syncfusion:ButtonAdv Label="ログイン"
                     Width="100"
                     Height="30"
+                    SizeMode="Normal"
+                    IconWidth="0"
+                    IconHeight="0"
                     IsDefault="True"
                     IsEnabled="{Binding IsNotLoading}"
                     Command="{Binding LoginCommand}" />
-            <Button Content="キャンセル"
+            <syncfusion:ButtonAdv Label="キャンセル"
                     Width="100"
                     Height="30"
                     Margin="8,0,0,0"
+                    SizeMode="Normal"
+                    IconWidth="0"
+                    IconHeight="0"
                     Command="{Binding CancelCommand}" />
         </StackPanel>
     </Grid>
