@@ -9,34 +9,5 @@
             <Setter Property="FontFamily" Value="Yu Gothic UI" />
             <Setter Property="FontSize" Value="11" />
         </Style>
-        <Style TargetType="Button">
-            <Setter Property="FontFamily" Value="Yu Gothic UI" />
-            <Setter Property="FontSize" Value="11" />
-        </Style>
-        <Style TargetType="TextBox">
-            <Setter Property="FontFamily" Value="Yu Gothic UI" />
-            <Setter Property="FontSize" Value="11" />
-        </Style>
-        <Style TargetType="TextBlock">
-            <Setter Property="FontFamily" Value="Yu Gothic UI" />
-            <Setter Property="FontSize" Value="11" />
-        </Style>
-        <Style TargetType="Label">
-            <Setter Property="FontFamily" Value="Yu Gothic UI" />
-            <Setter Property="FontSize" Value="11" />
-        </Style>
-        <Style TargetType="GroupBox">
-            <Setter Property="FontFamily" Value="Yu Gothic UI" />
-            <Setter Property="FontSize" Value="11" />
-        </Style>
-        <Style TargetType="Control">
-            <Setter Property="FontFamily" Value="Yu Gothic UI" />
-            <Setter Property="FontSize" Value="11" />
-        </Style>
-        <!-- Syncfusion コントロール用のフォント設定 -->
-        <Style TargetType="syncfusion:ButtonAdv">
-            <Setter Property="FontFamily" Value="Yu Gothic UI" />
-            <Setter Property="FontSize" Value="11" />
-        </Style>
     </Application.Resources>
 </Application>
