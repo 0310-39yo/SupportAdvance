@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:behaviors="clr-namespace:SupportAdvance.Presentation.WpfTrial.Behaviors"
         xmlns:converters="clr-namespace:SupportAdvance.Presentation.WpfTrial.Converters"
+        xmlns:input="clr-namespace:Syncfusion.Windows.Controls.Input;assembly=Syncfusion.SfInput.WPF"
         xmlns:syncfusionskin="clr-namespace:Syncfusion.SfSkinManager;assembly=Syncfusion.SfSkinManager.WPF"
         mc:Ignorable="d"
         Title="ログイン" Height="220" Width="400"
@@ -33,7 +34,7 @@
         </Grid.ColumnDefinitions>
 
         <TextBlock Grid.Row="0" Grid.Column="0" Text="ログインID:" VerticalAlignment="Center" />
-        <TextBox Grid.Row="0" Grid.Column="1"
+        <input:SfTextBoxExt Grid.Row="0" Grid.Column="1"
                  Margin="0,4"
                  VerticalContentAlignment="Center"
                  Text="{Binding LoginId, UpdateSourceTrigger=PropertyChanged}"
