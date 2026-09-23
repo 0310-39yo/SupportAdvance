@@ -32,8 +32,8 @@ namespace SupportAdvance.Presentation.WinTrial.Views
             lblPassword = new Label();
             txtPassword = new TextBox();
             lblError = new Label();
-            btnLogin = new Button();
-            btnCancel = new Button();
+            btnLogin = new Syncfusion.Windows.Forms.ButtonAdv();
+            btnCancel = new Syncfusion.Windows.Forms.ButtonAdv();
             SuspendLayout();
             // 
             // lblLoginId
@@ -128,7 +128,7 @@ namespace SupportAdvance.Presentation.WinTrial.Views
         private Label lblPassword;
         private TextBox txtPassword;
         private Label lblError;
-        private Button btnLogin;
-        private Button btnCancel;
+        private Syncfusion.Windows.Forms.ButtonAdv btnLogin;
+        private Syncfusion.Windows.Forms.ButtonAdv btnCancel;
     }
 }
