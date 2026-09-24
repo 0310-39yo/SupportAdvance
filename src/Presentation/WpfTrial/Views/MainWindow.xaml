@@ -23,8 +23,9 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- Ribbon（Tools系） -->
-        <syncfusion:Ribbon Grid.Row="0" Grid.ColumnSpan="3">
+        <!-- Ribbon（Tools系）- シンプルリボン表示 -->
+        <syncfusion:Ribbon Grid.Row="0" Grid.ColumnSpan="3"
+                           EnableSimplifiedLayoutMode="True">
             <syncfusion:RibbonTab Caption="Home">
                 <syncfusion:RibbonBar Header="File">
                     <syncfusion:RibbonButton Label="Save"
