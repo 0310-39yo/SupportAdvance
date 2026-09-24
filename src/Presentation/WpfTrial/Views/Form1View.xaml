@@ -60,9 +60,9 @@
                    Text="{Binding DepartmentNames}"
                    Margin="0,16,0,0" />
 
-        <!-- 業務日クロックの操作パネル（ClockType が BusinessDay の場合のみ表示） -->
+        <!-- BusinessDayClockの操作パネル（ClockType が BusinessDay の場合のみ表示） -->
         <GroupBox Grid.Row="4"
-                  Header="業務日クロック（検証用）"
+                  Header="BusinessDayClockクロック（検証用）"
                   DataContext="{Binding BusinessDayClock}"
                   Visibility="{Binding IsAvailable, Converter={StaticResource BoolToVisibility}}">
             <StackPanel Margin="4">
@@ -76,7 +76,7 @@
                                VerticalAlignment="Center" />
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                    <syncfusion:ButtonAdv Label="業務日を開始"
+                    <syncfusion:ButtonAdv Label="BusinessDayClockを開始"
                             Width="96"
                             SizeMode="Normal"
                             IconWidth="0"
@@ -84,7 +84,7 @@
                             FontFamily="Yu Gothic UI"
                             FontSize="18"
                             Command="{Binding TurnOnCommand}" />
-                    <syncfusion:ButtonAdv Label="業務日を終了"
+                    <syncfusion:ButtonAdv Label="BusinessDayClockを終了"
                             Width="96"
                             Margin="8,0,0,0"
                             SizeMode="Normal"

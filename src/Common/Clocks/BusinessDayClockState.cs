@@ -1,7 +1,7 @@
 namespace SupportAdvance.Common.Clocks;
 
 /// <summary>
-/// 業務日クロックの状態ファイルの内容
+/// BusinessDayClockの状態ファイルの内容
 /// </summary>
 /// <param name="StartDate">保存時の基点日。設定の基点日と異なる場合、状態は破棄</param>
 /// <param name="LastEndedDate">最後に終了した業務日。なしの場合は <see langword="null"/></param>

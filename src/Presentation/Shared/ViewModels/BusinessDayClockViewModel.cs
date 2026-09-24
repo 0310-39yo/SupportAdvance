@@ -6,7 +6,7 @@ using SupportAdvance.Common.Clocks;
 namespace SupportAdvance.Presentation.Shared.ViewModels;
 
 /// <summary>
-/// 業務日クロック（BusinessDayClock）を画面のボタンから操作するための、WpfTrial と WinTrial 共通の ViewModel
+/// BusinessDayClockを画面のボタンから操作するための、WpfTrial と WinTrial 共通の ViewModel
 /// </summary>
 /// <remarks>
 /// <para>【用途】検証時に、アプリケーションを再起動せずに業務日を開始・終了・やり直し</para>
@@ -47,7 +47,7 @@ public partial class BusinessDayClockViewModel : ObservableObject
     /// <summary>
     /// <see cref="BusinessDayClockViewModel"/> クラスの新しいインスタンスの初期化
     /// </summary>
-    /// <param name="control">業務日クロックの操作用の口。ClockType が BusinessDay 以外で DI に未登録の場合は既定値の <see langword="null"/></param>
+    /// <param name="control">BusinessDayClockの操作用の口。ClockType が BusinessDay 以外で DI に未登録の場合は既定値の <see langword="null"/></param>
     public BusinessDayClockViewModel(IBusinessDayClockControl? control = null)
     {
         _control = control;
@@ -55,7 +55,7 @@ public partial class BusinessDayClockViewModel : ObservableObject
     }
 
     /// <summary>
-    /// 業務日クロックを操作できるかどうかを示す値
+    /// BusinessDayClockを操作できるかどうかを示す値
     /// </summary>
     /// <value>ClockType が BusinessDay の場合は <see langword="true"/>。<see langword="false"/> の場合、各画面は操作パネルを非表示</value>
     public bool IsAvailable => _control is not null;

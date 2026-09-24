@@ -1,7 +1,7 @@
 namespace SupportAdvance.Common.Clocks;
 
 /// <summary>
-/// 業務日クロック（<see cref="BusinessDayClock"/>）の ON／OFF を操作するための口
+/// BusinessDayClock（<see cref="BusinessDayClock"/>）の ON／OFF を操作するための口
 /// </summary>
 /// <remarks>
 /// <para>【用途】Composition Root での起動時・終了時の自動の ON／OFF と、検証用画面のボタンからの操作</para>

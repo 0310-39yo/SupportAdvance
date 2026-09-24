@@ -3,7 +3,7 @@ using System.Text.Json;
 namespace SupportAdvance.Common.Clocks;
 
 /// <summary>
-/// 業務日クロックの状態ファイル（JSON）の読み書き
+/// BusinessDayClockの状態ファイル（JSON）の読み書き
 /// </summary>
 /// <param name="filePath">状態ファイルのパス</param>
 /// <remarks>

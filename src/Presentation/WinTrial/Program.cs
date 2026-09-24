@@ -59,7 +59,7 @@ internal static class Program
 
         host.Start();
 
-        // 業務日クロック（ClockType=BusinessDay）の場合のみ、起動を業務日の開始とする（それ以外は未登録で何もしない）
+        // BusinessDayClockの場合のみ、起動を業務日の開始とする（それ以外は未登録で何もしない）
         var businessDayClock =
             ServiceProviderServiceExtensions.GetService<IBusinessDayClockControl>(host.Services);
         businessDayClock?.TurnOn();
@@ -77,7 +77,7 @@ internal static class Program
         }
         // ログインキャンセル時はアプリを終了
 
-        // 業務日クロックの場合のみ、終了を業務日の終了とする
+        // BusinessDayClockの場合のみ、終了を業務日の終了とする
         businessDayClock?.TurnOff();
 
         host.StopAsync().GetAwaiter().GetResult();

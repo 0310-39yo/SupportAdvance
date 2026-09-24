@@ -55,7 +55,7 @@ public partial class MainWindowViewModel : ObservableObject
     /// <param name="appSettings">アプリケーション設定（<see cref="AppSettings"/> であること）</param>
     /// <param name="clock">現在日時（JST）の取得元</param>
     /// <param name="getEmployeeByBizIdUseCase">BizId による従業員検索のユースケース</param>
-    /// <param name="businessDayClock">業務日クロックの操作パネルの ViewModel</param>
+    /// <param name="businessDayClock">BusinessDayClockの操作パネルの ViewModel</param>
     /// <exception cref="ArgumentNullException">いずれかの引数が <see langword="null"/> の場合</exception>
     /// <exception cref="InvalidCastException"><paramref name="appSettings"/> が <see cref="AppSettings"/> 以外の実装の場合</exception>
     public MainWindowViewModel(IAppLogging<MainWindowViewModel> logger,
@@ -81,7 +81,7 @@ public partial class MainWindowViewModel : ObservableObject
     }
 
     /// <summary>
-    /// 業務日クロックの操作パネルの ViewModel
+    /// BusinessDayClockの操作パネルの ViewModel
     /// </summary>
     /// <value>ClockType が BusinessDay 以外の場合、<see cref="BusinessDayClockViewModel.IsAvailable"/> は <see langword="false"/>（パネルは非表示）</value>
     public BusinessDayClockViewModel BusinessDayClock { get; }

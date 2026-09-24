@@ -40,7 +40,7 @@ public partial class App : System.Windows.Application
     /// <para>【処理の流れ】</para>
     /// <list type="number">
     /// <item><description>DI ホストの構築と開始（Composition Root）</description></item>
-    /// <item><description>業務日クロックの場合は業務日の開始（ON）</description></item>
+    /// <item><description>BusinessDayClockの場合は業務日の開始（ON）</description></item>
     /// <item><description><see cref="LoginWindow"/> のモーダル表示</description></item>
     /// <item><description>ログイン成功の場合は <see cref="MainWindow"/> の表示、キャンセルの場合はアプリケーションの終了</description></item>
     /// </list>
@@ -74,7 +74,7 @@ public partial class App : System.Windows.Application
 
         _host.Start();
 
-        // 業務日クロック（ClockType=BusinessDay）の場合のみ、起動を業務日の開始とする（それ以外は未登録で何もしない）
+        // BusinessDayClockの場合のみ、起動を業務日の開始とする（それ以外は未登録で何もしない）
         _host.Services.GetService<IBusinessDayClockControl>()?.TurnOn();
 
         // LoginWindow は ShowDialog() 中は唯一のウィンドウになるため、
@@ -106,12 +106,12 @@ public partial class App : System.Windows.Application
     }
 
     /// <summary>
-    /// 業務日クロックの終了（OFF）と、DI ホストの停止と破棄
+    /// BusinessDayClockの終了（OFF）と、DI ホストの停止と破棄
     /// </summary>
     /// <param name="e">終了イベントの引数</param>
     protected override void OnExit(ExitEventArgs e)
     {
-        // 業務日クロックの場合のみ、終了を業務日の終了とする
+        // BusinessDayClockの場合のみ、終了を業務日の終了とする
         _host?.Services.GetService<IBusinessDayClockControl>()?.TurnOff();
 
         _host?.StopAsync().GetAwaiter().GetResult();

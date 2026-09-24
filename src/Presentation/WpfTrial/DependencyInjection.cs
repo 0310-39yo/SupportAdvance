@@ -25,7 +25,7 @@ public static class DependencyInjection
         services.AddScoped<LoginWindowViewModel>();
         services.AddScoped<Form1ViewModel>();
 
-        // 業務日クロックの操作パネル（Presentation.Shared の共通 ViewModel）
+        // BusinessDayClockの操作パネル（Presentation.Shared の共通 ViewModel）
         services.AddScoped<BusinessDayClockViewModel>();
 
         // Views（Window を DI コンテナから解決する）

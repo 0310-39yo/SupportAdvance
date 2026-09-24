@@ -57,7 +57,7 @@ public partial class Form1View : Form
     }
 
     /// <summary>
-    /// 業務日クロックの操作パネルの配置（ClockType が BusinessDay の場合のみ）
+    /// BusinessDayClockの操作パネルの配置（ClockType が BusinessDay の場合のみ）
     /// </summary>
     /// <param name="clockViewModel">パネルにバインドする ViewModel</param>
     /// <remarks>
@@ -102,7 +102,7 @@ public partial class Form1View : Form
         const int panelHeight = 110;
         var group = new GroupBox
         {
-            Text = "業務日クロック（検証用）",
+            Text = @"BusinessDayClock（検証用）",
             Location = new Point(12, ClientSize.Height),
             Size = new Size(ClientSize.Width - 24, panelHeight - 10),
             Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom
