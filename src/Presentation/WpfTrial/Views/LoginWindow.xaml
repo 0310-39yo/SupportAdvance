@@ -7,15 +7,13 @@
         xmlns:converters="clr-namespace:SupportAdvance.Presentation.WpfTrial.Converters"
         xmlns:input="clr-namespace:Syncfusion.Windows.Controls.Input;assembly=Syncfusion.SfInput.WPF"
         xmlns:syncfusion="http://schemas.syncfusion.com/wpf"
-        xmlns:syncfusionskin="clr-namespace:Syncfusion.SfSkinManager;assembly=Syncfusion.SfSkinManager.WPF"
         mc:Ignorable="d"
         Title="ログイン" Height="220" Width="400"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
         ShowInTaskbar="False"
         FontFamily="Yu Gothic UI"
-        FontSize="14"
-        syncfusionskin:SfSkinManager.Theme="{syncfusionskin:SkinManagerExtension ThemeName=Office2019White}">
+        FontSize="14">
     <Window.Resources>
         <converters:StringEmptyToVisibilityConverter x:Key="StringEmptyToVisibilityConverter" />
     </Window.Resources>

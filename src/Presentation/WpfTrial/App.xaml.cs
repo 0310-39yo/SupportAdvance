@@ -17,6 +17,7 @@ using SupportAdvance.Infrastructure.Services;
 using SupportAdvance.Presentation.Shared;
 using SupportAdvance.Presentation.WpfTrial.Services;
 using SupportAdvance.Presentation.WpfTrial.Views;
+using Syncfusion.SfSkinManager;
 
 namespace SupportAdvance.Presentation.WpfTrial;
 
@@ -52,6 +53,9 @@ public partial class App : System.Windows.Application
 
         // Syncfusion ライセンスキーを環境変数から登録
         SyncfusionLicenseHelper.RegisterLicenseFromEnvironment();
+
+        // アプリケーション全体（すべてのウィンドウ）に Office2019White テーマを適用
+        SfSkinManager.ApplicationTheme = new Theme("Office2019White");
 
         _host = HostBuilderFactory.Create(null, (context, services) =>
             {
