@@ -1,21 +1,75 @@
-<Window x:Class="SupportAdvance.Presentation.WpfTrial.Views.MainWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:SupportAdvance.Presentation.WpfTrial.Views"
-        xmlns:input="clr-namespace:Syncfusion.Windows.Controls.Input;assembly=Syncfusion.SfInput.WPF"
-        xmlns:syncfusion="http://schemas.syncfusion.com/wpf"
-        xmlns:syncfusionskin="clr-namespace:Syncfusion.SfSkinManager;assembly=Syncfusion.SfSkinManager.WPF"
-        mc:Ignorable="d"
-        Title="WpfTrial" Height="380" Width="484"
-        WindowStartupLocation="CenterScreen"
-        FontFamily="Yu Gothic UI"
-        FontSize="14"
-        syncfusionskin:SfSkinManager.Theme="{syncfusionskin:SkinManagerExtension ThemeName=Office2019White}">
-    <Window.Resources>
-        <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
-    </Window.Resources>
-    <Grid Margin="12">
+<syncfusion:SfChromelessWindow
+    x:Class="SupportAdvance.Presentation.WpfTrial.Views.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:syncfusion="http://schemas.syncfusion.com/wpf"
+    Title="MainWindow"
+    Width="1200"
+    Height="800">
+
+    <Grid>
+
+        <!-- 行：Ribbon / Main / StatusBar -->
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- 列：NavigationPane / Splitter / TabbedWindow -->
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="220"/>
+            <ColumnDefinition Width="5"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Ribbon（Tools系） -->
+        <syncfusion:Ribbon Grid.Row="0" Grid.ColumnSpan="3">
+            <syncfusion:RibbonTab Caption="Home">
+                <syncfusion:RibbonBar Header="File">
+                    <syncfusion:RibbonButton Label="Save"
+                                             Command="{Binding SaveCommand}"/>
+                </syncfusion:RibbonBar>
+            </syncfusion:RibbonTab>
+        </syncfusion:Ribbon>
+
+        <!-- NavigationPane（GroupBar / Tools系） -->
+        <syncfusion:GroupBar Grid.Row="1" Grid.Column="0"
+                             x:Name="NavigationPane"
+                             VisualMode="StackMode">
+
+            <syncfusion:GroupBarItem Header="顧客管理">
+                <syncfusion:GroupView>
+                    <syncfusion:GroupViewItem Text="顧客一覧"/>
+                    <syncfusion:GroupViewItem Text="顧客登録"/>
+                </syncfusion:GroupView>
+            </syncfusion:GroupBarItem>
+
+            <syncfusion:GroupBarItem Header="受注管理">
+                <syncfusion:GroupView>
+                    <syncfusion:GroupViewItem Text="受注一覧"/>
+                    <syncfusion:GroupViewItem Text="受注登録"/>
+                </syncfusion:GroupView>
+            </syncfusion:GroupBarItem>
+
+        </syncfusion:GroupBar>
+
+        <!-- Splitter -->
+        <GridSplitter Grid.Row="1" Grid.Column="1"
+                      Width="5"
+                      ResizeBehavior="PreviousAndNext"
+                      Background="#DDD"/>
+
+        <!-- TabbedWindow（TabControlExt / Tools系） -->
+        <syncfusion:TabControlExt Grid.Row="1" Grid.Column="2"
+                                  x:Name="MainTabs"
+                                  AllowDragDrop="True"
+                                  CloseButtonType="Individual"/>
+
+        <!-- StatusBar（Tools系） -->
+        <syncfusion:RibbonStatusBar Grid.Row="2" Grid.ColumnSpan="3">
+            <TextBlock Text="Ready"/>
+        </syncfusion:RibbonStatusBar>
+
     </Grid>
-</Window>
+</syncfusion:SfChromelessWindow>
