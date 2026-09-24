@@ -65,10 +65,27 @@
                       Background="#DDD"/>
 
         <!-- TabbedWindow（TabControlExt / Tools系） -->
+        <!-- ItemsSource: ViewModel の OpenTabs -->
+        <!-- SelectedItem: ViewModel の SelectedTab -->
         <syncfusion:TabControlExt Grid.Row="1" Grid.Column="2"
                                   x:Name="MainTabs"
+                                  ItemsSource="{Binding OpenTabs, Mode=TwoWay}"
+                                  SelectedItem="{Binding SelectedTab, Mode=TwoWay}"
                                   AllowDragDrop="True"
-                                  CloseButtonType="Individual"/>
+                                  CloseButtonType="Individual">
+            <!-- TabItem の表示テンプレート -->
+            <syncfusion:TabControlExt.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding Header}" />
+                </DataTemplate>
+            </syncfusion:TabControlExt.ItemTemplate>
+            <!-- TabItem の コンテンツテンプレート -->
+            <syncfusion:TabControlExt.ContentTemplate>
+                <DataTemplate>
+                    <ContentPresenter Content="{Binding Content}"/>
+                </DataTemplate>
+            </syncfusion:TabControlExt.ContentTemplate>
+        </syncfusion:TabControlExt>
 
         <!-- StatusBar（Tools系） -->
         <syncfusion:RibbonStatusBar Grid.Row="2" Grid.ColumnSpan="3">

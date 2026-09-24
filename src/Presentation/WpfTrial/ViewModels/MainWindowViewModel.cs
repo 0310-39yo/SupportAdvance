@@ -5,23 +5,22 @@ using SupportAdvance.Common.Configuration;
 using SupportAdvance.Contexts.IntegrationPrototype.Application.UseCases;
 using SupportAdvance.Crosscutting.Logging;
 using SupportAdvance.Presentation.Shared.ViewModels;
+using SupportAdvance.Presentation.WpfTrial.ViewModels.Models;
+using SupportAdvance.Presentation.WpfTrial.Views;
+using System.Collections.ObjectModel;
+using System.Windows.Controls;
 
 namespace SupportAdvance.Presentation.WpfTrial.ViewModels;
 
 /// <summary>
 /// メインウィンドウ ViewModel（MVVM Toolkit）
-///
-/// 【責務】
+/// 
+/// 責務:
 /// - BizId 検索入力の状態管理
 /// - GetEmployeeByBizIdIntegrationUseCase の実行
 /// - 検索結果（従業員氏名・所属部署）の保持
-///
-/// 【UI バインディング】
-/// - BizIdSearchInput（ObservableProperty）
-/// - EmployeeFullName（ObservableProperty）
-/// - DepartmentNames（ObservableProperty）
-/// - SearchEmployeeByBizIdCommand（RelayCommand）
-/// - ExecuteSampleUseCaseCommand（RelayCommand）
+/// - タブ管理（開いているタブのリスト、選択タブの追跡）
+/// - ナビゲーション選択→タブ追加の処理
 /// </summary>
 public partial class MainWindowViewModel : ObservableObject
 {
@@ -31,13 +30,13 @@ public partial class MainWindowViewModel : ObservableObject
     private readonly GetEmployeeByBizIdIntegrationUseCase _getEmployeeByBizIdUseCase;
 
     /// <summary>
-    /// BizId 検索欄の入力値（数値以外の入力は検索時にエラー表示）
+    /// BizId 検索欄の入力値
     /// </summary>
     [ObservableProperty]
     private string _bizIdSearchInput = string.Empty;
 
     /// <summary>
-    /// 検索結果の従業員氏名（「姓 名」形式）。見つからない場合やエラー時は、その旨のメッセージ
+    /// 検索結果の従業員氏名
     /// </summary>
     [ObservableProperty]
     private string _employeeFullName = string.Empty;
@@ -49,16 +48,27 @@ public partial class MainWindowViewModel : ObservableObject
     private string _departmentNames = string.Empty;
 
     /// <summary>
-    /// <see cref="MainWindowViewModel"/> クラスの新しいインスタンスの初期化
+    /// 現在開いているタブのリスト
     /// </summary>
-    /// <param name="logger">ログの出力先</param>
-    /// <param name="appSettings">アプリケーション設定（<see cref="AppSettings"/> であること）</param>
-    /// <param name="clock">現在日時（JST）の取得元</param>
-    /// <param name="getEmployeeByBizIdUseCase">BizId による従業員検索のユースケース</param>
-    /// <param name="businessDayClock">BusinessDayClockの操作パネルの ViewModel</param>
-    /// <exception cref="ArgumentNullException">いずれかの引数が <see langword="null"/> の場合</exception>
-    /// <exception cref="InvalidCastException"><paramref name="appSettings"/> が <see cref="AppSettings"/> 以外の実装の場合</exception>
-    public MainWindowViewModel(IAppLogging<MainWindowViewModel> logger,
+    [ObservableProperty]
+    private ObservableCollection<TabItemData> _openTabs = new();
+
+    /// <summary>
+    /// 現在選択中のタブ
+    /// </summary>
+    [ObservableProperty]
+    private TabItemData? _selectedTab;
+
+    /// <summary>
+    /// BusinessDayClockの操作パネルの ViewModel
+    /// </summary>
+    public BusinessDayClockViewModel BusinessDayClock { get; }
+
+    /// <summary>
+    /// MainWindowViewModel の新しいインスタンスの初期化
+    /// </summary>
+    public MainWindowViewModel(
+        IAppLogging<MainWindowViewModel> logger,
         IAppSettings appSettings,
         IClock clock,
         GetEmployeeByBizIdIntegrationUseCase getEmployeeByBizIdUseCase,
@@ -71,20 +81,14 @@ public partial class MainWindowViewModel : ObservableObject
         ArgumentNullException.ThrowIfNull(businessDayClock);
 
         BusinessDayClock = businessDayClock;
-
         _logger = logger;
         _appSettings = (AppSettings)appSettings;
         _clock = clock;
         _getEmployeeByBizIdUseCase = getEmployeeByBizIdUseCase;
+
         _logger.LogInformation("MainWindowViewModel initialized.");
         _logger.LogInformation(_appSettings.ApplicationBuildType ?? "Unknown");
     }
-
-    /// <summary>
-    /// BusinessDayClockの操作パネルの ViewModel
-    /// </summary>
-    /// <value>ClockType が BusinessDay 以外の場合、<see cref="BusinessDayClockViewModel.IsAvailable"/> は <see langword="false"/>（パネルは非表示）</value>
-    public BusinessDayClockViewModel BusinessDayClock { get; }
 
     /// <summary>
     /// BizId で従業員を検索
@@ -132,7 +136,7 @@ public partial class MainWindowViewModel : ObservableObject
     }
 
     /// <summary>
-    /// サンプル実行コマンド（ボタンクリック時に実行）
+    /// サンプル実行コマンド
     /// </summary>
     [RelayCommand]
     public void ExecuteSampleUseCase()
@@ -146,5 +150,55 @@ public partial class MainWindowViewModel : ObservableObject
             _logger.LogError("SampleUseCase execution failed", ex);
             throw;
         }
+    }
+
+    /// <summary>
+    /// ナビゲーション項目が選択された時の処理
+    /// </summary>
+    [RelayCommand]
+    public void NavigationItemSelected(object? parameter)
+    {
+        if (parameter is not Syncfusion.Windows.Tools.Controls.GroupViewItem groupViewItem)
+        {
+            return;
+        }
+
+        var itemText = groupViewItem.Text;
+        if (string.IsNullOrEmpty(itemText))
+        {
+            return;
+        }
+
+        // 既に開いているタブがあればそれを選択
+        var existingTab = _openTabs.FirstOrDefault(t => t.Header == itemText);
+        if (existingTab != null)
+        {
+            _selectedTab = existingTab;
+            OnPropertyChanged("SelectedTab");
+            return;
+        }
+
+        // 新規にタブを作成
+        var newTab = new TabItemData
+        {
+            Header = itemText,
+            Content = new EmptyView()
+        };
+
+        _openTabs.Add(newTab);
+        _selectedTab = newTab;
+        OnPropertyChanged("SelectedTab");
+
+        _logger.LogInformation($"Tab opened: {itemText}");
+    }
+
+    /// <summary>
+    /// タブ選択が変更された時の処理
+    /// </summary>
+    [RelayCommand]
+    public void TabSelectionChanged(object? parameter)
+    {
+        var selectedTabText = _selectedTab?.Header ?? "(none)";
+        _logger.LogInformation($"Tab selection changed to: {selectedTabText}");
     }
 }
