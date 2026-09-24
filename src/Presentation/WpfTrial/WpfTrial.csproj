@@ -38,6 +38,7 @@
     <PackageReference Include="Syncfusion.SfSkinManager.WPF" Version="34.2.8" />
     <PackageReference Include="Syncfusion.Tools.WPF" Version="34.2.8" />
     <PackageReference Include="Syncfusion.SfChromelessWindow.WPF" Version="34.2.8" />
+    <PackageReference Include="Syncfusion.SfNavigationDrawer.WPF" Version="34.2.8" />
     <PackageReference Include="Syncfusion.Themes.Office2019White.WPF" Version="34.2.8" />
     <PackageReference Include="Syncfusion.Themes.Office2019DarkGray.WPF" Version="34.2.8" />
   </ItemGroup>
