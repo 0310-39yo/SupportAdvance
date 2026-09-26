@@ -249,6 +249,11 @@ public partial class MainWindow : Form
         form.Text = tab.Header;
         form.MdiParent = this;
 
+        // 最大化した状態（Form1View のデザイナーの既定、または直前の子フォームが最大化のときの既定）で表示すると、
+        // 2 つ目以降の子フォームが MDI の領域全体を覆い、TabbedMDIManager のタブのバーが隠れる。
+        // 通常の状態にして、タブのバーの下に配置させる（位置と大きさは TabbedMDIManager が決める）
+        form.WindowState = FormWindowState.Normal;
+
         // 子フォームのアクティブ化・終了を ViewModel に反映
         form.Activated += (_, _) =>
         {
