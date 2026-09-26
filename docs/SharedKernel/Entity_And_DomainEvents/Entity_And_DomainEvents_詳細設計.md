@@ -689,8 +689,7 @@ grep -r "using SupportAdvance" src/SharedKernel/
 
 - [Entity_And_DomainEvents_技術仕様.md](Entity_And_DomainEvents_技術仕様.md) — 使用方法（開発者向け）
 - [Entity_And_DomainEvents_単体テスト仕様.md](Entity_And_DomainEvents_単体テスト仕様.md) — テスト仕様
-- [Entity_設計ガイドライン.md](../Guides/Entity_設計ガイドライン.md) — Entity<TId> パターンの詳細
-- [AggregateId_設計ガイド.md](../Guides/AggregateId_設計ガイド.md) — GUID ベース ID の実装
+- [Entity_設計ガイドライン.md](../../Assistance/Guides/Entity_設計ガイドライン.md) — Entity<TId> パターンの詳細
 - [CLAUDE.md - 依存関係ルール](../../../CLAUDE.md)
 
 ---

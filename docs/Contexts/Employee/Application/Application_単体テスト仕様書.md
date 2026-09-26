@@ -336,7 +336,7 @@ public async Task Test3_1_CreateEmployee_PersistsToRepository_CanBeRetrieved()
         DivisionCode = "M",
         EmployeeNumber = 1001
     };
-
+詳細は 2026-08-11 の Employee 実装検証報告書を参照（報告書はリポジトリには現存しない。現状は各テスト仕様書とテストコードが正）。
     // Act: 作成
     var created = await createUseCase.ExecuteAsync(request);
 
@@ -687,7 +687,7 @@ public class MockEmployeeRepository : IEmployeeRepository
 
 - [Application_技術仕様書.md](Application_技術仕様書.md) - Use Case API
 - [Application_詳細設計書.md](Application_詳細設計書.md) - 実装指示
-- [Employee Domain テスト](../../Domain/ValueObjects/Employee/EmployeeIdTests.cs) - テストパターン参考
+- [Employee Domain テスト](../../../../tests/Contexts/Employee.Domain.Tests/ValueObjects/Employee/EmployeeRowIdTests.cs) - テストパターン参考
 
 ---
 

@@ -1,6 +1,8 @@
 -- =====================================================
 -- 001_CreateDepartmentsTable.sql
 -- 部署マスターテーブル作成
+-- 列名・型は実 DB の定義（docs/Database/SQL/CREATE_m_departments.sql）に合わせている（2026-09-26）
+-- 部署名は nvarchar(50)
 -- =====================================================
 
 -- テーブル作成
@@ -12,9 +14,9 @@ CREATE TABLE [dbo].[m_departments] (
     [row_version]                     [timestamp]       NOT NULL,
 
     -- ビジネスカラム
-    [code]                            [nvarchar](4)     NOT NULL UNIQUE,
-    [name]                            [nvarchar](100)   NOT NULL,
-    [level]                           [int]             NOT NULL,
+    [department_code]                  [char](4)         NOT NULL UNIQUE,
+    [department_name]                  [nvarchar](50)    NOT NULL,
+    [hierarchy_level]                 [int]             NOT NULL,
     [parent_department_row_id]        [bigint]          NULL,
     [manager_employee_row_id]         [bigint]          NULL,
     [abolished_on]                    [datetime2](7)    NULL,
@@ -33,7 +35,7 @@ CREATE TABLE [dbo].[m_departments] (
 );
 
 -- インデックス
-CREATE INDEX [IX_m_departments_code] ON [dbo].[m_departments]([code])
+CREATE INDEX [IX_m_departments_code] ON [dbo].[m_departments]([department_code])
     WHERE [deleted_at] IS NULL;
 CREATE INDEX [IX_m_departments_parent_department_row_id] ON [dbo].[m_departments]([parent_department_row_id])
     WHERE [deleted_at] IS NULL;
@@ -68,8 +70,8 @@ ALTER TABLE [dbo].[m_departments]
 
 ALTER TABLE [dbo].[m_departments]
     ADD CONSTRAINT [CK_m_departments_level]
-        CHECK ([level] >= 0 AND [level] <= 4);
+        CHECK ([hierarchy_level] >= 0 AND [hierarchy_level] <= 4);
 
 -- テスト用サンプルデータ（オプション）
--- INSERT INTO [dbo].[m_departments] ([code], [name], [level], [created_at], [created_by])
+-- INSERT INTO [dbo].[m_departments] ([department_code], [department_name], [hierarchy_level], [created_at], [created_by])
 -- VALUES (N'COMP', N'Company', 0, GETUTCDATE(), 1);

@@ -6,7 +6,7 @@ namespace SupportAdvance.Contexts.Department.Domain.ValueObjects;
 /// 部署名を表す値オブジェクト
 /// </summary>
 /// <remarks>
-/// <para>【制約】必須。空文字は不可、<see cref="MaxLength"/> 文字以内（<c>m_departments.name</c> の <c>nvarchar(100)</c> に対応）</para>
+/// <para>【制約】必須。空文字は不可、<see cref="MaxLength"/> 文字以内（<c>m_departments.department_name</c> の <c>nvarchar(50)</c> に対応）</para>
 /// <para>【null契約】必須。<see langword="null"/> や空文字の入力は <see cref="TryFrom"/> で失敗。Unset なし</para>
 /// <para>【設計】他の BC（Employee）には、名前が無い場合を含む表示用の別の型（<c>DepartmentDisplayName</c>）で渡す。この型は Department BC の内側で使用</para>
 /// </remarks>
@@ -16,9 +16,9 @@ public sealed class DepartmentName : PrimitiveValueObject<string>, IEquatable<De
     /// 部署名の最大文字数
     /// </summary>
     /// <remarks>
-    /// <para>【値の根拠】DB の <c>m_departments.name</c> の型（<c>nvarchar(100)</c>）に合わせた値</para>
+    /// <para>【値の根拠】DB の <c>m_departments.department_name</c> の型（<c>nvarchar(50)</c>）に合わせた値</para>
     /// </remarks>
-    public const int MaxLength = 100;
+    public const int MaxLength = 50;
 
     /// <summary>
     /// 部署名

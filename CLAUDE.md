@@ -55,12 +55,11 @@ src/
 ├── Crosscutting/          # ロギング、監査、横断的関心事
 ├── Application/           # Use Cases / Application Services
 ├── Infrastructure/        # DB, ORM, 外部サービス実装
-├── Contexts/
-│   └── Samples/
-│       └── CarPreferences/
-│           ├── Domain/     # ドメインロジック
-│           ├── Application/ # Use Cases
-│           └── Infrastructure/ # DB実装
+├── Contexts/               # Bounded Context ごとに <Context>.Domain / .Application / .Infrastructure
+│   ├── Authentication/     # 認証（Authentication.Domain / .Application / .Infrastructure）
+│   ├── Department/         # 部署
+│   ├── Employee/           # 従業員
+│   └── Samples/            # サンプル（CarPreferences.Domain / .Application / .Infrastructure）
 └── Presentation/
     ├── Shared/           # 共有 UI コンポーネント
     ├── WinTrial/         # Windows Forms UI
@@ -521,6 +520,8 @@ services.AddScoped<IQueryService<Employee, EmployeeId>, EmployeeQueryService>();
 services.AddScoped<IQueryService<InsuranceProfile, InsuranceId>, InsuranceQueryService>();
 ```
 
+> **実装との違い（2026-09-26 確認）**: 上のコードは考え方を示す簡略化した例。実際の `IQueryService<TAggregate, TId>` は `where TId : notnull` も持つ。Employee の実装は `EmployeeQueryService : IQueryServiceWithBizId<IEmployee, EmployeeRowId>, IEmployeeQueryService`（`src/Contexts/Employee/Employee.Application/Queries/`）で、識別子は `EmployeeRowId`。Department は `DepartmentQueryService`。Authentication は現状、他 Context の Aggregate を読まないため使っていない。
+
 ### メリット
 
 ✅ **汎用層が肥大化しない** — ジェネリック定義のみ  
@@ -611,8 +612,9 @@ CREATE TABLE [dbo].[t_YourTable] (
 
 ### 実装例
 
-- **CarPreferences.Infrastructure**: `t_UserPreferences` テーブル
-  - 参考: `src/Contexts/Samples/CarPreferences.Infrastructure/Migrations/002_CreateUserPreferencesTable.sql`
+- **m_departments**: 8 つの監査カラムを持つテーブルの実例
+  - 参考: `docs/Database/SQL/CREATE_m_departments.sql`
+  - 参考: `Department.Infrastructure/Migrations/001_CreateDepartmentsTable.sql`（列名・型は上記の実 DB の定義に合わせ済み。この Migration は現在どのプロジェクトにも埋め込まれておらず、実行されない）
 
 ---
 
@@ -658,6 +660,7 @@ CREATE TABLE [dbo].[t_YourTable] (
 
 | 日付 | 更新内容 |
 |---|---|
+| 2026-09-26（後） | ドキュメント過不足是正（[実装計画](docs/Assistance/Plans/20260926_ドキュメント過不足是正計画.md)）: ディレクトリ構成を実際の Context 構成に修正、存在しなかった CarPreferences の Migration 参照を `m_departments` の DDL に差し替え、Query Service の例に実装との違いを追記 |
 | 2026-09-26 | ①Composition Root を「`Program.cs`（WPF は `App.xaml.cs`）」に明確化。②「DateTime は Infrastructure の内側に閉じる」を追加：Domain / SharedKernel / Application の公開メンバーに DateTime を持ち込まない（値オブジェクトの `FromDbValue(DateTime)` などの DB 型変換メソッドも同様。例外なし）。変換は Mapper / Repository が行い、値オブジェクトは `TryFrom(LocalDateTime?)` のみ。コードの移行は同日に完了（[実装計画](docs/Assistance/Plans/20260926_原則完全準拠_実装計画.md) フェーズ 4。変換ヘルパー `DbDateTimeExtensions` を追加し、8 つの値オブジェクトから旧形式を削除） |
 | 2026-09-06 | Context間のデータ共有パターンを追加。ジェネリック Query Service `IQueryService<TAggregate, TId>` パターンを採用。複数Contextがリアルタイムにドメインモデル情報にアクセスするための標準パターン。汎用層肥大化を防止 |
 | 2026-07-31（後）| Application層の依存関係表を修正。汎用Application層と Bounded Context別Application層の区別を明記。「Application（Context別）→ Application（汎用層）」が IUseCase 実装パターンとして許可されることを追記 |

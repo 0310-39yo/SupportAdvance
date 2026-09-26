@@ -239,8 +239,7 @@ public class PreferencesUpdatedEventHandler : IDomainEventHandler<PreferencesUpd
 ## 🔍 参考資料
 
 - [CLAUDE.md - ルートプロジェクト設計原則](../../../CLAUDE.md)
-- [Domain_Logging_Architecture.md - ドメイン層ログ設計](../Guides/Domain_Logging_Architecture.md)
-- [clean_architecture_principles - メモリ](../../../memory/clean_architecture_principles.md)
+- [Domain_Logging_Architecture.md - ドメイン層ログ設計](../../Assistance/Guides/Domain_Logging_Architecture.md)
 
 ---
 

@@ -401,4 +401,4 @@ NullReferenceException: Database:Dialect is not configured in appsettings.json
 ## 参考資料
 
 - [Authentication_BC_設計ガイド.md](Authentication_BC_設計ガイド.md) — Authentication BC の全体設計
-- [SqlQueryLoader.cs](../../Infrastructure/Persistence/SqlQueryLoader.cs) — ローダーの実装
+- [SqlQueryLoader.cs](../../../src/Infrastructure/Persistence/SqlQueryLoader.cs) — ローダーの実装

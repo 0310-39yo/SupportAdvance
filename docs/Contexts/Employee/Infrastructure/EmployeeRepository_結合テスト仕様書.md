@@ -147,6 +147,24 @@ var deletedAt = QueryScalar("m_employees", employee.RowId, "deleted_at");
 
 ---
 
+### 実装済みで、TC として詳細を書いていないテスト
+
+`EmployeeRepositoryTests.cs` には、上記 TC のほかに次の取得系テストがある（2026-09-26 追記。詳細な手順は書かず、テスト名のみ列挙）。
+
+| テスト名 | 観点 |
+|---|---|
+| `VO_CRUD_03_GetByIdAsync_WithValidId_WithValidIdReturnsEmployee` | 存在する ID で Employee が返る |
+| `VO_CRUD_04_GetByIdAsync_WithMultipleEmployees_WithMultipleEmployeesReturnsCorrectOne` | 複数件から指定した 1 件が返る |
+| `VO_CRUD_04_GetByIdAsync_WithInvalidId_WithInvalidIdReturnsNull` | 存在しない ID で null |
+| `VO_CRUD_03_GetByRowIdAsync_WithValidRowId_WithValidRowIdReturnsEmployee` | 存在する行ID で Employee が返る |
+| `VO_CRUD_04_GetByRowIdAsync_WithInvalidRowId_WithInvalidRowIdReturnsNull` | 存在しない行ID で null |
+| `VO_EXEC_01_GetByPersonRowIdAsync_WithValidPersonRowId_WithValidPersonRowIdReturnsEmployees` | Person の行ID で Employee 一覧が返る |
+| `VO_EXEC_01_GetByPersonRowIdAsync_WithInvalidPersonRowId_WithInvalidPersonRowIdReturnsEmpty` | 存在しない Person で空 |
+
+> テスト名に同じ語句が重複している（例: `WithValidId_WithValidIdReturnsEmployee`）。名前の整理は今後の課題（テストコードの変更を伴うため、ここでは記録のみ）。
+
+---
+
 ## 5. 実行方法
 
 ```bash

@@ -560,8 +560,8 @@ public static class EmployeeDtoMapper
 ## 🎓 参考資料
 
 - [Application_概要.md](Application_概要.md) - 実装スコープ、プロジェクト構成
-- [Entity_設計ガイドライン.md](../../Guides/Entity_設計ガイドライン.md) - Entity 設計
-- [ドメインイベント_設計ガイド.md](../../Guides/ドメインイベント_設計ガイド.md) - イベント処理
+- [Entity_設計ガイドライン.md](../../../Assistance/Guides/Entity_設計ガイドライン.md) - Entity 設計
+- [ドメインイベント_設計ガイド.md](../../../Assistance/Guides/ドメインイベント_設計ガイド.md) - イベント処理
 
 ---
 

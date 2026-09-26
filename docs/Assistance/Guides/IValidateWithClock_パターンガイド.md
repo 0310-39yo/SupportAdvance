@@ -463,7 +463,7 @@ public class Employee : AggregateRoot<EmployeeId>
 
 ## 📖 参考ドキュメント
 
-- [IValidateWithClock_技術仕様書.md](../SharedKernel/ValueObjects/Abstractions/IValidateWithClock_技術仕様書.md) — インターフェース定義
-- [IOptionalValidateWithClock_技術仕様書.md](../SharedKernel/ValueObjects/Abstractions/IOptionalValidateWithClock_技術仕様書.md) — オプション版定義
+- [IValidateWithClock_技術仕様書.md](../../SharedKernel/ValueObjects/Abstractions/IValidateWithClock_技術仕様書.md) — インターフェース定義
+- [IOptionalValidateWithClock_技術仕様書.md](../../SharedKernel/ValueObjects/Abstractions/IOptionalValidateWithClock_技術仕様書.md) — オプション版定義
 - [LocalDateTime_タイムゾーン_ガイド.md](LocalDateTime_タイムゾーン_ガイド.md) — Clock と LocalDateTime の使用規則
 - [null厳格性設計ガイド.md](null厳格性設計ガイド.md) — Unset() と IsSet フラグの設計

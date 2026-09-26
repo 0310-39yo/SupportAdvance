@@ -710,7 +710,7 @@ public class CarPreferenceViewModel : INotifyPropertyChanged
 
 **Program.cs での DI 構築例:**
 ```csharp
-// ✓ 許可：Program.cs のみで Infrastructure への参照
+// ✓ 許可：Composition Root（Program.cs。WPF は App.xaml.cs）のみで Infrastructure への参照
 var services = new ServiceCollection();
 services.AddInfrastructureModels(configuration);
 services.AddApplicationServices();

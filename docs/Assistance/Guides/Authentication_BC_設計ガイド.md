@@ -1,6 +1,6 @@
 # Authentication BC 設計ガイド
 
-**最終更新**: 2026-09-18（監査フィールド（CreatedBy/UpdatedBy/DeletedBy）に AuthorityRowId を使う設計判断を追記。SystemUserId のハードコード重複を Common.WellKnownIds に一元化したコード例に修正。mapping_employee_row_id の意味（社外ログインする人物と社内Employeeが同一人物であることの保証）を明記。IUserAuthSessionRepository を Domain層 から Application層（`Authentication.Application/Repositories/`）へ移動し、Employee/Department と配置を統一。login_id不一致時のフォールバックを SystemUserEmployeeRowId から新設の UnknownUserEmployeeRowId（正体不明の人物を表す別の予約ID）に変更し、seedスクリプト `docs/Database/SQL/SEED_ReservedSystemAccounts.sql` を追加。t_user_auth_sessionsの標準8監査カラムを維持する方針を明記（代替案として例外化・削除も検討したが不採用と決定））
+**最終更新**: 2026-09-26（原則完全準拠フェーズ 5 の反映: LoggedOutAt・UsedLoginCredentialsRowId の値オブジェクト化、LoggedInAt の LocalDateTime 化、LoginViewModel への名称修正、.csproj・DI 例を実装に合わせて修正。以前の更新: 2026-09-18 = 監査フィールド（CreatedBy/UpdatedBy/DeletedBy）に AuthorityRowId を使う設計判断を追記。SystemUserId のハードコード重複を Common.WellKnownIds に一元化したコード例に修正。mapping_employee_row_id の意味（社外ログインする人物と社内Employeeが同一人物であることの保証）を明記。IUserAuthSessionRepository を Domain層 から Application層（`Authentication.Application/Repositories/`）へ移動し、Employee/Department と配置を統一。login_id不一致時のフォールバックを SystemUserEmployeeRowId から新設の UnknownUserEmployeeRowId（正体不明の人物を表す別の予約ID）に変更し、seedスクリプト `docs/Database/SQL/SEED_ReservedSystemAccounts.sql` を追加。t_user_auth_sessionsの標準8監査カラムを維持する方針を明記（代替案として例外化・削除も検討したが不採用と決定））
 **作成者**: Claude + User (tyokkoto@hotmail.com)
 
 ---
@@ -99,37 +99,42 @@ public sealed class UserAuthSession : AggregateRoot<UserAuthSessionRowId>
     public bool IsAdAuthenticated { get; private set; }                 // true=AD認証、false=ローカル認証
     public bool LoginSuccess { get; private set; }                      // 認証成功/失敗（失敗も記録）
     public LocalDateTime LoggedInAt { get; private set; }
-    public LocalDateTime? LoggedOutAt { get; private set; }             // アプリ正常終了時のみ設定
-    public LoginCredentialsRowId? LoginCredentialsRowId { get; private set; } // ローカル認証時のみ値あり
-    public byte[] RowVersion { get; set; } = [];
+    public LoggedOutAt LoggedOutAt { get; private set; }                // アプリ正常終了時のみ設定（未設定は Unset）
+    public UsedLoginCredentialsRowId LoginCredentialsRowId { get; private set; } // ローカル認証時のみ設定（未設定は Unset）
+    public byte[] RowVersion { get; internal set; } = [];
 
     public static UserAuthSession Create(
         UserAuthSessionRowId id, AuthorityRowId authorityRowId,
         bool isAdAuthenticated, bool loginSuccess, LocalDateTime loggedInAt,
-        LoginCredentialsRowId? loginCredentialsRowId = null);
+        UsedLoginCredentialsRowId loginCredentialsRowId);
 
     // DB から復元（Repository が使用）
     public static UserAuthSession Reconstruct(
         UserAuthSessionRowId id, AuthorityRowId authorityRowId,
         bool isAdAuthenticated, bool loginSuccess, LocalDateTime loggedInAt,
-        LocalDateTime? loggedOutAt, LoginCredentialsRowId? loginCredentialsRowId);
+        LoggedOutAt loggedOutAt, UsedLoginCredentialsRowId loginCredentialsRowId,
+        byte[]? rowVersion = null);
 
     public void SetLoggedOutAt(LocalDateTime loggedOutAt);
-    public bool IsActive() => LoginSuccess && LoggedOutAt == null;
+    public bool IsActive() => LoginSuccess && !LoggedOutAt.HasLoggedOut;
 }
 ```
+
+Domain 層に `null` は現れない。未ログアウトは `LoggedOutAt.Unset()`（`HasLoggedOut == false`）、認証情報を使わない（AD 認証・不明なログイン ID）場合は `UsedLoginCredentialsRowId.Unset()`（`HasCredentials == false`）で表す（[null 厳格性設計ガイド](null厳格性設計ガイド.md) 参照）。DB の `NULL` との変換は Mapper（Infrastructure）が行う。
 
 **注**: 監査フィールド（CreatedAt/CreatedBy 等）は Domain Entity には保持せず、Repository が保存・更新時に設定する（[LocalDateTime 使用規則](../../../CLAUDE.md#-localdatetime-使用規則)参照）。
 
 ### ValueObjects
 
-Domain 層の実際の ValueObject は以下の5つ（[ValueObjects/](../../../src/Contexts/Authentication/Authentication.Domain/ValueObjects/) 配下）。
+Domain 層の実際の ValueObject は以下の7つ（[ValueObjects/](../../../src/Contexts/Authentication/Authentication.Domain/ValueObjects/) 配下）。
 
 | ValueObject | 用途 |
 |---|---|
 | `UserAuthSessionRowId` | UserAuthSession の主キー（`t_user_auth_sessions.row_id`） |
 | `AuthorityRowId` | 権限主体（`m_employees.row_id`）。EmployeeRowId と論理的に同一の値だが、BC境界を明確化するためこのBCでローカルに定義した独立した型（EmployeeRowId 型そのものではない） |
 | `LoginCredentialsRowId` | ローカル認証マスターの行ID（`m_login_credentials.row_id`） |
+| `UsedLoginCredentialsRowId` | セッションが使った認証情報の行ID（`t_user_auth_sessions.login_credentials_row_id`）。任意項目のため未設定（`Unset()`）を持つ。別名 `HasCredentials`。`From(LoginCredentialsRowId)` で認証情報の行ID から作れる。`TryFrom(long?)` は `null` を `Unset()` にする |
+| `LoggedOutAt` | ログアウト日時（`t_user_auth_sessions.logged_out_at`）。未設定（`Unset()`）は「非正常終了または継続中」。別名 `HasLoggedOut`。`TryFrom(LocalDateTime?)` は `null` を `Unset()` にする（`UpdatedAt` と同じパターン） |
 | `LoginId` | ログインID（現状 `AuthenticateLocalUserRequest`/`LoginCredentialsDbModel` では素の `string` として扱われており、この ValueObject は未結線） |
 | `AuthMethod` | 認証方式を表す enum ラッパー（`LocalAuth`/`WindowsAD`）。現状 `UserAuthSession.IsAdAuthenticated`（bool）が実際に使われており、この ValueObject は未結線 |
 
@@ -301,7 +306,7 @@ public sealed class AuthenticateLocalUserResponse
     public long UserAuthSessionRowId { get; init; }
     public long EmployeeRowId { get; init; }
     public string LoginId { get; init; } = string.Empty;
-    public DateTime LoggedInAt { get; init; }
+    public LocalDateTime LoggedInAt { get; init; }
 }
 ```
 
@@ -345,67 +350,36 @@ public sealed class LogoutUseCase
 
 ### プロジェクト参照（.csproj）
 
-**✓ Authentication.Domain**
+実際の `ProjectReference` は次のとおり（`Crosscutting` は参照していない）。
 
-```xml
-<ItemGroup>
-    <ProjectReference Include="../../SharedKernel/SharedKernel.csproj" />
-    <ProjectReference Include="../../Common/Common.csproj" />
-</ItemGroup>
-```
-
-**✓ Authentication.Application**
-
-```xml
-<ItemGroup>
-    <ProjectReference Include="../Authentication.Domain/Authentication.Domain.csproj" />
-    <ProjectReference Include="../../Application/Application.csproj" />
-    <ProjectReference Include="../../Crosscutting/Crosscutting.csproj" />
-</ItemGroup>
-```
-
-**✓ Authentication.Infrastructure**
-
-```xml
-<ItemGroup>
-    <ProjectReference Include="../Authentication.Domain/Authentication.Domain.csproj" />
-    <ProjectReference Include="../Authentication.Application/Authentication.Application.csproj" />
-    <ProjectReference Include="../../Infrastructure/Infrastructure.csproj" />
-    <!-- ✓ 汎用層の Query Service インターフェース（DI 経由で取得） -->
-    <!-- ✗ Employee.Application / Employee.Domain への直接参照は禁止 -->
-</ItemGroup>
-```
+| プロジェクト | 参照先 |
+|---|---|
+| `Authentication.Domain` | `Common`、`SharedKernel` |
+| `Authentication.Application` | `Authentication.Domain`、汎用 `Application`、`Common`、`SharedKernel` |
+| `Authentication.Infrastructure` | `Authentication.Domain`、`Authentication.Application`、汎用 `Application`、汎用 `Infrastructure` |
 
 ### 依存関係の正当性
 
 | From | To | 許可 | 理由 |
 |---|---|---|---|
-| Authentication.Domain → SharedKernel, Common | ✓ | 基盤型のため |
-| Authentication.Application → Authentication.Domain, Application（汎用）, Crosscutting | ✓ | Use Case 実装のため |
-| Authentication.Infrastructure → Authentication.Domain, Authentication.Application（インターフェース）, Infrastructure | ✓ | Repository 実装のため |
-| Authentication.Infrastructure → Employee.Application / Employee.Domain | ✗ | BC 参照禁止。代わりに `IQueryService<Employee, EmployeeRowId>` を DI 経由で使用 |
+| Authentication.Domain | SharedKernel, Common | ✓ | 基盤型のため |
+| Authentication.Application | Authentication.Domain, Application（汎用）, SharedKernel, Common | ✓ | Use Case 実装のため |
+| Authentication.Infrastructure | Authentication.Domain, Authentication.Application（インターフェース）, Application（汎用）, Infrastructure（汎用） | ✓ | Repository・Query Service 実装のため |
+| Authentication.* | Employee.* | ✗ | BC 参照禁止。認証情報の従業員は `mapping_employee_row_id`（`long`）で持つだけで、Employee の型は使わない |
 
-### DI 設定（Program.cs）
+> 現状、Authentication は他の BC の Aggregate を読まないため、[ジェネリック Query Service](../../../CLAUDE.md#-context間のデータ共有パターン)（`IQueryService<TAggregate, TId>`）は使っていない。他 BC の情報が必要になった場合はこのパターンを使う。
+
+### DI 設定（Composition Root）
+
+WinTrial の [Program.cs](../../../src/Presentation/WinTrial/Program.cs)（WpfTrial は `App.xaml.cs`）で次のように登録する。各 BC は自分の `Add…Models()` だけを持ち、他 BC の登録を含まない。
 
 ```csharp
-// 汎用層
 services
-    .AddApplicationModels()  // IQueryService<T, TId> インターフェース定義
-    ;
-
-// Employee BC
-services
-    .AddEmployeeApplicationModels()  // EmployeeQueryService 実装
-    .AddEmployeeInfrastructureModels()
-    ;
-
-// Authentication BC
-services
-    .AddAuthenticationApplicationModels()
-    .AddAuthenticationInfrastructureModels()
-    // DI: IQueryService<Employee, EmployeeRowId> → EmployeeQueryService
-    .AddScoped(typeof(IQueryService<>), typeof(EmployeeQueryService<>))
-    ;
+    .AddInfrastructureModels(context.Configuration)
+    .AddAuthenticationInfrastructureModels()   // IUserAuthSessionRepository、ILoginCredentialsQuery、IPasswordHashService、UserAuthSessionMapper
+    .AddApplicationModels()
+    .AddAuthenticationApplicationModels()      // AuthenticateLocalUserUseCase、LogoutUseCase、FindEmployeeByADUseCase
+    .AddScoped<ICurrentUserService, RealCurrentUserService>();
 ```
 
 ---
@@ -421,7 +395,7 @@ Main()
 ├─ DI コンテナ構築（AddAuthenticationApplicationModels / AddAuthenticationInfrastructureModels 等）
 ├─ host.Start()
 ├─ LoginDialog を DI から取得して ShowDialog()（モーダル）
-│  └─ LoginDialogViewModel.Login() が AuthenticateLocalUserUseCase.ExecuteAsync() を実行
+│  └─ LoginViewModel（Presentation.Shared）の Login() が AuthenticateLocalUserUseCase.ExecuteAsync() を実行
 │     ├─ 成功 → ICurrentUserService.SetLoggedInUser(...) → LoginSucceeded イベント → ダイアログを閉じる（DialogResult.OK）
 │     └─ 失敗 → ErrorMessage 表示、パスワード欄クリア、ダイアログは閉じない（再入力可）
 ├─ DialogResult.OK の場合 → Form1（メイン画面）を表示
@@ -446,7 +420,7 @@ public sealed class RealCurrentUserService : ICurrentUserService
     public bool IsLoggedIn { get; }
     public bool IsAuthenticated => IsLoggedIn;
 
-    public void SetLoggedInUser(long employeeRowId, string loginId); // LoginDialogViewModel から呼ばれる
+    public void SetLoggedInUser(long employeeRowId, string loginId); // LoginViewModel から呼ばれる
     public void SetLoggedOut();
 }
 ```
@@ -457,23 +431,23 @@ public sealed class RealCurrentUserService : ICurrentUserService
 
 ## 実装状況（2026-09-16 時点）
 
-- ✅ **Domain層**: UserAuthSession Entity、5つの ValueObject、IUserAuthSessionRepository 実装済み
+- ✅ **Domain層**: UserAuthSession Entity、7つの ValueObject、IUserAuthSessionRepository 実装済み
 - ✅ **Application層**: AuthenticateLocalUserUseCase、LogoutUseCase 実装済み。DTOs 定義済み
 - ✅ **Infrastructure層**: UserAuthSessionRepository（RepoDb+Dapper）、LoginCredentialsQueryService、PasswordHashService（PBKDF2+Salt）実装済み
-- ✅ **Presentation層との統合**: LoginDialog + LoginDialogViewModel（MVVM Toolkit）、RealCurrentUserService への切り替え完了
+- ✅ **Presentation層との統合**: LoginDialog + LoginViewModel（MVVM Toolkit。`Presentation.Shared`）、RealCurrentUserService への切り替え完了
 - ✅ **E2Eテスト**: ログイン成功/失敗フローの検証完了（[LoginDialogUITests.cs](../../../tests/Contexts/Authentication.Infrastructure.Tests/E2E/LoginDialogUITests.cs)）
 
 **未実装・既知のギャップ**:
 - ❌ **Windows AD 自動認証**: `FindEmployeeByADUseCase` は空のスタブ。常に ID/パスワード認証のダイアログから開始する
 - ❌ **ログアウト時の記録**: `LogoutUseCase` は実装済みだが Presentation層から呼び出されておらず、`logged_out_at` はアプリ終了時に記録されない
 - ⚠️ **LoginId / AuthMethod ValueObject**: 定義済みだが実際のコードパス（Entity/DbModel/DTO）では未使用（`string`/`bool` のまま）
-- ⚠️ **RowVersion（楽観ロック）**: `UserAuthSessionDbModel.RowVersion` は `[NotMapped]` のプレースホルダーで、実際の DB カラムとは未連携
+- ✅ **RowVersion（楽観ロック）**: `UserAuthSessionDbModel.RowVersion` は `[Column("row_version")]` で DB カラムにマップされ、Entity の `RowVersion`（`internal set`）へ Repository が受け渡す
 
 ---
 
 ## 参考資料
 
-- [CLAUDE.md - Context間のデータ共有パターン](../../CLAUDE.md#-context間のデータ共有パターン)
+- [CLAUDE.md - Context間のデータ共有パターン](../../../CLAUDE.md#-context間のデータ共有パターン)
 - [CLEAN_ARCHITECTURE_GUIDELINES.md](CLEAN_ARCHITECTURE_GUIDELINES.md)
 - [Repository_パターンガイド.md](Repository_パターンガイド.md)
 - [Entity_設計ガイドライン.md](Entity_設計ガイドライン.md)
