@@ -25,7 +25,7 @@ namespace SupportAdvance.Presentation.WinTrial.Views {
         private void InitializeComponent() {
             components = new System.ComponentModel.Container();
             ribbon = new Syncfusion.Windows.Forms.Tools.RibbonControlAdv();
-            navigationTree = new TreeView();
+            navigationTree = new Syncfusion.Windows.Forms.Tools.TreeViewAdv();
             tabbedMdiManager = new Syncfusion.Windows.Forms.Tools.TabbedMDIManager();
             statusStripEx = new Syncfusion.Windows.Forms.Tools.StatusStripEx();
 
@@ -72,7 +72,7 @@ namespace SupportAdvance.Presentation.WinTrial.Views {
         #endregion
 
         private Syncfusion.Windows.Forms.Tools.RibbonControlAdv ribbon;
-        private TreeView navigationTree;
+        private Syncfusion.Windows.Forms.Tools.TreeViewAdv navigationTree;
         private Syncfusion.Windows.Forms.Tools.TabbedMDIManager tabbedMdiManager;
         private Syncfusion.Windows.Forms.Tools.StatusStripEx statusStripEx;
     }

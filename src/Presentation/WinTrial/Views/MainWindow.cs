@@ -3,6 +3,7 @@ using System.ComponentModel;
 using SupportAdvance.Presentation.Shared.ViewModels;
 using SupportAdvance.Presentation.Shared.ViewModels.Tabs;
 using Syncfusion.Windows.Forms;
+using Syncfusion.Windows.Forms.Tools;
 
 namespace SupportAdvance.Presentation.WinTrial.Views;
 
@@ -13,7 +14,7 @@ namespace SupportAdvance.Presentation.WinTrial.Views;
 /// <para>【責務】<see cref="MainWindowViewModel"/> とナビゲーション・タブ（MDI 子フォーム）の同期のみ。タブの管理は ViewModel が担当</para>
 /// <para>【設計】WinForms には ItemsSource 相当が無いため、<see cref="MainWindowViewModel.OpenTabs"/> の変更を MDI 子フォームの生成・破棄に反映し、
 /// 子フォームのアクティブ化・終了を <see cref="MainWindowViewModel.SelectedTab"/>／<c>CloseTabCommand</c> に反映する</para>
-/// <para>【設計】ナビゲーションは階層を持てる <see cref="TreeView"/> を左側に固定配置する（項目名は WpfTrial の階層メニューと同じ）。
+/// <para>【設計】ナビゲーションは階層を持てる <see cref="TreeViewAdv"/> を左側に固定配置する（項目名は WpfTrial の階層メニューと同じ）。
 /// Syncfusion の NavigationDrawer は「閉じるスライドパネル」で階層を持てず、リサイズで項目が消えたため使用しない</para>
 /// <para>【動作】子項目のクリック（またはキーボードの Enter）でタブを開く。親項目のクリックは展開／折りたたみのみ</para>
 /// </remarks>
@@ -57,19 +58,21 @@ public partial class MainWindow : Form
     {
         foreach (var (parent, children) in NavigationMenu)
         {
-            var parentNode = navigationTree.Nodes.Add(parent);
+            var parentNode = new TreeNodeAdv(parent);
 
             // 子項目は Tag に項目名を持たせる（親項目は Tag なし）
             foreach (var child in children)
             {
-                parentNode.Nodes.Add(new TreeNode(child) { Tag = child });
+                parentNode.Nodes.Add(new TreeNodeAdv(child) { Tag = child });
             }
+
+            navigationTree.Nodes.Add(parentNode);
         }
 
         navigationTree.ExpandAll();
     }
 
-    private void NavigationTree_NodeMouseClick(object? sender, TreeNodeMouseClickEventArgs e)
+    private void NavigationTree_NodeMouseClick(object? sender, TreeViewAdvMouseClickEventArgs e)
     {
         OpenTabFor(e.Node);
     }
@@ -83,7 +86,7 @@ public partial class MainWindow : Form
         }
     }
 
-    private void OpenTabFor(TreeNode node)
+    private void OpenTabFor(TreeNodeAdv node)
     {
         // 親項目（Tag なし）は展開／折りたたみのみ。子項目のみタブを開く
         if (node.Tag is string menuName)
