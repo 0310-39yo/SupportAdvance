@@ -10,11 +10,9 @@
             <Setter Property="FontSize" Value="14" />
         </Style>
 
-        <!-- MainWindow は SfChromelessWindow を継承しているため、Window 向けの
-             暗黙的スタイルが適用されない。SfChromelessWindow にも同じ設定を適用する -->
-        <Style TargetType="syncfusion:SfChromelessWindow">
-            <Setter Property="FontFamily" Value="Yu Gothic UI" />
-            <Setter Property="FontSize" Value="14" />
-        </Style>
+        <!-- 【注意】SfChromelessWindow 向けの暗黙的スタイルは定義しない。
+             定義すると、SfSkinManager（テーマ）が適用するスタイル（タイトルバーのテンプレートを含む）が置き換わり、
+             タイトルバー（タイトル、最小化・最大化・閉じるのボタン）が表示されなくなる。
+             MainWindow のフォントは、MainWindow.xaml で直接指定する -->
     </Application.Resources>
 </Application>

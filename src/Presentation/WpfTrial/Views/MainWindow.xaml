@@ -17,10 +17,9 @@
     Title="MainWindow"
     Width="1200"
     Height="800"
-    CaptionBackground="#FFF0F0F0"
-    CaptionForeground="#FF222222">
-    <!-- タイトルバー：最小化・最大化・閉じるのボタンの記号は、テーマが濃い灰色（#444444）で描く（CaptionForeground では変わらない）。
-         濃い背景にすると記号が見えなくなるため、タイトルバーは明るい背景にし、タイトルの文字（CaptionForeground）だけを濃い色にする -->
+    FontFamily="Yu Gothic UI"
+    FontSize="14">
+    <!-- フォントは、App.xaml の暗黙的スタイルではなく、ここで直接指定する（暗黙的スタイルはテーマのタイトルバーを消すため） -->
 
     <Window.Resources>
         <!-- ナビゲーション項目のスタイル：フォントを少し大きくし（既定 14 → 16）、上下の間隔（最小の高さと余白）を小さくする。
