@@ -23,6 +23,17 @@
              テーマ既定のスタイルを引き継ぐ（BasedOn）ため、ここで指定した項目だけが変わる。
              ただし項目の高さは、テーマのテンプレートが固定したアイコン欄（高さ 25 + 余白 10 = 35）で決まり、スタイルでは 35 より小さくならない。
              そのため、上下の間隔は NavigationItemDensityBehavior.IconRowHeight（下の SfNavigationDrawer に指定）で詰める -->
+        <!-- タブの見出し：タブどうしの境が分かるように、枠線と隙間を付ける（選択中のタブは、TabControlExt の TabItemSelected* で白地に強調）。
+             テーマ既定のスタイルを引き継ぐ（BasedOn）ため、ここで指定した項目だけが変わる -->
+        <Style x:Key="MainTabItemStyle"
+               TargetType="syncfusion:TabItemExt"
+               BasedOn="{StaticResource {x:Type syncfusion:TabItemExt}}">
+            <Setter Property="Background" Value="#FFDCDCDC" />
+            <Setter Property="BorderBrush" Value="#FFB0B0B0" />
+            <Setter Property="BorderThickness" Value="1,1,1,0" />
+            <Setter Property="Margin" Value="0,0,2,0" />
+        </Style>
+
         <Style x:Key="NavigationItemStyle"
                TargetType="navigationDrawer:NavigationItem"
                BasedOn="{StaticResource {x:Type navigationDrawer:NavigationItem}}">
@@ -164,7 +175,15 @@
                                       SelectedItem="{Binding SelectedTab, Mode=TwoWay}"
                                       behaviors:TabControlExtCloseBehavior.TabClosedCommand="{Binding CloseTabCommand}"
                                       AllowDragDrop="True"
-                                      CloseButtonType="Individual">
+                                      CloseButtonType="Individual"
+                                      ItemContainerStyle="{StaticResource MainTabItemStyle}"
+                                      TabPanelBackground="#FFE6E6E6"
+                                      TabItemSelectedBackground="White"
+                                      TabItemSelectedBorderBrush="#FF808080"
+                                      TabItemSelectedForeground="#FF1A1A1A"
+                                      TabItemHoverBackground="#FFF2F2F2"
+                                      TabItemHoverBorderBrush="#FF9A9A9A"
+                                      SelectedItemFontWeight="SemiBold">
                 <!-- TabItem の表示テンプレート -->
                 <syncfusion:TabControlExt.ItemTemplate>
                     <DataTemplate>

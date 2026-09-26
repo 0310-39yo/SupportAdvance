@@ -69,6 +69,15 @@ public partial class MainWindow : Form
         // テーマは Office2016White 
         SkinManager.SetVisualStyle(this, "Office2016White");
 
+        // タブ（TabbedMDIManager）は、テーマの青い背景を使わず、白地に濃い文字の選択タブと、灰色の他のタブにする
+        // （テーマの適用後に指定しないと、テーマの色で上書きされる）
+        tabbedMdiManager.ActiveTabBackColor = Color.White;
+        tabbedMdiManager.ActiveTabForeColor = Color.FromArgb(0x1A, 0x1A, 0x1A);
+        tabbedMdiManager.TabBackColor = Color.FromArgb(0xE0, 0xE0, 0xE0);
+        tabbedMdiManager.TabForeColor = Color.FromArgb(0x40, 0x40, 0x40);
+        tabbedMdiManager.TabPanelBackColor = Color.FromArgb(0xF0, 0xF0, 0xF0);
+        tabbedMdiManager.TabPanelBorderColor = Color.FromArgb(0xB0, 0xB0, 0xB0);
+
         AddNavigationNodes();
         navigationTree.NodeMouseClick += NavigationTree_NodeMouseClick;
         navigationTree.KeyDown += NavigationTree_KeyDown;
