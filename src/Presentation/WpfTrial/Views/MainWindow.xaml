@@ -4,9 +4,20 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:syncfusion="http://schemas.syncfusion.com/wpf"
     xmlns:navigationDrawer="clr-namespace:Syncfusion.UI.Xaml.NavigationDrawer;assembly=Syncfusion.SfNavigationDrawer.WPF"
+    xmlns:behaviors="clr-namespace:SupportAdvance.Presentation.WpfTrial.Behaviors"
+    xmlns:tabs="clr-namespace:SupportAdvance.Presentation.WpfTrial.ViewModels.Tabs"
+    xmlns:views="clr-namespace:SupportAdvance.Presentation.WpfTrial.Views"
     Title="MainWindow"
     Width="1200"
     Height="800">
+
+    <Window.Resources>
+        <!-- タブ内容の ViewModel → View の対応付け（ViewModel-first）。
+             画面を追加する場合は、ここに ViewModel 型ごとの DataTemplate を追加する -->
+        <DataTemplate DataType="{x:Type tabs:EmptyTabContentViewModel}">
+            <views:EmptyView />
+        </DataTemplate>
+    </Window.Resources>
 
     <Grid>
 
@@ -41,7 +52,8 @@
                              x:Name="NavigationPane"
                              DisplayMode="Expanded"
                              IsToggleButtonVisible="False"
-                             DrawerWidth="220">
+                             DrawerWidth="220"
+                             behaviors:NavigationDrawerBehavior.ItemClickedCommand="{Binding OpenTabCommand}">
 
             <navigationDrawer:NavigationItem Header="顧客管理">
                 <navigationDrawer:NavigationItem Header="顧客一覧"/>
@@ -55,10 +67,10 @@
 
             <navigationDrawer:SfNavigationDrawer.ContentView>
                 <!-- TabbedWindow（TabControlExt / Tools系） -->
-                <!-- ItemsSource: ViewModel の OpenTabs -->
+                <!-- ItemsSource: ViewModel の OpenTabs（読み取り専用コレクションのため OneWay） -->
                 <!-- SelectedItem: ViewModel の SelectedTab -->
                 <syncfusion:TabControlExt x:Name="MainTabs"
-                                          ItemsSource="{Binding OpenTabs, Mode=TwoWay}"
+                                          ItemsSource="{Binding OpenTabs}"
                                           SelectedItem="{Binding SelectedTab, Mode=TwoWay}"
                                           AllowDragDrop="True"
                                           CloseButtonType="Individual">
@@ -68,10 +80,10 @@
                             <TextBlock Text="{Binding Header}" />
                         </DataTemplate>
                     </syncfusion:TabControlExt.ItemTemplate>
-                    <!-- TabItem の コンテンツテンプレート -->
+                    <!-- TabItem の コンテンツテンプレート（ContentViewModel の型に対応する DataTemplate で View が決まる） -->
                     <syncfusion:TabControlExt.ContentTemplate>
                         <DataTemplate>
-                            <ContentPresenter Content="{Binding Content}"/>
+                            <ContentPresenter Content="{Binding ContentViewModel}"/>
                         </DataTemplate>
                     </syncfusion:TabControlExt.ContentTemplate>
                 </syncfusion:TabControlExt>
