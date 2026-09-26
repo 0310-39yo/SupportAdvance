@@ -136,7 +136,7 @@ public class EmployeeRepository(
                 throw new InvalidOperationException($"Invalid DeletedAt for Person BizId={bizId}");
             }
 
-            return _mapper.ToDomainEntity(dbModel, personDbModel, departmentMemberships.ToList());
+            return _mapper.ToDomainEntity(dbModel, personDbModel, Clock, departmentMemberships.ToList());
         }
         catch (Exception ex)
         {
@@ -229,7 +229,7 @@ public class EmployeeRepository(
             _logger.LogInformation(
                 $"Employee loaded: RowId={id.Value}, Person found, DepartmentMemberships={membershipDbModels.Count()}");
 
-            return _mapper.ToDomainEntity(employeeDbModel, personDbModel, membershipDbModels.ToList());
+            return _mapper.ToDomainEntity(employeeDbModel, personDbModel, Clock, membershipDbModels.ToList());
         }
         catch (Exception ex)
         {
@@ -290,7 +290,7 @@ public class EmployeeRepository(
                     membershipSql,
                     new { EmployeeRowId = employeeDbModel.RowId });
 
-                results.Add(_mapper.ToDomainEntity(employeeDbModel, personDbModel, membershipDbModels.ToList()));
+                results.Add(_mapper.ToDomainEntity(employeeDbModel, personDbModel, Clock, membershipDbModels.ToList()));
             }
 
             return results.AsReadOnly();

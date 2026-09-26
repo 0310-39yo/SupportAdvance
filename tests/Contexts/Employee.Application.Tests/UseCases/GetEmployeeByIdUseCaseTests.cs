@@ -5,7 +5,6 @@ using SupportAdvance.Contexts.Employee.Domain.Entities;
 using SupportAdvance.Contexts.Employee.Domain.ValueObjects.DepartmentMembership;
 using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
 using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Person;
-using SupportAdvance.Contexts.Employee.Infrastructure.Mappers;
 using SupportAdvance.Contexts.Employee.Infrastructure.Repositories;
 using SupportAdvance.Common.Clocks;
 using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
@@ -81,9 +80,6 @@ public class GetEmployeeByIdUseCaseTests
 
     private (GetEmployeeByIdUseCase, SupportAdvance.Contexts.Employee.Application.Repositories.IEmployeeRepository) CreateUseCase()
     {
-        var fixedDateTime = new DateTime(2026, 8, 11, 0, 0, 0, DateTimeKind.Unspecified);
-        var clock = new MockClock(fixedDateTime);
-        var mapper = new EmployeeMapper(clock);
         var repository = new MockEmployeeRepository();
         var useCase = new GetEmployeeByIdUseCase(repository);
         return (useCase, repository);

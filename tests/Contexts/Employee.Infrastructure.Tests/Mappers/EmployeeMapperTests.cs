@@ -149,7 +149,7 @@ public class EmployeeMapperTests
         var mapper = CreateMapper();
 
         // Act
-        var employee = mapper.ToDomainEntity(dbModel, personDbModel, null);
+        var employee = mapper.ToDomainEntity(dbModel, personDbModel, _clock, null);
 
         // Assert
         Assert.NotNull(employee);
@@ -187,7 +187,7 @@ public class EmployeeMapperTests
         var mapper = CreateMapper();
 
         // Act
-        var employee = mapper.ToDomainEntity(dbModel, personDbModel, null);
+        var employee = mapper.ToDomainEntity(dbModel, personDbModel, _clock, null);
 
         // Assert
         Assert.True(employee.TypeDivision.IsDispatched);
@@ -221,7 +221,7 @@ public class EmployeeMapperTests
         var mapper = CreateMapper();
 
         // Act
-        var employee = mapper.ToDomainEntity(dbModel, personDbModel, null);
+        var employee = mapper.ToDomainEntity(dbModel, personDbModel, _clock, null);
 
         // Assert
         Assert.True(employee.TypeDivision.IsContractor);
@@ -261,7 +261,7 @@ public class EmployeeMapperTests
         // Act
         var dbModel = mapper.ToDbModel(originalEmployee);
         var personDbModel = mapper.ToPersonDbModel(originalPerson, originalRowId.Value);
-        var reconstructedEmployee = mapper.ToDomainEntity(dbModel, personDbModel, null);
+        var reconstructedEmployee = mapper.ToDomainEntity(dbModel, personDbModel, _clock, null);
 
         // Assert
         Assert.Equal(originalRowId.Value, reconstructedEmployee.RowId.Value);
@@ -302,7 +302,7 @@ public class EmployeeMapperTests
         var mapper = CreateMapper();
 
         // Act & Assert
-        Assert.Throws<ArgumentOutOfRangeException>(() => mapper.ToDomainEntity(dbModel, personDbModel, null));
+        Assert.Throws<ArgumentOutOfRangeException>(() => mapper.ToDomainEntity(dbModel, personDbModel, _clock, null));
     }
 
     #endregion
@@ -311,7 +311,7 @@ public class EmployeeMapperTests
 
     private EmployeeMapper CreateMapper()
     {
-        return new EmployeeMapper(_clock);
+        return new EmployeeMapper();
     }
 
     #endregion

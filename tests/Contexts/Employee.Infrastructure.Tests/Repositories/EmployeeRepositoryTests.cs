@@ -85,7 +85,7 @@ public class EmployeeRepositoryTests : RepositoryTestBase
         _connectionFactory = new DbConnectionFactory(appSettings);
         _testSequenceProvider = new TestSequenceProvider(appSettings);
         var queryLoader = new SqlQueryLoader(appSettings);
-        var mapper = new EmployeeMapper(_clock);
+        var mapper = new EmployeeMapper();
         var currentUser = new TestCurrentUserService();
         var logger = new NoOpAppLogging<EmployeeRepository>();
 
