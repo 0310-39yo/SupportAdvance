@@ -13,6 +13,9 @@ public sealed class EmptyTabForm : Form
     /// </summary>
     public EmptyTabForm()
     {
+        // TabbedMDIManager のタブとして表示する MDI の子フォームは、最大化した状態にする（Form1View も同様）
+        WindowState = FormWindowState.Maximized;
+
         Controls.Add(new Label
         {
             Text = "（未実装）",
