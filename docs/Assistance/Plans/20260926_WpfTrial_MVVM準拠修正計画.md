@@ -90,6 +90,16 @@
   - `*ViewModel` が `System.Windows.*`／`Syncfusion.*` に依存しない
 - 既存の 888 テスト＋新規テストが全て合格
 
+### 実施結果（2026-09-26）
+
+- `tests/Presentation/WpfTrial.Tests` を新設（20 テスト。MainWindow／Form1／LoginWindow の各 ViewModel。Moq 使用）
+- `tests/Architecture.Tests/PresentationArchitectureTests.cs` を追加（5 テスト）
+  - WpfTrial／WinTrial: Composition Root（App／Program）以外は Infrastructure に依存しない
+  - WpfTrial の ViewModel は View 型・UI コントロール型に依存しない
+  - 検証ルールが空振りしていないことの確認（App／Program が Infrastructure に、MainWindow が UI 型に依存していることを検出）
+- `Architecture.Tests` は WpfTrial／WinTrial を参照するため TargetFramework を `net10.0-windows` に変更
+- WinTrial の ViewModel の UI 型非依存ルールは、Phase 6 の調査結果を踏まえて追加する（Infrastructure 非依存ルールは適用済み）
+
 ## Phase 5: 任意の改善（低優先）
 
 - 各 View の要素ごとの `FontFamily`／`FontSize` 重複指定を削除し、App.xaml の暗黙スタイルに一本化
@@ -120,7 +130,7 @@ WinTrial は Phase 3 で `ICurrentUserService` の名前空間変更に追随す
 
 ### 完了条件
 
-- WinTrial についても Phase 4 の NetArchTest（Presentation → Infrastructure 禁止、ViewModel の UI 型非依存）が適用対象に含まれていること
+- WinTrial についても Phase 4 の NetArchTest のうち ViewModel の UI 型非依存ルールが適用されていること（Presentation → Infrastructure 禁止は Phase 4 で適用済み）
 
 ## リスクと留意点
 
