@@ -32,6 +32,9 @@ public partial class MainWindow : Form
     private const int NavigationIconSize = 20;
     private const float NavigationFontSize = 11f;
 
+    // ナビゲーションの項目の上下の余白の合計（小さいほど、項目の間隔が詰まる）
+    private const int NavigationItemVerticalPadding = 4;
+
     // Office2016White の明るい背景で見やすいよう、黒に近い濃い色で描く（ForeColor は、テーマ適用前の値になるため使わない）
     private static readonly Color NavigationIconColor = Color.FromArgb(0x1A, 0x1A, 0x1A);
     private const int CollapsedNavigationIndent = 4;
@@ -123,7 +126,8 @@ public partial class MainWindow : Form
 
         navigationTree.LeftImageList = imageList;
         navigationTree.Font = new Font(navigationTree.Font.FontFamily, NavigationFontSize);
-        navigationTree.ItemHeight = iconPixelSize + 10;
+        // 項目の高さは、アイコンと文字の高いほうに、上下の余白（合計 NavigationItemVerticalPadding）を足した大きさにする
+        navigationTree.ItemHeight = Math.Max(iconPixelSize, navigationTree.Font.Height) + NavigationItemVerticalPadding;
 
         foreach (var (parent, parentIcon, children) in NavigationMenu)
         {
