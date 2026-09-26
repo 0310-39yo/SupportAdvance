@@ -307,7 +307,103 @@ public class EmployeeMapperTests
 
     #endregion
 
+    #region グループ 5: 所属の部署名（表示用）
+
+    [Fact]
+    public void TestToDomainEntity05_WithMembershipDepartmentName_ConvertsToSetName()
+    {
+        var employee = MapWithMembershipName("営業部");
+
+        var membership = Assert.Single(employee.DepartmentMemberships);
+        Assert.True(membership.DepartmentDisplayName.HasName);
+        Assert.Equal("営業部", membership.DepartmentDisplayName.Value);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    public void TestToDomainEntity06_WithNullOrEmptyDepartmentName_ConvertsToUnset(string? departmentName)
+    {
+        // LEFT JOIN で部署が見つからない場合（NULL）や空文字は「名前なし」として扱う
+        var employee = MapWithMembershipName(departmentName);
+
+        var membership = Assert.Single(employee.DepartmentMemberships);
+        Assert.NotNull(membership.DepartmentDisplayName);
+        Assert.False(membership.DepartmentDisplayName.HasName);
+    }
+
+    [Fact]
+    public void TestToDepartmentMembershipDbModel01_WithUnsetName_ConvertsToNull()
+    {
+        var mapper = CreateMapper();
+        var membership = DepartmentMembership.Create(
+            DepartmentMembershipRowId.From(1L),
+            EmployeeRowId.From(100L),
+            DepartmentRowId.From(10L),
+            IsPrimary.Primary());
+
+        var result = mapper.ToDepartmentMembershipDbModel(membership);
+
+        Assert.Null(result.DepartmentName);
+    }
+
+    [Fact]
+    public void TestToDepartmentMembershipDbModel02_WithName_ConvertsToValue()
+    {
+        var mapper = CreateMapper();
+        var membership = DepartmentMembership.Create(
+            DepartmentMembershipRowId.From(1L),
+            EmployeeRowId.From(100L),
+            DepartmentRowId.From(10L),
+            IsPrimary.Primary(),
+            departmentDisplayName: DepartmentDisplayName.From("企画部"));
+
+        var result = mapper.ToDepartmentMembershipDbModel(membership);
+
+        Assert.Equal("企画部", result.DepartmentName);
+    }
+
+    #endregion
+
     #region ヘルパーメソッド
+
+    private Employee MapWithMembershipName(string? departmentName)
+    {
+        var personDbModel = new PersonDbModel
+        {
+            RowId = 50L,
+            EmployeeRowId = 100L,
+            LastName = "山田",
+            FirstName = "太郎",
+            LastNameKana = "ヤマダ",
+            FirstNameKana = "タロウ",
+            CreatedAt = DateTime.UtcNow,
+            CreatedBy = 1L
+        };
+        var dbModel = new EmployeeDbModel
+        {
+            RowId = 100L,
+            BizDivision = "M",
+            BizId = 1234,
+            RetiredOn = null,
+            CreatedAt = DateTime.UtcNow,
+            CreatedBy = 1L
+        };
+        var memberships = new List<DepartmentMembershipDbModel>
+        {
+            new()
+            {
+                RowId = 1L,
+                EmployeeRowId = 100L,
+                DepartmentRowId = 10L,
+                IsPrimary = true,
+                EndOn = null,
+                DepartmentName = departmentName
+            }
+        };
+
+        return CreateMapper().ToDomainEntity(dbModel, personDbModel, _clock, memberships);
+    }
 
     private EmployeeMapper CreateMapper()
     {

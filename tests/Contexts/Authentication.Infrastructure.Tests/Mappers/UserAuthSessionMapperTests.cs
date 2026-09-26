@@ -29,7 +29,8 @@ public class UserAuthSessionMapperTests
             authorityRowId,
             isAdAuthenticated: false,
             loginSuccess: true,
-            loggedInAt
+            loggedInAt,
+            UsedLoginCredentialsRowId.Unset()
         );
 
         // Act
@@ -59,7 +60,8 @@ public class UserAuthSessionMapperTests
             authorityRowId,
             isAdAuthenticated: true,
             loginSuccess: true,
-            loggedInAt
+            loggedInAt,
+            UsedLoginCredentialsRowId.Unset()
         );
         entity.SetLoggedOutAt(loggedOutAt);
 
@@ -105,6 +107,122 @@ public class UserAuthSessionMapperTests
         Assert.True(result.LoginSuccess);
     }
 
+    [Fact]
+    public void VO_MAP_04_ToDomainEntity_WithNullLoggedOutAtAndCredentials_ConvertsToUnset()
+    {
+        // Arrange
+        var mapper = new UserAuthSessionMapper();
+        var dbModel = new UserAuthSessionDbModel
+        {
+            RowId = 1L,
+            CurrentUserRowId = 100L,
+            IsAdAuthenticated = true,
+            LoginSuccess = true,
+            LoggedInAt = new DateTime(2026, 9, 16, 10, 0, 0),
+            LoggedOutAt = null,
+            LoginCredentialsRowId = null,
+            RowVersion = []
+        };
+
+        // Act
+        var result = mapper.ToDomainEntity(dbModel);
+
+        // Assert
+        Assert.NotNull(result.LoggedOutAt);
+        Assert.False(result.LoggedOutAt.HasLoggedOut);
+        Assert.NotNull(result.LoginCredentialsRowId);
+        Assert.False(result.LoginCredentialsRowId.HasCredentials);
+    }
+
+    [Fact]
+    public void VO_MAP_05_ToDomainEntity_WithLoggedOutAtAndCredentials_ConvertsToSetValues()
+    {
+        // Arrange
+        var mapper = new UserAuthSessionMapper();
+        var loggedOutDateTime = new DateTime(2026, 9, 16, 11, 0, 0);
+        var dbModel = new UserAuthSessionDbModel
+        {
+            RowId = 2L,
+            CurrentUserRowId = 101L,
+            IsAdAuthenticated = false,
+            LoginSuccess = true,
+            LoggedInAt = new DateTime(2026, 9, 16, 10, 0, 0),
+            LoggedOutAt = loggedOutDateTime,
+            LoginCredentialsRowId = 55L,
+            RowVersion = []
+        };
+
+        // Act
+        var result = mapper.ToDomainEntity(dbModel);
+
+        // Assert
+        Assert.True(result.LoggedOutAt.HasLoggedOut);
+        Assert.Equal(loggedOutDateTime, result.LoggedOutAt.Value.Value);
+        Assert.True(result.LoginCredentialsRowId.HasCredentials);
+        Assert.Equal(55L, result.LoginCredentialsRowId.Value);
+    }
+
+    [Fact]
+    public void VO_MAP_06_ToDomainEntity_WithInvalidCredentialsRowId_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var mapper = new UserAuthSessionMapper();
+        var dbModel = new UserAuthSessionDbModel
+        {
+            RowId = 1L,
+            CurrentUserRowId = 100L,
+            IsAdAuthenticated = false,
+            LoginSuccess = true,
+            LoggedInAt = new DateTime(2026, 9, 16, 10, 0, 0),
+            LoggedOutAt = null,
+            LoginCredentialsRowId = 0L,
+            RowVersion = []
+        };
+
+        // Act & Assert
+        Assert.Throws<InvalidOperationException>(() => mapper.ToDomainEntity(dbModel));
+    }
+
+    [Fact]
+    public void VO_MAP_07_ToDbModel_WithUnsetValues_ConvertsToNull()
+    {
+        // Arrange
+        var mapper = new UserAuthSessionMapper();
+        var entity = UserAuthSession.Create(
+            UserAuthSessionRowId.From(3L),
+            AuthorityRowId.From(102L),
+            isAdAuthenticated: true,
+            loginSuccess: true,
+            new LocalDateTime(new DateTime(2026, 9, 16, 10, 0, 0)),
+            UsedLoginCredentialsRowId.Unset());
+
+        // Act
+        var result = mapper.ToDbModel(entity);
+
+        // Assert
+        Assert.Null(result.LoggedOutAt);
+        Assert.Null(result.LoginCredentialsRowId);
+    }
+
+    [Fact]
+    public void VO_MAP_08_ToDbModel_WithCredentialsRowId_ConvertsToValue()
+    {
+        // Arrange
+        var mapper = new UserAuthSessionMapper();
+        var entity = UserAuthSession.Create(
+            UserAuthSessionRowId.From(4L),
+            AuthorityRowId.From(103L),
+            isAdAuthenticated: false,
+            loginSuccess: true,
+            new LocalDateTime(new DateTime(2026, 9, 16, 10, 0, 0)),
+            UsedLoginCredentialsRowId.From(77L));
+
+        // Act
+        var result = mapper.ToDbModel(entity);
+
+        // Assert
+        Assert.Equal(77L, result.LoginCredentialsRowId);
+    }
     #endregion
 
     #region グループ 3: DateTime変換

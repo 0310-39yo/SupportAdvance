@@ -1,45 +1,48 @@
-using SupportAdvance.Common.Clocks;
 using SupportAdvance.Contexts.Authentication.Domain.Entities;
 using SupportAdvance.Contexts.Authentication.Domain.ValueObjects;
 using SupportAdvance.Contexts.Authentication.Infrastructure.DbModels;
+using SupportAdvance.Common.Clocks;
+using SupportAdvance.Infrastructure.Mappers;
 
 namespace SupportAdvance.Contexts.Authentication.Infrastructure.Mappers;
 
 /// <summary>
-/// UserAuthSession マッパー
-///
-/// 【責務】
-/// - DbModel ↔ Domain Entity の双方向変換
-/// - LocalDateTime ↔ DateTime 変換（ビジネスフィールドのみ）
-///
-/// 【監査情報について】
-/// - Mapper では CreatedAt/CreatedBy/UpdatedAt/UpdatedBy/DeletedAt/DeletedBy を **設定しない**
-/// - Repository が保存・更新時に設定する責務を持つ
-/// - Reconstruct() では DB の監査情報をそのまま渡す
+/// 認証セッション（<see cref="UserAuthSession"/>）と DB モデル（<see cref="UserAuthSessionDbModel"/>）の相互変換を行うマッパー
 /// </summary>
+/// <remarks>
+/// <para>【責務】DB モデル ↔ Domain Entity の双方向変換。<c>DateTime</c> ↔ <see cref="LocalDateTime"/> の変換を含む（業務項目のみ）</para>
+/// <para>【注意】監査情報（CreatedAt／CreatedBy／UpdatedAt／UpdatedBy／DeletedAt／DeletedBy）は設定しない。保存・更新時の設定は Repository の担当</para>
+/// <para>【null契約】DB の NULL（ログアウト日時、認証情報の行ID）は、Unset の値オブジェクトに変換して Domain に渡す</para>
+/// </remarks>
 public sealed class UserAuthSessionMapper
 {
     /// <summary>
-    /// DbModel を Domain Entity に変換（DB から復元）
+    /// DB モデルからの認証セッションの復元
     /// </summary>
     /// <param name="dbModel">DB モデル</param>
-    /// <returns>Domain Entity（Reconstruct パターン）</returns>
+    /// <returns>復元したセッション</returns>
+    /// <exception cref="InvalidOperationException">DB の値を値オブジェクトに変換できない場合（DB の整合性エラー）</exception>
     public UserAuthSession ToDomainEntity(UserAuthSessionDbModel dbModel)
     {
         // ValueObjects の生成
         var sessionRowId = UserAuthSessionRowId.From(dbModel.RowId);
         var authorityRowId = AuthorityRowId.From(dbModel.CurrentUserRowId);
 
-        var loginCredentialsRowId = dbModel.LoginCredentialsRowId.HasValue
-            ? LoginCredentialsRowId.From(dbModel.LoginCredentialsRowId.Value)
-            : null;
+        if (!UsedLoginCredentialsRowId.TryFrom(dbModel.LoginCredentialsRowId, out var loginCredentialsRowId))
+        {
+            throw new InvalidOperationException(
+                $"Failed to convert LoginCredentialsRowId from DB value: {dbModel.LoginCredentialsRowId}");
+        }
 
-        var loggedInAt = new LocalDateTime(dbModel.LoggedInAt);
-        LocalDateTime? loggedOutAt = dbModel.LoggedOutAt.HasValue
-            ? new LocalDateTime(dbModel.LoggedOutAt.Value)
-            : null;
+        var loggedInAt = dbModel.LoggedInAt.ToLocalDateTime();
 
-        // DB から復元（全フィールド指定）
+        // DB の DateTime? を LocalDateTime? に変換してから TryFrom に渡す（null は Unset に変換）
+        if (!LoggedOutAt.TryFrom(dbModel.LoggedOutAt.ToLocalDateTimeOrNull(), out var loggedOutAt))
+        {
+            throw new InvalidOperationException(
+                $"Failed to convert LoggedOutAt from DB value: {dbModel.LoggedOutAt}");
+        }
+
         return UserAuthSession.Reconstruct(
             sessionRowId,
             authorityRowId,
@@ -52,14 +55,10 @@ public sealed class UserAuthSessionMapper
     }
 
     /// <summary>
-    /// Domain Entity を DbModel に変換（ビジネスフィールドのみ）
-    ///
-    /// 【注意】
-    /// - 監査フィールド（CreatedAt, CreatedBy, UpdatedAt, UpdatedBy, DeletedAt, DeletedBy）は設定しない
-    /// - Repository が責務を持つ
+    /// 認証セッションの DB モデルへの変換
     /// </summary>
-    /// <param name="entity">Domain Entity</param>
-    /// <returns>DbModel（ビジネスフィールドのみ設定）</returns>
+    /// <param name="entity">変換するセッション</param>
+    /// <returns>業務項目のみ設定した DB モデル（監査列は未設定）</returns>
     public UserAuthSessionDbModel ToDbModel(UserAuthSession entity)
     {
         return new UserAuthSessionDbModel
@@ -69,12 +68,11 @@ public sealed class UserAuthSessionMapper
             IsAdAuthenticated = entity.IsAdAuthenticated,
             LoginSuccess = entity.LoginSuccess,
             LoggedInAt = entity.LoggedInAt.Value,
-            LoggedOutAt = entity.LoggedOutAt?.Value,
-            LoginCredentialsRowId = entity.LoginCredentialsRowId?.Value,
+            LoggedOutAt = entity.LoggedOutAt.HasLoggedOut ? entity.LoggedOutAt.Value.Value : null,
+            LoginCredentialsRowId = entity.LoginCredentialsRowId.HasCredentials ? entity.LoginCredentialsRowId.Value : null,
             RowVersion = entity.RowVersion,
 
-            // ❌ 監査フィールドは設定しない
-            // CreatedAt, CreatedBy, UpdatedAt, UpdatedBy, DeletedAt, DeletedBy は省略
+            // 監査フィールド（CreatedAt, CreatedBy, UpdatedAt, UpdatedBy, DeletedAt, DeletedBy）は設定しない
         };
     }
 }

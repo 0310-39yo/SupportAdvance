@@ -76,7 +76,7 @@ public class UserAuthSessionRepositoryTests : RepositoryTestBase
     }
 
     /// <summary>
-    /// テスト用の UserAuthSession を生成する（AD認証、LoginCredentialsRowId は null）
+    /// テスト用の UserAuthSession を生成する（AD認証、認証情報の行ID は未設定）
     /// 【重要】AuthorityRowId は FK制約を満たすため、実装済みの System User を使用
     /// </summary>
     private async Task<UserAuthSession> BuildTestSessionAsync(
@@ -90,7 +90,7 @@ public class UserAuthSessionRepositoryTests : RepositoryTestBase
             isAdAuthenticated: true,
             loginSuccess: loginSuccess,
             loggedInAt: loggedInAt ?? _clock.JstNow,
-            loginCredentialsRowId: null);
+            loginCredentialsRowId: UsedLoginCredentialsRowId.Unset());
     }
 
     #region グループ 1: SaveAsync（新規作成）
@@ -112,7 +112,8 @@ public class UserAuthSessionRepositoryTests : RepositoryTestBase
             Assert.NotNull(retrieved);
             Assert.Equal(session.AuthorityRowId.Value, retrieved.AuthorityRowId.Value);
             Assert.True(retrieved.LoginSuccess);
-            Assert.Null(retrieved.LoggedOutAt);
+            Assert.False(retrieved.LoggedOutAt.HasLoggedOut);
+            Assert.False(retrieved.LoginCredentialsRowId.HasCredentials);
         }
         finally
         {
@@ -245,7 +246,7 @@ public class UserAuthSessionRepositoryTests : RepositoryTestBase
             // Assert
             var result = await _repository.GetByIdAsync(savedRowId);
             Assert.NotNull(result);
-            Assert.NotNull(result.LoggedOutAt);
+            Assert.True(result.LoggedOutAt.HasLoggedOut);
         }
         finally
         {

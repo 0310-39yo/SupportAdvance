@@ -23,7 +23,7 @@ public class DepartmentQueryServiceTests
         var expectedDepartment = Department.Create(
             departmentId,
             DepartmentCode.From("D001"),
-            "営業部",
+            DepartmentName.From("営業部"),
             HierarchyLevel.From(1)
         );
         ((MockDepartmentRepository)repository).SetupGetByIdAsync(departmentId, expectedDepartment);

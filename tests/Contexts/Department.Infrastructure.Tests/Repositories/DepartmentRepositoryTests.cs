@@ -199,7 +199,7 @@ public class DepartmentRepositoryTests : RepositoryTestBase
             var entity = Department.Create(
                 DepartmentRowId.From(testRowId),
                 DepartmentCode.From(NextTestCode()),
-                "営業部",
+                DepartmentName.From("営業部"),
                 HierarchyLevel.From(1)
             );
 
@@ -229,7 +229,7 @@ public class DepartmentRepositoryTests : RepositoryTestBase
             var entity = Department.Create(
                 DepartmentRowId.From(testRowId),
                 DepartmentCode.From(NextTestCode()),
-                "企画部",
+                DepartmentName.From("企画部"),
                 HierarchyLevel.From(2)
             );
 
@@ -274,7 +274,7 @@ public class DepartmentRepositoryTests : RepositoryTestBase
             var updated = Department.Reconstruct(
                 existing.RowId,
                 existing.DeptCode,
-                "新製造部",
+                DepartmentName.From("新製造部"),
                 existing.Level,
                 existing.ParentId,
                 existing.ManagerId,
@@ -287,7 +287,7 @@ public class DepartmentRepositoryTests : RepositoryTestBase
             // Assert
             var retrieved = await repository.GetByIdAsync(DepartmentRowId.From(rowId));
             Assert.NotNull(retrieved);
-            Assert.Equal("新製造部", retrieved.Name);
+            Assert.Equal("新製造部", retrieved.Name.Value);
         }
         finally
         {

@@ -38,7 +38,7 @@ public class DepartmentMapperTests
         Assert.NotNull(result);
         Assert.Equal(1L, result.RowId.Value);
         Assert.Equal("D001", result.DeptCode.Value);
-        Assert.Equal("営業部", result.Name);
+        Assert.Equal("営業部", result.Name.Value);
         Assert.Equal(1, result.Level.Value);
     }
 
@@ -66,7 +66,7 @@ public class DepartmentMapperTests
         Assert.NotNull(result);
         Assert.Equal(2L, result.RowId.Value);
         Assert.Equal("D002", result.DeptCode.Value);
-        Assert.Equal("企画部", result.Name);
+        Assert.Equal("企画部", result.Name.Value);
         Assert.Equal(2, result.Level.Value);
         Assert.True(result.ParentId.IsSet);
         Assert.Equal(1L, result.ParentId.Value);
@@ -154,6 +154,48 @@ public class DepartmentMapperTests
         Assert.Throws<InvalidOperationException>(() => mapper.ToDomainEntity(dbModel));
     }
 
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    public void Test2_4_ToDomainEntity_WithNullOrEmptyName_ThrowsInvalidOperationException(string? name)
+    {
+        // Arrange
+        var mapper = new DepartmentMapper();
+        var dbModel = new DepartmentDbModel
+        {
+            RowId = 1L,
+            DepartmentCode = "D001",
+            DepartmentName = name!, // Invalid: 部署名は必須
+            HierarchyLevel = 1,
+            ParentDepartmentRowId = null,
+            ManagerEmployeeRowId = null,
+            AbolishedOn = null
+        };
+
+        // Act & Assert
+        Assert.Throws<InvalidOperationException>(() => mapper.ToDomainEntity(dbModel));
+    }
+
+    [Fact]
+    public void Test2_5_ToDomainEntity_WithTooLongName_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var mapper = new DepartmentMapper();
+        var dbModel = new DepartmentDbModel
+        {
+            RowId = 1L,
+            DepartmentCode = "D001",
+            DepartmentName = new string('あ', DepartmentName.MaxLength + 1), // Invalid: 100 文字超
+            HierarchyLevel = 1,
+            ParentDepartmentRowId = null,
+            ManagerEmployeeRowId = null,
+            AbolishedOn = null
+        };
+
+        // Act & Assert
+        Assert.Throws<InvalidOperationException>(() => mapper.ToDomainEntity(dbModel));
+    }
+
     #endregion
 
     #region グループ 2.5: コード変換
@@ -195,7 +237,7 @@ public class DepartmentMapperTests
         var entity = Department.Create(
             DepartmentRowId.From(1L),
             DepartmentCode.From("D001"),
-            "営業部",
+            DepartmentName.From("営業部"),
             HierarchyLevel.From(1)
         );
 
@@ -221,7 +263,7 @@ public class DepartmentMapperTests
         var entity = Department.Create(
             DepartmentRowId.From(2L),
             DepartmentCode.From("D002"),
-            "企画部",
+            DepartmentName.From("企画部"),
             HierarchyLevel.From(2),
             ParentDepartmentRowId.From(1L),
             ManagerEmployeeRowId.From(100L)
@@ -248,7 +290,7 @@ public class DepartmentMapperTests
         var entity = Department.Create(
             DepartmentRowId.From(4L),
             DepartmentCode.From("D004"),
-            "旧製造部",
+            DepartmentName.From("旧製造部"),
             HierarchyLevel.From(1),
             abolishedOn: AbolishedOn.From(localDateTime)
         );
@@ -284,7 +326,7 @@ public class DepartmentMapperTests
         var entity = Department.Create(
             DepartmentRowId.From(1L),
             DepartmentCode.From("D001"),
-            "テスト部",
+            DepartmentName.From("テスト部"),
             HierarchyLevel.From(1)
         );
 

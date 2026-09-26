@@ -60,13 +60,18 @@ public class EmployeeMapper
                 var isPrimary = dm.IsPrimary ? IsPrimary.Primary() : IsPrimary.Secondary();
                 var endOn = dm.EndOn.HasValue ? EndOn.From(new LocalDateTime(dm.EndOn.Value)) : EndOn.Unset();
 
+                // 部署名は表示用の写し。LEFT JOIN で取得できない（NULL）場合や空文字は「名前なし」として扱う
+                var displayName = string.IsNullOrEmpty(dm.DepartmentName)
+                    ? DepartmentDisplayName.Unset()
+                    : DepartmentDisplayName.From(dm.DepartmentName);
+
                 var membership = DepartmentMembership.Create(
                     DepartmentMembershipRowId.From(dm.RowId),
                     EmployeeRowId.From(dm.EmployeeRowId),
                     DepartmentRowId.From(dm.DepartmentRowId),
                     isPrimary,
                     endOn,
-                    dm.DepartmentName
+                    displayName
                 );
                 memberships.Add(membership);
             }
@@ -128,6 +133,6 @@ public class EmployeeMapper
             DepartmentRowId = membership.DepartmentRowId.Value,
             IsPrimary = membership.IsPrimary.Value,
             EndOn = membership.EndOn.HasEnded ? membership.EndOn.Value!.Value.Value : null,
-            DepartmentName = membership.DepartmentName
+            DepartmentName = membership.DepartmentDisplayName.HasName ? membership.DepartmentDisplayName.Value : null
         };
 }

@@ -9,7 +9,8 @@ public class UserAuthSessionTests
     private static readonly LocalDateTime TestDateTime = new(new DateTime(2026, 9, 14, 10, 30, 0, DateTimeKind.Unspecified));
     private static readonly UserAuthSessionRowId TestSessionRowId = UserAuthSessionRowId.From(1);
     private static readonly AuthorityRowId TestAuthorityRowId = AuthorityRowId.From(100);
-    private static readonly LoginCredentialsRowId TestLoginCredentialsRowId = LoginCredentialsRowId.From(5);
+    private static readonly UsedLoginCredentialsRowId TestLoginCredentialsRowId = UsedLoginCredentialsRowId.From(5);
+    private static readonly UsedLoginCredentialsRowId NoCredentials = UsedLoginCredentialsRowId.Unset();
 
     [Fact]
     public void Create_WithLocalAuth_ReturnsValidSession()
@@ -28,7 +29,8 @@ public class UserAuthSessionTests
         Assert.True(session.LoginSuccess);
         Assert.Equal(TestDateTime, session.LoggedInAt);
         Assert.Equal(TestLoginCredentialsRowId, session.LoginCredentialsRowId);
-        Assert.Null(session.LoggedOutAt);
+        Assert.True(session.LoginCredentialsRowId.HasCredentials);
+        Assert.False(session.LoggedOutAt.HasLoggedOut);
     }
 
     [Fact]
@@ -40,10 +42,10 @@ public class UserAuthSessionTests
             isAdAuthenticated: true,
             loginSuccess: true,
             TestDateTime,
-            loginCredentialsRowId: null);
+            NoCredentials);
 
         Assert.True(session.IsAdAuthenticated);
-        Assert.Null(session.LoginCredentialsRowId);
+        Assert.False(session.LoginCredentialsRowId.HasCredentials);
     }
 
     [Fact]
@@ -61,16 +63,33 @@ public class UserAuthSessionTests
     }
 
     [Fact]
-    public void Create_WithoutLoginCredentialsRowId_ReturnsSessionWithNull()
+    public void Create_WithoutCredentials_ReturnsSessionWithUnsetCredentialsRowId()
     {
         var session = UserAuthSession.Create(
             TestSessionRowId,
             TestAuthorityRowId,
             isAdAuthenticated: true,
             loginSuccess: true,
-            TestDateTime);
+            TestDateTime,
+            NoCredentials);
 
-        Assert.Null(session.LoginCredentialsRowId);
+        Assert.NotNull(session.LoginCredentialsRowId);
+        Assert.False(session.LoginCredentialsRowId.HasCredentials);
+    }
+
+    [Fact]
+    public void Create_InitialLoggedOutAt_IsUnset()
+    {
+        var session = UserAuthSession.Create(
+            TestSessionRowId,
+            TestAuthorityRowId,
+            isAdAuthenticated: true,
+            loginSuccess: true,
+            TestDateTime,
+            NoCredentials);
+
+        Assert.NotNull(session.LoggedOutAt);
+        Assert.False(session.LoggedOutAt.HasLoggedOut);
     }
 
     [Fact]
@@ -84,7 +103,7 @@ public class UserAuthSessionTests
             isAdAuthenticated: false,
             loginSuccess: true,
             TestDateTime,
-            logoutTime,
+            LoggedOutAt.From(logoutTime),
             TestLoginCredentialsRowId);
 
         Assert.Equal(TestSessionRowId, session.RowId);
@@ -92,12 +111,13 @@ public class UserAuthSessionTests
         Assert.False(session.IsAdAuthenticated);
         Assert.True(session.LoginSuccess);
         Assert.Equal(TestDateTime, session.LoggedInAt);
-        Assert.Equal(logoutTime, session.LoggedOutAt);
+        Assert.True(session.LoggedOutAt.HasLoggedOut);
+        Assert.Equal(logoutTime, session.LoggedOutAt.Value);
         Assert.Equal(TestLoginCredentialsRowId, session.LoginCredentialsRowId);
     }
 
     [Fact]
-    public void Reconstruct_WithoutLoggedOutAt_ReturnsSessionWithNull()
+    public void Reconstruct_WithUnsetLoggedOutAt_ReturnsSessionWithoutLogout()
     {
         var session = UserAuthSession.Reconstruct(
             TestSessionRowId,
@@ -105,10 +125,42 @@ public class UserAuthSessionTests
             isAdAuthenticated: true,
             loginSuccess: true,
             TestDateTime,
-            loggedOutAt: null,
-            loginCredentialsRowId: null);
+            LoggedOutAt.Unset(),
+            NoCredentials);
 
-        Assert.Null(session.LoggedOutAt);
+        Assert.False(session.LoggedOutAt.HasLoggedOut);
+    }
+
+    [Fact]
+    public void Reconstruct_WithNullLoggedOutAt_ThrowsArgumentNullException()
+    {
+        var exception = Assert.Throws<ArgumentNullException>(() =>
+            UserAuthSession.Reconstruct(
+                TestSessionRowId,
+                TestAuthorityRowId,
+                isAdAuthenticated: true,
+                loginSuccess: true,
+                TestDateTime,
+                loggedOutAt: null!,
+                NoCredentials));
+
+        Assert.Contains("loggedOutAt", exception.Message);
+    }
+
+    [Fact]
+    public void Reconstruct_WithNullCredentialsRowId_ThrowsArgumentNullException()
+    {
+        var exception = Assert.Throws<ArgumentNullException>(() =>
+            UserAuthSession.Reconstruct(
+                TestSessionRowId,
+                TestAuthorityRowId,
+                isAdAuthenticated: true,
+                loginSuccess: true,
+                TestDateTime,
+                LoggedOutAt.Unset(),
+                loginCredentialsRowId: null!));
+
+        Assert.Contains("loginCredentialsRowId", exception.Message);
     }
 
     [Fact]
@@ -119,12 +171,29 @@ public class UserAuthSessionTests
             TestAuthorityRowId,
             isAdAuthenticated: true,
             loginSuccess: true,
-            TestDateTime);
+            TestDateTime,
+            NoCredentials);
 
         var logoutTime = new LocalDateTime(new DateTime(2026, 9, 14, 17, 0, 0, DateTimeKind.Unspecified));
         session.SetLoggedOutAt(logoutTime);
 
-        Assert.Equal(logoutTime, session.LoggedOutAt);
+        Assert.True(session.LoggedOutAt.HasLoggedOut);
+        Assert.Equal(logoutTime, session.LoggedOutAt.Value);
+    }
+
+    [Fact]
+    public void SetLoggedOutAt_WithMinValue_ThrowsArgumentException()
+    {
+        var session = UserAuthSession.Create(
+            TestSessionRowId,
+            TestAuthorityRowId,
+            isAdAuthenticated: true,
+            loginSuccess: true,
+            TestDateTime,
+            NoCredentials);
+
+        Assert.Throws<ArgumentException>(() => session.SetLoggedOutAt(LocalDateTime.MinValue));
+        Assert.False(session.LoggedOutAt.HasLoggedOut);
     }
 
     [Fact]
@@ -135,7 +204,8 @@ public class UserAuthSessionTests
             TestAuthorityRowId,
             isAdAuthenticated: true,
             loginSuccess: true,
-            TestDateTime);
+            TestDateTime,
+            NoCredentials);
 
         Assert.True(session.IsActive());
     }
@@ -148,7 +218,8 @@ public class UserAuthSessionTests
             TestAuthorityRowId,
             isAdAuthenticated: true,
             loginSuccess: false,
-            TestDateTime);
+            TestDateTime,
+            NoCredentials);
 
         Assert.False(session.IsActive());
     }
@@ -161,7 +232,8 @@ public class UserAuthSessionTests
             TestAuthorityRowId,
             isAdAuthenticated: true,
             loginSuccess: true,
-            TestDateTime);
+            TestDateTime,
+            NoCredentials);
 
         var logoutTime = new LocalDateTime(new DateTime(2026, 9, 14, 15, 0, 0, DateTimeKind.Unspecified));
         session.SetLoggedOutAt(logoutTime);
@@ -179,7 +251,7 @@ public class UserAuthSessionTests
             isAdAuthenticated: false,
             loginSuccess: true,
             TestDateTime,
-            logoutTime,
+            LoggedOutAt.From(logoutTime),
             TestLoginCredentialsRowId);
 
         Assert.False(session.IsActive());
@@ -193,7 +265,8 @@ public class UserAuthSessionTests
             TestAuthorityRowId,
             isAdAuthenticated: true,
             loginSuccess: true,
-            TestDateTime);
+            TestDateTime,
+            NoCredentials);
 
         Assert.NotNull(session.RowVersion);
         Assert.Empty(session.RowVersion);
@@ -208,7 +281,8 @@ public class UserAuthSessionTests
                 TestAuthorityRowId,
                 isAdAuthenticated: true,
                 loginSuccess: true,
-                TestDateTime));
+                TestDateTime,
+                NoCredentials));
 
         Assert.Contains("id", exception.Message);
     }
@@ -222,9 +296,25 @@ public class UserAuthSessionTests
                 null!,
                 isAdAuthenticated: true,
                 loginSuccess: true,
-                TestDateTime));
+                TestDateTime,
+                NoCredentials));
 
         Assert.Contains("authorityRowId", exception.Message);
+    }
+
+    [Fact]
+    public void Create_WithNullCredentialsRowId_ThrowsArgumentNullException()
+    {
+        var exception = Assert.Throws<ArgumentNullException>(() =>
+            UserAuthSession.Create(
+                TestSessionRowId,
+                TestAuthorityRowId,
+                isAdAuthenticated: true,
+                loginSuccess: true,
+                TestDateTime,
+                loginCredentialsRowId: null!));
+
+        Assert.Contains("loginCredentialsRowId", exception.Message);
     }
 
     [Fact]
@@ -249,16 +339,16 @@ public class UserAuthSessionTests
     [Fact]
     public void ADAndLocalAuthAreMutuallyExclusive()
     {
-        // AD認証の場合、LoginCredentialsRowIdはnull
+        // AD認証の場合、認証情報の行IDは未設定（Unset）
         var adSession = UserAuthSession.Create(
             UserAuthSessionRowId.From(2),
             TestAuthorityRowId,
             isAdAuthenticated: true,
             loginSuccess: true,
             TestDateTime,
-            loginCredentialsRowId: null);
+            NoCredentials);
 
-        // ローカル認証の場合、LoginCredentialsRowIdが設定
+        // ローカル認証の場合、認証情報の行IDが設定
         var localSession = UserAuthSession.Create(
             UserAuthSessionRowId.From(3),
             TestAuthorityRowId,
@@ -268,9 +358,9 @@ public class UserAuthSessionTests
             TestLoginCredentialsRowId);
 
         Assert.True(adSession.IsAdAuthenticated);
-        Assert.Null(adSession.LoginCredentialsRowId);
+        Assert.False(adSession.LoginCredentialsRowId.HasCredentials);
 
         Assert.False(localSession.IsAdAuthenticated);
-        Assert.NotNull(localSession.LoginCredentialsRowId);
+        Assert.True(localSession.LoginCredentialsRowId.HasCredentials);
     }
 }

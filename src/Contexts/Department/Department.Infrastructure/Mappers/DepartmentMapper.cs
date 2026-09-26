@@ -8,21 +8,17 @@ using SupportAdvance.Infrastructure.Mappers;
 using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 /// <summary>
-/// 部署ドメインモデル ↔ DepartmentDbModel のマッピング
-///
-/// 【責務】ValueObject ↔ プリミティブ型の双方向変換
-/// 【層の責務】
-///   - Domain: ValueObject（型安全性）
-///   - DbModel: プリミティブ型（ORM マッピング）
-///   - Mapper: 変換ロジック（層の橋渡し）
-/// 【重要】監査フィールド（UpdatedAt/UpdatedBy）は Repository で管理（Mapper では設定しない）
-/// 【テスト容易性】Clock 依存なし（純粋な型変換）
+/// 部署（<see cref="Department"/>）と DB モデル（<see cref="DepartmentDbModel"/>）の相互変換を行うマッパー
 /// </summary>
+/// <remarks>
+/// <para>【責務】値オブジェクト ↔ プリミティブ型の双方向変換。Domain は値オブジェクト、DB モデルはプリミティブ型で保持し、この型が橋渡しを行う</para>
+/// <para>【重要】監査フィールド（UpdatedAt／UpdatedBy など）は設定しない。設定は Repository の担当</para>
+/// <para>【テスト容易性】Clock 依存なし（純粋な型変換）</para>
+/// </remarks>
 public class DepartmentMapper
 {
     /// <summary>
-    /// DbModel から Domain Entity に変換（読み込み用）
-    /// 【責務】DB の プリミティブ型 → Domain の ValueObject に変換
+    /// DB モデルからの部署の復元（読み込み用）
     /// </summary>
     /// <param name="dbModel">DB から読み込んだ DB モデル</param>
     /// <returns>復元した部署</returns>
@@ -64,11 +60,16 @@ public class DepartmentMapper
             throw new InvalidOperationException($"Failed to convert AbolishedOn from DB value: {dbModel.AbolishedOn}");
         }
 
+        if (!DepartmentName.TryFrom(dbModel.DepartmentName, out var deptName))
+        {
+            throw new InvalidOperationException($"Failed to convert DepartmentName from DB value: {dbModel.DepartmentName}");
+        }
+
         // Domain Entity の復元
         return Department.Reconstruct(
             deptRowId,
             deptCode,
-            dbModel.DepartmentName,
+            deptName,
             level,
             parentId,
             managerId,
@@ -77,9 +78,7 @@ public class DepartmentMapper
     }
 
     /// <summary>
-    /// Domain Entity から DbModel に変換（Insert/Update 用）
-    /// 【責務】Domain の ValueObject → DB の プリミティブ型に変換
-    /// 【注意】監査フィールド（UpdatedAt/UpdatedBy）は Repository で設定
+    /// 部署の DB モデルへの変換（Insert／Update 用）
     /// </summary>
     /// <param name="entity">変換する部署</param>
     /// <returns>業務データのみ設定した DB モデル（監査列は未設定）</returns>
@@ -92,7 +91,7 @@ public class DepartmentMapper
         {
             RowId = entity.RowId.Value,
             DepartmentCode = entity.DeptCode.Value,
-            DepartmentName = entity.Name,
+            DepartmentName = entity.Name.Value,
             HierarchyLevel = entity.Level.Value,
             ParentDepartmentRowId = entity.ParentId.IsSet ? entity.ParentId.Value : null,
             ManagerEmployeeRowId = entity.ManagerId.IsSet ? entity.ManagerId.Value : null,

@@ -5,76 +5,55 @@ using SupportAdvance.SharedKernel.Entities;
 namespace SupportAdvance.Contexts.Authentication.Domain.Entities;
 
 /// <summary>
-/// ユーザー認証セッション（ログイン状態を表現）
-///
-/// 【責務】
-/// - ユーザーのログイン状態を記録
-/// - ログインセッション情報の保持（ユーザー、認証方式、ログイン/ログアウト時刻）
-/// - 「誰がログインしているか」を管理
-///
-/// 【特徴】
-/// - 認証情報マスター（m_login_credentials）の外部参照を含む
-/// - トランザクションテーブル（t_user_auth_sessions）に対応
-/// - 監査情報はRepository層で管理（Domain層には含めない）
-///
-/// 【不変性】
-/// - UserAuthSessionRowId、AuthorityRowId、IsAdAuthenticated は生成後変更不可
-/// - LoggedOutAt のみ、アプリケーション終了時に更新可能
+/// ユーザーのログイン状態を表す集約ルート（認証セッション）
 /// </summary>
+/// <remarks>
+/// <para>【責務】ログインセッション情報（ユーザー、認証方式、ログイン／ログアウト日時）の保持。「誰がログインしているか」の管理</para>
+/// <para>【特徴】認証情報マスター（<c>m_login_credentials</c>）の外部参照を含む。トランザクションテーブル（<c>t_user_auth_sessions</c>）に対応。監査情報は Repository が管理し、Domain 層には含めない</para>
+/// <para>【不変条件】<see cref="Entity{TId}.RowId"/>、<see cref="AuthorityRowId"/>、<see cref="IsAdAuthenticated"/> は生成後変更不可。<see cref="LoggedOutAt"/> のみ、アプリケーション終了時に <see cref="SetLoggedOutAt"/> で更新可能</para>
+/// <para>【null契約】未設定の項目（ログアウト日時、認証情報の行ID）は <see langword="null"/> ではなく、各値オブジェクトの Unset で表現。Domain 層での null 確認は不要</para>
+/// </remarks>
 public sealed class UserAuthSession : AggregateRoot<UserAuthSessionRowId>
 {
     /// <summary>
-    /// 権限主体（m_employees.row_id）
-    /// 【特徴】ログインしたユーザー（従業員）を示す
-    /// 【制約】NOT NULL
+    /// 権限主体（<c>m_employees.row_id</c>）。ログインしたユーザー（従業員）
     /// </summary>
     public AuthorityRowId AuthorityRowId { get; private set; }
 
     /// <summary>
-    /// 認証方式（Windows AD か ローカル認証か）
-    /// 【型】bool（true=AD認証、false=ローカル認証）
-    /// 【不変性】生成後変更不可
+    /// 認証方式が Windows AD かどうかを示す値
     /// </summary>
+    /// <value>AD 認証の場合は <see langword="true"/>、ローカル認証の場合は <see langword="false"/>。生成後変更不可</value>
     public bool IsAdAuthenticated { get; private set; }
 
     /// <summary>
-    /// 認証成功/失敗（ログイン試行の結果）
-    /// 【型】bool（true=成功、false=失敗）
-    /// 【用途】失敗ログも記録（監査用）
-    /// 【不変性】生成後変更不可
+    /// 認証に成功したかどうかを示す値
     /// </summary>
+    /// <value>成功の場合は <see langword="true"/>、失敗の場合は <see langword="false"/>。失敗も監査用に記録するため、生成後変更不可</value>
     public bool LoginSuccess { get; private set; }
 
     /// <summary>
-    /// ログイン操作日時（成功・失敗共に記録）
-    /// 【型】LocalDateTime（JST）
-    /// 【特徴】タイムゾーン既知
-    /// 【不変性】生成後変更不可
+    /// ログイン操作日時（JST）。成功・失敗とも記録
     /// </summary>
+    /// <value>生成後変更不可</value>
     public LocalDateTime LoggedInAt { get; private set; }
 
     /// <summary>
-    /// ログアウト日時（アプリケーション終了時に設定）
-    /// 【型】LocalDateTime または null
-    /// 【特徴】アプリが正常終了した場合のみ値を持つ。異常終了時は NULL（監査用）
-    /// 【可変性】生成後、SetLoggedOutAt() で更新可能
+    /// ログアウト日時（JST）
     /// </summary>
-    public LocalDateTime? LoggedOutAt { get; private set; }
+    /// <value>アプリケーションが正常終了した場合のみ設定。異常終了の場合は未設定（<see cref="LoggedOutAt.Unset"/>。監査用）</value>
+    public LoggedOutAt LoggedOutAt { get; private set; }
 
     /// <summary>
-    /// ローカル認証情報マスター RowId
-    /// 【型】LoginCredentialsRowId または null
-    /// 【特徴】ローカル認証時のみ値を持つ。AD認証時は NULL
-    /// 【用途】m_login_credentials.row_id への参照（監査追跡用）
-    /// 【不変性】生成後変更不可
+    /// ローカル認証で使用した認証情報の行ID
     /// </summary>
-    public LoginCredentialsRowId? LoginCredentialsRowId { get; private set; }
+    /// <value>ローカル認証の場合のみ設定（<c>m_login_credentials.row_id</c> への参照。監査追跡用）。AD 認証の場合は未設定（<see cref="UsedLoginCredentialsRowId.Unset"/>）。生成後変更不可</value>
+    public UsedLoginCredentialsRowId LoginCredentialsRowId { get; private set; }
 
     /// <summary>
-    /// 楽観ロックタイムスタンプ
-    /// 【用途】Repository が UpdateAsync 時に row_version で競合検出
-    /// 【管理】Reconstruct() でのみ設定（DB から復元時）。Create() の新規作成では空配列のまま
+    /// 楽観ロック用のタイムスタンプ
     /// </summary>
+    /// <value>Repository が更新時に <c>row_version</c> で競合を検出するための値。<see cref="Reconstruct"/> でのみ設定。<see cref="Create"/> による新規作成では空配列のまま</value>
     public byte[] RowVersion { get; internal set; } = [];
 
     private UserAuthSession(
@@ -83,35 +62,36 @@ public sealed class UserAuthSession : AggregateRoot<UserAuthSessionRowId>
         bool isAdAuthenticated,
         bool loginSuccess,
         LocalDateTime loggedInAt,
-        LocalDateTime? loggedOutAt,
-        LoginCredentialsRowId? loginCredentialsRowId)
+        LoggedOutAt loggedOutAt,
+        UsedLoginCredentialsRowId loginCredentialsRowId)
     {
         RowId = id ?? throw new ArgumentNullException(nameof(id));
         AuthorityRowId = authorityRowId ?? throw new ArgumentNullException(nameof(authorityRowId));
         IsAdAuthenticated = isAdAuthenticated;
         LoginSuccess = loginSuccess;
         LoggedInAt = loggedInAt;
-        LoggedOutAt = loggedOutAt;
-        LoginCredentialsRowId = loginCredentialsRowId;
+        LoggedOutAt = loggedOutAt ?? throw new ArgumentNullException(nameof(loggedOutAt));
+        LoginCredentialsRowId = loginCredentialsRowId ?? throw new ArgumentNullException(nameof(loginCredentialsRowId));
     }
 
     /// <summary>
-    /// UserAuthSession を新規作成（ログイン試行）
+    /// 認証セッションの新規作成（ログイン試行）
     /// </summary>
-    /// <param name="id">セッション RowId</param>
-    /// <param name="authorityRowId">権限主体（ユーザー）</param>
-    /// <param name="isAdAuthenticated">認証方式（true=AD、false=ローカル）</param>
-    /// <param name="loginSuccess">認証成功/失敗</param>
-    /// <param name="loggedInAt">ログイン操作日時</param>
-    /// <param name="loginCredentialsRowId">ローカル認証時のマスター RowId（NULLable）</param>
-    /// <returns>ログアウト日時が未設定（<see langword="null"/>）の新しいセッション</returns>
+    /// <param name="id">セッションの行ID</param>
+    /// <param name="authorityRowId">権限主体（ユーザー）の行ID</param>
+    /// <param name="isAdAuthenticated">AD 認証の場合は <see langword="true"/>、ローカル認証の場合は <see langword="false"/></param>
+    /// <param name="loginSuccess">認証に成功した場合は <see langword="true"/></param>
+    /// <param name="loggedInAt">ログイン操作日時（JST）</param>
+    /// <param name="loginCredentialsRowId">ローカル認証で使用した認証情報の行ID。使用なしの場合（AD 認証、存在しないログインID での失敗など）は <see cref="UsedLoginCredentialsRowId.Unset"/></param>
+    /// <returns>ログアウト日時が未設定（<see cref="LoggedOutAt.Unset"/>）の新しいセッション</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="id"/>、<paramref name="authorityRowId"/>、または <paramref name="loginCredentialsRowId"/> が <see langword="null"/> の場合</exception>
     public static UserAuthSession Create(
         UserAuthSessionRowId id,
         AuthorityRowId authorityRowId,
         bool isAdAuthenticated,
         bool loginSuccess,
         LocalDateTime loggedInAt,
-        LoginCredentialsRowId? loginCredentialsRowId = null)
+        UsedLoginCredentialsRowId loginCredentialsRowId)
     {
         return new UserAuthSession(
             id,
@@ -119,32 +99,34 @@ public sealed class UserAuthSession : AggregateRoot<UserAuthSessionRowId>
             isAdAuthenticated,
             loginSuccess,
             loggedInAt,
-            loggedOutAt: null,
+            LoggedOutAt.Unset(),
             loginCredentialsRowId);
     }
 
     /// <summary>
-    /// DB から復元（全フィールド指定）
-    /// 【用途】Repository が DbModel から Domain Entity を構築時に使用
-    /// 【重要】rowVersion は楽観ロック用（更新時に競合検出）。DB から取得した値をそのまま渡す
+    /// DB から読み込んだ値による認証セッションの復元（全項目指定）
     /// </summary>
     /// <param name="id">セッションの行ID</param>
     /// <param name="authorityRowId">権限主体（従業員）の行ID</param>
     /// <param name="isAdAuthenticated">AD 認証の場合は <see langword="true"/>、ローカル認証の場合は <see langword="false"/></param>
     /// <param name="loginSuccess">認証に成功した場合は <see langword="true"/></param>
     /// <param name="loggedInAt">ログイン操作日時（JST）</param>
-    /// <param name="loggedOutAt">ログアウト日時（JST）。<see langword="null"/> はログアウト操作なし</param>
-    /// <param name="loginCredentialsRowId">ローカル認証で使用した認証情報の行ID。AD 認証の場合は <see langword="null"/></param>
+    /// <param name="loggedOutAt">ログアウト日時（JST）。ログアウト操作なしの場合は <see cref="LoggedOutAt.Unset"/></param>
+    /// <param name="loginCredentialsRowId">ローカル認証で使用した認証情報の行ID。AD 認証の場合は <see cref="UsedLoginCredentialsRowId.Unset"/></param>
     /// <param name="rowVersion">楽観ロック用の値。<see langword="null"/> の場合は設定なし</param>
     /// <returns>復元したセッション</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="id"/>、<paramref name="authorityRowId"/>、<paramref name="loggedOutAt"/>、または <paramref name="loginCredentialsRowId"/> が <see langword="null"/> の場合</exception>
+    /// <remarks>
+    /// <para>【用途】Infrastructure 層のマッパーからの呼び出し専用。<paramref name="rowVersion"/> は DB から取得した値をそのまま渡す（更新時の競合検出用）</para>
+    /// </remarks>
     public static UserAuthSession Reconstruct(
         UserAuthSessionRowId id,
         AuthorityRowId authorityRowId,
         bool isAdAuthenticated,
         bool loginSuccess,
         LocalDateTime loggedInAt,
-        LocalDateTime? loggedOutAt,
-        LoginCredentialsRowId? loginCredentialsRowId,
+        LoggedOutAt loggedOutAt,
+        UsedLoginCredentialsRowId loginCredentialsRowId,
         byte[]? rowVersion = null)
     {
         var session = new UserAuthSession(
@@ -165,17 +147,29 @@ public sealed class UserAuthSession : AggregateRoot<UserAuthSessionRowId>
     }
 
     /// <summary>
-    /// ログアウト日時を設定（アプリケーション終了時に呼び出す）
+    /// ログアウト日時の設定
     /// </summary>
-    /// <param name="loggedOutAt">ログアウト日時</param>
+    /// <param name="loggedOutAt">ログアウト日時（JST）</param>
+    /// <exception cref="ArgumentException"><paramref name="loggedOutAt"/> が <see cref="LocalDateTime.MinValue"/> または <see cref="LocalDateTime.MaxValue"/> の場合</exception>
+    /// <remarks>
+    /// <para>【呼び出し元】アプリケーション終了時</para>
+    /// <para>【副作用】<see cref="LoggedOutAt"/> の更新</para>
+    /// </remarks>
     public void SetLoggedOutAt(LocalDateTime loggedOutAt)
     {
-        LoggedOutAt = loggedOutAt;
+        if (!LoggedOutAt.TryFrom(loggedOutAt, out var value))
+        {
+            throw new ArgumentException(
+                "LoggedOutAt must be a valid system timestamp, not MinValue or MaxValue.",
+                nameof(loggedOutAt));
+        }
+
+        LoggedOutAt = value;
     }
 
     /// <summary>
-    /// セッションが有効か判定
+    /// セッションが有効かどうかの判定
     /// </summary>
-    /// <returns>ログイン成功かつ未ログアウト状態の場合 true</returns>
-    public bool IsActive() => LoginSuccess && LoggedOutAt == null;
+    /// <returns>ログイン成功、かつ未ログアウトの場合は <see langword="true"/></returns>
+    public bool IsActive() => LoginSuccess && !LoggedOutAt.HasLoggedOut;
 }

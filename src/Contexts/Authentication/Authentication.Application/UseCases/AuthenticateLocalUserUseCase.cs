@@ -101,7 +101,7 @@ public sealed class AuthenticateLocalUserUseCase
                 isAdAuthenticated: false,
                 loginSuccess: false,
                 loggedInAt: now,
-                loginCredentialsRowId: null);
+                loginCredentialsRowId: UsedLoginCredentialsRowId.Unset());
             await _sessionRepository.SaveAsync(failureSession);
 
             throw new InvalidOperationException("ログインIDが見つかりません");
@@ -119,7 +119,7 @@ public sealed class AuthenticateLocalUserUseCase
                 isAdAuthenticated: false,
                 loginSuccess: false,
                 loggedInAt: now,
-                loginCredentialsRowId: LoginCredentialsRowId.From(credentials.RowId));
+                loginCredentialsRowId: UsedLoginCredentialsRowId.From(credentials.RowId));
             await _sessionRepository.SaveAsync(failureSession);
 
             throw new InvalidOperationException("このアカウントは無効です");
@@ -136,7 +136,7 @@ public sealed class AuthenticateLocalUserUseCase
                 isAdAuthenticated: false,
                 loginSuccess: false,
                 loggedInAt: now,
-                loginCredentialsRowId: LoginCredentialsRowId.From(credentials.RowId));
+                loginCredentialsRowId: UsedLoginCredentialsRowId.From(credentials.RowId));
             await _sessionRepository.SaveAsync(failureSession);
 
             throw new InvalidOperationException("パスワードが間違っています");
@@ -144,7 +144,7 @@ public sealed class AuthenticateLocalUserUseCase
 
         // Step 4: 成功時の UserAuthSession を生成
         var authorityRowId = AuthorityRowId.From(credentials.MappingEmployeeRowId);
-        var loginCredentialsRowId = LoginCredentialsRowId.From(credentials.RowId);
+        var loginCredentialsRowId = UsedLoginCredentialsRowId.From(credentials.RowId);
 
         var session = UserAuthSession.Create(
             id: sessionRowId,
