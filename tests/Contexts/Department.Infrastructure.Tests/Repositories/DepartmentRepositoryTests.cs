@@ -10,6 +10,7 @@ using SupportAdvance.Contexts.Department.Domain.ValueObjects;
 using SupportAdvance.Contexts.Department.Infrastructure.Mappers;
 using SupportAdvance.Contexts.Department.Infrastructure.Repositories;
 using SupportAdvance.Infrastructure.Persistence;
+using SupportAdvance.Application.Abstractions.Services;
 using SupportAdvance.Infrastructure.Services;
 using SupportAdvance.Infrastructure.Tests.Utilities;
 using SupportAdvance.SharedKernel.ValueObjects.Identifiers;

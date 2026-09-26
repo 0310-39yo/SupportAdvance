@@ -14,7 +14,7 @@ using SupportAdvance.Contexts.Employee.Infrastructure.Repositories;
 using SupportAdvance.Crosscutting.Logging;
 using SupportAdvance.Infrastructure.Persistence;
 using SupportAdvance.Infrastructure.Providers;
-using SupportAdvance.Infrastructure.Services;
+using SupportAdvance.Application.Abstractions.Services;
 using SupportAdvance.Infrastructure.Tests.Utilities;
 using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 using SupportAdvance.Application.Abstractions.Identifiers;

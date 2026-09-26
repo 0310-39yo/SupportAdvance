@@ -1,4 +1,4 @@
-using SupportAdvance.Infrastructure.Services;
+using SupportAdvance.Application.Abstractions.Services;
 using EmployeeRowIdVo = SupportAdvance.SharedKernel.ValueObjects.Identifiers.EmployeeRowId;
 
 namespace SupportAdvance.Presentation.WpfTrial.Services;

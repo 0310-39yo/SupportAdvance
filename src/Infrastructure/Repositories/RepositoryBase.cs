@@ -1,6 +1,6 @@
 using SupportAdvance.Common.Clocks;
 using SupportAdvance.Infrastructure.Mappers;
-using SupportAdvance.Infrastructure.Services;
+using SupportAdvance.Application.Abstractions.Services;
 using SupportAdvance.SharedKernel.Entities;
 using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 

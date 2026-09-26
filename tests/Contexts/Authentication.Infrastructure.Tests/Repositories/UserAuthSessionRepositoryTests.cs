@@ -10,6 +10,7 @@ using SupportAdvance.Contexts.Authentication.Domain.ValueObjects;
 using SupportAdvance.Contexts.Authentication.Infrastructure.Repositories;
 using SupportAdvance.Infrastructure.Persistence;
 using SupportAdvance.Infrastructure.Providers;
+using SupportAdvance.Application.Abstractions.Services;
 using SupportAdvance.Infrastructure.Services;
 using SupportAdvance.Infrastructure.Tests.Utilities;
 using Xunit;

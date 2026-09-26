@@ -3,7 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using SupportAdvance.Contexts.Authentication.Application.Dtos;
 using SupportAdvance.Contexts.Authentication.Application.UseCases;
 using SupportAdvance.Crosscutting.Logging;
-using SupportAdvance.Infrastructure.Services;
+using SupportAdvance.Application.Abstractions.Services;
 
 namespace SupportAdvance.Presentation.WpfTrial.ViewModels;
 

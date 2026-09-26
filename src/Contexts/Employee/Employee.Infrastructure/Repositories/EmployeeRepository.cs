@@ -15,7 +15,7 @@ using Models;
 using Crosscutting.Logging;
 using SupportAdvance.Infrastructure.Persistence;
 using SupportAdvance.Infrastructure.Repositories;
-using SupportAdvance.Infrastructure.Services;
+using SupportAdvance.Application.Abstractions.Services;
 using SharedKernel.ValueObjects.Audit;
 
 /// <summary>

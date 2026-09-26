@@ -1,4 +1,4 @@
-namespace SupportAdvance.Infrastructure.Services;
+namespace SupportAdvance.Application.Abstractions.Services;
 
 /// <summary>
 /// 現在のユーザー（従業員）情報を提供・管理
@@ -12,8 +12,12 @@ namespace SupportAdvance.Infrastructure.Services;
 /// - 画面表示時に現在ユーザー情報を参照
 ///
 /// 【実装】
-/// - WinForms: RealCurrentUserService（ログイン時に情報を保持）
+/// - WinForms／WPF: Presentation の RealCurrentUserService（ログイン時に情報を保持）
+/// - システム処理: Infrastructure の SystemCurrentUserService（システムユーザー固定）
 /// - AspNet: HttpContext から取得（認証ミドルウェア連携）
+///
+/// 【配置】
+/// - Presentation と Infrastructure の双方が参照するため、依存方向を守れる Application 汎用層に定義
 /// </summary>
 public interface ICurrentUserService
 {

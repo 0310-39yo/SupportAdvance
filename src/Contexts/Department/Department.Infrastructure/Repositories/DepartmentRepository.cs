@@ -12,7 +12,7 @@ using SupportAdvance.Contexts.Department.Domain.ValueObjects;
 using SupportAdvance.Contexts.Department.Infrastructure.DbModels;
 using SupportAdvance.Contexts.Department.Infrastructure.Mappers;
 using SupportAdvance.Infrastructure.Persistence;
-using SupportAdvance.Infrastructure.Services;
+using SupportAdvance.Application.Abstractions.Services;
 
 /// <summary>
 /// 部署リポジトリの実装

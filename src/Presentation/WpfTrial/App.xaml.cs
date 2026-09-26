@@ -13,7 +13,7 @@ using SupportAdvance.Contexts.Employee.Infrastructure;
 using SupportAdvance.Contexts.IntegrationPrototype.Application;
 using SupportAdvance.Crosscutting;
 using SupportAdvance.Infrastructure;
-using SupportAdvance.Infrastructure.Services;
+using SupportAdvance.Application.Abstractions.Services;
 using SupportAdvance.Presentation.Shared;
 using SupportAdvance.Presentation.WpfTrial.Services;
 using SupportAdvance.Presentation.WpfTrial.Views;
