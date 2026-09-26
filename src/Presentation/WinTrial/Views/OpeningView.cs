@@ -47,7 +47,9 @@ public sealed class OpeningView : UserControl
     {
         base.OnPaint(e);
 
-        const TextFormatFlags flags = TextFormatFlags.NoPadding | TextFormatFlags.SingleLine | TextFormatFlags.Right | TextFormatFlags.Bottom;
+        // 【注意】Right／Bottom は指定しない。サイズを測るときに Bottom を指定すると、高さが 1 になり、何も描かれない。
+        // 右下にそろえる位置は、測った大きさから自分で計算する
+        const TextFormatFlags flags = TextFormatFlags.NoPadding | TextFormatFlags.SingleLine;
 
         // 下から順に、アプリケーションの名前、その上に製品名を、右端にそろえて描く
         var applicationNameSize = TextRenderer.MeasureText(e.Graphics, _viewModel.ApplicationName, _applicationNameFont, Size.Empty, flags);

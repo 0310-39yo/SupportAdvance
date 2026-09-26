@@ -60,6 +60,9 @@ public partial class MainWindow : Form
 
         InitializeComponent();
 
+        // MDI の子フォームをタブとして表示する（デザイナーの再生成で消えないよう、コードで接続する）
+        tabbedMdiManager.AttachToMdiContainer(this);
+
         // テーマは Office2016White 
         SkinManager.SetVisualStyle(this, "Office2016White");
 
