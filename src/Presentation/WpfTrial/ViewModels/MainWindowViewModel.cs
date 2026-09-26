@@ -24,7 +24,7 @@ namespace SupportAdvance.Presentation.WpfTrial.ViewModels;
 /// </summary>
 public partial class MainWindowViewModel : ObservableObject
 {
-    private readonly AppSettings _appSettings;
+    private readonly IAppSettings _appSettings;
     private readonly IClock _clock;
     private readonly IAppLogging<MainWindowViewModel> _logger;
     private readonly GetEmployeeByBizIdIntegrationUseCase _getEmployeeByBizIdUseCase;
@@ -82,12 +82,12 @@ public partial class MainWindowViewModel : ObservableObject
 
         BusinessDayClock = businessDayClock;
         _logger = logger;
-        _appSettings = (AppSettings)appSettings;
+        _appSettings = appSettings;
         _clock = clock;
         _getEmployeeByBizIdUseCase = getEmployeeByBizIdUseCase;
 
         _logger.LogInformation("MainWindowViewModel initialized.");
-        _logger.LogInformation(_appSettings.ApplicationBuildType ?? "Unknown");
+        _logger.LogInformation(_appSettings.ApplicationBuildType);
     }
 
     /// <summary>
@@ -141,15 +141,19 @@ public partial class MainWindowViewModel : ObservableObject
     [RelayCommand]
     public void ExecuteSampleUseCase()
     {
-        try
-        {
-            _logger.LogInformation($"[テストボタンクリック] 現在時刻: {_clock.JstNow}");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError("SampleUseCase execution failed", ex);
-            throw;
-        }
+        _logger.LogInformation($"[テストボタンクリック] 現在時刻: {_clock.JstNow}");
+    }
+
+    /// <summary>
+    /// 保存コマンド（リボンの Save ボタン用のプレースホルダー）
+    /// </summary>
+    /// <remarks>
+    /// <para>【注意】保存対象の画面は未実装のため、ログ出力のみ</para>
+    /// </remarks>
+    [RelayCommand]
+    private void Save()
+    {
+        _logger.LogInformation("Save is not implemented yet.");
     }
 
     /// <summary>

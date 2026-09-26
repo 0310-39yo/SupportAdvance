@@ -62,12 +62,16 @@
 
 `ICurrentUserService` が `src/Infrastructure/Services/` にあり、`LoginWindowViewModel`／`RealCurrentUserService`（WpfTrial、WinTrial 両方）が Infrastructure 名前空間を参照している。一方で Infrastructure のリポジトリ基底クラスもこれを使用（利用箇所は約 15 ファイル）。
 
-### 方針（推奨）
+### 方針
 
-- `ICurrentUserService` を **Common 層**へ移動（`long` と `string` のみのインターフェースで依存ゼロ。Infrastructure と Presentation の双方が参照可能）
+- `ICurrentUserService`（インターフェースのみ）を **Application 汎用層**（`src/Application/Abstractions/Services/`、名前空間 `SupportAdvance.Application.Abstractions.Services`）へ移動
+  - 既存の `ISequenceProvider`（`Abstractions/Identifiers`）と同じ流儀
+  - 汎用 Application 層は「インターフェース定義のみ」というルールに合致
+  - `Infrastructure.csproj` は既に `Application.csproj` を参照済みで、Presentation → Application も許可された依存方向。プロジェクト参照の追加は不要
+  - Infrastructure が Application のインターフェースを実装する形になり、CLAUDE.md の依存ルールに沿う
+- 移動先を Common にしない理由: 「現在のユーザー」はアプリケーションの文脈を表す契約であり、Common（Clock や Settings などの基盤ユーティリティ）より Application の役割に合うため
 - 名前空間変更に伴い using を一括置換（Infrastructure リポジトリ、各 Context Infrastructure、テスト、WinTrial、WpfTrial）
-- `SystemCurrentUserService` は Infrastructure に残す（実装のためであり許可される）
-- 代替案: Application 汎用層へ移動。ただし Common の方が変更範囲が小さく、依存方向の理由も明確
+- `SystemCurrentUserService` は Infrastructure に残す（Application のインターフェースの実装のため許可される）
 - `ICurrentUserService` の XMLDoc（実装先の記述）を更新
 
 ### 検証
@@ -93,6 +97,31 @@
 - Window の ViewModel 紐付けを DataTemplate／`d:DataContext` 設計時サポートへ整理
 - `TabItemViewModel` が `Header` 変更を通知するか（ObservableObject 化で対応済み）確認
 
+## Phase 6: WinTrial の準拠調査（WpfTrial 改修完了後）
+
+### 背景
+
+WinTrial は Phase 3 で `ICurrentUserService` の名前空間変更に追随するのみで、ViewModel／View の中身は未調査。ただし `LoginDialogViewModel` と `Services/RealCurrentUserService.cs` が Infrastructure 名前空間を参照していることは確認済み（Phase 3 で解消）。
+
+### 調査観点
+
+- WinForms における MVVM の位置づけ（データバインディング、MVP との使い分け）と、プロジェクトの基本方針との整合
+- ViewModel から `System.Windows.Forms` 型への依存が無いこと
+- MVVM Toolkit の使い方（`ObservableProperty`／`RelayCommand`）の正確性
+- Form のコードビハインドにビジネスロジックが無く、Use Case 呼び出しは ViewModel 経由であること
+- Presentation → Infrastructure／Domain の依存が Program.cs のみであること
+- `Presentation.Shared` の共有 ViewModel（`BusinessDayClockViewModel`）の使われ方
+- WpfTrial との重複コード（Form1 相当の画面、ログイン処理）の有無
+
+### 成果物
+
+- 調査結果を `docs/Assistance/Reports/yyyyMMdd_WinTrial_準拠調査報告.md` に保存（WpfTrial 調査と同じ観点・重大度で整理）
+- 必要な修正は別途 Plans に修正計画を作成し、承認後に着手
+
+### 完了条件
+
+- WinTrial についても Phase 4 の NetArchTest（Presentation → Infrastructure 禁止、ViewModel の UI 型非依存）が適用対象に含まれていること
+
 ## リスクと留意点
 
 | リスク | 対策 |
@@ -100,10 +129,10 @@
 | Syncfusion `SfNavigationDrawer` のイベントをビヘイビア化できない | 2-2 (b) にフォールバック |
 | `ICurrentUserService` 移動による広範囲の namespace 変更 | Phase 3 を単独コミットにし、置換後に全ビルド＋全テスト |
 | ViewModel-first の DataTemplate で TabControlExt の表示が崩れる | 既存の SfNavigationDrawer 検証手順（スモークテスト）で実機確認 |
-| WinTrial にも同種の違反がある | 本計画は WpfTrial 中心。WinTrial は Phase 3 の namespace 変更のみ追随し、MVVM 観点の調査は別途 |
+| WinTrial にも同種の違反がある | 本計画は WpfTrial 中心。WinTrial は Phase 3 の namespace 変更のみ追随し、MVVM 観点の調査は Phase 6 で実施 |
 
 ## 実施順序
 
-Phase 1 → 2 → 3 → 4（Phase 4 のテストは Phase 2・3 と並行して追加してもよい）→ 5
+Phase 1 → 2 → 3 → 4（Phase 4 のテストは Phase 2・3 と並行して追加してもよい）→ 5 → 6
 
 各 Phase 後に、ログイン → メイン → ナビゲーション選択 → タブ追加・切り替えの手動スモークテストを実施する。

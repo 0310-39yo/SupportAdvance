@@ -1,7 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using SupportAdvance.Common.Clocks;
-using SupportAdvance.Common.Configuration;
 using SupportAdvance.Contexts.IntegrationPrototype.Application.UseCases;
 using SupportAdvance.Crosscutting.Logging;
 using SupportAdvance.Presentation.Shared.ViewModels;
@@ -16,7 +15,6 @@ namespace SupportAdvance.Presentation.WpfTrial.ViewModels;
 /// </remarks>
 public partial class Form1ViewModel : ObservableObject
 {
-    private readonly AppSettings _appSettings;
     private readonly IClock _clock;
     private readonly IAppLogging<Form1ViewModel> _logger;
     private readonly GetEmployeeByBizIdIntegrationUseCase _getEmployeeByBizIdUseCase;
@@ -43,20 +41,16 @@ public partial class Form1ViewModel : ObservableObject
     /// <see cref="Form1ViewModel"/> クラスの新しいインスタンスの初期化
     /// </summary>
     /// <param name="logger">ログの出力先</param>
-    /// <param name="appSettings">アプリケーション設定（<see cref="AppSettings"/> であること）</param>
     /// <param name="clock">現在日時（JST）の取得元</param>
     /// <param name="getEmployeeByBizIdUseCase">BizId による従業員検索のユースケース</param>
     /// <param name="businessDayClock">BusinessDayClockの操作パネルの ViewModel</param>
     /// <exception cref="ArgumentNullException">いずれかの引数が <see langword="null"/> の場合</exception>
-    /// <exception cref="InvalidCastException"><paramref name="appSettings"/> が <see cref="AppSettings"/> 以外の実装の場合</exception>
     public Form1ViewModel(IAppLogging<Form1ViewModel> logger,
-        IAppSettings appSettings,
         IClock clock,
         GetEmployeeByBizIdIntegrationUseCase getEmployeeByBizIdUseCase,
         BusinessDayClockViewModel businessDayClock)
     {
         ArgumentNullException.ThrowIfNull(logger);
-        ArgumentNullException.ThrowIfNull(appSettings);
         ArgumentNullException.ThrowIfNull(clock);
         ArgumentNullException.ThrowIfNull(getEmployeeByBizIdUseCase);
         ArgumentNullException.ThrowIfNull(businessDayClock);
@@ -64,7 +58,6 @@ public partial class Form1ViewModel : ObservableObject
         BusinessDayClock = businessDayClock;
 
         _logger = logger;
-        _appSettings = (AppSettings)appSettings;
         _clock = clock;
         _getEmployeeByBizIdUseCase = getEmployeeByBizIdUseCase;
         _logger.LogInformation("Form1ViewModel initialized.");
@@ -87,6 +80,7 @@ public partial class Form1ViewModel : ObservableObject
             if (string.IsNullOrWhiteSpace(BizIdSearchInput))
             {
                 EmployeeFullName = string.Empty;
+                DepartmentNames = string.Empty;
                 _logger.LogInformation("BizId search input is empty.");
                 return;
             }
@@ -94,6 +88,7 @@ public partial class Form1ViewModel : ObservableObject
             if (!int.TryParse(BizIdSearchInput, out var bizId))
             {
                 EmployeeFullName = "入力エラー：BizId は数値で入力してください";
+                DepartmentNames = string.Empty;
                 _logger.LogWarning($"Invalid BizId format: {BizIdSearchInput}");
                 return;
             }
@@ -104,6 +99,7 @@ public partial class Form1ViewModel : ObservableObject
             if (employee == null)
             {
                 EmployeeFullName = "従業員が見つかりません";
+                DepartmentNames = string.Empty;
                 _logger.LogInformation($"No employee found with BizId: {bizId}");
                 return;
             }
@@ -126,25 +122,6 @@ public partial class Form1ViewModel : ObservableObject
     [RelayCommand]
     public void ExecuteSampleUseCase()
     {
-        try
-        {
-            _logger.LogInformation($"[テストボタンクリック] 現在時刻: {_clock.JstNow}");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError("SampleUseCase execution failed", ex);
-            throw;
-        }
-    }
-
-    /// <summary>
-    /// リソースの解放（現在は解放対象なし）
-    /// </summary>
-    /// <remarks>
-    /// <para>【注意】<see cref="IDisposable"/> は未実装のため、DI コンテナーからの自動呼び出しなし</para>
-    /// </remarks>
-    public void Dispose()
-    {
-        // リソース解放があれば記載
+        _logger.LogInformation($"[テストボタンクリック] 現在時刻: {_clock.JstNow}");
     }
 }

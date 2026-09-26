@@ -156,8 +156,8 @@ public partial class LoginWindowViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"予期しないエラー: {ex.Message}";
-            _logger.LogWarning($"Unexpected error during login: {ex.Message}");
+            ErrorMessage = "予期しないエラーが発生しました。しばらくしてからやり直してください";
+            _logger.LogError("Unexpected error during login", ex);
         }
         finally
         {
