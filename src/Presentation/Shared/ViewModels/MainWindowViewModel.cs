@@ -11,7 +11,7 @@ namespace SupportAdvance.Presentation.Shared.ViewModels;
 /// メインウィンドウ ViewModel（MVVM Toolkit）
 /// </summary>
 /// <remarks>
-/// <para>【責務】タブ管理（開いているタブのリスト、選択タブの追跡）、ナビゲーション選択からのタブ追加</para>
+/// <para>【責務】タブ管理（開いているタブのリスト、選択タブの追跡）、ナビゲーション選択からのタブ追加、タブが無いときのオープニング画面の表示の切り替え</para>
 /// <para>【設計】View 型・UI コントロール型には依存しない。タブの画面は各 <see cref="TabItemViewModel.ContentViewModel"/> の型に対応する DataTemplate で決まる</para>
 /// </remarks>
 public partial class MainWindowViewModel : ObservableObject
@@ -36,18 +36,29 @@ public partial class MainWindowViewModel : ObservableObject
     /// <param name="logger">ログの出力先</param>
     /// <param name="appSettings">アプリケーション設定</param>
     /// <param name="form1ViewModel">顧客一覧のタブ（仮）に表示する画面の ViewModel</param>
+    /// <param name="appIdentity">起動しているアプリケーションの識別情報（オープニング画面に表示する名前）</param>
     /// <exception cref="ArgumentNullException">いずれかの引数が <see langword="null"/> の場合</exception>
     public MainWindowViewModel(
         IAppLogging<MainWindowViewModel> logger,
         IAppSettings appSettings,
-        Form1ViewModel form1ViewModel)
+        Form1ViewModel form1ViewModel,
+        AppIdentity appIdentity)
     {
         ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(appSettings);
         ArgumentNullException.ThrowIfNull(form1ViewModel);
+        ArgumentNullException.ThrowIfNull(appIdentity);
 
         _logger = logger;
         _form1ViewModel = form1ViewModel;
+        Opening = new OpeningViewModel(appIdentity);
+
+        // タブの有無が変わったら、タブ領域とオープニング画面の表示の切り替えを通知する
+        OpenTabs.CollectionChanged += (_, _) =>
+        {
+            OnPropertyChanged(nameof(HasOpenTabs));
+            OnPropertyChanged(nameof(IsOpeningViewVisible));
+        };
 
         _logger.LogInformation("MainWindowViewModel initialized.");
         _logger.LogInformation(appSettings.ApplicationBuildType);
@@ -57,6 +68,22 @@ public partial class MainWindowViewModel : ObservableObject
     /// 現在開いているタブのリスト
     /// </summary>
     public ObservableCollection<TabItemViewModel> OpenTabs { get; } = new();
+
+    /// <summary>
+    /// オープニング画面の ViewModel
+    /// </summary>
+    public OpeningViewModel Opening { get; }
+
+    /// <summary>
+    /// タブが 1 つ以上開いているかどうかを示す値（タブ領域の表示に使う）
+    /// </summary>
+    public bool HasOpenTabs => OpenTabs.Count > 0;
+
+    /// <summary>
+    /// オープニング画面を表示するかどうかを示す値
+    /// </summary>
+    /// <value>タブが 1 つも開いていない場合（起動直後、または最後のタブを閉じた後）は <see langword="true"/></value>
+    public bool IsOpeningViewVisible => !HasOpenTabs;
 
     /// <summary>
     /// 指定した名前のタブを開く

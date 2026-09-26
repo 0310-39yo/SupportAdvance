@@ -39,6 +39,10 @@
         <DataTemplate DataType="{x:Type vm:Form1ViewModel}">
             <views:Form1View />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:OpeningViewModel}">
+            <views:OpeningView />
+        </DataTemplate>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
     </Window.Resources>
 
     <Grid>
@@ -148,8 +152,14 @@
             <!-- TabbedWindow（TabControlExt / Tools系） -->
             <!-- ItemsSource: ViewModel の OpenTabs（読み取り専用コレクションのため OneWay） -->
             <!-- SelectedItem: ViewModel の SelectedTab -->
+            <!-- オープニング画面：タブが 1 つも無い間（起動後、ナビゲーションが選ばれるまで）表示する。タブ領域と同じ場所に重ねる -->
+            <ContentControl Grid.Column="2"
+                            Content="{Binding Opening}"
+                            Visibility="{Binding IsOpeningViewVisible, Converter={StaticResource BoolToVisibility}}" />
+
             <syncfusion:TabControlExt x:Name="MainTabs"
                                       Grid.Column="2"
+                                      Visibility="{Binding HasOpenTabs, Converter={StaticResource BoolToVisibility}}"
                                       ItemsSource="{Binding OpenTabs}"
                                       SelectedItem="{Binding SelectedTab, Mode=TwoWay}"
                                       AllowDragDrop="True"

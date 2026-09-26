@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using SupportAdvance.Contexts.Employee.Application.UseCases;
+using SupportAdvance.Presentation.Shared;
 using SupportAdvance.Presentation.Shared.ViewModels;
 using SupportAdvance.Presentation.WinTrial.Views;
 
@@ -24,6 +25,9 @@ public static class DependencyInjection
         services.AddScoped<GetEmployeeByBizIdUseCase>();
 
         // ViewModels（Presentation.Shared の共通 ViewModel。ViewModel に Use Case を DI する）
+        // アプリケーションの識別情報（オープニング画面に表示する名前）
+        services.AddSingleton(new AppIdentity("WinTrial"));
+
         services.AddScoped<MainWindowViewModel>();
         services.AddScoped<LoginViewModel>();
         services.AddScoped<Form1ViewModel>();

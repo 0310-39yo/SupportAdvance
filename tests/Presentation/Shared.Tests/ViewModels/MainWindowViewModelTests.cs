@@ -2,6 +2,7 @@ using Moq;
 using SupportAdvance.Application.Queries;
 using SupportAdvance.Common.Clocks;
 using SupportAdvance.Contexts.IntegrationPrototype.Application.UseCases;
+using SupportAdvance.Presentation.Shared;
 using SupportAdvance.Presentation.Shared.ViewModels.Tabs;
 using SupportAdvance.Common.Configuration;
 using SupportAdvance.Crosscutting.Logging;
@@ -34,7 +35,8 @@ public class MainWindowViewModelTests
         return new MainWindowViewModel(
             Mock.Of<IAppLogging<MainWindowViewModel>>(),
             settings.Object,
-            form1ViewModel ?? CreateForm1ViewModel());
+            form1ViewModel ?? CreateForm1ViewModel(),
+            new AppIdentity("TestApp"));
     }
 
     [Fact]
@@ -166,11 +168,52 @@ public class MainWindowViewModelTests
     }
 
     [Fact]
+    public void Opening_ShowsProductNameAndApplicationName()
+    {
+        var sut = CreateSut();
+
+        Assert.Equal("Support Advance", sut.Opening.ProductName);
+        Assert.Equal("TestApp", sut.Opening.ApplicationName);
+    }
+
+    [Fact]
+    public void OpeningView_IsVisibleUntilATabIsOpened_AndAgainAfterTheLastTabIsClosed()
+    {
+        var sut = CreateSut();
+        Assert.True(sut.IsOpeningViewVisible);
+        Assert.False(sut.HasOpenTabs);
+
+        sut.OpenTabCommand.Execute("顧客一覧");
+        Assert.False(sut.IsOpeningViewVisible);
+        Assert.True(sut.HasOpenTabs);
+
+        sut.CloseTabCommand.Execute(sut.SelectedTab);
+        Assert.True(sut.IsOpeningViewVisible);
+    }
+
+    [Fact]
+    public void OpeningViewVisibility_WhenTabsChange_RaisesPropertyChanged()
+    {
+        var sut = CreateSut();
+        var raised = new List<string?>();
+        sut.PropertyChanged += (_, e) => raised.Add(e.PropertyName);
+
+        sut.OpenTabCommand.Execute("顧客一覧");
+
+        Assert.Contains(nameof(MainWindowViewModel.IsOpeningViewVisible), raised);
+        Assert.Contains(nameof(MainWindowViewModel.HasOpenTabs), raised);
+    }
+
+    [Fact]
     public void Constructor_NullArguments_Throw()
     {
         var form1 = CreateForm1ViewModel();
-        Assert.Throws<ArgumentNullException>(() => new MainWindowViewModel(null!, Mock.Of<IAppSettings>(), form1));
-        Assert.Throws<ArgumentNullException>(() => new MainWindowViewModel(Mock.Of<IAppLogging<MainWindowViewModel>>(), null!, form1));
-        Assert.Throws<ArgumentNullException>(() => new MainWindowViewModel(Mock.Of<IAppLogging<MainWindowViewModel>>(), Mock.Of<IAppSettings>(), null!));
+        var identity = new AppIdentity("TestApp");
+        var logger = Mock.Of<IAppLogging<MainWindowViewModel>>();
+        var settings = Mock.Of<IAppSettings>();
+        Assert.Throws<ArgumentNullException>(() => new MainWindowViewModel(null!, settings, form1, identity));
+        Assert.Throws<ArgumentNullException>(() => new MainWindowViewModel(logger, null!, form1, identity));
+        Assert.Throws<ArgumentNullException>(() => new MainWindowViewModel(logger, settings, null!, identity));
+        Assert.Throws<ArgumentNullException>(() => new MainWindowViewModel(logger, settings, form1, null!));
     }
 }

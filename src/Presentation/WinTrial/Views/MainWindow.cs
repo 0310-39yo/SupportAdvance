@@ -42,6 +42,7 @@ public partial class MainWindow : Form
     private readonly MainWindowViewModel _viewModel;
     private readonly Dictionary<TabItemViewModel, Form> _tabForms = new();
     private readonly int _expandedNavigationIndent;
+    private readonly OpeningView _openingView;
     private int _expandedNavigationWidth = DefaultExpandedNavigationWidth;
     private bool _isSynchronizing;
     private bool _isNavigationCollapsed;
@@ -77,6 +78,10 @@ public partial class MainWindow : Form
             }
         };
         SetNavigationCollapsed(false);
+
+        // オープニング画面は、MDI の領域に置く（タブは使わない）。タブが 1 つも無い間だけ表示する
+        _openingView = new OpeningView(_viewModel.Opening) { Visible = _viewModel.IsOpeningViewVisible };
+        Controls.OfType<MdiClient>().FirstOrDefault()?.Controls.Add(_openingView);
 
         _viewModel.OpenTabs.CollectionChanged += OpenTabs_CollectionChanged;
         _viewModel.PropertyChanged += ViewModel_PropertyChanged;
@@ -209,6 +214,12 @@ public partial class MainWindow : Form
 
     private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
+        if (e.PropertyName == nameof(MainWindowViewModel.IsOpeningViewVisible))
+        {
+            _openingView.Visible = _viewModel.IsOpeningViewVisible;
+            return;
+        }
+
         if (e.PropertyName != nameof(MainWindowViewModel.SelectedTab))
         {
             return;
