@@ -8,6 +8,7 @@
     xmlns:navigationDrawer="clr-namespace:Syncfusion.UI.Xaml.NavigationDrawer;assembly=Syncfusion.SfNavigationDrawer.WPF"
     xmlns:behaviors="clr-namespace:SupportAdvance.Presentation.WpfTrial.Behaviors"
     xmlns:controls="clr-namespace:SupportAdvance.Presentation.WpfTrial.Controls"
+    xmlns:markup="clr-namespace:SupportAdvance.Presentation.WpfTrial.Markup"
     xmlns:tabs="clr-namespace:SupportAdvance.Presentation.Shared.ViewModels.Tabs;assembly=Shared"
     xmlns:vm="clr-namespace:SupportAdvance.Presentation.Shared.ViewModels;assembly=Shared"
     xmlns:views="clr-namespace:SupportAdvance.Presentation.WpfTrial.Views"
@@ -55,6 +56,8 @@
             <syncfusion:RibbonTab Caption="Home">
                 <syncfusion:RibbonBar Header="File">
                     <syncfusion:RibbonButton Label="Save"
+                                             SmallIcon="{markup:FluentIconImage Icon=Save, Size=16}"
+                                             LargeIcon="{markup:FluentIconImage Icon=Save, Size=32}"
                                              Command="{Binding SaveCommand}"/>
                 </syncfusion:RibbonBar>
             </syncfusion:RibbonTab>
@@ -76,39 +79,39 @@
                              ExpandedModeWidth="220"
                              ItemContainerStyle="{StaticResource NavigationItemStyle}"
                              CompactModeWidth="48"
-                             behaviors:NavigationItemDensityBehavior.IconRowHeight="20"
+                             behaviors:NavigationItemDensityBehavior.IconRowHeight="24"
                              behaviors:NavigationDrawerBehavior.ItemClickedCommand="{Binding OpenTabCommand}">
 
             <!-- 折りたたみ：トグルボタンで幅 220（Expanded）⇔ 48（Compact。アイコンのみの細い縦バー）を切り替える。
                  Compact 時はアイコンのみ表示されるため、各項目にアイコンを指定する -->
             <navigationDrawer:NavigationItem Header="顧客管理">
                 <navigationDrawer:NavigationItem.Icon>
-                    <controls:FluentIcon Icon="Customers" FontSize="18" Foreground="#FF555555"/>
+                    <controls:FluentIcon Icon="Customers" FontSize="22" Foreground="#FF555555"/>
                 </navigationDrawer:NavigationItem.Icon>
                 <navigationDrawer:NavigationItem Header="顧客一覧">
                     <navigationDrawer:NavigationItem.Icon>
-                        <controls:FluentIcon Icon="List" FontSize="16" Foreground="#FF555555"/>
+                        <controls:FluentIcon Icon="List" FontSize="20" Foreground="#FF555555"/>
                     </navigationDrawer:NavigationItem.Icon>
                 </navigationDrawer:NavigationItem>
                 <navigationDrawer:NavigationItem Header="顧客登録">
                     <navigationDrawer:NavigationItem.Icon>
-                        <controls:FluentIcon Icon="Register" FontSize="16" Foreground="#FF555555"/>
+                        <controls:FluentIcon Icon="Register" FontSize="20" Foreground="#FF555555"/>
                     </navigationDrawer:NavigationItem.Icon>
                 </navigationDrawer:NavigationItem>
             </navigationDrawer:NavigationItem>
 
             <navigationDrawer:NavigationItem Header="受注管理">
                 <navigationDrawer:NavigationItem.Icon>
-                    <controls:FluentIcon Icon="Orders" FontSize="18" Foreground="#FF555555"/>
+                    <controls:FluentIcon Icon="Orders" FontSize="22" Foreground="#FF555555"/>
                 </navigationDrawer:NavigationItem.Icon>
                 <navigationDrawer:NavigationItem Header="受注一覧">
                     <navigationDrawer:NavigationItem.Icon>
-                        <controls:FluentIcon Icon="List" FontSize="16" Foreground="#FF555555"/>
+                        <controls:FluentIcon Icon="List" FontSize="20" Foreground="#FF555555"/>
                     </navigationDrawer:NavigationItem.Icon>
                 </navigationDrawer:NavigationItem>
                 <navigationDrawer:NavigationItem Header="受注登録">
                     <navigationDrawer:NavigationItem.Icon>
-                        <controls:FluentIcon Icon="Register" FontSize="16" Foreground="#FF555555"/>
+                        <controls:FluentIcon Icon="Register" FontSize="20" Foreground="#FF555555"/>
                     </navigationDrawer:NavigationItem.Icon>
                 </navigationDrawer:NavigationItem>
             </navigationDrawer:NavigationItem>

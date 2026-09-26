@@ -18,7 +18,7 @@ public sealed class FluentIcon : TextBlock
 {
     // 【注意】pack URI をそのまま new FontFamily(string) に渡すと、URI 内のカンマ（pack://application:,,,）で
     // 複数のフォント名に分割されて解決に失敗し、アイコンが □ になる。基準の URI とフォント名を分けて渡す
-    private static readonly FontFamily IconFontFamily =
+    internal static readonly FontFamily IconFontFamily =
         new(new Uri("pack://application:,,,/Assets/Fonts/"), $"./#{FluentIconCatalog.FontFamilyName}");
 
     /// <summary>
