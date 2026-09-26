@@ -15,6 +15,7 @@ namespace SupportAdvance.Presentation.WinTrial.Views;
 /// <para>【設計】WinForms には ItemsSource 相当が無いため、<see cref="MainWindowViewModel.OpenTabs"/> の変更を MDI 子フォームの生成・破棄に反映し、
 /// 子フォームのアクティブ化・終了を <see cref="MainWindowViewModel.SelectedTab"/>／<c>CloseTabCommand</c> に反映する</para>
 /// <para>【注意】NavigationDrawer は階層を持てないため、ナビゲーション項目は葉ノードのみを並べる（WpfTrial の階層メニューと項目名は同じ）</para>
+/// <para>【注意】NavigationDrawer は既定で閉じたスライドパネルのため、表示後に開き、常時表示（閉じる操作を取り消し）にする</para>
 /// </remarks>
 public partial class MainWindow : Form
 {
@@ -43,8 +44,37 @@ public partial class MainWindow : Form
         AddNavigationItems();
         navigationDrawer.ItemClicked += NavigationDrawer_ItemClicked;
 
+        // ドロワーは左側の固定メニューとして使う。閉じる操作（外側のクリックなど）は取り消す
+        navigationDrawer.Closing += (_, e) => e.Cancel = true;
+        navigationDrawer.SizeChanged += (_, _) => FitDrawerToHost();
+
         _viewModel.OpenTabs.CollectionChanged += OpenTabs_CollectionChanged;
         _viewModel.PropertyChanged += ViewModel_PropertyChanged;
+    }
+
+    /// <summary>
+    /// 表示後にドロワーを開く
+    /// </summary>
+    /// <param name="e">イベントの引数</param>
+    /// <remarks>
+    /// <para>【理由】NavigationDrawer は既定で閉じており、開く操作（ToggleDrawer）が無いと項目が表示されない。ハンドルの作成後である表示後に開く</para>
+    /// </remarks>
+    protected override void OnShown(EventArgs e)
+    {
+        base.OnShown(e);
+
+        FitDrawerToHost();
+        if (!navigationDrawer.IsDrawerShowing())
+        {
+            navigationDrawer.ToggleDrawer();
+        }
+    }
+
+    private void FitDrawerToHost()
+    {
+        // スライドパネルの大きさをドロワー本体（左側に固定配置した領域）に合わせる
+        navigationDrawer.DrawerWidth = navigationDrawer.Width;
+        navigationDrawer.DrawerHeight = navigationDrawer.Height;
     }
 
     private void AddNavigationItems()
