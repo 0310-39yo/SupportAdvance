@@ -162,6 +162,7 @@
                                       Visibility="{Binding HasOpenTabs, Converter={StaticResource BoolToVisibility}}"
                                       ItemsSource="{Binding OpenTabs}"
                                       SelectedItem="{Binding SelectedTab, Mode=TwoWay}"
+                                      behaviors:TabControlExtCloseBehavior.TabClosedCommand="{Binding CloseTabCommand}"
                                       AllowDragDrop="True"
                                       CloseButtonType="Individual">
                 <!-- TabItem の表示テンプレート -->
