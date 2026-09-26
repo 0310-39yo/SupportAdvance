@@ -88,6 +88,10 @@ public partial class MainWindow : Form
         tabbedMdiManager.ShowCloseButtonForActiveTabOnly = false;
         tabbedMdiManager.CloseOnMiddleButtonClick = true;
 
+        // 閉じるボタンの記号（×）を、濃い色にする。テーマの色（白）のままだと、白地の選択中のタブで見えなくなる
+        tabbedMdiManager.CloseButtonColor = Color.FromArgb(0x40, 0x40, 0x40);
+        tabbedMdiManager.CloseButtonBackColor = Color.White;
+
         // タブの高さと文字の大きさ（既定の高さ 23 では窮屈なため、大きくする）
         tabbedMdiManager.ImageSize = new Size(TabIconSize, TabIconSize);
         tabbedMdiManager.TabFont = new Font("Yu Gothic UI", TabFontSize, FontStyle.Regular, GraphicsUnit.Point, 128);
