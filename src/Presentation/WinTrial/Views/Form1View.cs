@@ -1,7 +1,4 @@
-using SupportAdvance.Common.Configuration;
-using SupportAdvance.Crosscutting.Logging;
 using SupportAdvance.Presentation.Shared.ViewModels;
-using SupportAdvance.Presentation.WinTrial.ViewModels;
 
 namespace SupportAdvance.Presentation.WinTrial.Views;
 
@@ -13,28 +10,20 @@ namespace SupportAdvance.Presentation.WinTrial.Views;
 /// </remarks>
 public partial class Form1View : Form
 {
-    private readonly IAppSettings _appSettings = null!;
-    private readonly IAppLogging<Form1View> _logger = null!;
-    private readonly Form1ViewModel _viewModel = null!;
+    private readonly Form1ViewModel _viewModel;
 
     /// <summary>
     /// <see cref="Form1View"/> クラスの新しいインスタンスの初期化
     /// </summary>
     /// <param name="viewModel">バインドする ViewModel</param>
-    /// <param name="logger">ログの出力先</param>
-    /// <param name="settings">アプリケーション設定（ビルド種別のログ出力用）</param>
-    /// <exception cref="ArgumentNullException">いずれかの引数が <see langword="null"/> の場合</exception>
-    public Form1View(Form1ViewModel viewModel, IAppLogging<Form1View> logger, IAppSettings settings)
+    /// <exception cref="ArgumentNullException"><paramref name="viewModel"/> が <see langword="null"/> の場合</exception>
+    public Form1View(Form1ViewModel viewModel)
     {
+        ArgumentNullException.ThrowIfNull(viewModel);
+
         InitializeComponent();
 
-        ArgumentNullException.ThrowIfNull(logger);
-        ArgumentNullException.ThrowIfNull(viewModel);
-        ArgumentNullException.ThrowIfNull(settings);
-
-        _logger = logger;
         _viewModel = viewModel;
-        _appSettings = settings;
 
         // ViewModel を DataContext に設定
         DataContext = _viewModel;
@@ -49,11 +38,6 @@ public partial class Form1View : Form
         sfButton2.Command = _viewModel.SearchEmployeeByBizIdCommand;
 
         AddBusinessDayClockPanel(_viewModel.BusinessDayClock);
-
-        _logger.LogInformation("Form1View initialized.");
-        _logger.LogInformation("情報");
-        _logger.LogWarning("警告");
-        _logger.LogInformation(_appSettings?.ApplicationBuildType ?? "Unknown");
     }
 
     /// <summary>

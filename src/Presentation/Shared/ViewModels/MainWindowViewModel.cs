@@ -2,10 +2,10 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using SupportAdvance.Common.Configuration;
 using SupportAdvance.Crosscutting.Logging;
-using SupportAdvance.Presentation.WpfTrial.ViewModels.Tabs;
+using SupportAdvance.Presentation.Shared.ViewModels.Tabs;
 using System.Collections.ObjectModel;
 
-namespace SupportAdvance.Presentation.WpfTrial.ViewModels;
+namespace SupportAdvance.Presentation.Shared.ViewModels;
 
 /// <summary>
 /// メインウィンドウ ViewModel（MVVM Toolkit）
@@ -77,6 +77,31 @@ public partial class MainWindowViewModel : ObservableObject
         SelectedTab = newTab;
 
         _logger.LogInformation($"Tab opened: {menuName}");
+    }
+
+    /// <summary>
+    /// 指定したタブを閉じる
+    /// </summary>
+    /// <param name="tab">閉じるタブ</param>
+    /// <remarks>
+    /// <para>【動作】閉じたタブが選択中だった場合は、残っている最後のタブを選択（タブが無くなれば選択なし）</para>
+    /// <para>【注意】<paramref name="tab"/> が <see langword="null"/> または開いていないタブの場合は何もしない</para>
+    /// <para>【用途】ItemsSource／SelectedItem を自動同期できない UI（WinForms）が、タブの終了を ViewModel に反映するために使用</para>
+    /// </remarks>
+    [RelayCommand]
+    private void CloseTab(TabItemViewModel? tab)
+    {
+        if (tab is null || !OpenTabs.Remove(tab))
+        {
+            return;
+        }
+
+        if (ReferenceEquals(SelectedTab, tab))
+        {
+            SelectedTab = OpenTabs.LastOrDefault();
+        }
+
+        _logger.LogInformation($"Tab closed: {tab.Header}");
     }
 
     /// <summary>

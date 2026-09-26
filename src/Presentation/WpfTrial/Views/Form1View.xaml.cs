@@ -1,5 +1,5 @@
 using System.Windows;
-using SupportAdvance.Presentation.WpfTrial.ViewModels;
+using SupportAdvance.Presentation.Shared.ViewModels;
 
 namespace SupportAdvance.Presentation.WpfTrial.Views;
 

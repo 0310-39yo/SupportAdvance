@@ -4,9 +4,8 @@ using SupportAdvance.Common.Clocks;
 using SupportAdvance.Contexts.IntegrationPrototype.Application.UseCases;
 using SupportAdvance.Crosscutting.Logging;
 using SupportAdvance.Presentation.Shared.ViewModels;
-using SupportAdvance.Presentation.WpfTrial.ViewModels;
 
-namespace SupportAdvance.Tests.Presentation.WpfTrial.Tests.ViewModels;
+namespace SupportAdvance.Tests.Presentation.Shared.Tests.ViewModels;
 
 /// <summary>
 /// <see cref="Form1ViewModel"/> の BizId 検索の各分岐の検証

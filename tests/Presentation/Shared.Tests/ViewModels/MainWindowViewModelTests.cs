@@ -1,9 +1,9 @@
 using Moq;
 using SupportAdvance.Common.Configuration;
 using SupportAdvance.Crosscutting.Logging;
-using SupportAdvance.Presentation.WpfTrial.ViewModels;
+using SupportAdvance.Presentation.Shared.ViewModels;
 
-namespace SupportAdvance.Tests.Presentation.WpfTrial.Tests.ViewModels;
+namespace SupportAdvance.Tests.Presentation.Shared.Tests.ViewModels;
 
 /// <summary>
 /// <see cref="MainWindowViewModel"/> のタブ管理の検証
@@ -66,6 +66,62 @@ public class MainWindowViewModelTests
         sut.OpenTabCommand.Execute("顧客一覧");
 
         Assert.Contains(nameof(MainWindowViewModel.SelectedTab), raised);
+    }
+
+    [Fact]
+    public void CloseTabCommand_SelectedTab_RemovesItAndSelectsLastRemainingTab()
+    {
+        var sut = CreateSut();
+        sut.OpenTabCommand.Execute("顧客一覧");
+        var first = sut.SelectedTab!;
+        sut.OpenTabCommand.Execute("受注一覧");
+        var second = sut.SelectedTab!;
+
+        sut.CloseTabCommand.Execute(second);
+
+        Assert.Single(sut.OpenTabs);
+        Assert.Same(first, sut.SelectedTab);
+    }
+
+    [Fact]
+    public void CloseTabCommand_LastTab_ClearsSelection()
+    {
+        var sut = CreateSut();
+        sut.OpenTabCommand.Execute("顧客一覧");
+
+        sut.CloseTabCommand.Execute(sut.SelectedTab);
+
+        Assert.Empty(sut.OpenTabs);
+        Assert.Null(sut.SelectedTab);
+    }
+
+    [Fact]
+    public void CloseTabCommand_NonSelectedTab_KeepsSelection()
+    {
+        var sut = CreateSut();
+        sut.OpenTabCommand.Execute("顧客一覧");
+        var first = sut.SelectedTab!;
+        sut.OpenTabCommand.Execute("受注一覧");
+        var second = sut.SelectedTab!;
+
+        sut.CloseTabCommand.Execute(first);
+
+        Assert.Same(second, sut.SelectedTab);
+        Assert.Single(sut.OpenTabs);
+    }
+
+    [Fact]
+    public void CloseTabCommand_NullOrUnknownTab_DoesNothing()
+    {
+        var sut = CreateSut();
+        sut.OpenTabCommand.Execute("顧客一覧");
+        var selected = sut.SelectedTab;
+
+        sut.CloseTabCommand.Execute(null);
+        sut.CloseTabCommand.Execute(new SupportAdvance.Presentation.Shared.ViewModels.Tabs.TabItemViewModel("別", new object()));
+
+        Assert.Single(sut.OpenTabs);
+        Assert.Same(selected, sut.SelectedTab);
     }
 
     [Fact]

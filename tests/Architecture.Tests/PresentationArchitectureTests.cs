@@ -10,7 +10,7 @@ namespace SupportAdvance.Tests.Architecture.Tests;
 /// </summary>
 /// <remarks>
 /// <para>【検証内容】Composition Root（WpfTrial の App、WinTrial の Program）以外は Infrastructure に依存しない</para>
-/// <para>【検証内容】WpfTrial の ViewModel は View 型・UI コントロール型に依存しない</para>
+/// <para>【検証内容】ViewModel（Presentation.Shared に集約）は View 型・UI コントロール型に依存しない。WpfTrial／WinTrial は ViewModel を持たない（重複の再発防止）</para>
 /// <para>【設計】Types.InNamespace は読み込み済みアセンブリのみが対象のため、アセンブリを明示して検証。対象が空で常に成功する状態を防ぐため、検証対象の存在も確認する</para>
 /// </remarks>
 public class PresentationArchitectureTests
@@ -37,10 +37,13 @@ public class PresentationArchitectureTests
         "System.Windows.DependencyObject",
         "System.Windows.Visibility",
         "Syncfusion",
-        "SupportAdvance.Presentation.WpfTrial.Views"
+        "SupportAdvance.Presentation.WpfTrial.Views",
+        "SupportAdvance.Presentation.WinTrial.Views"
     ];
 
     private static Assembly WpfTrialAssembly => typeof(SupportAdvance.Presentation.WpfTrial.DependencyInjection).Assembly;
+
+    private static Assembly SharedAssembly => typeof(SupportAdvance.Presentation.Shared.ViewModels.MainWindowViewModel).Assembly;
 
     private static Assembly WinTrialAssembly => typeof(SupportAdvance.Presentation.WinTrial.DependencyInjection).Assembly;
 
@@ -116,10 +119,10 @@ public class PresentationArchitectureTests
     }
 
     [Fact]
-    public void WpfTrialViewModels_ShouldNotDependOnViewsOrUiControls()
+    public void SharedViewModels_ShouldNotDependOnViewsOrUiControls()
     {
-        var viewModels = Types.InAssembly(WpfTrialAssembly)
-            .That().ResideInNamespace("SupportAdvance.Presentation.WpfTrial.ViewModels");
+        var viewModels = Types.InAssembly(SharedAssembly)
+            .That().ResideInNamespace("SupportAdvance.Presentation.Shared.ViewModels");
 
         Assert.NotEmpty(viewModels.GetTypes());
 
@@ -127,6 +130,28 @@ public class PresentationArchitectureTests
             .ShouldNot().HaveDependencyOnAny(UiTypeNamespaces)
             .GetResult();
 
-        Assert.True(result.IsSuccessful, $"WpfTrial ViewModels should not depend on Views / UI types: {Describe(result)}");
+        Assert.True(result.IsSuccessful, $"Shared ViewModels should not depend on Views / UI types: {Describe(result)}");
+    }
+
+    [Fact]
+    public void WinTrialViews_DoDependOnUiTypes_SoTheViewModelRuleIsNotVacuous()
+    {
+        var result = Types.InAssembly(WinTrialAssembly)
+            .That().HaveName("MainWindow")
+            .Should().HaveDependencyOnAny(UiTypeNamespaces)
+            .GetResult();
+
+        Assert.True(result.IsSuccessful, "WinTrial.MainWindow should depend on UI types");
+    }
+
+    [Fact]
+    public void WpfTrialAndWinTrial_ShouldNotDefineTheirOwnViewModels()
+    {
+        // ViewModel は Presentation.Shared に集約する（WpfTrial／WinTrial の重複定義の再発防止）
+        var wpf = Types.InAssembly(WpfTrialAssembly).That().HaveNameEndingWith("ViewModel").GetTypes();
+        var win = Types.InAssembly(WinTrialAssembly).That().HaveNameEndingWith("ViewModel").GetTypes();
+
+        Assert.Empty(wpf);
+        Assert.Empty(win);
     }
 }

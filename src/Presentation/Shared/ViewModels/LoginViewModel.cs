@@ -5,10 +5,10 @@ using SupportAdvance.Contexts.Authentication.Application.UseCases;
 using SupportAdvance.Crosscutting.Logging;
 using SupportAdvance.Application.Abstractions.Services;
 
-namespace SupportAdvance.Presentation.WinTrial.ViewModels;
+namespace SupportAdvance.Presentation.Shared.ViewModels;
 
 /// <summary>
-/// ログインダイアログ ViewModel（MVVM Toolkit）
+/// ログイン画面 ViewModel（MVVM Toolkit。WpfTrial／WinTrial 共通）
 ///
 /// 【責務】
 /// - ログインID・パスワード入力の状態管理
@@ -19,69 +19,62 @@ namespace SupportAdvance.Presentation.WinTrial.ViewModels;
 ///
 /// 【UI バインディング】
 /// - LoginId （ObservableProperty）
-/// - Password （ObservableProperty）
+/// - Password （ObservableProperty。WPF の PasswordBox は Behaviors/PasswordBoxAssistant 経由でバインド）
 /// - ErrorMessage （ObservableProperty）
-/// - IsLoading （ObservableProperty）
-/// - LoginCommand （RelayCommand）
+/// - IsLoading （ObservableProperty。入力欄・ボタンの有効／無効は InverseBooleanConverter で反転してバインド）
+/// - LoginCommand / CancelCommand （RelayCommand）
 /// </summary>
-public partial class LoginDialogViewModel : ObservableObject
+public partial class LoginViewModel : ObservableObject
 {
     private readonly AuthenticateLocalUserUseCase _authenticateUseCase;
     private readonly ICurrentUserService _currentUserService;
-    private readonly IAppLogging<LoginDialogViewModel> _logger;
+    private readonly IAppLogging<LoginViewModel> _logger;
 
     /// <summary>
     /// ログインID の入力値
     /// </summary>
     [ObservableProperty]
-    private string loginId = string.Empty;
+    private string _loginId = string.Empty;
 
     /// <summary>
     /// パスワードの入力値（ログイン失敗時にクリア）
     /// </summary>
     [ObservableProperty]
-    private string password = string.Empty;
+    private string _password = string.Empty;
 
     /// <summary>
     /// 画面に表示するエラーメッセージ。エラーなしの場合は空文字
     /// </summary>
     [ObservableProperty]
-    private string errorMessage = string.Empty;
+    private string _errorMessage = string.Empty;
 
     /// <summary>
     /// ログイン処理中かどうかを示す値
     /// </summary>
     [ObservableProperty]
-    private bool isLoading;
+    private bool _isLoading;
 
     /// <summary>
-    /// ログイン処理中でないかどうかを示す値（入力欄・ボタンの有効／無効のバインド用）
-    /// </summary>
-    /// <remarks>【注意】<c>IsLoading</c> の変更時に自動で反転。直接の設定は不要</remarks>
-    [ObservableProperty]
-    private bool isNotLoading = true;
-
-    /// <summary>
-    /// ログイン成功イベント
+    /// ログイン成功イベント（View 側で画面を閉じるために使用）
     /// </summary>
     public event EventHandler? LoginSucceeded;
 
     /// <summary>
-    /// キャンセルイベント
+    /// キャンセルイベント（View 側で画面を閉じるために使用）
     /// </summary>
     public event EventHandler? CancelRequested;
 
     /// <summary>
-    /// <see cref="LoginDialogViewModel"/> クラスの新しいインスタンスの初期化
+    /// <see cref="LoginViewModel"/> クラスの新しいインスタンスの初期化
     /// </summary>
     /// <param name="authenticateUseCase">ローカル認証のユースケース</param>
     /// <param name="currentUserService">ログイン成功時にユーザー情報を記録する先</param>
     /// <param name="logger">ログの出力先</param>
     /// <exception cref="ArgumentNullException">いずれかの引数が <see langword="null"/> の場合</exception>
-    public LoginDialogViewModel(
+    public LoginViewModel(
         AuthenticateLocalUserUseCase authenticateUseCase,
         ICurrentUserService currentUserService,
-        IAppLogging<LoginDialogViewModel> logger)
+        IAppLogging<LoginViewModel> logger)
     {
         ArgumentNullException.ThrowIfNull(authenticateUseCase);
         ArgumentNullException.ThrowIfNull(currentUserService);
@@ -91,15 +84,7 @@ public partial class LoginDialogViewModel : ObservableObject
         _currentUserService = currentUserService;
         _logger = logger;
 
-        _logger.LogInformation("LoginDialogViewModel initialized.");
-    }
-
-    /// <summary>
-    /// IsLoading が変更されたときに IsNotLoading を同期
-    /// </summary>
-    partial void OnIsLoadingChanged(bool oldValue, bool newValue)
-    {
-        IsNotLoading = !newValue;
+        _logger.LogInformation("LoginViewModel initialized.");
     }
 
     /// <summary>
@@ -156,8 +141,8 @@ public partial class LoginDialogViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"予期しないエラー: {ex.Message}";
-            _logger.LogWarning($"Unexpected error during login: {ex.Message}");
+            ErrorMessage = "予期しないエラーが発生しました。しばらくしてからやり直してください";
+            _logger.LogError("Unexpected error during login", ex);
         }
         finally
         {

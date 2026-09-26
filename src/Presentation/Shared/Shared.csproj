@@ -13,6 +13,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Application\Application.csproj" />
+    <ProjectReference Include="..\..\Contexts\Authentication\Authentication.Application\Authentication.Application.csproj" />
+    <ProjectReference Include="..\..\Contexts\IntegrationPrototype\IntegrationPrototype.Application\IntegrationPrototype.Application.csproj" />
     <ProjectReference Include="..\..\Common\Common.csproj" />
     <ProjectReference Include="..\..\Crosscutting\Crosscutting.csproj" />
   </ItemGroup>

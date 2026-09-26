@@ -1,6 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace SupportAdvance.Presentation.WpfTrial.ViewModels.Tabs;
+namespace SupportAdvance.Presentation.Shared.ViewModels.Tabs;
 
 /// <summary>
 /// メインウィンドウのタブ 1 枚分の ViewModel

@@ -1,4 +1,4 @@
-using SupportAdvance.Presentation.WpfTrial.ViewModels;
+using SupportAdvance.Presentation.Shared.ViewModels;
 using Syncfusion.Windows.Controls;
 
 namespace SupportAdvance.Presentation.WpfTrial.Views;

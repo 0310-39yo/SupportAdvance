@@ -1,5 +1,5 @@
 using System.Windows;
-using SupportAdvance.Presentation.WpfTrial.ViewModels;
+using SupportAdvance.Presentation.Shared.ViewModels;
 
 namespace SupportAdvance.Presentation.WpfTrial.Views;
 
@@ -7,7 +7,7 @@ namespace SupportAdvance.Presentation.WpfTrial.Views;
 /// ログインウィンドウ（WPF + MVVM Toolkit）
 ///
 /// 【責務】
-/// - ViewModel（LoginWindowViewModel）を DataContext に設定
+/// - ViewModel（LoginViewModel）を DataContext に設定
 /// - ログインID・パスワード入力欄、エラーメッセージは XAML の Binding のみで表現
 /// - PasswordBox は仕様上バインド不可のため Behaviors/PasswordBoxAssistant で仲介
 /// - ViewModel の LoginSucceeded / CancelRequested イベントを受けて DialogResult を確定しウィンドウを閉じる
@@ -15,14 +15,14 @@ namespace SupportAdvance.Presentation.WpfTrial.Views;
 /// </summary>
 public partial class LoginWindow : Window
 {
-    private readonly LoginWindowViewModel _viewModel;
+    private readonly LoginViewModel _viewModel;
 
     /// <summary>
     /// <see cref="LoginWindow"/> クラスの新しいインスタンスの初期化
     /// </summary>
     /// <param name="viewModel">DataContext に設定する ViewModel</param>
     /// <exception cref="ArgumentNullException"><paramref name="viewModel"/> が <see langword="null"/> の場合</exception>
-    public LoginWindow(LoginWindowViewModel viewModel)
+    public LoginWindow(LoginViewModel viewModel)
     {
         ArgumentNullException.ThrowIfNull(viewModel);
 

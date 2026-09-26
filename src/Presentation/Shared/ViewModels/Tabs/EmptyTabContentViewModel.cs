@@ -1,4 +1,4 @@
-namespace SupportAdvance.Presentation.WpfTrial.ViewModels.Tabs;
+namespace SupportAdvance.Presentation.Shared.ViewModels.Tabs;
 
 /// <summary>
 /// 未実装の画面を表すタブ内容の ViewModel

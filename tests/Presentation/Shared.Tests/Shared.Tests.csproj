@@ -1,11 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0-windows</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
-    <UseWPF>true</UseWPF>
   </PropertyGroup>
 
   <ItemGroup>
@@ -27,7 +26,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../../src/Presentation/WpfTrial/WpfTrial.csproj" />
     <ProjectReference Include="../../../src/Presentation/Shared/Shared.csproj" />
     <ProjectReference Include="../../../src/Application/Application.csproj" />
     <ProjectReference Include="../../../src/Common/Common.csproj" />

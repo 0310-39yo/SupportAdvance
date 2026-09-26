@@ -15,7 +15,6 @@ using SupportAdvance.Infrastructure;
 using SupportAdvance.Application.Abstractions.Services;
 using SupportAdvance.Presentation.Shared;
 using SupportAdvance.Presentation.WinTrial.Services;
-using SupportAdvance.Presentation.WinTrial.ViewModels;
 using SupportAdvance.Presentation.WinTrial.Views;
 
 namespace SupportAdvance.Presentation.WinTrial;
@@ -49,17 +48,14 @@ internal static class Program
                     .AddIntegrationPrototypeApplicationModels() // IntegrationPrototype Application を登録
                     .AddWinTrialModules()
                     // Authentication BC 実装により RealCurrentUserService に切り替え
-                    .AddScoped<ICurrentUserService, RealCurrentUserService>()
-                    // LoginDialog + ViewModel（MVVM Toolkit）を DI 登録
-                    .AddScoped<LoginDialogViewModel>()
-                    .AddScoped<LoginDialog>()
-                    ;
+                    .AddScoped<ICurrentUserService, RealCurrentUserService>();
             })
             .Build();
 
         host.Start();
 
         // BusinessDayClockの場合のみ、起動を業務日の開始とする（それ以外は未登録で何もしない）
+        // Syncfusion の System.ServiceExtensions と拡張メソッド名が衝突するため、静的メソッドとして明示的に呼び出す
         var businessDayClock =
             ServiceProviderServiceExtensions.GetService<IBusinessDayClockControl>(host.Services);
         businessDayClock?.TurnOn();
@@ -71,8 +67,7 @@ internal static class Program
         if (dialogResult == DialogResult.OK)
         {
             // ログイン成功時は MainWindow を表示
-            var mainForm = ServiceProviderServiceExtensions.GetRequiredService<MainWindow>(scope.ServiceProvider) ??
-                           ActivatorUtilities.CreateInstance<MainWindow>(scope.ServiceProvider);
+            var mainForm = ServiceProviderServiceExtensions.GetRequiredService<MainWindow>(scope.ServiceProvider);
             System.Windows.Forms.Application.Run(mainForm);
         }
         // ログインキャンセル時はアプリを終了

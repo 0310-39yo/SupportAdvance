@@ -54,7 +54,7 @@
     <Project Path="tests/SharedKernel.Tests/SharedKernel.Tests.csproj" Id="b1c2d3e4-f5a6-47b8-9c0d-3e4f5a6b7c8d" />
   </Folder>
   <Folder Name="/tests/Presentation/">
-    <Project Path="tests/Presentation/WpfTrial.Tests/WpfTrial.Tests.csproj" />
+    <Project Path="tests/Presentation/Shared.Tests/Shared.Tests.csproj" />
   </Folder>
   <Folder Name="/tests/Contexts/">
     <Project Path="tests/Contexts/Employee.Domain.Tests/Employee.Domain.Tests.csproj" />

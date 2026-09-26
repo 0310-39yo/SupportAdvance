@@ -61,7 +61,6 @@ namespace SupportAdvance.Presentation.WinTrial.Views {
             Controls.Add(statusStripEx);
             Name = "MainWindow";
             Text = "MainWindow";
-            Load += MainWindow_Load;
             ResumeLayout(false);
             PerformLayout();
 

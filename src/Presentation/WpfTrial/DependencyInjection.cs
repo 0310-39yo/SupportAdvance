@@ -1,6 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
 using SupportAdvance.Presentation.Shared.ViewModels;
-using SupportAdvance.Presentation.WpfTrial.ViewModels;
 using SupportAdvance.Presentation.WpfTrial.Views;
 
 namespace SupportAdvance.Presentation.WpfTrial;
@@ -22,7 +21,7 @@ public static class DependencyInjection
 
         // ViewModels（Window に ViewModel を DI する）
         services.AddScoped<MainWindowViewModel>();
-        services.AddScoped<LoginWindowViewModel>();
+        services.AddScoped<LoginViewModel>();
         services.AddScoped<Form1ViewModel>();
 
         // BusinessDayClockの操作パネル（Presentation.Shared の共通 ViewModel）

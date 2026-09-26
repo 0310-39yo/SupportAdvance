@@ -92,7 +92,7 @@
 
 ### 実施結果（2026-09-26）
 
-- `tests/Presentation/WpfTrial.Tests` を新設（20 テスト。MainWindow／Form1／LoginWindow の各 ViewModel。Moq 使用）
+- `tests/Presentation/WpfTrial.Tests` を新設（20 テスト。MainWindow／Form1／LoginWindow の各 ViewModel。Moq 使用）。その後 ViewModel を `Presentation.Shared` に移した際に `tests/Presentation/Shared.Tests` へ改名
 - `tests/Architecture.Tests/PresentationArchitectureTests.cs` を追加（5 テスト）
   - WpfTrial／WinTrial: Composition Root（App／Program）以外は Infrastructure に依存しない
   - WpfTrial の ViewModel は View 型・UI コントロール型に依存しない

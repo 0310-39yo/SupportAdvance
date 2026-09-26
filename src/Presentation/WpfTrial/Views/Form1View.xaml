@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:SupportAdvance.Presentation.WpfTrial.Views"
         xmlns:input="clr-namespace:Syncfusion.Windows.Controls.Input;assembly=Syncfusion.SfInput.WPF"
         xmlns:syncfusion="http://schemas.syncfusion.com/wpf"
-        xmlns:vm="clr-namespace:SupportAdvance.Presentation.WpfTrial.ViewModels"
+        xmlns:vm="clr-namespace:SupportAdvance.Presentation.Shared.ViewModels;assembly=Shared"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=vm:Form1ViewModel}"
         Title="Form1 View" Height="380" Width="484"

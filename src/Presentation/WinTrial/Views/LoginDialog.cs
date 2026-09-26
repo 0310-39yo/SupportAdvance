@@ -1,4 +1,4 @@
-using SupportAdvance.Presentation.WinTrial.ViewModels;
+using SupportAdvance.Presentation.Shared.ViewModels;
 
 namespace SupportAdvance.Presentation.WinTrial.Views;
 
@@ -7,7 +7,7 @@ namespace SupportAdvance.Presentation.WinTrial.Views;
 ///
 /// 【責務】
 /// - ログインID・パスワード入力フォーム
-/// - ViewModel（LoginDialogViewModel）とデータバインディング
+/// - ViewModel（LoginViewModel）とデータバインディング
 /// - UI イベントハンドリング
 ///
 /// 【UI パターン】
@@ -23,14 +23,14 @@ namespace SupportAdvance.Presentation.WinTrial.Views;
 /// </summary>
 public partial class LoginDialog : Form
 {
-    private readonly LoginDialogViewModel _viewModel;
+    private readonly LoginViewModel _viewModel;
 
     /// <summary>
     /// <see cref="LoginDialog"/> クラスの新しいインスタンスの初期化
     /// </summary>
     /// <param name="viewModel">バインドする ViewModel</param>
     /// <exception cref="ArgumentNullException"><paramref name="viewModel"/> が <see langword="null"/> の場合</exception>
-    public LoginDialog(LoginDialogViewModel viewModel)
+    public LoginDialog(LoginViewModel viewModel)
     {
         ArgumentNullException.ThrowIfNull(viewModel);
 
@@ -48,22 +48,28 @@ public partial class LoginDialog : Form
         _viewModel.CancelRequested += ViewModel_CancelRequested;
 
         // ログインID テキストボックスにバインド
-        txtLoginId.DataBindings.Add("Text", _viewModel, nameof(LoginDialogViewModel.LoginId), true,
+        txtLoginId.DataBindings.Add("Text", _viewModel, nameof(LoginViewModel.LoginId), true,
             DataSourceUpdateMode.OnPropertyChanged);
 
         // パスワード テキストボックスにバインド
-        txtPassword.DataBindings.Add("Text", _viewModel, nameof(LoginDialogViewModel.Password), true,
+        txtPassword.DataBindings.Add("Text", _viewModel, nameof(LoginViewModel.Password), true,
             DataSourceUpdateMode.OnPropertyChanged);
 
         // エラーメッセージ ラベルにバインド
-        lblError.DataBindings.Add("Text", _viewModel, nameof(LoginDialogViewModel.ErrorMessage));
-        lblError.DataBindings.Add("Visible", _viewModel, nameof(LoginDialogViewModel.ErrorMessage),
-            true, DataSourceUpdateMode.Never, "");
+        lblError.DataBindings.Add("Text", _viewModel, nameof(LoginViewModel.ErrorMessage));
 
-        // ログイン ボタンにバインド
+        // 表示／非表示はメッセージが空でない場合のみ（文字列から bool への既定の変換は失敗するため、Format で変換）
+        var errorVisibleBinding = new Binding("Visible", _viewModel, nameof(LoginViewModel.ErrorMessage),
+            true, DataSourceUpdateMode.Never);
+        errorVisibleBinding.Format += (_, e) => e.Value = !string.IsNullOrEmpty(e.Value as string);
+        lblError.DataBindings.Add(errorVisibleBinding);
+
+        // ログイン ボタンにバインド（ログイン処理中は無効）
         btnLogin.Command = _viewModel.LoginCommand;
-        btnLogin.DataBindings.Add("Enabled", _viewModel, nameof(LoginDialogViewModel.IsNotLoading),
-            true, DataSourceUpdateMode.OnPropertyChanged);
+        var loginEnabledBinding = new Binding("Enabled", _viewModel, nameof(LoginViewModel.IsLoading),
+            true, DataSourceUpdateMode.Never);
+        loginEnabledBinding.Format += (_, e) => e.Value = e.Value is not true;
+        btnLogin.DataBindings.Add(loginEnabledBinding);
 
         // キャンセル ボタンにバインド
         btnCancel.Command = _viewModel.CancelCommand;

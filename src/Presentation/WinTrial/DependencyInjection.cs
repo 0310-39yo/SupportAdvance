@@ -1,7 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using SupportAdvance.Contexts.Employee.Application.UseCases;
 using SupportAdvance.Presentation.Shared.ViewModels;
-using SupportAdvance.Presentation.WinTrial.ViewModels;
 using SupportAdvance.Presentation.WinTrial.Views;
 
 namespace SupportAdvance.Presentation.WinTrial;
@@ -24,13 +23,16 @@ public static class DependencyInjection
         // Use Cases（Presentation が直接使用する場合）
         services.AddScoped<GetEmployeeByBizIdUseCase>();
 
-        // ViewModels（ViewModel に Use Case を DI する）
+        // ViewModels（Presentation.Shared の共通 ViewModel。ViewModel に Use Case を DI する）
+        services.AddScoped<MainWindowViewModel>();
+        services.AddScoped<LoginViewModel>();
         services.AddScoped<Form1ViewModel>();
 
         // BusinessDayClockの操作パネル（Presentation.Shared の共通 ViewModel）
         services.AddScoped<BusinessDayClockViewModel>();
 
         // Views（Form に ViewModel を DI する）
+        services.AddScoped<LoginDialog>();
         services.AddScoped<Form1View>();
         services.AddScoped<MainWindow>();
 

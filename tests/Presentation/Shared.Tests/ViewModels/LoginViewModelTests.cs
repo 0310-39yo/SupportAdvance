@@ -7,21 +7,21 @@ using SupportAdvance.Contexts.Authentication.Application.Repositories;
 using SupportAdvance.Contexts.Authentication.Application.Services;
 using SupportAdvance.Contexts.Authentication.Application.UseCases;
 using SupportAdvance.Crosscutting.Logging;
-using SupportAdvance.Presentation.WpfTrial.ViewModels;
+using SupportAdvance.Presentation.Shared.ViewModels;
 
-namespace SupportAdvance.Tests.Presentation.WpfTrial.Tests.ViewModels;
+namespace SupportAdvance.Tests.Presentation.Shared.Tests.ViewModels;
 
 /// <summary>
-/// <see cref="LoginWindowViewModel"/> の入力検証・成功・失敗の各分岐の検証
+/// <see cref="LoginViewModel"/> の入力検証・成功・失敗の各分岐の検証
 /// </summary>
-public class LoginWindowViewModelTests
+public class LoginViewModelTests
 {
     private readonly Mock<ILoginCredentialsQuery> _credentialsQuery = new();
     private readonly Mock<IPasswordHashService> _passwordHashService = new();
     private readonly Mock<IUserAuthSessionRepository> _sessionRepository = new();
     private readonly Mock<ICurrentUserService> _currentUserService = new();
 
-    private LoginWindowViewModel CreateSut()
+    private LoginViewModel CreateSut()
     {
         var clock = new Mock<IClock>();
         clock.SetupGet(c => c.JstNow).Returns(new LocalDateTime(new DateTime(2026, 9, 26, 9, 0, 0)));
@@ -36,10 +36,10 @@ public class LoginWindowViewModelTests
             clock.Object,
             sequence.Object);
 
-        return new LoginWindowViewModel(
+        return new LoginViewModel(
             useCase,
             _currentUserService.Object,
-            Mock.Of<IAppLogging<LoginWindowViewModel>>());
+            Mock.Of<IAppLogging<LoginViewModel>>());
     }
 
     private void SetupActiveCredentials(bool passwordMatches)
