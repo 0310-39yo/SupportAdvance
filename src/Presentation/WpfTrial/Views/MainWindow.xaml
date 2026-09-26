@@ -3,6 +3,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:syncfusion="http://schemas.syncfusion.com/wpf"
+    xmlns:navigationDrawer="clr-namespace:Syncfusion.UI.Xaml.NavigationDrawer;assembly=Syncfusion.SfNavigationDrawer.WPF"
     Title="MainWindow"
     Width="1200"
     Height="800">
@@ -16,15 +17,8 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- 列：NavigationPane / Splitter / TabbedWindow -->
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="220"/>
-            <ColumnDefinition Width="5"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
-
         <!-- Ribbon（Tools系）- シンプルリボン表示 -->
-        <syncfusion:Ribbon Grid.Row="0" Grid.ColumnSpan="3"
+        <syncfusion:Ribbon Grid.Row="0"
                            EnableSimplifiedLayoutMode="True">
             <syncfusion:RibbonTab Caption="Home">
                 <syncfusion:RibbonBar Header="File">
@@ -34,61 +28,59 @@
             </syncfusion:RibbonTab>
         </syncfusion:Ribbon>
 
-        <!-- NavigationPane（GroupBar / Tools系） -->
-        <!-- SfNavigationDrawer は動的な NavigationItem 階層構築(Items.Add) 時に
-             内部の CollectionChanged ハンドラで NullReferenceException が発生する
-             既知の不具合があるため、安定して動作する GroupBar（Tools系）を使用する -->
-        <syncfusion:GroupBar Grid.Row="1" Grid.Column="0"
+        <!-- NavigationPane（SfNavigationDrawer / モダン系） -->
+        <!-- ナビゲーション項目（NavigationItem）は SfNavigationDrawer 直下に XAML で宣言する
+             （SfNavigationDrawer.ContentPropertyAttribute が Items のため公式に想定された書き方）。
+             ContentView にはナビゲーション選択後のメインコンテンツ（TabControlExt）を配置し、
+             ナビゲーション項目とコンテンツ領域を混在させない。
+             旧実装（ContentView 内に NavigationItemsView を配置）で発生した
+             NullReferenceException は、このパターンでは実機検証（スモークテスト）で
+             再現しないことを確認済み（詳細は
+             docs/Assistance/Plans/20260926_SfNavigationDrawer再検証計画.md）。 -->
+        <navigationDrawer:SfNavigationDrawer Grid.Row="1"
                              x:Name="NavigationPane"
-                             VisualMode="StackMode">
+                             DisplayMode="Expanded"
+                             IsToggleButtonVisible="False"
+                             DrawerWidth="220">
 
-            <syncfusion:GroupBarItem Header="顧客管理">
-                <syncfusion:GroupView>
-                    <syncfusion:GroupViewItem Text="顧客一覧"/>
-                    <syncfusion:GroupViewItem Text="顧客登録"/>
-                </syncfusion:GroupView>
-            </syncfusion:GroupBarItem>
+            <navigationDrawer:NavigationItem Header="顧客管理">
+                <navigationDrawer:NavigationItem Header="顧客一覧"/>
+                <navigationDrawer:NavigationItem Header="顧客登録"/>
+            </navigationDrawer:NavigationItem>
 
-            <syncfusion:GroupBarItem Header="受注管理">
-                <syncfusion:GroupView>
-                    <syncfusion:GroupViewItem Text="受注一覧"/>
-                    <syncfusion:GroupViewItem Text="受注登録"/>
-                </syncfusion:GroupView>
-            </syncfusion:GroupBarItem>
+            <navigationDrawer:NavigationItem Header="受注管理">
+                <navigationDrawer:NavigationItem Header="受注一覧"/>
+                <navigationDrawer:NavigationItem Header="受注登録"/>
+            </navigationDrawer:NavigationItem>
 
-        </syncfusion:GroupBar>
+            <navigationDrawer:SfNavigationDrawer.ContentView>
+                <!-- TabbedWindow（TabControlExt / Tools系） -->
+                <!-- ItemsSource: ViewModel の OpenTabs -->
+                <!-- SelectedItem: ViewModel の SelectedTab -->
+                <syncfusion:TabControlExt x:Name="MainTabs"
+                                          ItemsSource="{Binding OpenTabs, Mode=TwoWay}"
+                                          SelectedItem="{Binding SelectedTab, Mode=TwoWay}"
+                                          AllowDragDrop="True"
+                                          CloseButtonType="Individual">
+                    <!-- TabItem の表示テンプレート -->
+                    <syncfusion:TabControlExt.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Header}" />
+                        </DataTemplate>
+                    </syncfusion:TabControlExt.ItemTemplate>
+                    <!-- TabItem の コンテンツテンプレート -->
+                    <syncfusion:TabControlExt.ContentTemplate>
+                        <DataTemplate>
+                            <ContentPresenter Content="{Binding Content}"/>
+                        </DataTemplate>
+                    </syncfusion:TabControlExt.ContentTemplate>
+                </syncfusion:TabControlExt>
+            </navigationDrawer:SfNavigationDrawer.ContentView>
 
-        <!-- Splitter -->
-        <GridSplitter Grid.Row="1" Grid.Column="1"
-                      Width="5"
-                      ResizeBehavior="PreviousAndNext"
-                      Background="#DDD"/>
-
-        <!-- TabbedWindow（TabControlExt / Tools系） -->
-        <!-- ItemsSource: ViewModel の OpenTabs -->
-        <!-- SelectedItem: ViewModel の SelectedTab -->
-        <syncfusion:TabControlExt Grid.Row="1" Grid.Column="2"
-                                  x:Name="MainTabs"
-                                  ItemsSource="{Binding OpenTabs, Mode=TwoWay}"
-                                  SelectedItem="{Binding SelectedTab, Mode=TwoWay}"
-                                  AllowDragDrop="True"
-                                  CloseButtonType="Individual">
-            <!-- TabItem の表示テンプレート -->
-            <syncfusion:TabControlExt.ItemTemplate>
-                <DataTemplate>
-                    <TextBlock Text="{Binding Header}" />
-                </DataTemplate>
-            </syncfusion:TabControlExt.ItemTemplate>
-            <!-- TabItem の コンテンツテンプレート -->
-            <syncfusion:TabControlExt.ContentTemplate>
-                <DataTemplate>
-                    <ContentPresenter Content="{Binding Content}"/>
-                </DataTemplate>
-            </syncfusion:TabControlExt.ContentTemplate>
-        </syncfusion:TabControlExt>
+        </navigationDrawer:SfNavigationDrawer>
 
         <!-- StatusBar（Tools系） -->
-        <syncfusion:RibbonStatusBar Grid.Row="2" Grid.ColumnSpan="3">
+        <syncfusion:RibbonStatusBar Grid.Row="2">
             <TextBlock Text="Ready"/>
         </syncfusion:RibbonStatusBar>
 

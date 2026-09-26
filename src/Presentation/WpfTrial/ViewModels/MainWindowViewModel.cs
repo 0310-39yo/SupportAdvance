@@ -158,12 +158,12 @@ public partial class MainWindowViewModel : ObservableObject
     [RelayCommand]
     public void NavigationItemSelected(object? parameter)
     {
-        if (parameter is not Syncfusion.Windows.Tools.Controls.GroupViewItem groupViewItem)
+        if (parameter is not Syncfusion.UI.Xaml.NavigationDrawer.NavigationItem navigationItem)
         {
             return;
         }
 
-        var itemText = groupViewItem.Text;
+        var itemText = navigationItem.Header?.ToString();
         if (string.IsNullOrEmpty(itemText))
         {
             return;
