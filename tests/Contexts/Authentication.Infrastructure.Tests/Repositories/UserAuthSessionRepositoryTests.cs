@@ -55,12 +55,9 @@ public class UserAuthSessionRepositoryTests : RepositoryTestBase
         _testSequenceProvider = new TestSequenceProvider(appSettings);
         var queryLoader = new SqlQueryLoader(appSettings);
 
-        // 【注意】本番用 SequenceProvider（s_row_id_sequence）。
-        //         テストでは事前に TestSequenceProvider で RowId を採番して渡すため、
-        //         Repository.SaveAsync 内の採番ロジック（RowId==0 の場合のみ）は通常通らない。
-        var sequenceProvider = new SequenceProvider(appSettings);
-
-        _repository = new UserAuthSessionRepository(_connectionFactory, _clock, queryLoader, sequenceProvider);
+        // 【重要】リポジトリにもテスト用シーケンス（s_test_row_id_sequence）を渡す。
+        //         本番シーケンス（s_row_id_sequence）は、テストでは消費しない。
+        _repository = new UserAuthSessionRepository(_connectionFactory, _clock, queryLoader, _testSequenceProvider);
         return Task.CompletedTask;
     }
 

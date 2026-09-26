@@ -1,5 +1,6 @@
 using System.Data;
 using Microsoft.Data.SqlClient;
+using SupportAdvance.Application.Abstractions.Identifiers;
 using SupportAdvance.Common.Configuration;
 
 namespace SupportAdvance.Infrastructure.Tests.Utilities;
@@ -15,8 +16,10 @@ namespace SupportAdvance.Infrastructure.Tests.Utilities;
 /// 【使用方法】
 /// var provider = new TestSequenceProvider(appSettings);
 /// var rowId = await provider.GetNextValueAsync();
+///
+/// 【注意】ISequenceProvider を実装しているため、リポジトリなどの本番型に本番シーケンスの代わりに渡せる
 /// </summary>
-public class TestSequenceProvider
+public class TestSequenceProvider : ISequenceProvider
 {
     private readonly string _connectionString;
     private readonly object _lockObject = new();
