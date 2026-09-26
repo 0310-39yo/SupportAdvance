@@ -1,48 +1,59 @@
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using Syncfusion.UI.Xaml.NavigationDrawer;
 
 namespace SupportAdvance.Presentation.WpfTrial.Behaviors;
 
 /// <summary>
-/// <see cref="SfNavigationDrawer"/> の展開時の幅を、マウスのドラッグで変えられるようにする添付ビヘイビア（<see cref="Thumb"/> に指定）
+/// <see cref="SfNavigationDrawer"/> を置いた <see cref="Grid"/> の列の幅を、<see cref="GridSplitter"/> のドラッグで変えられるようにする添付ビヘイビア
 ///
 /// 【背景】
-/// SfNavigationDrawer は幅をドラッグで変える機能を持たない。ドロワーの右端に重ねて置いた <see cref="Thumb"/>（つかみ部分）のドラッグ量を、
-/// ドロワーの <see cref="SfNavigationDrawer.ExpandedModeWidth"/> に反映する。
+/// SfNavigationDrawer は、展開時の幅（<see cref="SfNavigationDrawer.ExpandedModeWidth"/>）を、実行中に変えても表示に反映しない。
+/// そのため、ドロワーの内側の幅は最大の幅に固定し、ドロワーを置いた列の幅（ドラッグで変える）で、見える範囲を切り取る方式にする。
 ///
 /// 【使い方】
-/// &lt;Thumb HorizontalAlignment="Left" Width="6" Cursor="SizeWE"
-///         behaviors:NavigationDrawerResizeBehavior.Target="{Binding ElementName=NavigationPane}"
+/// ドロワーを Grid の列 N に置き、列 N+1 に <see cref="GridSplitter"/> を置く。ドロワーに次を指定する。
+/// &lt;navigationDrawer:SfNavigationDrawer ExpandedModeWidth="500"
+///         behaviors:NavigationDrawerResizeBehavior.IsResizable="True"
 ///         behaviors:NavigationDrawerResizeBehavior.MinWidth="120"
 ///         behaviors:NavigationDrawerResizeBehavior.MaxWidth="500" /&gt;
+/// （<c>ExpandedModeWidth</c> は <c>MaxWidth</c> 以上にする）
 ///
 /// 【動作】
-/// - つかみ部分は、ドロワーの現在の右端に追従する（レイアウトの更新のたびに位置を合わせる）
-/// - 折りたたみ表示（Compact）のときは、つかみ部分を隠して、幅を変えられないようにする
+/// - 展開表示のとき: 列の幅を <c>MinWidth</c>〜<c>MaxWidth</c> の範囲でドラッグして変えられる
+/// - 折りたたみ表示（Compact）になったとき: 列の幅を記憶したうえで <see cref="SfNavigationDrawer.CompactModeWidth"/> に固定し、境界を無効にする。
+///   展開表示に戻ると、記憶した幅に戻す
 ///
 /// 【注意】
-/// - 現在の幅は、ドロワーのテンプレートが作る <c>DrawerContentGrid</c> の幅から求める（テンプレートの構造に依存。見つからない場合は何もしない）
+/// - 展開／折りたたみの判定は、ドロワーのテンプレートが作る <c>ContentViewContentPresenter</c> の左の余白（折りたたみ時は <c>CompactModeWidth</c> になる）による。
+///   テンプレートの構造に依存し、見つからない場合は何もしない
 /// </summary>
 public static class NavigationDrawerResizeBehavior
 {
-    // ドロワーのテンプレートが持つ、項目を並べる領域の要素の名前（この要素の幅が、現在のドロワーの幅になる）
-    private const string DrawerContentGridName = "DrawerContentGrid";
+    // ドロワーのテンプレートが、メインコンテンツの左側に空ける余白（＝現在の展開／折りたたみの幅）を持つ要素の名前
+    private const string ContentPresenterName = "ContentViewContentPresenter";
 
-    private static readonly ConditionalWeakTable<Thumb, EventHandler> LayoutHandlers = new();
+    // 列ごとの状態（展開時の幅の記憶など）と、LayoutUpdated ハンドラー（登録の解除と二重登録の防止のために保持）
+    private sealed class State
+    {
+        public bool IsCompact;
+        public GridLength ExpandedWidth = new(220);
+        public EventHandler? Handler;
+    }
+
+    private static readonly ConditionalWeakTable<FrameworkElement, State> States = new();
 
     /// <summary>
-    /// <c>Target</c> 添付プロパティの識別子（幅を変える対象のドロワー）
+    /// <c>IsResizable</c> 添付プロパティの識別子（<see langword="true"/> で、列の幅をドラッグで変えられるようにする）
     /// </summary>
-    public static readonly DependencyProperty TargetProperty =
+    public static readonly DependencyProperty IsResizableProperty =
         DependencyProperty.RegisterAttached(
-            "Target",
-            typeof(SfNavigationDrawer),
+            "IsResizable",
+            typeof(bool),
             typeof(NavigationDrawerResizeBehavior),
-            new PropertyMetadata(null, OnTargetChanged));
+            new PropertyMetadata(false, OnIsResizableChanged));
 
     /// <summary>
     /// <c>MinWidth</c> 添付プロパティの識別子（ドラッグで縮められる最小の幅）
@@ -57,113 +68,127 @@ public static class NavigationDrawerResizeBehavior
         DependencyProperty.RegisterAttached("MaxWidth", typeof(double), typeof(NavigationDrawerResizeBehavior), new PropertyMetadata(500.0));
 
     /// <summary>
-    /// <c>Target</c> 添付プロパティの値の取得
+    /// <c>IsResizable</c> 添付プロパティの値の取得
     /// </summary>
-    /// <param name="d">対象の要素（<see cref="Thumb"/>）</param>
-    /// <returns>幅を変える対象のドロワー。未設定の場合は <see langword="null"/></returns>
-    public static SfNavigationDrawer? GetTarget(DependencyObject d) => (SfNavigationDrawer?)d.GetValue(TargetProperty);
+    /// <param name="d">対象の要素（<see cref="SfNavigationDrawer"/>）</param>
+    /// <returns>列の幅をドラッグで変えられる場合は <see langword="true"/></returns>
+    public static bool GetIsResizable(DependencyObject d) => (bool)d.GetValue(IsResizableProperty);
 
     /// <summary>
-    /// <c>Target</c> 添付プロパティの値の設定
+    /// <c>IsResizable</c> 添付プロパティの値の設定
     /// </summary>
-    /// <param name="d">対象の要素（<see cref="Thumb"/>）</param>
-    /// <param name="value">幅を変える対象のドロワー</param>
-    public static void SetTarget(DependencyObject d, SfNavigationDrawer? value) => d.SetValue(TargetProperty, value);
+    /// <param name="d">対象の要素（<see cref="SfNavigationDrawer"/>）</param>
+    /// <param name="value"><see langword="true"/> で、列の幅をドラッグで変えられるようにする</param>
+    public static void SetIsResizable(DependencyObject d, bool value) => d.SetValue(IsResizableProperty, value);
 
     /// <summary>
     /// <c>MinWidth</c> 添付プロパティの値の取得
     /// </summary>
-    /// <param name="d">対象の要素（<see cref="Thumb"/>）</param>
+    /// <param name="d">対象の要素（<see cref="SfNavigationDrawer"/>）</param>
     /// <returns>ドラッグで縮められる最小の幅</returns>
     public static double GetMinWidth(DependencyObject d) => (double)d.GetValue(MinWidthProperty);
 
     /// <summary>
     /// <c>MinWidth</c> 添付プロパティの値の設定
     /// </summary>
-    /// <param name="d">対象の要素（<see cref="Thumb"/>）</param>
+    /// <param name="d">対象の要素（<see cref="SfNavigationDrawer"/>）</param>
     /// <param name="value">ドラッグで縮められる最小の幅</param>
     public static void SetMinWidth(DependencyObject d, double value) => d.SetValue(MinWidthProperty, value);
 
     /// <summary>
     /// <c>MaxWidth</c> 添付プロパティの値の取得
     /// </summary>
-    /// <param name="d">対象の要素（<see cref="Thumb"/>）</param>
+    /// <param name="d">対象の要素（<see cref="SfNavigationDrawer"/>）</param>
     /// <returns>ドラッグで広げられる最大の幅</returns>
     public static double GetMaxWidth(DependencyObject d) => (double)d.GetValue(MaxWidthProperty);
 
     /// <summary>
     /// <c>MaxWidth</c> 添付プロパティの値の設定
     /// </summary>
-    /// <param name="d">対象の要素（<see cref="Thumb"/>）</param>
+    /// <param name="d">対象の要素（<see cref="SfNavigationDrawer"/>）</param>
     /// <param name="value">ドラッグで広げられる最大の幅</param>
     public static void SetMaxWidth(DependencyObject d, double value) => d.SetValue(MaxWidthProperty, value);
 
-    private static void OnTargetChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    private static void OnIsResizableChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
-        if (d is not Thumb thumb)
+        if (d is not SfNavigationDrawer drawer)
             return;
 
-        thumb.DragDelta -= Thumb_DragDelta;
-
-        if (e.OldValue is SfNavigationDrawer oldTarget && LayoutHandlers.TryGetValue(thumb, out var oldHandler))
+        if (States.TryGetValue(drawer, out var existing) && existing.Handler is not null)
         {
-            oldTarget.LayoutUpdated -= oldHandler;
-            LayoutHandlers.Remove(thumb);
+            drawer.LayoutUpdated -= existing.Handler;
+            States.Remove(drawer);
         }
 
-        if (e.NewValue is not SfNavigationDrawer target)
+        if (e.NewValue is not true)
             return;
 
-        thumb.DragDelta += Thumb_DragDelta;
-
-        // LayoutUpdated の送信元はドロワーではないため、つかみ部分とドロワーをクロージャで保持する
-        EventHandler handler = (_, _) => FollowDrawerEdge(thumb, target);
-        LayoutHandlers.Add(thumb, handler);
-        target.LayoutUpdated += handler;
+        var state = new State();
+        state.Handler = (_, _) => Update(drawer, state);
+        States.Add(drawer, state);
+        drawer.LayoutUpdated += state.Handler;
     }
 
-    private static void Thumb_DragDelta(object sender, DragDeltaEventArgs e)
+    private static void Update(SfNavigationDrawer drawer, State state)
     {
-        var thumb = (Thumb)sender;
-        var target = GetTarget(thumb);
-        if (target is null)
+        if (VisualTreeHelper.GetParent(drawer) is not Grid grid)
             return;
 
-        var width = target.ExpandedModeWidth + e.HorizontalChange;
-        target.ExpandedModeWidth = Math.Clamp(width, GetMinWidth(thumb), GetMaxWidth(thumb));
-        e.Handled = true;
-    }
-
-    private static void FollowDrawerEdge(Thumb thumb, SfNavigationDrawer target)
-    {
-        var currentWidth = FindDrawerContentGrid(target)?.ActualWidth;
-        if (currentWidth is null)
+        var index = Grid.GetColumn(drawer);
+        if (index < 0 || index >= grid.ColumnDefinitions.Count)
             return;
 
-        // 折りたたみ表示（Compact）では幅を変えられないため、つかみ部分を隠す
-        var isCompact = currentWidth.Value <= target.CompactModeWidth + 1;
-        var visibility = isCompact ? Visibility.Collapsed : Visibility.Visible;
-        if (thumb.Visibility != visibility)
+        var column = grid.ColumnDefinitions[index];
+        var splitter = grid.Children.OfType<GridSplitter>().FirstOrDefault(s => Grid.GetColumn(s) == index + 1);
+
+        var leftMargin = FindContentPresenter(drawer)?.Margin.Left;
+        if (leftMargin is null)
+            return;
+
+        var isCompact = leftMargin.Value <= drawer.CompactModeWidth + 1;
+
+        if (isCompact)
         {
-            thumb.Visibility = visibility;
+            if (!state.IsCompact)
+            {
+                // 展開 → 折りたたみ: 列の幅を記憶して、折りたたみの幅に固定する
+                state.IsCompact = true;
+                state.ExpandedWidth = column.Width;
+                column.MinWidth = drawer.CompactModeWidth;
+                column.MaxWidth = drawer.CompactModeWidth;
+                column.Width = new GridLength(drawer.CompactModeWidth);
+                if (splitter is not null)
+                {
+                    splitter.IsEnabled = false;
+                }
+            }
+
+            return;
         }
 
-        var left = currentWidth.Value - thumb.Width / 2;
-        if (!isCompact && Math.Abs(thumb.Margin.Left - left) > 0.01)
+        if (state.IsCompact || column.MaxWidth != GetMaxWidth(drawer))
         {
-            thumb.Margin = new Thickness(left, 0, 0, 0);
+            // 折りたたみ → 展開（または最初の表示）: 記憶した幅に戻す
+            state.IsCompact = false;
+            column.MinWidth = GetMinWidth(drawer);
+            column.MaxWidth = GetMaxWidth(drawer);
+            column.Width = state.ExpandedWidth;
+            if (splitter is not null)
+            {
+                splitter.IsEnabled = true;
+            }
         }
     }
 
-    private static FrameworkElement? FindDrawerContentGrid(DependencyObject parent)
+    private static FrameworkElement? FindContentPresenter(DependencyObject parent)
     {
         for (var i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
         {
             var child = VisualTreeHelper.GetChild(parent, i);
-            if (child is Grid { Name: DrawerContentGridName } grid)
-                return grid;
+            if (child is ContentPresenter { Name: ContentPresenterName } presenter)
+                return presenter;
 
-            var found = FindDrawerContentGrid(child);
+            var found = FindContentPresenter(child);
             if (found is not null)
                 return found;
         }
