@@ -1,4 +1,8 @@
 using Moq;
+using SupportAdvance.Application.Queries;
+using SupportAdvance.Common.Clocks;
+using SupportAdvance.Contexts.IntegrationPrototype.Application.UseCases;
+using SupportAdvance.Presentation.Shared.ViewModels.Tabs;
 using SupportAdvance.Common.Configuration;
 using SupportAdvance.Crosscutting.Logging;
 using SupportAdvance.Presentation.Shared.ViewModels;
@@ -10,11 +14,48 @@ namespace SupportAdvance.Tests.Presentation.Shared.Tests.ViewModels;
 /// </summary>
 public class MainWindowViewModelTests
 {
-    private static MainWindowViewModel CreateSut()
+    private static Form1ViewModel CreateForm1ViewModel()
+    {
+        var useCase = new GetEmployeeByBizIdIntegrationUseCase(
+            Mock.Of<IEmployeeQueryService>(),
+            Mock.Of<IAppLogging<GetEmployeeByBizIdIntegrationUseCase>>());
+
+        return new Form1ViewModel(
+            Mock.Of<IAppLogging<Form1ViewModel>>(),
+            Mock.Of<IClock>(),
+            useCase,
+            new BusinessDayClockViewModel());
+    }
+
+    private static MainWindowViewModel CreateSut(Form1ViewModel? form1ViewModel = null)
     {
         var settings = new Mock<IAppSettings>();
         settings.SetupGet(s => s.ApplicationBuildType).Returns("Debug");
-        return new MainWindowViewModel(Mock.Of<IAppLogging<MainWindowViewModel>>(), settings.Object);
+        return new MainWindowViewModel(
+            Mock.Of<IAppLogging<MainWindowViewModel>>(),
+            settings.Object,
+            form1ViewModel ?? CreateForm1ViewModel());
+    }
+
+    [Fact]
+    public void OpenTabCommand_CustomerList_ShowsForm1ViewModelAsContent()
+    {
+        var form1 = CreateForm1ViewModel();
+        var sut = CreateSut(form1);
+
+        sut.OpenTabCommand.Execute(MainWindowViewModel.CustomerListMenuName);
+
+        Assert.Same(form1, sut.SelectedTab!.ContentViewModel);
+    }
+
+    [Fact]
+    public void OpenTabCommand_OtherMenu_ShowsEmptyPlaceholderAsContent()
+    {
+        var sut = CreateSut();
+
+        sut.OpenTabCommand.Execute("受注一覧");
+
+        Assert.IsType<EmptyTabContentViewModel>(sut.SelectedTab!.ContentViewModel);
     }
 
     [Fact]
@@ -127,7 +168,9 @@ public class MainWindowViewModelTests
     [Fact]
     public void Constructor_NullArguments_Throw()
     {
-        Assert.Throws<ArgumentNullException>(() => new MainWindowViewModel(null!, Mock.Of<IAppSettings>()));
-        Assert.Throws<ArgumentNullException>(() => new MainWindowViewModel(Mock.Of<IAppLogging<MainWindowViewModel>>(), null!));
+        var form1 = CreateForm1ViewModel();
+        Assert.Throws<ArgumentNullException>(() => new MainWindowViewModel(null!, Mock.Of<IAppSettings>(), form1));
+        Assert.Throws<ArgumentNullException>(() => new MainWindowViewModel(Mock.Of<IAppLogging<MainWindowViewModel>>(), null!, form1));
+        Assert.Throws<ArgumentNullException>(() => new MainWindowViewModel(Mock.Of<IAppLogging<MainWindowViewModel>>(), Mock.Of<IAppSettings>(), null!));
     }
 }

@@ -33,7 +33,6 @@ public static class DependencyInjection
 
         // Views（Form に ViewModel を DI する）
         services.AddScoped<LoginDialog>();
-        services.AddScoped<Form1View>();
         services.AddScoped<MainWindow>();
 
         return services;

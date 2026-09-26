@@ -30,7 +30,6 @@ public static class DependencyInjection
         // Views（Window を DI コンテナから解決する）
         services.AddScoped<MainWindow>();
         services.AddScoped<LoginWindow>();
-        services.AddScoped<Form1View>();
 
         return services;
     }

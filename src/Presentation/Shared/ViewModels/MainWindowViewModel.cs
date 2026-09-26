@@ -16,7 +16,13 @@ namespace SupportAdvance.Presentation.Shared.ViewModels;
 /// </remarks>
 public partial class MainWindowViewModel : ObservableObject
 {
+    /// <summary>
+    /// 顧客一覧のナビゲーション項目の名前（仮として <see cref="Form1ViewModel"/> の画面を表示する項目）
+    /// </summary>
+    public const string CustomerListMenuName = "顧客一覧";
+
     private readonly IAppLogging<MainWindowViewModel> _logger;
+    private readonly Form1ViewModel _form1ViewModel;
 
     /// <summary>
     /// 現在選択中のタブ
@@ -29,15 +35,19 @@ public partial class MainWindowViewModel : ObservableObject
     /// </summary>
     /// <param name="logger">ログの出力先</param>
     /// <param name="appSettings">アプリケーション設定</param>
+    /// <param name="form1ViewModel">顧客一覧のタブ（仮）に表示する画面の ViewModel</param>
     /// <exception cref="ArgumentNullException">いずれかの引数が <see langword="null"/> の場合</exception>
     public MainWindowViewModel(
         IAppLogging<MainWindowViewModel> logger,
-        IAppSettings appSettings)
+        IAppSettings appSettings,
+        Form1ViewModel form1ViewModel)
     {
         ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(appSettings);
+        ArgumentNullException.ThrowIfNull(form1ViewModel);
 
         _logger = logger;
+        _form1ViewModel = form1ViewModel;
 
         _logger.LogInformation("MainWindowViewModel initialized.");
         _logger.LogInformation(appSettings.ApplicationBuildType);
@@ -54,6 +64,7 @@ public partial class MainWindowViewModel : ObservableObject
     /// <param name="menuName">ナビゲーション項目の名前（タブのヘッダーにもなる）</param>
     /// <remarks>
     /// <para>【動作】同じ名前のタブが既に開いていればそのタブを選択。なければ新しいタブを追加して選択</para>
+    /// <para>【注意】顧客一覧のタブは <see cref="Form1ViewModel"/> を共有する（同名のタブは 1 つしか開かないため）</para>
     /// <para>【注意】<paramref name="menuName"/> が <see langword="null"/> または空文字の場合は何もしない</para>
     /// </remarks>
     [RelayCommand]
@@ -71,13 +82,20 @@ public partial class MainWindowViewModel : ObservableObject
             return;
         }
 
-        // 画面ごとの ViewModel が用意できるまでは、未実装画面のプレースホルダーを表示
-        var newTab = new TabItemViewModel(menuName, new EmptyTabContentViewModel());
+        var newTab = new TabItemViewModel(menuName, CreateContentViewModel(menuName));
         OpenTabs.Add(newTab);
         SelectedTab = newTab;
 
         _logger.LogInformation($"Tab opened: {menuName}");
     }
+
+    /// <summary>
+    /// ナビゲーション項目に対応するタブ内容の ViewModel の生成
+    /// </summary>
+    /// <param name="menuName">ナビゲーション項目の名前</param>
+    /// <returns>顧客一覧は <see cref="Form1ViewModel"/>（仮）。それ以外は、画面ごとの ViewModel が用意できるまでのプレースホルダー</returns>
+    private object CreateContentViewModel(string menuName)
+        => menuName == CustomerListMenuName ? _form1ViewModel : new EmptyTabContentViewModel();
 
     /// <summary>
     /// 指定したタブを閉じる

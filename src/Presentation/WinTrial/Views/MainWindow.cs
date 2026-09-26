@@ -14,12 +14,16 @@ namespace SupportAdvance.Presentation.WinTrial.Views;
 /// <para>【責務】<see cref="MainWindowViewModel"/> とナビゲーション・タブ（MDI 子フォーム）の同期のみ。タブの管理は ViewModel が担当</para>
 /// <para>【設計】WinForms には ItemsSource 相当が無いため、<see cref="MainWindowViewModel.OpenTabs"/> の変更を MDI 子フォームの生成・破棄に反映し、
 /// 子フォームのアクティブ化・終了を <see cref="MainWindowViewModel.SelectedTab"/>／<c>CloseTabCommand</c> に反映する</para>
-/// <para>【注意】NavigationDrawer は階層を持てないため、ナビゲーション項目は葉ノードのみを並べる（WpfTrial の階層メニューと項目名は同じ）</para>
+/// <para>【注意】NavigationDrawer は階層を持てないため、親項目（見出し。クリックしても何もしない）と子項目（字下げ）を平らに並べて階層を表現する。項目名は WpfTrial の階層メニューと同じ</para>
 /// <para>【注意】NavigationDrawer は既定で閉じたスライドパネルのため、表示後に開き、常時表示（閉じる操作を取り消し）にする</para>
 /// </remarks>
 public partial class MainWindow : Form
 {
-    private static readonly string[] NavigationItemNames = ["顧客一覧", "顧客登録", "受注一覧", "受注登録"];
+    private static readonly (string Parent, string[] Children)[] NavigationMenu =
+    [
+        ("顧客管理", [MainWindowViewModel.CustomerListMenuName, "顧客登録"]),
+        ("受注管理", ["受注一覧", "受注登録"])
+    ];
 
     private readonly MainWindowViewModel _viewModel;
     private readonly Dictionary<TabItemViewModel, Form> _tabForms = new();
@@ -46,7 +50,7 @@ public partial class MainWindow : Form
 
         // ドロワーは左側の固定メニューとして使う。閉じる操作（外側のクリックなど）は取り消す
         navigationDrawer.Closing += (_, e) => e.Cancel = true;
-        navigationDrawer.SizeChanged += (_, _) => FitDrawerToHost();
+        navigationDrawer.SizeChanged += (_, _) => KeepDrawerOpen();
 
         _viewModel.OpenTabs.CollectionChanged += OpenTabs_CollectionChanged;
         _viewModel.PropertyChanged += ViewModel_PropertyChanged;
@@ -63,31 +67,65 @@ public partial class MainWindow : Form
     {
         base.OnShown(e);
 
-        FitDrawerToHost();
-        if (!navigationDrawer.IsDrawerShowing())
-        {
-            navigationDrawer.ToggleDrawer();
-        }
+        KeepDrawerOpen();
     }
 
-    private void FitDrawerToHost()
+    /// <summary>
+    /// ドロワーを左側の領域に合わせて開いた状態にする
+    /// </summary>
+    /// <remarks>
+    /// <para>【理由】ウィンドウのリサイズでスライドパネルが閉じ、項目が消えることがあるため、サイズ変更のたびに大きさを合わせて開き直す</para>
+    /// </remarks>
+    private void KeepDrawerOpen()
     {
+        if (!IsHandleCreated)
+        {
+            return;
+        }
+
         // スライドパネルの大きさをドロワー本体（左側に固定配置した領域）に合わせる
         navigationDrawer.DrawerWidth = navigationDrawer.Width;
         navigationDrawer.DrawerHeight = navigationDrawer.Height;
+
+        // 大きさの変更が反映された後に、閉じていれば開く
+        BeginInvoke(() =>
+        {
+            if (!navigationDrawer.IsDrawerShowing())
+            {
+                navigationDrawer.ToggleDrawer();
+            }
+        });
     }
 
     private void AddNavigationItems()
     {
-        foreach (var name in NavigationItemNames)
+        foreach (var (parent, children) in NavigationMenu)
         {
-            navigationDrawer.Items.Add(new DrawerMenuItem { ItemText = name });
+            // 親項目は見出し（Tag なし。クリックしても何もしない）
+            navigationDrawer.Items.Add(new DrawerMenuItem
+            {
+                ItemText = parent,
+                Font = new Font(Font, FontStyle.Bold)
+            });
+
+            // 子項目は字下げし、Tag に項目名を持たせる
+            foreach (var child in children)
+            {
+                navigationDrawer.Items.Add(new DrawerMenuItem
+                {
+                    ItemText = "　　" + child,
+                    Tag = child
+                });
+            }
         }
     }
 
     private void NavigationDrawer_ItemClicked(object? sender, MenuItemClickedEventArgs e)
     {
-        _viewModel.OpenTabCommand.Execute(e.MenuItem.ItemText);
+        if (e.MenuItem.Tag is string menuName)
+        {
+            _viewModel.OpenTabCommand.Execute(menuName);
+        }
     }
 
     private void OpenTabs_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
@@ -137,6 +175,7 @@ public partial class MainWindow : Form
         // 画面の種類は ContentViewModel の型で決まる（新しい画面を追加する場合はここに分岐を追加）
         Form form = tab.ContentViewModel switch
         {
+            Form1ViewModel form1ViewModel => new Form1View(form1ViewModel),
             EmptyTabContentViewModel => new EmptyTabForm(),
             _ => throw new NotSupportedException($"未対応のタブ内容です: {tab.ContentViewModel.GetType().Name}")
         };
