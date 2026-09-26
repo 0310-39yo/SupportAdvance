@@ -85,6 +85,11 @@ public partial class MainWindow : Form
             {
                 using var bitmap = FluentIconFont.CreateBitmap(icon, iconPixelSize, navigationTree.ForeColor);
                 imageList.Images.Add(bitmap);
+
+                // ImageList は、ハンドルが作られるまで元の画像を参照し続ける。
+                // 画像を破棄する前にハンドルを作らせないと、描画時に「パラメーターが有効ではありません」になる
+                _ = imageList.Handle;
+
                 index = imageList.Images.Count - 1;
                 imageIndexes[icon] = index;
             }
