@@ -25,6 +25,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- アイコンフォント（実体は Presentation.Shared の 1 ファイル。ここではリンクとして取り込む） -->
+    <Resource Include="..\Shared\Assets\Fonts\FluentSystemIcons-Resizable.ttf" Link="Assets\Fonts\FluentSystemIcons-Resizable.ttf" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Include="..\..\..\configs\NLog\NLog.config" Link="NLog.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

@@ -7,6 +7,7 @@
     xmlns:syncfusion="http://schemas.syncfusion.com/wpf"
     xmlns:navigationDrawer="clr-namespace:Syncfusion.UI.Xaml.NavigationDrawer;assembly=Syncfusion.SfNavigationDrawer.WPF"
     xmlns:behaviors="clr-namespace:SupportAdvance.Presentation.WpfTrial.Behaviors"
+    xmlns:controls="clr-namespace:SupportAdvance.Presentation.WpfTrial.Controls"
     xmlns:tabs="clr-namespace:SupportAdvance.Presentation.Shared.ViewModels.Tabs;assembly=Shared"
     xmlns:vm="clr-namespace:SupportAdvance.Presentation.Shared.ViewModels;assembly=Shared"
     xmlns:views="clr-namespace:SupportAdvance.Presentation.WpfTrial.Views"
@@ -68,32 +69,32 @@
                  Compact 時はアイコンのみ表示されるため、各項目にアイコンを指定する -->
             <navigationDrawer:NavigationItem Header="顧客管理">
                 <navigationDrawer:NavigationItem.Icon>
-                    <Path Data="M2,5 L9,5 L11,7 L22,7 L22,20 L2,20 Z" Fill="#FF555555" Stretch="Uniform" Width="18" Height="18"/>
+                    <controls:FluentIcon Icon="Customers" FontSize="18" Foreground="#FF555555"/>
                 </navigationDrawer:NavigationItem.Icon>
                 <navigationDrawer:NavigationItem Header="顧客一覧">
                     <navigationDrawer:NavigationItem.Icon>
-                        <Path Data="M5,2 L15,2 L19,6 L19,22 L5,22 Z" Fill="#FF555555" Stretch="Uniform" Width="16" Height="16"/>
+                        <controls:FluentIcon Icon="List" FontSize="16" Foreground="#FF555555"/>
                     </navigationDrawer:NavigationItem.Icon>
                 </navigationDrawer:NavigationItem>
                 <navigationDrawer:NavigationItem Header="顧客登録">
                     <navigationDrawer:NavigationItem.Icon>
-                        <Path Data="M5,2 L15,2 L19,6 L19,22 L5,22 Z" Fill="#FF555555" Stretch="Uniform" Width="16" Height="16"/>
+                        <controls:FluentIcon Icon="Register" FontSize="16" Foreground="#FF555555"/>
                     </navigationDrawer:NavigationItem.Icon>
                 </navigationDrawer:NavigationItem>
             </navigationDrawer:NavigationItem>
 
             <navigationDrawer:NavigationItem Header="受注管理">
                 <navigationDrawer:NavigationItem.Icon>
-                    <Path Data="M2,5 L9,5 L11,7 L22,7 L22,20 L2,20 Z" Fill="#FF555555" Stretch="Uniform" Width="18" Height="18"/>
+                    <controls:FluentIcon Icon="Orders" FontSize="18" Foreground="#FF555555"/>
                 </navigationDrawer:NavigationItem.Icon>
                 <navigationDrawer:NavigationItem Header="受注一覧">
                     <navigationDrawer:NavigationItem.Icon>
-                        <Path Data="M5,2 L15,2 L19,6 L19,22 L5,22 Z" Fill="#FF555555" Stretch="Uniform" Width="16" Height="16"/>
+                        <controls:FluentIcon Icon="List" FontSize="16" Foreground="#FF555555"/>
                     </navigationDrawer:NavigationItem.Icon>
                 </navigationDrawer:NavigationItem>
                 <navigationDrawer:NavigationItem Header="受注登録">
                     <navigationDrawer:NavigationItem.Icon>
-                        <Path Data="M5,2 L15,2 L19,6 L19,22 L5,22 Z" Fill="#FF555555" Stretch="Uniform" Width="16" Height="16"/>
+                        <controls:FluentIcon Icon="Register" FontSize="16" Foreground="#FF555555"/>
                     </navigationDrawer:NavigationItem.Icon>
                 </navigationDrawer:NavigationItem>
             </navigationDrawer:NavigationItem>

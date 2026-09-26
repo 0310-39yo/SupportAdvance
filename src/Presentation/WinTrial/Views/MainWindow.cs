@@ -1,7 +1,9 @@
 using System.Collections.Specialized;
 using System.ComponentModel;
+using SupportAdvance.Presentation.Shared.Icons;
 using SupportAdvance.Presentation.Shared.ViewModels;
 using SupportAdvance.Presentation.Shared.ViewModels.Tabs;
+using SupportAdvance.Presentation.WinTrial.Icons;
 using Syncfusion.Windows.Forms;
 using Syncfusion.Windows.Forms.Tools;
 
@@ -21,18 +23,23 @@ namespace SupportAdvance.Presentation.WinTrial.Views;
 /// </remarks>
 public partial class MainWindow : Form
 {
-    private static readonly (string Parent, string[] Children)[] NavigationMenu =
+    private static readonly (string Parent, AppIcon ParentIcon, (string Name, AppIcon Icon)[] Children)[] NavigationMenu =
     [
-        ("顧客管理", [MainWindowViewModel.CustomerListMenuName, "顧客登録"]),
-        ("受注管理", ["受注一覧", "受注登録"])
+        ("顧客管理", AppIcon.Customers, [(MainWindowViewModel.CustomerListMenuName, AppIcon.List), ("顧客登録", AppIcon.Register)]),
+        ("受注管理", AppIcon.Orders, [("受注一覧", AppIcon.List), ("受注登録", AppIcon.Register)])
     ];
+
+    private const int NavigationIconSize = 16;
+    private const int CollapsedNavigationIndent = 4;
 
     private const int ExpandedNavigationWidth = 220;
     private const int CollapsedNavigationWidth = 36;
 
     private readonly MainWindowViewModel _viewModel;
     private readonly Dictionary<TabItemViewModel, Form> _tabForms = new();
+    private readonly int _expandedNavigationIndent;
     private bool _isSynchronizing;
+    private bool _isNavigationCollapsed;
 
     /// <summary>
     /// <see cref="MainWindow"/> クラスの新しいインスタンスの初期化
@@ -53,7 +60,8 @@ public partial class MainWindow : Form
         AddNavigationNodes();
         navigationTree.NodeMouseClick += NavigationTree_NodeMouseClick;
         navigationTree.KeyDown += NavigationTree_KeyDown;
-        navigationToggleButton.Click += (_, _) => SetNavigationCollapsed(navigationTree.Visible);
+        _expandedNavigationIndent = navigationTree.Indent;
+        navigationToggleButton.Click += (_, _) => SetNavigationCollapsed(!_isNavigationCollapsed);
         SetNavigationCollapsed(false);
 
         _viewModel.OpenTabs.CollectionChanged += OpenTabs_CollectionChanged;
@@ -62,14 +70,38 @@ public partial class MainWindow : Form
 
     private void AddNavigationNodes()
     {
-        foreach (var (parent, children) in NavigationMenu)
+        // アイコンは Fluent UI System Icons から、高 DPI に合わせた大きさの画像を作成して ImageList に登録する
+        var iconPixelSize = (int)Math.Round(NavigationIconSize * DeviceDpi / 96.0);
+        var imageList = new ImageList
         {
-            var parentNode = new TreeNodeAdv(parent);
+            ImageSize = new Size(iconPixelSize, iconPixelSize),
+            ColorDepth = ColorDepth.Depth32Bit
+        };
+        var imageIndexes = new Dictionary<AppIcon, int>();
+
+        int GetImageIndex(AppIcon icon)
+        {
+            if (!imageIndexes.TryGetValue(icon, out var index))
+            {
+                using var bitmap = FluentIconFont.CreateBitmap(icon, iconPixelSize, navigationTree.ForeColor);
+                imageList.Images.Add(bitmap);
+                index = imageList.Images.Count - 1;
+                imageIndexes[icon] = index;
+            }
+
+            return index;
+        }
+
+        navigationTree.LeftImageList = imageList;
+
+        foreach (var (parent, parentIcon, children) in NavigationMenu)
+        {
+            var parentNode = new TreeNodeAdv(parent) { LeftImageIndices = [GetImageIndex(parentIcon)] };
 
             // 子項目は Tag に項目名を持たせる（親項目は Tag なし）
-            foreach (var child in children)
+            foreach (var (name, icon) in children)
             {
-                parentNode.Nodes.Add(new TreeNodeAdv(child) { Tag = child });
+                parentNode.Nodes.Add(new TreeNodeAdv(name) { Tag = name, LeftImageIndices = [GetImageIndex(icon)] });
             }
 
             navigationTree.Nodes.Add(parentNode);
@@ -81,10 +113,19 @@ public partial class MainWindow : Form
     /// <summary>
     /// ナビゲーションの折りたたみ／展開
     /// </summary>
-    /// <param name="collapsed"><see langword="true"/> で幅の細い縦バー（ボタンのみ）、<see langword="false"/> で展開表示</param>
+    /// <param name="collapsed"><see langword="true"/> で幅の細い縦バー（アイコンのみ）、<see langword="false"/> で展開表示</param>
+    /// <remarks>
+    /// <para>【動作】折りたたみ時は、パネルの幅を狭めて項目名を隠し、アイコンだけを縦に並べる（展開／折りたたみのボタンと線は消し、字下げを小さくする）</para>
+    /// </remarks>
     private void SetNavigationCollapsed(bool collapsed)
     {
-        navigationTree.Visible = !collapsed;
+        _isNavigationCollapsed = collapsed;
+
+        navigationTree.ShowPlusMinus = !collapsed;
+        navigationTree.ShowLines = !collapsed;
+        navigationTree.ShowRootLines = !collapsed;
+        navigationTree.Indent = collapsed ? CollapsedNavigationIndent : _expandedNavigationIndent;
+
         navigationPanel.Width = collapsed ? CollapsedNavigationWidth : ExpandedNavigationWidth;
         navigationToggleButton.Text = collapsed ? "▶" : "◀";
     }

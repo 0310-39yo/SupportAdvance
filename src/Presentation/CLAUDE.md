@@ -16,3 +16,5 @@ services.AddApplicationServices();
 ```
 
 - `Program.cs` はプロジェクト参照上 Infrastructure に到達できるため、この規律は NetArchTest 等の自動検証で担保する方針（詳細は [CLEAN_ARCHITECTURE_GUIDELINES.md](../../docs/Assistance/Guides/CLEAN_ARCHITECTURE_GUIDELINES.md#自動検証の導入)）
+
+- アイコンは Fluent UI System Icons を `AppIcon`／`FluentIconCatalog`（`Presentation.Shared/Icons`）経由で使う。コードポイントを画面に直接書かない。追加手順は [アイコン_利用ガイド.md](../../docs/Assistance/Guides/アイコン_利用ガイド.md)
