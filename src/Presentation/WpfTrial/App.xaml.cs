@@ -54,8 +54,8 @@ public partial class App : System.Windows.Application
         // Syncfusion ライセンスキーを環境変数から登録
         SyncfusionLicenseHelper.RegisterLicenseFromEnvironment();
 
-        // アプリケーション全体（すべてのウィンドウ）に Office2019White テーマを適用
-        SfSkinManager.ApplicationTheme = new Theme("Office2019White");
+        // アプリケーション全体（すべてのウィンドウ）に Office2019Colorful テーマを適用
+        SfSkinManager.ApplicationTheme = new Theme("Office2019Colorful");
 
         _host = HostBuilderFactory.Create(null, (context, services) =>
             {

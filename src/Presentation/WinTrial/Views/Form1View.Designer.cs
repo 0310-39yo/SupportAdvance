@@ -85,7 +85,7 @@ namespace SupportAdvance.Presentation.WinTrial.Views
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(484, 302);
-            Font = new Font("Yu Gothic UI", 9F);
+            Font = new Font("Yu Gothic UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 128);
             Controls.Add(label2);
             Controls.Add(label1);
             Controls.Add(textBoxExt1);
