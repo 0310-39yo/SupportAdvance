@@ -25,7 +25,7 @@ namespace SupportAdvance.Presentation.WinTrial.Views {
         private void InitializeComponent() {
             components = new System.ComponentModel.Container();
             ribbon = new Syncfusion.Windows.Forms.Tools.RibbonControlAdv();
-            navigationDrawer = new Syncfusion.Windows.Forms.Tools.NavigationDrawer();
+            navigationTree = new TreeView();
             tabbedMdiManager = new Syncfusion.Windows.Forms.Tools.TabbedMDIManager();
             statusStripEx = new Syncfusion.Windows.Forms.Tools.StatusStripEx();
 
@@ -36,12 +36,13 @@ namespace SupportAdvance.Presentation.WinTrial.Views {
             ribbon.Size = new Size(800, 60);
             ribbon.TabIndex = 1;
 
-            // navigationDrawer（左側）
-            navigationDrawer.Dock = DockStyle.Left;
-            navigationDrawer.Location = new Point(0, 60);
-            navigationDrawer.Name = "navigationDrawer";
-            navigationDrawer.Size = new Size(200, 365);
-            navigationDrawer.TabIndex = 2;
+            // navigationTree（左側。階層メニュー。項目は MainWindow.cs で構築）
+            navigationTree.Dock = DockStyle.Left;
+            navigationTree.HideSelection = false;
+            navigationTree.Location = new Point(0, 60);
+            navigationTree.Name = "navigationTree";
+            navigationTree.Size = new Size(200, 365);
+            navigationTree.TabIndex = 2;
 
             // statusStripEx（下部）
             statusStripEx.Dock = Syncfusion.Windows.Forms.Tools.DockStyleEx.Bottom;
@@ -56,7 +57,7 @@ namespace SupportAdvance.Presentation.WinTrial.Views {
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 450);
             IsMdiContainer = true;
-            Controls.Add(navigationDrawer);
+            Controls.Add(navigationTree);
             Controls.Add(ribbon);
             Controls.Add(statusStripEx);
             Name = "MainWindow";
@@ -71,7 +72,7 @@ namespace SupportAdvance.Presentation.WinTrial.Views {
         #endregion
 
         private Syncfusion.Windows.Forms.Tools.RibbonControlAdv ribbon;
-        private Syncfusion.Windows.Forms.Tools.NavigationDrawer navigationDrawer;
+        private TreeView navigationTree;
         private Syncfusion.Windows.Forms.Tools.TabbedMDIManager tabbedMdiManager;
         private Syncfusion.Windows.Forms.Tools.StatusStripEx statusStripEx;
     }

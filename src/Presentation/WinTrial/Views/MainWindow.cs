@@ -3,7 +3,6 @@ using System.ComponentModel;
 using SupportAdvance.Presentation.Shared.ViewModels;
 using SupportAdvance.Presentation.Shared.ViewModels.Tabs;
 using Syncfusion.Windows.Forms;
-using Syncfusion.Windows.Forms.Tools;
 
 namespace SupportAdvance.Presentation.WinTrial.Views;
 
@@ -14,8 +13,9 @@ namespace SupportAdvance.Presentation.WinTrial.Views;
 /// <para>【責務】<see cref="MainWindowViewModel"/> とナビゲーション・タブ（MDI 子フォーム）の同期のみ。タブの管理は ViewModel が担当</para>
 /// <para>【設計】WinForms には ItemsSource 相当が無いため、<see cref="MainWindowViewModel.OpenTabs"/> の変更を MDI 子フォームの生成・破棄に反映し、
 /// 子フォームのアクティブ化・終了を <see cref="MainWindowViewModel.SelectedTab"/>／<c>CloseTabCommand</c> に反映する</para>
-/// <para>【注意】NavigationDrawer は階層を持てないため、親項目（見出し。クリックしても何もしない）と子項目（字下げ）を平らに並べて階層を表現する。項目名は WpfTrial の階層メニューと同じ</para>
-/// <para>【注意】NavigationDrawer は既定で閉じたスライドパネルのため、表示後に開き、常時表示（閉じる操作を取り消し）にする</para>
+/// <para>【設計】ナビゲーションは階層を持てる <see cref="TreeView"/> を左側に固定配置する（項目名は WpfTrial の階層メニューと同じ）。
+/// Syncfusion の NavigationDrawer は「閉じるスライドパネル」で階層を持てず、リサイズで項目が消えたため使用しない</para>
+/// <para>【動作】子項目のクリック（またはキーボードの Enter）でタブを開く。親項目のクリックは展開／折りたたみのみ</para>
 /// </remarks>
 public partial class MainWindow : Form
 {
@@ -45,84 +45,48 @@ public partial class MainWindow : Form
         // テーマは Office2016DarkGray（WpfTrial の Office2019White とは別。WinForms 側の既存の指定を維持）
         SkinManager.SetVisualStyle(this, "Office2016DarkGray");
 
-        AddNavigationItems();
-        navigationDrawer.ItemClicked += NavigationDrawer_ItemClicked;
-
-        // ドロワーは左側の固定メニューとして使う。閉じる操作（外側のクリックなど）は取り消す
-        navigationDrawer.Closing += (_, e) => e.Cancel = true;
-        navigationDrawer.SizeChanged += (_, _) => KeepDrawerOpen();
+        AddNavigationNodes();
+        navigationTree.NodeMouseClick += NavigationTree_NodeMouseClick;
+        navigationTree.KeyDown += NavigationTree_KeyDown;
 
         _viewModel.OpenTabs.CollectionChanged += OpenTabs_CollectionChanged;
         _viewModel.PropertyChanged += ViewModel_PropertyChanged;
     }
 
-    /// <summary>
-    /// 表示後にドロワーを開く
-    /// </summary>
-    /// <param name="e">イベントの引数</param>
-    /// <remarks>
-    /// <para>【理由】NavigationDrawer は既定で閉じており、開く操作（ToggleDrawer）が無いと項目が表示されない。ハンドルの作成後である表示後に開く</para>
-    /// </remarks>
-    protected override void OnShown(EventArgs e)
-    {
-        base.OnShown(e);
-
-        KeepDrawerOpen();
-    }
-
-    /// <summary>
-    /// ドロワーを左側の領域に合わせて開いた状態にする
-    /// </summary>
-    /// <remarks>
-    /// <para>【理由】ウィンドウのリサイズでスライドパネルが閉じ、項目が消えることがあるため、サイズ変更のたびに大きさを合わせて開き直す</para>
-    /// </remarks>
-    private void KeepDrawerOpen()
-    {
-        if (!IsHandleCreated)
-        {
-            return;
-        }
-
-        // スライドパネルの大きさをドロワー本体（左側に固定配置した領域）に合わせる
-        navigationDrawer.DrawerWidth = navigationDrawer.Width;
-        navigationDrawer.DrawerHeight = navigationDrawer.Height;
-
-        // 大きさの変更が反映された後に、閉じていれば開く
-        BeginInvoke(() =>
-        {
-            if (!navigationDrawer.IsDrawerShowing())
-            {
-                navigationDrawer.ToggleDrawer();
-            }
-        });
-    }
-
-    private void AddNavigationItems()
+    private void AddNavigationNodes()
     {
         foreach (var (parent, children) in NavigationMenu)
         {
-            // 親項目は見出し（Tag なし。クリックしても何もしない）
-            navigationDrawer.Items.Add(new DrawerMenuItem
-            {
-                ItemText = parent,
-                Font = new Font(Font, FontStyle.Bold)
-            });
+            var parentNode = navigationTree.Nodes.Add(parent);
 
-            // 子項目は字下げし、Tag に項目名を持たせる
+            // 子項目は Tag に項目名を持たせる（親項目は Tag なし）
             foreach (var child in children)
             {
-                navigationDrawer.Items.Add(new DrawerMenuItem
-                {
-                    ItemText = "　　" + child,
-                    Tag = child
-                });
+                parentNode.Nodes.Add(new TreeNode(child) { Tag = child });
             }
+        }
+
+        navigationTree.ExpandAll();
+    }
+
+    private void NavigationTree_NodeMouseClick(object? sender, TreeNodeMouseClickEventArgs e)
+    {
+        OpenTabFor(e.Node);
+    }
+
+    private void NavigationTree_KeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.KeyCode == Keys.Enter && navigationTree.SelectedNode is { } node)
+        {
+            OpenTabFor(node);
+            e.Handled = true;
         }
     }
 
-    private void NavigationDrawer_ItemClicked(object? sender, MenuItemClickedEventArgs e)
+    private void OpenTabFor(TreeNode node)
     {
-        if (e.MenuItem.Tag is string menuName)
+        // 親項目（Tag なし）は展開／折りたたみのみ。子項目のみタブを開く
+        if (node.Tag is string menuName)
         {
             _viewModel.OpenTabCommand.Execute(menuName);
         }
