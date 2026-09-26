@@ -54,9 +54,13 @@
         <syncfusion:Ribbon Grid.Row="0"
                            EnableSimplifiedLayoutMode="True">
             <syncfusion:RibbonTab Caption="Home">
-                <syncfusion:RibbonBar Header="File">
+                <!-- CollapseImage：ウィンドウが狭くなり、グループがドロップダウンに縮小されたときに表示する大きめのアイコン -->
+                <syncfusion:RibbonBar Header="File"
+                                      CollapseImage="{markup:FluentIconImage Icon=Save, Size=32}">
+                    <!-- アイコン：SmallIcon（16。通常レイアウトの小サイズ）、MediumIcon（20。シンプルレイアウト = EnableSimplifiedLayoutMode）、LargeIcon（32。通常レイアウトの大サイズ） -->
                     <syncfusion:RibbonButton Label="Save"
                                              SmallIcon="{markup:FluentIconImage Icon=Save, Size=16}"
+                                             MediumIcon="{markup:FluentIconImage Icon=Save, Size=20}"
                                              LargeIcon="{markup:FluentIconImage Icon=Save, Size=32}"
                                              Command="{Binding SaveCommand}"/>
                 </syncfusion:RibbonBar>
