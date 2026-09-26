@@ -17,11 +17,10 @@
     Title="MainWindow"
     Width="1200"
     Height="800"
-    CaptionBackground="#FF2B579A"
-    CaptionForeground="White">
-    <!-- タイトルバー：Office2019Colorful テーマは、タイトルの文字と最小化・最大化・閉じるのボタンを白で描く。
-         タイトルバーの背景が明るい灰色だと、白が同化して何も見えなくなるため、リボンの File タブと同系色の濃い青を明示する
-         （文字とボタンの記号は白のまま） -->
+    CaptionBackground="#FFF0F0F0"
+    CaptionForeground="#FF222222">
+    <!-- タイトルバー：最小化・最大化・閉じるのボタンの記号は、テーマが濃い灰色（#444444）で描く（CaptionForeground では変わらない）。
+         濃い背景にすると記号が見えなくなるため、タイトルバーは明るい背景にし、タイトルの文字（CaptionForeground）だけを濃い色にする -->
 
     <Window.Resources>
         <!-- ナビゲーション項目のスタイル：フォントを少し大きくし（既定 14 → 16）、上下の間隔（最小の高さと余白）を小さくする。
