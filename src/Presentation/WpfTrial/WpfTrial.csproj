@@ -32,14 +32,14 @@
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
-    <PackageReference Include="Syncfusion.Shared.WPF" Version="34.2.8" />
-    <PackageReference Include="Syncfusion.SfInput.WPF" Version="34.2.8" />
-    <PackageReference Include="Syncfusion.SfBusyIndicator.WPF" Version="34.2.8" />
-    <PackageReference Include="Syncfusion.SfSkinManager.WPF" Version="34.2.8" />
-    <PackageReference Include="Syncfusion.Tools.WPF" Version="34.2.8" />
-    <PackageReference Include="Syncfusion.SfChromelessWindow.WPF" Version="34.2.8" />
-    <PackageReference Include="Syncfusion.Themes.Office2019White.WPF" Version="34.2.8" />
-    <PackageReference Include="Syncfusion.Themes.Office2019DarkGray.WPF" Version="34.2.8" />
+    <PackageReference Include="Syncfusion.Shared.WPF" Version="34.2.9" />
+    <PackageReference Include="Syncfusion.SfInput.WPF" Version="34.2.9" />
+    <PackageReference Include="Syncfusion.SfBusyIndicator.WPF" Version="34.2.9" />
+    <PackageReference Include="Syncfusion.SfSkinManager.WPF" Version="34.2.9" />
+    <PackageReference Include="Syncfusion.Tools.WPF" Version="34.2.9" />
+    <PackageReference Include="Syncfusion.SfChromelessWindow.WPF" Version="34.2.9" />
+    <PackageReference Include="Syncfusion.Themes.Office2019White.WPF" Version="34.2.9" />
+    <PackageReference Include="Syncfusion.Themes.Office2019DarkGray.WPF" Version="34.2.9" />
   </ItemGroup>
 
   <ItemGroup>
