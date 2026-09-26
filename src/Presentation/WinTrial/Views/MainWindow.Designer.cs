@@ -25,6 +25,8 @@ namespace SupportAdvance.Presentation.WinTrial.Views {
         private void InitializeComponent() {
             components = new System.ComponentModel.Container();
             ribbon = new Syncfusion.Windows.Forms.Tools.RibbonControlAdv();
+            navigationPanel = new Panel();
+            navigationToggleButton = new Button();
             navigationTree = new Syncfusion.Windows.Forms.Tools.TreeViewAdv();
             tabbedMdiManager = new Syncfusion.Windows.Forms.Tools.TabbedMDIManager();
             statusStripEx = new Syncfusion.Windows.Forms.Tools.StatusStripEx();
@@ -36,13 +38,29 @@ namespace SupportAdvance.Presentation.WinTrial.Views {
             ribbon.Size = new Size(800, 60);
             ribbon.TabIndex = 1;
 
-            // navigationTree（左側。階層メニュー。項目は MainWindow.cs で構築）
-            navigationTree.Dock = DockStyle.Left;
+            // navigationPanel（左側。折りたたみ可能なナビゲーション領域。幅の切り替えは MainWindow.cs）
+            navigationPanel.Dock = DockStyle.Left;
+            navigationPanel.Location = new Point(0, 60);
+            navigationPanel.Name = "navigationPanel";
+            navigationPanel.Size = new Size(200, 365);
+            navigationPanel.TabIndex = 2;
+            navigationPanel.Controls.Add(navigationTree);
+            navigationPanel.Controls.Add(navigationToggleButton);
+
+            // navigationToggleButton（ナビゲーションの展開／折りたたみ）
+            navigationToggleButton.Dock = DockStyle.Top;
+            navigationToggleButton.FlatStyle = FlatStyle.Flat;
+            navigationToggleButton.Name = "navigationToggleButton";
+            navigationToggleButton.Size = new Size(200, 28);
+            navigationToggleButton.TabIndex = 0;
+            navigationToggleButton.Text = "◀";
+            navigationToggleButton.UseVisualStyleBackColor = true;
+
+            // navigationTree（階層メニュー。項目は MainWindow.cs で構築）
+            navigationTree.Dock = DockStyle.Fill;
             navigationTree.HideSelection = false;
-            navigationTree.Location = new Point(0, 60);
             navigationTree.Name = "navigationTree";
-            navigationTree.Size = new Size(200, 365);
-            navigationTree.TabIndex = 2;
+            navigationTree.TabIndex = 1;
 
             // statusStripEx（下部）
             statusStripEx.Dock = Syncfusion.Windows.Forms.Tools.DockStyleEx.Bottom;
@@ -57,7 +75,7 @@ namespace SupportAdvance.Presentation.WinTrial.Views {
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 450);
             IsMdiContainer = true;
-            Controls.Add(navigationTree);
+            Controls.Add(navigationPanel);
             Controls.Add(ribbon);
             Controls.Add(statusStripEx);
             Name = "MainWindow";
@@ -72,6 +90,8 @@ namespace SupportAdvance.Presentation.WinTrial.Views {
         #endregion
 
         private Syncfusion.Windows.Forms.Tools.RibbonControlAdv ribbon;
+        private Panel navigationPanel;
+        private Button navigationToggleButton;
         private Syncfusion.Windows.Forms.Tools.TreeViewAdv navigationTree;
         private Syncfusion.Windows.Forms.Tools.TabbedMDIManager tabbedMdiManager;
         private Syncfusion.Windows.Forms.Tools.StatusStripEx statusStripEx;

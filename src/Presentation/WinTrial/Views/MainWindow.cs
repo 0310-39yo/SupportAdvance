@@ -17,6 +17,7 @@ namespace SupportAdvance.Presentation.WinTrial.Views;
 /// <para>【設計】ナビゲーションは階層を持てる <see cref="TreeViewAdv"/> を左側に固定配置する（項目名は WpfTrial の階層メニューと同じ）。
 /// Syncfusion の NavigationDrawer は「閉じるスライドパネル」で階層を持てず、リサイズで項目が消えたため使用しない</para>
 /// <para>【動作】子項目のクリック（またはキーボードの Enter）でタブを開く。親項目のクリックは展開／折りたたみのみ</para>
+/// <para>【折りたたみ】上部のボタンで、ナビゲーションを幅の細い縦バー（ボタンのみ）と展開表示に切り替える（WpfTrial の Compact／Expanded に相当。WinForms 側はアイコンを持たないため、折りたたみ時は項目を隠す）</para>
 /// </remarks>
 public partial class MainWindow : Form
 {
@@ -25,6 +26,9 @@ public partial class MainWindow : Form
         ("顧客管理", [MainWindowViewModel.CustomerListMenuName, "顧客登録"]),
         ("受注管理", ["受注一覧", "受注登録"])
     ];
+
+    private const int ExpandedNavigationWidth = 220;
+    private const int CollapsedNavigationWidth = 36;
 
     private readonly MainWindowViewModel _viewModel;
     private readonly Dictionary<TabItemViewModel, Form> _tabForms = new();
@@ -49,6 +53,8 @@ public partial class MainWindow : Form
         AddNavigationNodes();
         navigationTree.NodeMouseClick += NavigationTree_NodeMouseClick;
         navigationTree.KeyDown += NavigationTree_KeyDown;
+        navigationToggleButton.Click += (_, _) => SetNavigationCollapsed(navigationTree.Visible);
+        SetNavigationCollapsed(false);
 
         _viewModel.OpenTabs.CollectionChanged += OpenTabs_CollectionChanged;
         _viewModel.PropertyChanged += ViewModel_PropertyChanged;
@@ -70,6 +76,17 @@ public partial class MainWindow : Form
         }
 
         navigationTree.ExpandAll();
+    }
+
+    /// <summary>
+    /// ナビゲーションの折りたたみ／展開
+    /// </summary>
+    /// <param name="collapsed"><see langword="true"/> で幅の細い縦バー（ボタンのみ）、<see langword="false"/> で展開表示</param>
+    private void SetNavigationCollapsed(bool collapsed)
+    {
+        navigationTree.Visible = !collapsed;
+        navigationPanel.Width = collapsed ? CollapsedNavigationWidth : ExpandedNavigationWidth;
+        navigationToggleButton.Text = collapsed ? "▶" : "◀";
     }
 
     private void NavigationTree_NodeMouseClick(object? sender, TreeViewAdvMouseClickEventArgs e)
