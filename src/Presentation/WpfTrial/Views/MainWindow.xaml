@@ -146,6 +146,24 @@
 
         </navigationDrawer:SfNavigationDrawer>
 
+        <!-- ナビゲーションの幅をドラッグで変えるためのつかみ部分（ドロワーの右端に重ねる）。
+             位置と幅の反映は NavigationDrawerResizeBehavior が行う。折りたたみ表示のときは隠れる -->
+        <Thumb Grid.Row="1"
+               Width="6"
+               HorizontalAlignment="Left"
+               Cursor="SizeWE"
+               Background="Transparent"
+               Panel.ZIndex="10"
+               behaviors:NavigationDrawerResizeBehavior.Target="{Binding ElementName=NavigationPane}"
+               behaviors:NavigationDrawerResizeBehavior.MinWidth="120"
+               behaviors:NavigationDrawerResizeBehavior.MaxWidth="500">
+            <Thumb.Template>
+                <ControlTemplate TargetType="Thumb">
+                    <Border Background="{TemplateBinding Background}" />
+                </ControlTemplate>
+            </Thumb.Template>
+        </Thumb>
+
         <!-- StatusBar（Tools系） -->
         <syncfusion:RibbonStatusBar Grid.Row="2">
             <TextBlock Text="Ready"/>

@@ -36,12 +36,13 @@ public partial class MainWindow : Form
     private static readonly Color NavigationIconColor = Color.FromArgb(0x1A, 0x1A, 0x1A);
     private const int CollapsedNavigationIndent = 4;
 
-    private const int ExpandedNavigationWidth = 220;
+    private const int DefaultExpandedNavigationWidth = 220;
     private const int CollapsedNavigationWidth = 36;
 
     private readonly MainWindowViewModel _viewModel;
     private readonly Dictionary<TabItemViewModel, Form> _tabForms = new();
     private readonly int _expandedNavigationIndent;
+    private int _expandedNavigationWidth = DefaultExpandedNavigationWidth;
     private bool _isSynchronizing;
     private bool _isNavigationCollapsed;
 
@@ -66,6 +67,15 @@ public partial class MainWindow : Form
         navigationTree.KeyDown += NavigationTree_KeyDown;
         _expandedNavigationIndent = navigationTree.Indent;
         navigationToggleButton.Click += (_, _) => SetNavigationCollapsed(!_isNavigationCollapsed);
+
+        // ドラッグで変えた展開時の幅を保持する（折りたたんだ後に展開したときに、その幅へ戻すため）
+        navigationSplitter.SplitterMoved += (_, _) =>
+        {
+            if (!_isNavigationCollapsed)
+            {
+                _expandedNavigationWidth = navigationPanel.Width;
+            }
+        };
         SetNavigationCollapsed(false);
 
         _viewModel.OpenTabs.CollectionChanged += OpenTabs_CollectionChanged;
@@ -127,6 +137,7 @@ public partial class MainWindow : Form
     /// <param name="collapsed"><see langword="true"/> で幅の細い縦バー（アイコンのみ）、<see langword="false"/> で展開表示</param>
     /// <remarks>
     /// <para>【動作】折りたたみ時は、パネルの幅を狭めて項目名を隠し、アイコンだけを縦に並べる（展開／折りたたみのボタンと線は消し、字下げを小さくする）</para>
+    /// <para>【幅】展開時の幅は、境界（<c>navigationSplitter</c>）のドラッグで変えられる。折りたたみ中はドラッグ不可</para>
     /// </remarks>
     private void SetNavigationCollapsed(bool collapsed)
     {
@@ -137,7 +148,10 @@ public partial class MainWindow : Form
         navigationTree.ShowRootLines = !collapsed;
         navigationTree.Indent = collapsed ? CollapsedNavigationIndent : _expandedNavigationIndent;
 
-        navigationPanel.Width = collapsed ? CollapsedNavigationWidth : ExpandedNavigationWidth;
+        navigationPanel.Width = collapsed ? CollapsedNavigationWidth : _expandedNavigationWidth;
+
+        // 折りたたみ中は、ドラッグで幅を変えられないようにする
+        navigationSplitter.Enabled = !collapsed;
         navigationToggleButton.Text = collapsed ? "▶" : "◀";
     }
 

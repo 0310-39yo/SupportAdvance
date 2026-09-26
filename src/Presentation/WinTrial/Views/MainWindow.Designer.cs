@@ -27,6 +27,7 @@ namespace SupportAdvance.Presentation.WinTrial.Views {
             var treeNodeAdvStyleInfo1 = new Syncfusion.Windows.Forms.Tools.TreeNodeAdvStyleInfo();
             var resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWindow));
             ribbon = new Syncfusion.Windows.Forms.Tools.RibbonControlAdv();
+            navigationSplitter = new Splitter();
             navigationPanel = new Panel();
             navigationTree = new Syncfusion.Windows.Forms.Tools.TreeViewAdv();
             navigationToggleButton = new Button();
@@ -60,6 +61,17 @@ namespace SupportAdvance.Presentation.WinTrial.Views {
             ribbon.SystemText.QuickAccessDialogDropDownName = "Start menu";
             ribbon.SystemText.RenameDisplayLabelText = "&Display Name:";
             ribbon.TabIndex = 1;
+            //
+            // navigationSplitter（ナビゲーションの幅をマウスのドラッグで変えるための境界。幅の保持は MainWindow.cs）
+            //
+            navigationSplitter.Dock = DockStyle.Left;
+            navigationSplitter.Location = new Point(200, 60);
+            navigationSplitter.MinExtra = 200;
+            navigationSplitter.MinSize = 120;
+            navigationSplitter.Name = "navigationSplitter";
+            navigationSplitter.Size = new Size(5, 679);
+            navigationSplitter.TabIndex = 3;
+            navigationSplitter.TabStop = false;
             // 
             // navigationPanel
             // 
@@ -142,6 +154,7 @@ namespace SupportAdvance.Presentation.WinTrial.Views {
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1184, 761);
+            Controls.Add(navigationSplitter);
             Controls.Add(navigationPanel);
             Controls.Add(ribbon);
             Controls.Add(statusStripEx);
@@ -158,6 +171,7 @@ namespace SupportAdvance.Presentation.WinTrial.Views {
         #endregion
 
         private Syncfusion.Windows.Forms.Tools.RibbonControlAdv ribbon;
+        private Splitter navigationSplitter;
         private Panel navigationPanel;
         private Button navigationToggleButton;
         private Syncfusion.Windows.Forms.Tools.TreeViewAdv navigationTree;
