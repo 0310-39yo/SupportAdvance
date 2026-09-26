@@ -45,6 +45,11 @@ tests/Contexts/Authentication.Infrastructure.Tests/
 | VO-MAP-01 | Entity → DbModel で全フィールドが正しくマップされる | 正常系 | ✅ UserAuthSessionMapperTests.cs::VO_MAP_01_ToDbModel_WithValidEntity_MapsAllFields |
 | VO-MAP-02 | ログアウト済み Entity で logout_at がマップされる | 正常系 | ✅ UserAuthSessionMapperTests.cs::VO_MAP_02_ToDbModel_WithLoggedOutSession_SetsLogoutAt |
 | VO-MAP-03 | DbModel → Entity で全フィールドが正しくマップされる | 正常系 | ✅ UserAuthSessionMapperTests.cs::VO_MAP_03_ToDomainEntity_WithValidDbModel_MapsAllFields |
+| VO-MAP-04 | DbModel → Entity で logged_out_at・使用した認証情報の行ID が NULL の場合、Unset に変換される | 正常系 | ✅ UserAuthSessionMapperTests.cs::VO_MAP_04_ToDomainEntity_WithNullLoggedOutAtAndCredentials_ConvertsToUnset |
+| VO-MAP-05 | DbModel → Entity で logged_out_at・使用した認証情報の行ID が値を持つ場合、設定済みに変換される | 正常系 | ✅ UserAuthSessionMapperTests.cs::VO_MAP_05_ToDomainEntity_WithLoggedOutAtAndCredentials_ConvertsToSetValues |
+| VO-MAP-06 | DbModel の使用した認証情報の行ID が不正な値の場合、InvalidOperationException が発生する | 異常系 | ✅ UserAuthSessionMapperTests.cs::VO_MAP_06_ToDomainEntity_WithInvalidCredentialsRowId_ThrowsInvalidOperationException |
+| VO-MAP-07 | Entity → DbModel で Unset の値が NULL に変換される | 正常系 | ✅ UserAuthSessionMapperTests.cs::VO_MAP_07_ToDbModel_WithUnsetValues_ConvertsToNull |
+| VO-MAP-08 | Entity → DbModel で認証情報の行ID が値に変換される | 正常系 | ✅ UserAuthSessionMapperTests.cs::VO_MAP_08_ToDbModel_WithCredentialsRowId_ConvertsToValue |
 
 #### VO-TYPE: 型変換（DateTime ↔ LocalDateTime）
 
@@ -126,8 +131,13 @@ tests/Contexts/Authentication.Infrastructure.Tests/
 | 1.2 | ToDbModel_WithLoggedOutSession_SetsLogoutAt | ログアウト済み | logout_at フィールド |
 | 1.3 | ToDomainEntity_WithValidDbModel_MapsAllFields | 有効な DbModel | 全フィールド マップ |
 | 1.4 | DateTimeConversion_LocalDateTimeRoundTrip | 日時フィールド | 往復変換の一貫性 |
+| 1.5 | ToDomainEntity_WithNullLoggedOutAtAndCredentials_ConvertsToUnset | NULL の日時・認証情報 | Unset に変換 |
+| 1.6 | ToDomainEntity_WithLoggedOutAtAndCredentials_ConvertsToSetValues | 値あり | 設定済みに変換 |
+| 1.7 | ToDomainEntity_WithInvalidCredentialsRowId_ThrowsInvalidOperationException | 不正な行ID | 例外 |
+| 1.8 | ToDbModel_WithUnsetValues_ConvertsToNull | Unset | NULL に変換 |
+| 1.9 | ToDbModel_WithCredentialsRowId_ConvertsToValue | 認証情報あり | 値に変換 |
 
-**テストケース数:** 4
+**テストケース数:** 9
 
 ---
 
@@ -201,18 +211,18 @@ tests/Contexts/Authentication.Infrastructure.Tests/
 
 | コンポーネント | テスト数 | 合計 |
 |----------|---------|------|
-| UserAuthSessionMapper | 4 | |
+| UserAuthSessionMapper | 9 | |
 | UserAuthSessionRepository | 10 | |
 | PasswordHashService | 8 | |
 | LoginCredentialsRepository | 5 | |
-| **合計** | | **27** |
+| **合計** | | **32** |
 
 ---
 
 ## 📋 テスト実装チェックリスト
 
 ### Mapper テストファイル
-- [ ] UserAuthSessionMapperTests (4テスト)
+- [ ] UserAuthSessionMapperTests (9テスト)
 
 ### Repository テストファイル
 - [ ] UserAuthSessionRepositoryTests (10テスト)

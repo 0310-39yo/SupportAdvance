@@ -82,7 +82,7 @@ var retrieved = await repository.GetByIdAsync(savedRowId);
 **期待結果:**
 - retrieved != null
 - retrieved.AuthorityRowId == session.AuthorityRowId
-- retrieved.LoggedOutAt == null（ログイン直後は未ログアウト）
+- retrieved.LoggedOutAt.HasLoggedOut == false（ログイン直後は未ログアウト）
 
 ---
 
@@ -145,7 +145,7 @@ var result = await repository.GetByIdAsync(savedRowId);
 ```
 
 **期待結果:**
-- result.LoggedOutAt != null
+- result.LoggedOutAt.HasLoggedOut == true
 
 ---
 

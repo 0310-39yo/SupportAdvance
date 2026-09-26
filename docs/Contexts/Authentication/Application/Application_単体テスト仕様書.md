@@ -40,26 +40,30 @@ tests/Contexts/Authentication.Application.Tests/
 
 | 観点ID | 観点（説明） | 分類 | テスト実装 |
 |--------|------|------|-----------|
-| VO-EXEC-01 | 有効な認証情報で認証できる | 正常系 | ⏸️ Skip: 結合テスト化予定 |
-| VO-EXEC-02 | パスワード一致で認証成功 | 正常系 | ⏸️ Skip: 結合テスト化予定 |
-| VO-EXEC-03 | 複数認証でそれぞれ独立したセッションが作成される | 正常系 | ⏸️ Skip: 結合テスト化予定 |
+| VO-EXEC-01 | 有効な認証情報で認証でき、成功のセッションが保存される | 正常系 | ✅ AuthenticateLocalUserUseCaseTests.cs::VO_EXEC_01_ExecuteAsync_ValidCredentials_SavesSuccessfulSession |
+| VO-EXEC-02 | パスワード一致で認証成功 | 正常系 | ✅ VO-EXEC-01 に統合（成功セッションの保存で検証） |
+| VO-EXEC-03 | 複数認証でそれぞれ独立したセッションが作成される | 正常系 | ⏸️ Skip: 結合テスト化予定（セッション行ID の採番が実 DB のシーケンスに依存するため） |
 
 #### VO-RESULT: 戻り値
 
 | 観点ID | 観点（説明） | 分類 | テスト実装 |
 |--------|------|------|-----------|
-| VO-RESULT-01 | UserAuthSession が返却される | 正常系 | ⏸️ Skip: 結合テスト化予定 |
-| VO-RESULT-02 | SessionId が設定される | 正常系 | ⏸️ Skip: 結合テスト化予定 |
-| VO-RESULT-03 | AuthMethod, LoginAt が正しく設定される | 正常系 | ⏸️ Skip: 結合テスト化予定 |
+| VO-RESULT-01 | 応答（AuthenticateLocalUserResponse）が返却される | 正常系 | ✅ VO-RESULT-02／03 で検証 |
+| VO-RESULT-02 | セッションの行ID が設定される | 正常系 | ✅ AuthenticateLocalUserUseCaseTests.cs::VO_RESULT_02_ExecuteAsync_ValidCredentials_ReturnsSessionRowId |
+| VO-RESULT-03 | 従業員行ID・ログインID・ログイン日時（クロックの現在時刻）が正しく設定される | 正常系 | ✅ AuthenticateLocalUserUseCaseTests.cs::VO_RESULT_03_ExecuteAsync_ValidCredentials_ReturnsEmployeeLoginIdAndClockNowAsLoggedInAt |
 
 #### VO-ERROR: 異常系
 
+失敗はすべて `InvalidOperationException` で通知される。認証の失敗（VO-ERROR-01〜03）は、例外の前に失敗のセッション（`LoginSuccess = false`）を保存する。
+
 | 観点ID | 観点（説明） | 分類 | テスト実装 |
 |--------|------|------|-----------|
-| VO-ERROR-01 | パスワード不一致で AuthenticationException が発生する | 異常系 | ⏸️ Skip: 結合テスト化予定 |
-| VO-ERROR-02 | 存在しない LoginId で EntityNotFoundException が発生する | 異常系 | ⏸️ Skip: 結合テスト化予定 |
-| VO-ERROR-03 | 削除済みユーザーで EntityNotFoundException が発生する | 異常系 | ⏸️ Skip: 結合テスト化予定 |
-| VO-ERROR-04 | 期限切れ認証情報で ArgumentException が発生する | 異常系 | ⏸️ Skip: 結合テスト化予定 |
+| VO-ERROR-01 | パスワード不一致で例外が発生し、失敗のセッションが記録される | 異常系 | ✅ AuthenticateLocalUserUseCaseTests.cs::VO_ERROR_01_ExecuteAsync_PasswordMismatch_ThrowsAndRecordsFailedSession |
+| VO-ERROR-02 | 存在しない LoginId で例外が発生し、特定できない人物の失敗セッションが記録される | 異常系 | ✅ AuthenticateLocalUserUseCaseTests.cs::VO_ERROR_02_ExecuteAsync_UnknownLoginId_ThrowsAndRecordsFailedSessionForUnknownUser |
+| VO-ERROR-03 | 無効なアカウントで例外が発生し、失敗のセッションが記録される | 異常系 | ✅ AuthenticateLocalUserUseCaseTests.cs::VO_ERROR_03_ExecuteAsync_InactiveAccount_ThrowsAndRecordsFailedSession |
+| VO-ERROR-04 | 期限切れ認証情報で例外が発生する | 異常系 | ➖ 対象外（現行の実装に期限の概念がない） |
+| VO-ERROR-05 | LoginId／Password が空・空白で ArgumentException が発生し、何も保存されない | 異常系 | ✅ AuthenticateLocalUserUseCaseTests.cs::VO_ERROR_05_ExecuteAsync_EmptyLoginIdOrPassword_ThrowsArgumentExceptionWithoutSaving（4 ケース） |
+| VO-ERROR-06 | LoginId が 50 文字を超えると ArgumentException が発生し、何も保存されない | 異常系 | ✅ AuthenticateLocalUserUseCaseTests.cs::VO_ERROR_06_ExecuteAsync_TooLongLoginId_ThrowsArgumentExceptionWithoutSaving |
 
 ---
 
@@ -69,15 +73,21 @@ tests/Contexts/Authentication.Application.Tests/
 
 | 観点ID | 観点（説明） | 分類 | テスト実装 |
 |--------|------|------|-----------|
-| VO-EXEC-01 | 有効なセッションでログアウトできる | 正常系 | ⏸️ Skip: 結合テスト化予定 |
-| VO-EXEC-02 | 存在しないセッションで例外が発生する | 異常系 | ⏸️ Skip: 結合テスト化予定 |
-| VO-EXEC-03 | 既にログアウト済みセッションで例外が発生する | 異常系 | ⏸️ Skip: 結合テスト化予定 |
+| VO-EXEC-01 | 有効なセッションでログアウトでき、セッションが更新される | 正常系 | ✅ LogoutUseCaseTests.cs::VO_EXEC_01_ExecuteAsync_ExistingSession_UpdatesSession |
+| VO-EXEC-02 | 存在しないセッションで InvalidOperationException が発生し、更新されない | 異常系 | ✅ LogoutUseCaseTests.cs::VO_EXEC_02_ExecuteAsync_MissingSession_ThrowsInvalidOperationExceptionWithoutUpdate |
+| VO-EXEC-03 | 既にログアウト済みセッションで例外が発生する | 異常系 | ➖ 仕様と実装の差異（現行の LogoutUseCase は例外を送出しない。方針が決まるまで未実装） |
 
 #### VO-STATE: 状態変化
 
 | 観点ID | 観点（説明） | 分類 | テスト実装 |
 |--------|------|------|-----------|
-| VO-STATE-01 | LogoutAt が設定される | 正常系 | ⏸️ Skip: 結合テスト化予定 |
+| VO-STATE-01 | ログアウト日時にクロックの現在時刻が設定され、セッションが有効でなくなる | 正常系 | ✅ LogoutUseCaseTests.cs::VO_STATE_01_ExecuteAsync_ExistingSession_SetsLoggedOutAtFromClock |
+
+#### VO-ERROR: 異常系
+
+| 観点ID | 観点（説明） | 分類 | テスト実装 |
+|--------|------|------|-----------|
+| VO-ERROR-01 | セッションの行ID が null で ArgumentNullException が発生する | 異常系 | ✅ LogoutUseCaseTests.cs::VO_ERROR_01_ExecuteAsync_NullSessionRowId_ThrowsArgumentNullException |
 
 ---
 
@@ -99,20 +109,11 @@ tests/Contexts/Authentication.Application.Tests/
 
 **ファイル:** `UseCases/AuthenticateLocalUserUseCaseTests.cs`
 
-**責務:** ローカル認証（LoginId + パスワード）→ UserAuthSession 生成
+**責務:** ローカル認証（LoginId + パスワード）→ 認証結果のセッション保存と応答の生成
 
-| # | テスト | 条件 | 検証 |
-|---|--------|------|------|
-| 1.1 | Authenticate_WithValidCredentials_ReturnsSession | 有効な認証情報 | UserAuthSession返却 |
-| 1.2 | Authenticate_WithCorrectPassword_Succeeds | パスワード一致 | 認証成功 |
-| 1.3 | Authenticate_WithIncorrectPassword_ThrowsException | パスワード不一致 | AuthenticationException |
-| 1.4 | Authenticate_WithNonExistentLoginId_ThrowsException | 存在しないID | EntityNotFoundException |
-| 1.5 | Authenticate_WithDeletedUser_ThrowsException | 削除済みユーザー | EntityNotFoundException |
-| 1.6 | Authenticate_SetsSessionDetails_Correctly | セッション作成 | AuthMethod, LoginAt等設定 |
-| 1.7 | Authenticate_WithMultipleAttempts_IndependentSessions | 複数認証 | 各セッション独立 |
-| 1.8 | Authenticate_WithExpiredCredentials_ThrowsException | 期限切れ認証情報 | ArgumentException |
+観点IDとテストメソッドの対応は「1. テスト観点一覧」を参照。
 
-**テストケース数:** 8
+**テストケース数:** 8（Theory の展開を含めて 11 ケース）
 
 ---
 
@@ -120,15 +121,11 @@ tests/Contexts/Authentication.Application.Tests/
 
 **ファイル:** `UseCases/LogoutUseCaseTests.cs`
 
-**責務:** UserAuthSession を終了（LogoutAt設定）
+**責務:** UserAuthSession にログアウト日時を設定して更新
 
-| # | テスト | 条件 | 検証 |
-|---|--------|------|------|
-| 2.1 | Logout_WithValidSession_CompletesSession | 有効なセッション | LogoutAt設定 |
-| 2.2 | Logout_WithNonExistentSession_ThrowsException | 存在しないセッション | EntityNotFoundException |
-| 2.3 | Logout_AlreadyLoggedOut_ThrowsException | 既にログアウト済み | InvalidOperationException |
+観点IDとテストメソッドの対応は「1. テスト観点一覧」を参照。
 
-**テストケース数:** 3
+**テストケース数:** 4
 
 ---
 
@@ -153,9 +150,9 @@ tests/Contexts/Authentication.Application.Tests/
 | Use Case / Query Service | テスト数 | 合計 |
 |----------|---------|------|
 | AuthenticateLocalUserUseCase | 8 | |
-| LogoutUseCase | 3 | |
+| LogoutUseCase | 4 | |
 | LoginCredentialsQueryService | 3 | |
-| **合計** | | **14** |
+| **合計** | | **15** |
 
 ---
 

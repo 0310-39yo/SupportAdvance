@@ -193,7 +193,13 @@ tests/Contexts/Employee.Application.Tests/
 
 | 観点ID | 観点（説明） | 分類 | テスト実装 |
 |--------|------|------|-----------|
-| VO-EXT-01 | ToEmployeeDto が正しく変換する | 正常系 | ⏸️ Skip: 結合テスト化予定 |
+| VO-EXT-01 | ToDto が全項目を DTO に写す | 正常系 | ✅ EmployeeExtensionTests.cs::VO_EXT_01_ToDto_ValidEmployee_MapsAllFields |
+| VO-EXT-02 | 従業員コードが区分と業務ID を含む形式で出力される | 正常系 | ✅ EmployeeExtensionTests.cs::VO_EXT_02_ToDto_ValidEmployee_BizCodeContainsDivisionAndBizId |
+| VO-EXT-03 | 所属がない場合、部署名が空文字になる | 正常系 | ✅ EmployeeExtensionTests.cs::VO_EXT_03_ToDto_NoMemberships_DepartmentNamesIsEmpty |
+| VO-EXT-04 | 複数所属の場合、主部署が先頭になり「, 」で連結される | 正常系 | ✅ EmployeeExtensionTests.cs::VO_EXT_04_ToDto_MultipleMemberships_PrimaryDepartmentFirstJoinedByComma |
+| VO-EXT-05 | 部署名が未設定（Unset）の所属は空文字として扱われ、例外にならない | 正常系 | ✅ EmployeeExtensionTests.cs::VO_EXT_05_ToDto_UnsetDepartmentDisplayName_DepartmentNamesIsEmpty |
+
+> 注意: 部署名が未設定の所属と設定済みの所属が混在すると、連結結果の末尾（または途中）に空の要素ができる（例:「営業部, 」）。現行の実装の挙動であり、テストでは固定していない。
 
 ---
 
@@ -447,12 +453,15 @@ public async Task Test3_1_CreateEmployee_PersistsToRepository_CanBeRetrieved()
 
 | # | テスト | 条件 | 検証 |
 |---|--------|------|------|
-| 1 | ToDto_WithValidEmployee_ReturnsEmployeeDto | 有効な Employee | EmployeeDto 返却 |
-| 2 | ToDto_MapsAllFields_Correctly | 全フィールド存在 | 全フィールド一致 |
-| 3 | ToDto_WithDeletedEmployee_HandlesCorrectly | 論理削除済み | deleted_at を返却 |
-| 4 | ToDto_CodeFormatIsCorrect | M/1234 形式 | 正しいコード形式 |
+| 1 | VO_EXT_01_ToDto_ValidEmployee_MapsAllFields | 有効な Employee | 全フィールド一致 |
+| 2 | VO_EXT_02_ToDto_ValidEmployee_BizCodeContainsDivisionAndBizId | M/1234 形式 | 正しいコード形式 |
+| 3 | VO_EXT_03_ToDto_NoMemberships_DepartmentNamesIsEmpty | 所属なし | 空文字 |
+| 4 | VO_EXT_04_ToDto_MultipleMemberships_PrimaryDepartmentFirstJoinedByComma | 複数所属 | 主部署が先頭、「, 」連結 |
+| 5 | VO_EXT_05_ToDto_UnsetDepartmentDisplayName_DepartmentNamesIsEmpty | 部署名 Unset | 空文字 |
 
-**テストケース数:** 4
+> 論理削除済み Employee は、DTO が deleted_at を持たないため対象外。
+
+**テストケース数:** 5
 
 ---
 
@@ -468,8 +477,8 @@ public async Task Test3_1_CreateEmployee_PersistsToRepository_CanBeRetrieved()
 | GetEmployeeByBizIdUseCase | 5 | |
 | EmployeeDtoMapping | 3 | |
 | EmployeeQueryService | 3 | |
-| EmployeeExtensions | 4 | |
-| **合計** | | **39** |
+| EmployeeExtensions | 5 | |
+| **合計** | | **40** |
 
 ---
 
@@ -658,7 +667,7 @@ public class MockEmployeeRepository : IEmployeeRepository
 - [ ] GetEmployeeByBizIdUseCaseTests (5テスト)
 - [ ] EmployeeDtoMappingTests (3テスト)
 - [ ] EmployeeQueryServiceTests (3テスト)
-- [ ] EmployeeExtensionTests (4テスト)
+- [ ] EmployeeExtensionTests (5テスト)
 
 ### Fixture/Mock 実装
 - [ ] EmployeeUseCaseFixture.cs

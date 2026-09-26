@@ -52,4 +52,23 @@ public class AbolishedOnTests
         var abolishedOn = AbolishedOn.Unset();
         Assert.Equal("Not Abolished", abolishedOn.ToString());
     }
+
+    [Fact]
+    public void Equals_SameSetValue_ReturnsTrueAndDiffersFromUnset()
+    {
+        var now = new LocalDateTime(new DateTime(2026, 9, 15, 10, 0, 0));
+
+        Assert.Equal(AbolishedOn.From(now), AbolishedOn.From(now));
+        Assert.Equal(AbolishedOn.From(now).GetHashCode(), AbolishedOn.From(now).GetHashCode());
+        Assert.NotEqual(AbolishedOn.From(now), AbolishedOn.Unset());
+        Assert.False(AbolishedOn.From(now).Equals(null));
+    }
+
+    [Fact]
+    public void ToString_Set_ReturnsValueText()
+    {
+        var now = new LocalDateTime(new DateTime(2026, 9, 15, 10, 0, 0));
+
+        Assert.Equal(now.ToString(), AbolishedOn.From(now).ToString());
+    }
 }
