@@ -59,18 +59,43 @@
         <navigationDrawer:SfNavigationDrawer Grid.Row="1"
                              x:Name="NavigationPane"
                              DisplayMode="Expanded"
-                             IsToggleButtonVisible="False"
-                             DrawerWidth="220"
+                             IsToggleButtonVisible="True"
+                             ExpandedModeWidth="220"
+                             CompactModeWidth="48"
                              behaviors:NavigationDrawerBehavior.ItemClickedCommand="{Binding OpenTabCommand}">
 
+            <!-- 折りたたみ：トグルボタンで幅 220（Expanded）⇔ 48（Compact。アイコンのみの細い縦バー）を切り替える。
+                 Compact 時はアイコンのみ表示されるため、各項目にアイコンを指定する -->
             <navigationDrawer:NavigationItem Header="顧客管理">
-                <navigationDrawer:NavigationItem Header="顧客一覧"/>
-                <navigationDrawer:NavigationItem Header="顧客登録"/>
+                <navigationDrawer:NavigationItem.Icon>
+                    <Path Data="M2,5 L9,5 L11,7 L22,7 L22,20 L2,20 Z" Fill="#FF555555" Stretch="Uniform" Width="18" Height="18"/>
+                </navigationDrawer:NavigationItem.Icon>
+                <navigationDrawer:NavigationItem Header="顧客一覧">
+                    <navigationDrawer:NavigationItem.Icon>
+                        <Path Data="M5,2 L15,2 L19,6 L19,22 L5,22 Z" Fill="#FF555555" Stretch="Uniform" Width="16" Height="16"/>
+                    </navigationDrawer:NavigationItem.Icon>
+                </navigationDrawer:NavigationItem>
+                <navigationDrawer:NavigationItem Header="顧客登録">
+                    <navigationDrawer:NavigationItem.Icon>
+                        <Path Data="M5,2 L15,2 L19,6 L19,22 L5,22 Z" Fill="#FF555555" Stretch="Uniform" Width="16" Height="16"/>
+                    </navigationDrawer:NavigationItem.Icon>
+                </navigationDrawer:NavigationItem>
             </navigationDrawer:NavigationItem>
 
             <navigationDrawer:NavigationItem Header="受注管理">
-                <navigationDrawer:NavigationItem Header="受注一覧"/>
-                <navigationDrawer:NavigationItem Header="受注登録"/>
+                <navigationDrawer:NavigationItem.Icon>
+                    <Path Data="M2,5 L9,5 L11,7 L22,7 L22,20 L2,20 Z" Fill="#FF555555" Stretch="Uniform" Width="18" Height="18"/>
+                </navigationDrawer:NavigationItem.Icon>
+                <navigationDrawer:NavigationItem Header="受注一覧">
+                    <navigationDrawer:NavigationItem.Icon>
+                        <Path Data="M5,2 L15,2 L19,6 L19,22 L5,22 Z" Fill="#FF555555" Stretch="Uniform" Width="16" Height="16"/>
+                    </navigationDrawer:NavigationItem.Icon>
+                </navigationDrawer:NavigationItem>
+                <navigationDrawer:NavigationItem Header="受注登録">
+                    <navigationDrawer:NavigationItem.Icon>
+                        <Path Data="M5,2 L15,2 L19,6 L19,22 L5,22 Z" Fill="#FF555555" Stretch="Uniform" Width="16" Height="16"/>
+                    </navigationDrawer:NavigationItem.Icon>
+                </navigationDrawer:NavigationItem>
             </navigationDrawer:NavigationItem>
 
             <navigationDrawer:SfNavigationDrawer.ContentView>
