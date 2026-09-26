@@ -8,14 +8,19 @@ using Department = SupportAdvance.Contexts.Department.Domain.Entities.Department
 
 /// <summary>
 /// 部署照会サービス（ジェネリック Query Service パターン）
-///
-/// 【責務】
-///   - IQueryService&lt;Department, DepartmentRowId&gt; を実装
-///   - 他の Bounded Context から部署情報の照会を提供（読み取り専用）
-/// 【パターン】
-///   - Employee BC 等が DI で注入され、部署情報をリアルタイムに照会
-///   - Repository 経由で DB アクセス（トランザクション外）
 /// </summary>
+/// <remarks>
+/// <para>【責務】</para>
+/// <list type="bullet">
+/// <item><description>IQueryService&lt;Department, DepartmentRowId&gt; を実装</description></item>
+/// <item><description>他の Bounded Context から部署情報の照会を提供（読み取り専用）</description></item>
+/// </list>
+/// <para>【パターン】</para>
+/// <list type="bullet">
+/// <item><description>Employee BC 等が DI で注入され、部署情報をリアルタイムに照会</description></item>
+/// <item><description>Repository 経由で DB アクセス（トランザクション外）</description></item>
+/// </list>
+/// </remarks>
 public class DepartmentQueryService : IQueryService<Department, DepartmentRowId>
 {
     private readonly IDepartmentRepository _repository;
@@ -32,7 +37,7 @@ public class DepartmentQueryService : IQueryService<Department, DepartmentRowId>
     }
 
     /// <summary>
-    /// 部署を行IDで照会する
+    /// 部署の行IDでの照会
     /// </summary>
     /// <param name="id">部署行ID</param>
     /// <returns>部署（存在しない場合は null）</returns>

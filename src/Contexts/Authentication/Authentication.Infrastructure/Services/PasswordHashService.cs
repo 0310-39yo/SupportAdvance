@@ -5,22 +5,27 @@ namespace SupportAdvance.Contexts.Authentication.Infrastructure.Services;
 
 /// <summary>
 /// パスワードハッシュ検証サービス 実装
-///
-/// 【責務】
-/// - PBKDF2 (with Salt) によるパスワード検証
-/// - パスワードハッシュ化
-///
-/// 【ハッシュ方式】
-/// - PBKDF2-SHA256（イテレーション回数：10000）
-/// - Salt: 16バイト（ランダム生成）
-/// - Hash: 32バイト
-/// - ハッシュ形式: Base64(Salt + Hash) = 64文字
-///
-/// 【セキュリティ】
-/// - ハッシュ化は一方向（復号不可）
-/// - ソルトはランダム生成
-/// - タイミング攻撃耐性あり
 /// </summary>
+/// <remarks>
+/// <para>【責務】</para>
+/// <list type="bullet">
+/// <item><description>PBKDF2 (with Salt) によるパスワード検証</description></item>
+/// <item><description>パスワードハッシュ化</description></item>
+/// </list>
+/// <para>【ハッシュ方式】</para>
+/// <list type="bullet">
+/// <item><description>PBKDF2-SHA256（イテレーション回数：10000）</description></item>
+/// <item><description>Salt: 16バイト（ランダム生成）</description></item>
+/// <item><description>Hash: 32バイト</description></item>
+/// <item><description>ハッシュ形式: Base64(Salt + Hash) = 64文字</description></item>
+/// </list>
+/// <para>【セキュリティ】</para>
+/// <list type="bullet">
+/// <item><description>ハッシュ化は一方向（復号不可）</description></item>
+/// <item><description>ソルトはランダム生成</description></item>
+/// <item><description>タイミング攻撃耐性あり</description></item>
+/// </list>
+/// </remarks>
 public sealed class PasswordHashService : IPasswordHashService
 {
     private const int SaltSize = 16;      // バイト
@@ -29,15 +34,18 @@ public sealed class PasswordHashService : IPasswordHashService
 
     /// <summary>
     /// パスワードがハッシュ値と一致するか検証（PBKDF2+Salt）
-    ///
-    /// 【アルゴリズム】
-    /// 1. DB ハッシュから Salt を抽出（最初の 16 バイト）
-    /// 2. 入力パスワードを同じ Salt で PBKDF2 ハッシュ化
-    /// 3. 生成されたハッシュ部分と DB のハッシュ部分を比較
     /// </summary>
     /// <param name="plainPassword">入力されたパスワード（平文）</param>
     /// <param name="passwordHash"><see cref="HashPassword"/> で生成した Base64 文字列（Salt 16 バイト + ハッシュ 32 バイト）</param>
     /// <returns>一致した場合は <see langword="true"/>。不一致、いずれかが空、またはハッシュの形式が不正な場合は <see langword="false"/>（例外の送出なし）</returns>
+    /// <remarks>
+    /// <para>【アルゴリズム】</para>
+    /// <list type="bullet">
+    /// <item><description>DB ハッシュから Salt を抽出（最初の 16 バイト）</description></item>
+    /// <item><description>入力パスワードを同じ Salt で PBKDF2 ハッシュ化</description></item>
+    /// <item><description>生成されたハッシュ部分と DB のハッシュ部分を比較</description></item>
+    /// </list>
+    /// </remarks>
     public bool VerifyPassword(string plainPassword, string passwordHash)
     {
         if (string.IsNullOrEmpty(plainPassword) || string.IsNullOrEmpty(passwordHash))

@@ -38,7 +38,7 @@ public sealed class BusinessDayClock : IClock, IBusinessDayClockControl, IDispos
     /// <param name="stateFilePath">状態ファイルのパス。<see langword="null"/> の場合は <see cref="DefaultStateFilePath"/></param>
     /// <param name="timeProvider">実際の現在時刻の取得元。<see langword="null"/> の場合は <see cref="TimeProvider.System"/>（テストでは偽の時刻に差し替え）</param>
     /// <remarks>
-    /// <para>【注意】コンストラクターでは ON しない。ON のきっかけは Composition Root が決定</para>
+    /// <para>【注意】コンストラクターでの ON なし。ON のきっかけは Composition Root が決定</para>
     /// <para>【状態の復元】状態ファイルがない・壊れている・保存時の基点日が <paramref name="startDate"/> と異なる場合は、最後に終了した業務日なし（基点日から開始）。
     /// ON のまま異常終了した跡がある場合は、そのとき ON していた業務日を最後に終了した業務日とみなす</para>
     /// </remarks>
@@ -193,7 +193,7 @@ public sealed class BusinessDayClock : IClock, IBusinessDayClockControl, IDispos
     /// リソースの解放
     /// </summary>
     /// <remarks>
-    /// <para>【注意】OFF は行わない。DI コンテナーはインスタンスとして登録したシングルトンを破棄しないため、OFF は Composition Root が明示的に呼び出す</para>
+    /// <para>【注意】OFF は実施なし。DI コンテナーはインスタンスとして登録したシングルトンを破棄しないため、OFF は Composition Root が明示的に呼び出す</para>
     /// <para>【注意】破棄後も <see cref="JstNow"/> は値を返す（終了処理中のログ出力のため）</para>
     /// </remarks>
     public void Dispose()

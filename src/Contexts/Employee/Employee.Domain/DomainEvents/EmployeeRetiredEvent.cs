@@ -6,11 +6,12 @@ namespace SupportAdvance.Contexts.Employee.Domain.DomainEvents;
 
 /// <summary>
 /// 従業員が退職したというドメインイベント
-///
-/// 【発行】Employee.RetireEmployee()
-/// 【用途】人事システム連携、アーカイブ、監査ログ
-/// 【識別】AggregateRootId（RowId）で識別、ナチュラルキー（Division+Number）で参照
 /// </summary>
+/// <remarks>
+/// <para>【発行】Employee.RetireEmployee()</para>
+/// <para>【用途】人事システム連携、アーカイブ、監査ログ</para>
+/// <para>【識別】AggregateRootId（RowId）で識別、ナチュラルキー（Division+Number）で参照</para>
+/// </remarks>
 public sealed class EmployeeRetiredEvent : IDomainEvent
 {
     /// <summary>

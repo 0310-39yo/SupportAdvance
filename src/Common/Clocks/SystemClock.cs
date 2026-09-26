@@ -2,7 +2,7 @@ namespace SupportAdvance.Common.Clocks;
 
 /// <summary>
 /// システムクロック実装
-/// 実行時の現在時刻をシステムクロックから取得します
+/// 実行時の現在時刻をシステムクロックから取得
 /// </summary>
 public class SystemClock : IClock
 {
@@ -10,7 +10,7 @@ public class SystemClock : IClock
         TimeZoneInfo.FindSystemTimeZoneById("Tokyo Standard Time");
 
     /// <summary>
-    /// 現在のJST日時を LocalDateTime で取得します
+    /// 現在のJST日時の LocalDateTime での取得
     /// </summary>
     public LocalDateTime JstNow
     {
@@ -24,7 +24,7 @@ public class SystemClock : IClock
     }
 
     /// <summary>
-    /// 本日（00:00:00）のJST日付を LocalDateTime で取得します
+    /// 本日（00:00:00）のJST日付の LocalDateTime での取得
     /// </summary>
     public LocalDateTime JstToday
     {

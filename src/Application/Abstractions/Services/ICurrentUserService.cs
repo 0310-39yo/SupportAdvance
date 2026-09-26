@@ -2,23 +2,29 @@ namespace SupportAdvance.Application.Abstractions.Services;
 
 /// <summary>
 /// 現在のユーザー（従業員）情報を提供・管理
-///
-/// 【責務】
-/// - 認証コンテキストから現在のユーザー情報を取得
-/// - ログイン・ログアウト時にユーザー情報を管理
-///
-/// 【用途】
-/// - 監査カラム（createdBy, updatedBy, deletedBy）に従業員rowIdを設定
-/// - 画面表示時に現在ユーザー情報を参照
-///
-/// 【実装】
-/// - WinForms／WPF: Presentation の RealCurrentUserService（ログイン時に情報を保持）
-/// - システム処理: Infrastructure の SystemCurrentUserService（システムユーザー固定）
-/// - AspNet: HttpContext から取得（認証ミドルウェア連携）
-///
-/// 【配置】
-/// - Presentation と Infrastructure の双方が参照するため、依存方向を守れる Application 汎用層に定義
 /// </summary>
+/// <remarks>
+/// <para>【責務】</para>
+/// <list type="bullet">
+/// <item><description>認証コンテキストから現在のユーザー情報を取得</description></item>
+/// <item><description>ログイン・ログアウト時にユーザー情報を管理</description></item>
+/// </list>
+/// <para>【用途】</para>
+/// <list type="bullet">
+/// <item><description>監査カラム（createdBy, updatedBy, deletedBy）に従業員rowIdを設定</description></item>
+/// <item><description>画面表示時に現在ユーザー情報を参照</description></item>
+/// </list>
+/// <para>【実装】</para>
+/// <list type="bullet">
+/// <item><description>WinForms／WPF: Presentation の RealCurrentUserService（ログイン時に情報を保持）</description></item>
+/// <item><description>システム処理: Infrastructure の SystemCurrentUserService（システムユーザー固定）</description></item>
+/// <item><description>AspNet: HttpContext から取得（認証ミドルウェア連携）</description></item>
+/// </list>
+/// <para>【配置】</para>
+/// <list type="bullet">
+/// <item><description>Presentation と Infrastructure の双方が参照するため、依存方向を守れる Application 汎用層に定義</description></item>
+/// </list>
+/// </remarks>
 public interface ICurrentUserService
 {
     /// <summary>

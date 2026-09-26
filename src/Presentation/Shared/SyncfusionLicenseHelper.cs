@@ -24,8 +24,8 @@ public static class SyncfusionLicenseHelper
     private static readonly ILogger Logger = LogManager.GetCurrentClassLogger();
 
     /// <summary>
-    /// 環境変数から Syncfusion ライセンスキーを取得して登録します
-    /// 環境変数が設定されていない場合はデフォルト値を使用します
+    /// 環境変数から Syncfusion ライセンスキーを取得して登録
+    /// 環境変数が設定されていない場合はデフォルト値の使用
     /// </summary>
     /// <remarks>
     /// ログ出力：

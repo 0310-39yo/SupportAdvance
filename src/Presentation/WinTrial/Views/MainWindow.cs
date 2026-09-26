@@ -15,9 +15,9 @@ namespace SupportAdvance.Presentation.WinTrial.Views;
 /// <remarks>
 /// <para>【責務】<see cref="MainWindowViewModel"/> とナビゲーション・タブ（MDI 子フォーム）の同期のみ。タブの管理は ViewModel が担当</para>
 /// <para>【設計】WinForms には ItemsSource 相当が無いため、<see cref="MainWindowViewModel.OpenTabs"/> の変更を MDI 子フォームの生成・破棄に反映し、
-/// 子フォームのアクティブ化・終了を <see cref="MainWindowViewModel.SelectedTab"/>／<c>CloseTabCommand</c> に反映する</para>
+/// 子フォームのアクティブ化・終了を <see cref="MainWindowViewModel.SelectedTab"/>／<c>CloseTabCommand</c> に反映</para>
 /// <para>【設計】ナビゲーションは階層を持てる <see cref="TreeViewAdv"/> を左側に固定配置する（項目名は WpfTrial の階層メニューと同じ）。
-/// Syncfusion の NavigationDrawer は「閉じるスライドパネル」で階層を持てず、リサイズで項目が消えたため使用しない</para>
+/// Syncfusion の NavigationDrawer は「閉じるスライドパネル」で階層を持てず、リサイズで項目が消えたため不採用</para>
 /// <para>【動作】子項目のクリック（またはキーボードの Enter）でタブを開く。親項目のクリックは展開／折りたたみのみ</para>
 /// <para>【折りたたみ】上部のボタンで、ナビゲーションを幅の細い縦バー（ボタンのみ）と展開表示に切り替える（WpfTrial の Compact／Expanded に相当。WinForms 側はアイコンを持たないため、折りたたみ時は項目を隠す）</para>
 /// </remarks>
@@ -179,7 +179,7 @@ public partial class MainWindow : Form
     /// <param name="collapsed"><see langword="true"/> で幅の細い縦バー（アイコンのみ）、<see langword="false"/> で展開表示</param>
     /// <remarks>
     /// <para>【動作】折りたたみ時は、パネルの幅を狭めて項目名を隠し、アイコンだけを縦に並べる（展開／折りたたみのボタンと線は消し、字下げを小さくする）</para>
-    /// <para>【幅】展開時の幅は、境界（<c>navigationSplitter</c>）のドラッグで変えられる。折りたたみ中はドラッグ不可</para>
+    /// <para>【幅】展開時の幅は、境界（<c>navigationSplitter</c>）のドラッグで変更可能。折りたたみ中はドラッグ不可</para>
     /// </remarks>
     private void SetNavigationCollapsed(bool collapsed)
     {

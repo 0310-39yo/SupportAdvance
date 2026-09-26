@@ -4,14 +4,19 @@ namespace SupportAdvance.Contexts.Department.Infrastructure.DbModels;
 
 /// <summary>
 /// 部署データベースモデル
-///
-/// 【責務】
-///   - m_departments テーブルのマッピング
-///   - プリミティブ型のデータベーススキーマ表現
-/// 【注意】
-///   - 監査フィールド（CreatedAt/UpdatedAt/DeletedAt）は DateTime プリミティブ型
-///   - ビジネスフィールドも DateTime（LocalDateTime ↔ DateTime は Mapper で変換）
 /// </summary>
+/// <remarks>
+/// <para>【責務】</para>
+/// <list type="bullet">
+/// <item><description>m_departments テーブルのマッピング</description></item>
+/// <item><description>プリミティブ型のデータベーススキーマ表現</description></item>
+/// </list>
+/// <para>【注意】</para>
+/// <list type="bullet">
+/// <item><description>監査フィールド（CreatedAt/UpdatedAt/DeletedAt）は DateTime プリミティブ型</description></item>
+/// <item><description>ビジネスフィールドも DateTime（LocalDateTime ↔ DateTime は Mapper で変換）</description></item>
+/// </list>
+/// </remarks>
 [Table("m_departments")]
 public class DepartmentDbModel
 {
@@ -59,8 +64,10 @@ public class DepartmentDbModel
 
     /// <summary>
     /// 楽観ロック用タイムスタンプ
-    /// 【重要】SQL Server の timestamp は自動管理のため、RepoDb の fields パラメータで INSERT/UPDATE から除外
     /// </summary>
+    /// <remarks>
+    /// <para>【重要】SQL Server の timestamp は自動管理のため、RepoDb の fields パラメータで INSERT/UPDATE から除外</para>
+    /// </remarks>
     [Column("row_version")]
     public byte[]? RowVersion { get; set; }
 

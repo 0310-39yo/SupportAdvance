@@ -4,15 +4,14 @@ using SupportAdvance.Crosscutting.Logging;
 namespace SupportAdvance.Presentation.Shared.Decorators;
 
 /// <summary>
-/// UseCase のエラーハンドリング デコレーター。
-/// インナーの UseCase 実行時に発生した例外をキャッチし、詳細なエラーログを記録する。
-/// 相関コンテキスト(CorrelationContext)を使用してエラーログを関連付け、トレーサビリティを向上させる。
-///
-/// 【単一責務】例外のキャッチとエラーログ記録。
-/// 例外の再スロー処理により、呼び出し元での適切なハンドリングを可能にする。
+/// UseCase のエラーハンドリング デコレーター
 /// </summary>
 /// <typeparam name="TRequest">リクエストの型</typeparam>
 /// <typeparam name="TResponse">レスポンスの型</typeparam>
+/// <remarks>
+/// <para>インナーの UseCase 実行時に発生した例外をキャッチし、詳細なエラーログの記録。相関コンテキスト(CorrelationContext)を使用してエラーログを関連付け、トレーサビリティを向上させる</para>
+/// <para>【単一責務】例外のキャッチとエラーログ記録。例外の再スロー処理により、呼び出し元での適切なハンドリングの実現</para>
+/// </remarks>
 public sealed class ErrorHandlingDecorator<TRequest, TResponse> : IUseCase<TRequest, TResponse>
     where TRequest : IRequest
     where TResponse : IResponse
@@ -43,14 +42,13 @@ public sealed class ErrorHandlingDecorator<TRequest, TResponse> : IUseCase<TRequ
     }
 
     /// <summary>
-    /// UseCase を実行し、例外が発生した場合はエラーログを記録する。
-    ///
-    /// 【単一責務】例外のキャッチとエラーログ記録
+    /// UseCase を実行し、例外が発生した場合はエラーログの記録
     /// </summary>
     /// <param name="request">リクエストの内容</param>
     /// <returns>レスポンスの内容</returns>
     /// <exception cref="ArgumentNullException"><paramref name="request"/> が <see langword="null"/> の場合</exception>
     /// <remarks>
+    /// <para>【単一責務】例外のキャッチとエラーログ記録</para>
     /// <para>【注意】例外はエラーログの記録後、そのまま再送出（握りつぶさない）</para>
     /// </remarks>
     public async Task<TResponse> ExecuteAsync(TRequest request)

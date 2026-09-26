@@ -4,9 +4,11 @@ namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Person;
 
 /// <summary>
 /// 個人の姓（カナ）を表す ValueObject
-/// 【型】string のラッパー
-/// 【制約】1文字以上100文字以下、null 不可、カナ文字のみ
 /// </summary>
+/// <remarks>
+/// <para>【型】string のラッパー</para>
+/// <para>【制約】1文字以上100文字以下、null 不可、カナ文字のみ</para>
+/// </remarks>
 public sealed class LastNameKana : ValueObject, IEquatable<LastNameKana>
 {
     /// <summary>
@@ -23,7 +25,7 @@ public sealed class LastNameKana : ValueObject, IEquatable<LastNameKana>
     }
 
     /// <summary>
-    /// 指定された値から LastNameKana を生成する
+    /// 指定された値からの LastNameKana の生成
     /// </summary>
     /// <param name="value">姓（カナ）</param>
     /// <returns>LastNameKana インスタンス</returns>
@@ -44,7 +46,7 @@ public sealed class LastNameKana : ValueObject, IEquatable<LastNameKana>
     }
 
     /// <summary>
-    /// DB値から LastNameKana を復元する
+    /// DB値から LastNameKana の復元
     /// </summary>
     /// <param name="value">DB から読み込んだ姓（カナ）</param>
     /// <param name="result">成功した場合は復元したインスタンス。失敗した場合は <see langword="null"/>（使用禁止）</param>
@@ -92,7 +94,7 @@ public sealed class LastNameKana : ValueObject, IEquatable<LastNameKana>
     public override int GetHashCode() => Value.GetHashCode();
 
     /// <summary>
-    /// 文字列表現を取得する
+    /// 文字列表現の取得
     /// </summary>
     /// <returns>姓（カナ）の値そのもの</returns>
     public override string ToString() => Value;

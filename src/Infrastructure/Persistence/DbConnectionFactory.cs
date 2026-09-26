@@ -6,10 +6,11 @@ namespace SupportAdvance.Infrastructure.Persistence;
 
 /// <summary>
 /// SQL Server 接続ファクトリー実装
-///
-/// 【責務】IAppSettings から接続文字列を読み込み、接続を生成
-/// 【設計】appsettings.*.json のすべての設定値は IAppSettings から統一して取得
 /// </summary>
+/// <remarks>
+/// <para>【責務】IAppSettings から接続文字列を読み込み、接続を生成</para>
+/// <para>【設計】appsettings.*.json のすべての設定値は IAppSettings から統一して取得</para>
+/// </remarks>
 public class DbConnectionFactory : IDbConnectionFactory
 {
     private readonly string _connectionString;

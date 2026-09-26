@@ -4,15 +4,20 @@ namespace SupportAdvance.Contexts.Authentication.Infrastructure.DbModels;
 
 /// <summary>
 /// ユーザー認証セッション データベースモデル
-///
-/// 【責務】
-///   - t_user_auth_sessions テーブルのマッピング
-///   - プリミティブ型のデータベーススキーマ表現
-/// 【注意】
-///   - 監査フィールド（CreatedAt/UpdatedAt/DeletedAt）は DateTime プリミティブ型
-///   - ログイン日時フィールド（LoggedInAt/LoggedOutAt）も DateTime
-///   - LocalDateTime ↔ DateTime の変換は Mapper で実施
 /// </summary>
+/// <remarks>
+/// <para>【責務】</para>
+/// <list type="bullet">
+/// <item><description>t_user_auth_sessions テーブルのマッピング</description></item>
+/// <item><description>プリミティブ型のデータベーススキーマ表現</description></item>
+/// </list>
+/// <para>【注意】</para>
+/// <list type="bullet">
+/// <item><description>監査フィールド（CreatedAt/UpdatedAt/DeletedAt）は DateTime プリミティブ型</description></item>
+/// <item><description>ログイン日時フィールド（LoggedInAt/LoggedOutAt）も DateTime</description></item>
+/// <item><description>LocalDateTime ↔ DateTime の変換は Mapper で実施</description></item>
+/// </list>
+/// </remarks>
 [Table("t_user_auth_sessions")]
 public class UserAuthSessionDbModel
 {
@@ -24,8 +29,10 @@ public class UserAuthSessionDbModel
 
     /// <summary>
     /// 権限主体（従業員行ID）
-    /// 【制約】NOT NULL、FK → m_employees(row_id)
     /// </summary>
+    /// <remarks>
+    /// <para>【制約】NOT NULL、FK → m_employees(row_id)</para>
+    /// </remarks>
     [Column("current_user_row_id")]
     public long CurrentUserRowId { get; set; }
 
@@ -55,16 +62,19 @@ public class UserAuthSessionDbModel
 
     /// <summary>
     /// ローカル認証マスター行ID（ローカル認証時のみ値あり、AD認証時はNULL）
-    /// 【制約】NULL許可、FK → m_login_credentials(row_id)
     /// </summary>
+    /// <remarks>
+    /// <para>【制約】NULL許可、FK → m_login_credentials(row_id)</para>
+    /// </remarks>
     [Column("login_credentials_row_id")]
     public long? LoginCredentialsRowId { get; set; }
 
     /// <summary>
     /// 楽観ロック用タイムスタンプ（INSERT/UPDATE では除外、DB が自動生成）
-    /// 【重要】row_version は SQL Server の timestamp 型で自動管理のため、
-    ///         明示的な値を INSERT/UPDATE の SET 句に含めてはいけない（Repository の fields で除外）
     /// </summary>
+    /// <remarks>
+    /// <para>【重要】row_version は SQL Server の timestamp 型で自動管理のため、明示的な値を INSERT/UPDATE の SET 句に含めてはいけない（Repository の fields で除外）</para>
+    /// </remarks>
     [Column("row_version")]
     public byte[] RowVersion { get; set; } = [];
 

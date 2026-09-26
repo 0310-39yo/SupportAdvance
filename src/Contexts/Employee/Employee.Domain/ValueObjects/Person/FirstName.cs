@@ -4,9 +4,11 @@ namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Person;
 
 /// <summary>
 /// 個人の名を表す ValueObject
-/// 【型】string のラッパー
-/// 【制約】1文字以上100文字以下、null 不可
 /// </summary>
+/// <remarks>
+/// <para>【型】string のラッパー</para>
+/// <para>【制約】1文字以上100文字以下、null 不可</para>
+/// </remarks>
 public sealed class FirstName : ValueObject, IEquatable<FirstName>
 {
     /// <summary>
@@ -23,7 +25,7 @@ public sealed class FirstName : ValueObject, IEquatable<FirstName>
     }
 
     /// <summary>
-    /// 指定された値から FirstName を生成する
+    /// 指定された値からの FirstName の生成
     /// </summary>
     /// <param name="value">名</param>
     /// <returns>FirstName インスタンス</returns>
@@ -44,7 +46,7 @@ public sealed class FirstName : ValueObject, IEquatable<FirstName>
     }
 
     /// <summary>
-    /// DB値から FirstName を復元する
+    /// DB値から FirstName の復元
     /// </summary>
     /// <param name="value">DB から読み込んだ名</param>
     /// <param name="result">成功した場合は復元したインスタンス。失敗した場合は <see langword="null"/>（使用禁止）</param>
@@ -92,7 +94,7 @@ public sealed class FirstName : ValueObject, IEquatable<FirstName>
     public override int GetHashCode() => Value.GetHashCode();
 
     /// <summary>
-    /// 文字列表現を取得する
+    /// 文字列表現の取得
     /// </summary>
     /// <returns>名の値そのもの</returns>
     public override string ToString() => Value;

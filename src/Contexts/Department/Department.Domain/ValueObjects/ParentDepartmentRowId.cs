@@ -4,9 +4,11 @@ namespace SupportAdvance.Contexts.Department.Domain.ValueObjects;
 
 /// <summary>
 /// 親部署の行IDを表すオプション ValueObject
-/// 【範囲】IsSet=true の場合は 1以上、IsSet=false で「親部署なし」を表現
-/// 【責務】t_departments.parent_department_row_id の管理と検証
 /// </summary>
+/// <remarks>
+/// <para>【範囲】IsSet=true の場合は 1以上、IsSet=false で「親部署なし」を表現</para>
+/// <para>【責務】t_departments.parent_department_row_id の管理と検証</para>
+/// </remarks>
 public sealed class ParentDepartmentRowId : RowId, IEquatable<ParentDepartmentRowId>
 {
     /// <summary>
@@ -24,13 +26,13 @@ public sealed class ParentDepartmentRowId : RowId, IEquatable<ParentDepartmentRo
     }
 
     /// <summary>
-    /// ルート部署（親なし）を表す Unset インスタンスを生成する
+    /// ルート部署（親なし）を表す Unset インスタンスの生成
     /// </summary>
     /// <returns>IsSet=false のインスタンス</returns>
     public static ParentDepartmentRowId Unset() => new(false);
 
     /// <summary>
-    /// 指定された親部署行IDから ParentDepartmentRowId を生成する
+    /// 指定された親部署行IDからの ParentDepartmentRowId の生成
     /// </summary>
     /// <param name="value">親部署行ID（1以上）</param>
     /// <returns>生成された ParentDepartmentRowId インスタンス</returns>

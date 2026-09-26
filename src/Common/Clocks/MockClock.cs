@@ -2,14 +2,14 @@ namespace SupportAdvance.Common.Clocks;
 
 /// <summary>
 /// 単体テスト用のモッククロック
-/// テスト中に任意の日時を設定できます
+/// テスト中の任意の日時の設定が可能
 /// </summary>
 public class MockClock : IClock, IDisposable
 {
     private DateTime _fixedDateTime;
 
     /// <summary>
-    /// MockClock を初期化します
+    /// MockClock の初期化
     /// </summary>
     /// <param name="fixedDateTime">固定する日時（デフォルト: 2024年1月1日 00:00:00）</param>
     /// <exception cref="ArgumentException"><paramref name="fixedDateTime"/> の <see cref="DateTime.Kind"/> が <see cref="DateTimeKind.Unspecified"/> 以外の場合</exception>
@@ -26,7 +26,7 @@ public class MockClock : IClock, IDisposable
     }
 
     /// <summary>
-    /// 固定された日時を LocalDateTime で取得します
+    /// 固定された日時の LocalDateTime での取得
     /// </summary>
     public LocalDateTime JstNow => new(_fixedDateTime);
 
@@ -48,7 +48,7 @@ public class MockClock : IClock, IDisposable
     }
 
     /// <summary>
-    /// テスト中に現在時刻を変更します
+    /// テスト中に現在時刻の変更
     /// </summary>
     /// <param name="newDateTime">新しい日時</param>
     /// <exception cref="ArgumentException"><paramref name="newDateTime"/> の <see cref="DateTime.Kind"/> が <see cref="DateTimeKind.Unspecified"/> 以外の場合</exception>
@@ -65,7 +65,7 @@ public class MockClock : IClock, IDisposable
     }
 
     /// <summary>
-    /// テスト中に日時を進めます
+    /// テスト中の日時の進行
     /// </summary>
     /// <param name="timeSpan">進める時間</param>
     public void Advance(TimeSpan timeSpan)
@@ -74,7 +74,7 @@ public class MockClock : IClock, IDisposable
     }
 
     /// <summary>
-    /// テスト中に時刻をリセットします
+    /// テスト中に時刻のリセット
     /// </summary>
     /// <param name="resetDateTime">リセット後の日時（デフォルト: 2024年1月1日 00:00:00）</param>
     /// <exception cref="ArgumentException"><paramref name="resetDateTime"/> の <see cref="DateTime.Kind"/> が <see cref="DateTimeKind.Unspecified"/> 以外の場合</exception>

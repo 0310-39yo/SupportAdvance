@@ -6,12 +6,15 @@ namespace SupportAdvance.Contexts.Authentication.Infrastructure.Queries;
 
 /// <summary>
 /// ローカル認証情報マスター Query Service 実装
-///
-/// 【責務】
-/// - m_login_credentials テーブルから SELECT
-/// - ILoginCredentialsQuery の実装
-/// - Dapper + SQL ファイルで実装
 /// </summary>
+/// <remarks>
+/// <para>【責務】</para>
+/// <list type="bullet">
+/// <item><description>m_login_credentials テーブルから SELECT</description></item>
+/// <item><description>ILoginCredentialsQuery の実装</description></item>
+/// <item><description>Dapper + SQL ファイルで実装</description></item>
+/// </list>
+/// </remarks>
 public sealed class LoginCredentialsQueryService : ILoginCredentialsQuery
 {
     private readonly IDbConnectionFactory _connectionFactory;

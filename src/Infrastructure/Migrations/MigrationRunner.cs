@@ -7,16 +7,18 @@ namespace SupportAdvance.Infrastructure.Migrations;
 
 /// <summary>
 /// 統一マイグレーション実行エンジン
-///
-/// 【責務】複数 BC のマイグレーションを一元管理・実行
-/// 【用途】アプリケーション起動時のDB初期化
-/// 【実装】各 BC の埋め込みSQLスクリプトを自動検出して実行
-///
-/// 【マイグレーション検出ルール】
-/// - パス: Contexts/*/Infrastructure/Migrations/*.sql
-/// - 実行順序: ファイル名の昇順（グローバルに昇順）
-/// - 例: 000_CreateMigrationHistoryTable.sql → 001_CreateUserPreferencesTable.sql
 /// </summary>
+/// <remarks>
+/// <para>【責務】複数 BC のマイグレーションを一元管理・実行</para>
+/// <para>【用途】アプリケーション起動時のDB初期化</para>
+/// <para>【実装】各 BC の埋め込みSQLスクリプトを自動検出して実行</para>
+/// <para>【マイグレーション検出ルール】</para>
+/// <list type="bullet">
+/// <item><description>パス: Contexts/*/Infrastructure/Migrations/*.sql</description></item>
+/// <item><description>実行順序: ファイル名の昇順（グローバルに昇順）</description></item>
+/// <item><description>例: 000_CreateMigrationHistoryTable.sql → 001_CreateUserPreferencesTable.sql</description></item>
+/// </list>
+/// </remarks>
 public class MigrationRunner
 {
     private readonly string _connectionString;
@@ -38,13 +40,14 @@ public class MigrationRunner
 
     /// <summary>
     /// すべてのマイグレーション（全 BC）を実行
-    ///
-    /// 【実行順序】ファイル名の昇順（000_*, 001_*, ...）
-    /// 【履歴管理】__MigrationHistory テーブルで実行済みをトラッキング
-    /// 【重複防止】既に実行済みのマイグレーションはスキップ
-    /// 【トランザクション】各マイグレーションをトランザクション内で実行
-    /// 【例外】SQL実行失敗時は SqlException をスロー＆ロールバック
     /// </summary>
+    /// <remarks>
+    /// <para>【実行順序】ファイル名の昇順（000_*, 001_*, ...）</para>
+    /// <para>【履歴管理】__MigrationHistory テーブルで実行済みをトラッキング</para>
+    /// <para>【重複防止】既に実行済みのマイグレーションはスキップ</para>
+    /// <para>【トランザクション】各マイグレーションをトランザクション内で実行</para>
+    /// <para>【例外】SQL実行失敗時は SqlException をスロー＆ロールバック</para>
+    /// </remarks>
     public async Task RunMigrationsAsync()
     {
         var migrations = GetAllMigrationScripts();
@@ -105,11 +108,12 @@ public class MigrationRunner
 
     /// <summary>
     /// すべての BC からマイグレーションスクリプトを検出
-    ///
-    /// 【検索対象】すべての リファレンス Assembly
-    /// 【リソース形式】Contexts/{BCName}/Infrastructure/Migrations/{NNN_*.sql}
-    /// 【ソート】ファイル名で昇順（BC間でも昇順）
     /// </summary>
+    /// <remarks>
+    /// <para>【検索対象】すべての リファレンス Assembly</para>
+    /// <para>【リソース形式】Contexts/{BCName}/Infrastructure/Migrations/{NNN_*.sql}</para>
+    /// <para>【ソート】ファイル名で昇順（BC間でも昇順）</para>
+    /// </remarks>
     private static List<(string Name, string Sql)> GetAllMigrationScripts()
     {
         var migrations = new List<(string Name, string Sql)>();

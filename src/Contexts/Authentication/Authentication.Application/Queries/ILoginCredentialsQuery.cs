@@ -2,18 +2,23 @@ namespace SupportAdvance.Contexts.Authentication.Application.Queries;
 
 /// <summary>
 /// ローカル認証情報マスター Query インターフェース
-///
-/// 【責務】
-/// - m_login_credentials テーブルからの SELECT クエリを定義
-/// - ログインID でローカル認証情報を検索
-///
-/// 【実装】
-/// - Infrastructure層で Dapper + SQL ファイルで実装
-///
-/// 【パターン】
-/// - Read-only インターフェース（SELECT のみ）
-/// - Application層は検索結果を DTO で受け取る
 /// </summary>
+/// <remarks>
+/// <para>【責務】</para>
+/// <list type="bullet">
+/// <item><description>m_login_credentials テーブルからの SELECT クエリを定義</description></item>
+/// <item><description>ログインID でローカル認証情報を検索</description></item>
+/// </list>
+/// <para>【実装】</para>
+/// <list type="bullet">
+/// <item><description>Infrastructure層で Dapper + SQL ファイルで実装</description></item>
+/// </list>
+/// <para>【パターン】</para>
+/// <list type="bullet">
+/// <item><description>Read-only インターフェース（SELECT のみ）</description></item>
+/// <item><description>Application層は検索結果を DTO で受け取る</description></item>
+/// </list>
+/// </remarks>
 public interface ILoginCredentialsQuery
 {
     /// <summary>
@@ -33,15 +38,19 @@ public interface ILoginCredentialsQuery
 
 /// <summary>
 /// ローカル認証情報マスター Query結果 DTO
-///
-/// 【用途】
-/// - ILoginCredentialsQuery の戻り値
-/// - パスワードハッシュ検証用
-///
-/// 【特徴】
-/// - Domain Entity ではなく、Query専用DTO
-/// - パスワードハッシュ（平文ではない）を含む
 /// </summary>
+/// <remarks>
+/// <para>【用途】</para>
+/// <list type="bullet">
+/// <item><description>ILoginCredentialsQuery の戻り値</description></item>
+/// <item><description>パスワードハッシュ検証用</description></item>
+/// </list>
+/// <para>【特徴】</para>
+/// <list type="bullet">
+/// <item><description>Domain Entity ではなく、Query専用DTO</description></item>
+/// <item><description>パスワードハッシュ（平文ではない）を含む</description></item>
+/// </list>
+/// </remarks>
 public sealed class LoginCredentialsQueryResult
 {
     /// <summary>
@@ -51,11 +60,10 @@ public sealed class LoginCredentialsQueryResult
 
     /// <summary>
     /// 紐づいた従業員 RowId
-    /// 【意味】社外から m_login_credentials 経由でローカル認証ログインする人物が、
-    /// 社内の Employee 情報上では誰にあたるかを示すマッピング。
-    /// 社外からログインした人物と社内で Employee として認識される人物は、
-    /// この値を介して同一人物であることが保証される。
     /// </summary>
+    /// <remarks>
+    /// <para>【意味】社外から m_login_credentials 経由でローカル認証ログインする人物が、社内の Employee 情報上では誰にあたるかを示すマッピング。社外からログインした人物と社内で Employee として認識される人物は、この値を介して同一人物であることの保証</para>
+    /// </remarks>
     public long MappingEmployeeRowId { get; init; }
 
     /// <summary>
@@ -65,8 +73,10 @@ public sealed class LoginCredentialsQueryResult
 
     /// <summary>
     /// パスワードハッシュ値
-    /// 【注意】平文ではなく、ハッシュ化済み
     /// </summary>
+    /// <remarks>
+    /// <para>【注意】平文ではなく、ハッシュ化済み</para>
+    /// </remarks>
     public string PasswordHash { get; init; } = string.Empty;
 
     /// <summary>

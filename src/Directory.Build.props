@@ -7,10 +7,10 @@
     XMLドキュメントコメント（docs/Assistance/Guides/XMLドキュメントコメント_ガイド.md §10）
     CS1570: XML として壊れている / CS1572: 存在しない引数の param / CS1573: 一部の引数にしか param がない
     CS1574: cref の参照先が見つからない / CS1734: paramref の引数名の誤り
-    コメントなし（CS1591）は警告のまま
+    CS1591: public なメンバーにコメントがない（2026-09-26 に警告からエラーへ昇格。導入時点で 0 件）
   -->
   <PropertyGroup>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <WarningsAsErrors>$(WarningsAsErrors);CS1570;CS1572;CS1573;CS1574;CS1734</WarningsAsErrors>
+    <WarningsAsErrors>$(WarningsAsErrors);CS1570;CS1572;CS1573;CS1574;CS1591;CS1734</WarningsAsErrors>
   </PropertyGroup>
 </Project>

@@ -27,7 +27,7 @@ public sealed class CreatedBy : PrimitiveValueObject<long>, IEquatable<CreatedBy
     }
 
     /// <summary>
-    /// 指定された従業員行IDから CreatedBy を生成する
+    /// 指定された従業員行IDからの CreatedBy の生成
     /// </summary>
     /// <param name="value">従業員行ID（1以上）</param>
     /// <returns>生成された CreatedBy インスタンス</returns>
@@ -95,7 +95,7 @@ public sealed class CreatedBy : PrimitiveValueObject<long>, IEquatable<CreatedBy
     }
 
     /// <summary>
-    /// 従業員行IDを取得する
+    /// 従業員行IDの取得
     /// </summary>
     public long Value => ValueField;
 
@@ -122,7 +122,7 @@ public sealed class CreatedBy : PrimitiveValueObject<long>, IEquatable<CreatedBy
     public override int GetHashCode() => Value.GetHashCode();
 
     /// <summary>
-    /// 文字列表現を取得する
+    /// 文字列表現の取得
     /// </summary>
     /// <returns>作成者の従業員rowId の文字列</returns>
     public override string ToString() => Value.ToString();
@@ -134,7 +134,7 @@ public sealed class CreatedBy : PrimitiveValueObject<long>, IEquatable<CreatedBy
     }
 
     /// <summary>
-    /// 値を検証する
+    /// 値の検証
     /// </summary>
     /// <param name="normalized">検証対象の値</param>
     /// <exception cref="ArgumentException"><paramref name="normalized"/> が 0 以下の場合</exception>

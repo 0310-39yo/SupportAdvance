@@ -2,11 +2,13 @@ namespace SupportAdvance.Contexts.Authentication.Domain.ValueObjects;
 
 /// <summary>
 /// ログインID（従業員番号など）
-/// 【型】string（m_login_credentials.login_id に対応）
-/// 【特徴】ユーザーが入力するログイン用ID、ビジネス識別子
-/// 【制約】最大50文字、空文字列不可
-/// 【不変性】生成後変更不可
 /// </summary>
+/// <remarks>
+/// <para>【型】string（m_login_credentials.login_id に対応）</para>
+/// <para>【特徴】ユーザーが入力するログイン用ID、ビジネス識別子</para>
+/// <para>【制約】最大50文字、空文字列不可</para>
+/// <para>【不変性】生成後変更不可</para>
+/// </remarks>
 public sealed class LoginId : IEquatable<LoginId>
 {
     /// <summary>

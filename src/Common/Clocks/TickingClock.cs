@@ -48,7 +48,7 @@ public class TickingClock : IClock, IDisposable
 
     /// <summary>
     /// 現在のJST日時を LocalDateTime で取得
-    /// 自動進行モード時は、Timer により自動的に更新される
+    /// 自動進行モード時は、Timer による自動更新
     /// </summary>
     public LocalDateTime JstNow
     {

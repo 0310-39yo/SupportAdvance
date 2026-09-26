@@ -8,19 +8,20 @@ namespace SupportAdvance.Presentation.WpfTrial.Behaviors;
 
 /// <summary>
 /// <see cref="SfNavigationDrawer"/> の項目の上下の間隔を詰める添付ビヘイビア
-///
-/// 【背景】
-/// 項目の高さは、テーマのテンプレートが決めている。項目の見出しの行は、アイコン欄（高さ 25 に上下の余白 5 ずつ、合計 35）で高さが決まり、
-/// 項目のスタイル（MinHeight など）では 35 より小さくできない。テンプレート内の要素に直接指定された値は、
-/// スタイルよりも優先されるため、表示後にビジュアルツリーのアイコン欄へ、より優先度の高い値（ローカル値）を指定して詰める。
-///
-/// 【使い方】
-/// &lt;navigationDrawer:SfNavigationDrawer behaviors:NavigationItemDensityBehavior.IconRowHeight="20" /&gt;
-///
-/// 【注意】
-/// - テンプレートの構造（<c>NavigationItem</c> の中の、高さ 25・上下の余白 5 のアイコン欄）に依存する。Syncfusion の更新で構造が変わると、何も変えずに終わる（壊れはしない）
-/// - 子項目は展開したときに作られるため、レイアウトが更新されるたびに、未処理のアイコン欄を探して詰める
 /// </summary>
+/// <remarks>
+/// <para>【背景】項目の高さは、テーマのテンプレートが決めている。項目の見出しの行は、アイコン欄（高さ 25 に上下の余白 5 ずつ、合計 35）で高さが決まり、項目のスタイル（<c>MinHeight</c> など）では 35 より小さくできない。テンプレート内の要素に直接指定された値はスタイルよりも優先されるため、表示後にビジュアルツリーのアイコン欄へ、より優先度の高い値（ローカル値）を指定して詰める</para>
+/// <para>【注意】</para>
+/// <list type="bullet">
+/// <item><description>テンプレートの構造（<c>NavigationItem</c> の中の、高さ 25・上下の余白 5 のアイコン欄）に依存。Syncfusion の更新で構造が変わると、何も変えずに終了（壊れはしない）</description></item>
+/// <item><description>子項目は展開したときに作られるため、レイアウトが更新されるたびに、未処理のアイコン欄を探して詰める</description></item>
+/// </list>
+/// </remarks>
+/// <example>
+/// <code>
+/// &lt;navigationDrawer:SfNavigationDrawer behaviors:NavigationItemDensityBehavior.IconRowHeight="20" /&gt;
+/// </code>
+/// </example>
 public static class NavigationItemDensityBehavior
 {
     // テンプレートが指定しているアイコン欄の高さ（これと一致する要素だけを対象にする）
@@ -39,7 +40,7 @@ public static class NavigationItemDensityBehavior
     /// <c>IconRowHeight</c> 添付プロパティの識別子（アイコン欄の高さ。項目の高さは、この値に上下の余白（合計 4）を足した大きさになる）
     /// </summary>
     /// <remarks>
-    /// <para>【既定値】<see cref="double.NaN"/>（何もしない。テーマの既定の間隔のまま）</para>
+    /// <para>【既定値】<see cref="double.NaN"/>（処理なし。テーマの既定の間隔のまま）</para>
     /// </remarks>
     public static readonly DependencyProperty IconRowHeightProperty =
         DependencyProperty.RegisterAttached(

@@ -5,15 +5,14 @@ using SupportAdvance.Crosscutting.Logging;
 namespace SupportAdvance.Presentation.Shared.Decorators;
 
 /// <summary>
-/// UseCase のパフォーマンス計測 デコレーター。
-/// インナーの UseCase 実行時間を計測し、実行時間をログに記録する。
-/// 実行時間が閾値を超える場合は Warning ログを出力。
-/// 相関コンテキスト(CorrelationContext)を使用してパフォーマンスログを関連付ける。
-///
-/// 【単一責務】実行時間の計測とログ記録のみ。
+/// UseCase のパフォーマンス計測 デコレーター
 /// </summary>
 /// <typeparam name="TRequest">リクエストの型</typeparam>
 /// <typeparam name="TResponse">レスポンスの型</typeparam>
+/// <remarks>
+/// <para>インナーの UseCase 実行時間の計測と、実行時間のログへの記録。実行時間が閾値を超える場合は Warning ログを出力。相関コンテキスト(CorrelationContext)を使用したパフォーマンスログの関連付け</para>
+/// <para>【単一責務】実行時間の計測とログ記録のみ</para>
+/// </remarks>
 public sealed class PerformanceDecorator<TRequest, TResponse> : IUseCase<TRequest, TResponse>
     where TRequest : IRequest
     where TResponse : IResponse
@@ -53,13 +52,14 @@ public sealed class PerformanceDecorator<TRequest, TResponse> : IUseCase<TReques
     }
 
     /// <summary>
-    /// UseCase を実行し、実行時間を計測してログに記録する。
-    ///
-    /// 【単一責務】実行時間の計測とログ記録のみ
+    /// UseCase の実行と、実行時間の計測およびログへの記録
     /// </summary>
     /// <param name="request">リクエストの内容</param>
     /// <returns>レスポンスの内容</returns>
     /// <exception cref="ArgumentNullException"><paramref name="request"/> が <see langword="null"/> の場合</exception>
+    /// <remarks>
+    /// <para>【単一責務】実行時間の計測とログ記録のみ</para>
+    /// </remarks>
     public async Task<TResponse> ExecuteAsync(TRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);

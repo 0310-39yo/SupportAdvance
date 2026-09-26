@@ -11,7 +11,7 @@ namespace SupportAdvance.Contexts.Authentication.Infrastructure.Mappers;
 /// </summary>
 /// <remarks>
 /// <para>【責務】DB モデル ↔ Domain Entity の双方向変換。<c>DateTime</c> ↔ <see cref="LocalDateTime"/> の変換を含む（業務項目のみ）</para>
-/// <para>【注意】監査情報（CreatedAt／CreatedBy／UpdatedAt／UpdatedBy／DeletedAt／DeletedBy）は設定しない。保存・更新時の設定は Repository の担当</para>
+/// <para>【注意】監査情報（CreatedAt／CreatedBy／UpdatedAt／UpdatedBy／DeletedAt／DeletedBy）の設定なし。保存・更新時の設定は Repository の担当</para>
 /// <para>【null契約】DB の NULL（ログアウト日時、認証情報の行ID）は、Unset の値オブジェクトに変換して Domain に渡す</para>
 /// </remarks>
 public sealed class UserAuthSessionMapper

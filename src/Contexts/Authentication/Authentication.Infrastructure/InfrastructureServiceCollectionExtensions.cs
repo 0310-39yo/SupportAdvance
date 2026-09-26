@@ -17,7 +17,7 @@ namespace SupportAdvance.Contexts.Authentication.Infrastructure;
 public static class InfrastructureServiceCollectionExtensions
 {
     /// <summary>
-    /// Authentication Context の Infrastructure Models を DI コンテナに登録する
+    /// Authentication Context の Infrastructure Models の DI コンテナへの登録
     /// </summary>
     /// <param name="services">登録先のサービスコレクション</param>
     /// <returns>メソッドチェーン用の <paramref name="services"/> 自身</returns>

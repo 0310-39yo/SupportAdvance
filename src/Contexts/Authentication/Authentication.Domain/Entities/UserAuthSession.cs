@@ -9,7 +9,7 @@ namespace SupportAdvance.Contexts.Authentication.Domain.Entities;
 /// </summary>
 /// <remarks>
 /// <para>【責務】ログインセッション情報（ユーザー、認証方式、ログイン／ログアウト日時）の保持。「誰がログインしているか」の管理</para>
-/// <para>【特徴】認証情報マスター（<c>m_login_credentials</c>）の外部参照を含む。トランザクションテーブル（<c>t_user_auth_sessions</c>）に対応。監査情報は Repository が管理し、Domain 層には含めない</para>
+/// <para>【特徴】認証情報マスター（<c>m_login_credentials</c>）の外部参照を含む。トランザクションテーブル（<c>t_user_auth_sessions</c>）に対応。監査情報は Repository が管理し、Domain 層への含有なし</para>
 /// <para>【不変条件】<see cref="Entity{TId}.RowId"/>、<see cref="AuthorityRowId"/>、<see cref="IsAdAuthenticated"/> は生成後変更不可。<see cref="LoggedOutAt"/> のみ、アプリケーション終了時に <see cref="SetLoggedOutAt"/> で更新可能</para>
 /// <para>【null契約】未設定の項目（ログアウト日時、認証情報の行ID）は <see langword="null"/> ではなく、各値オブジェクトの Unset で表現。Domain 層での null 確認は不要</para>
 /// </remarks>

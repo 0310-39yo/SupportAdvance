@@ -2,12 +2,13 @@ namespace SupportAdvance.Contexts.Authentication.Domain.ValueObjects;
 
 /// <summary>
 /// 認証方式（LocalAuth / WindowsAD）
-/// 【型】enum（論理値：ビジネスロジックで判別）
-/// 【値】LocalAuth = ローカルユーザー認証（m_login_credentials）
-///     WindowsAD = Windows Active Directory 認証
-/// 【特徴】ログイン時の認証方式を判別（5段階検証ロジックで使用）
-/// 【不変性】生成後変更不可
 /// </summary>
+/// <remarks>
+/// <para>【型】enum（論理値：ビジネスロジックで判別）</para>
+/// <para>【値】LocalAuth = ローカルユーザー認証（m_login_credentials）。WindowsAD = Windows Active Directory 認証</para>
+/// <para>【特徴】ログイン時の認証方式を判別（5段階検証ロジックで使用）</para>
+/// <para>【不変性】生成後変更不可</para>
+/// </remarks>
 public sealed class AuthMethod : IEquatable<AuthMethod>
 {
     /// <summary>

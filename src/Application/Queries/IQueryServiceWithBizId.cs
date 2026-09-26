@@ -29,7 +29,7 @@ public interface IQueryServiceWithBizId<TAggregate, TId> : IQueryService<TAggreg
     where TId : notnull
 {
     /// <summary>
-    /// BizId（ビジネスID）で Aggregate を検索する
+    /// BizId（ビジネスID）で Aggregate の検索
     /// </summary>
     /// <param name="bizId">ビジネスID（従業員番号など、1以上）</param>
     /// <returns>見つかった Aggregate、または null</returns>

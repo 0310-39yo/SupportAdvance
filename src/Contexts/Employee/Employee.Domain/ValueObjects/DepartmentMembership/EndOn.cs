@@ -9,7 +9,7 @@ namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.DepartmentMembers
 /// <remarks>
 /// <para>【責務】部署配属・ロール・権限の終了日の管理</para>
 /// <para>【null契約】任意。無期限（継続中）は <see cref="Unset"/>（<see cref="Value"/> が <see langword="null"/>、<see cref="HasEnded"/> が <see langword="false"/>）で表現</para>
-/// <para>【時刻】JST の <see cref="LocalDateTime"/> で保持。DB の <c>DateTime</c> との変換は Infrastructure（Mapper）の担当。この型は <c>DateTime</c> を公開しない</para>
+/// <para>【時刻】JST の <see cref="LocalDateTime"/> で保持。DB の <c>DateTime</c> との変換は Infrastructure（Mapper）の担当。この型は <c>DateTime</c> の公開なし</para>
 /// </remarks>
 public sealed class EndOn : ValueObject, IEquatable<EndOn>
 {

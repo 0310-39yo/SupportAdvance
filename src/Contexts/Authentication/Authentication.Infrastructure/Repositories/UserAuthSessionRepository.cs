@@ -14,23 +14,26 @@ namespace SupportAdvance.Contexts.Authentication.Infrastructure.Repositories;
 
 /// <summary>
 /// UserAuthSession Repository 実装
-///
-/// 【責務】
-/// - UserAuthSession 集約の永続化
-/// - SELECT: Dapper + SQL ファイル
-/// - INSERT/UPDATE/DELETE: RepoDb Entity-based API
-/// - 監査フィールド（CreatedAt/CreatedBy/UpdatedAt/UpdatedBy/DeletedAt/DeletedBy）の管理
-///   【重要】CreatedBy/UpdatedBy/DeletedBy には session.AuthorityRowId（このセッションの主体）を使用。
-///           ログイン試行中は ICurrentUserService が未設定の場合があるため採用しない
-///
-/// 【パターン】
-/// - GetByIdAsync: Dapper + SQL
-/// - GetLatestByAuthorityRowIdAsync: Dapper + SQL
-/// - GetLatestByLoginCredentialsRowIdAsync: Dapper + SQL
-/// - SaveAsync: RepoDb Insert
-/// - UpdateAsync: RepoDb Update（楽観ロック付き）
-/// - DeleteAsync: RepoDb Update（論理削除）
 /// </summary>
+/// <remarks>
+/// <para>【責務】</para>
+/// <list type="bullet">
+/// <item><description>UserAuthSession 集約の永続化</description></item>
+/// <item><description>SELECT: Dapper + SQL ファイル</description></item>
+/// <item><description>INSERT/UPDATE/DELETE: RepoDb Entity-based API</description></item>
+/// <item><description>監査フィールド（CreatedAt/CreatedBy/UpdatedAt/UpdatedBy/DeletedAt/DeletedBy）の管理</description></item>
+/// </list>
+/// <para>【重要】CreatedBy/UpdatedBy/DeletedBy には session.AuthorityRowId（このセッションの主体）を使用。ログイン試行中は ICurrentUserService が未設定の場合があるため不採用</para>
+/// <para>【パターン】</para>
+/// <list type="bullet">
+/// <item><description>GetByIdAsync: Dapper + SQL</description></item>
+/// <item><description>GetLatestByAuthorityRowIdAsync: Dapper + SQL</description></item>
+/// <item><description>GetLatestByLoginCredentialsRowIdAsync: Dapper + SQL</description></item>
+/// <item><description>SaveAsync: RepoDb Insert</description></item>
+/// <item><description>UpdateAsync: RepoDb Update（楽観ロック付き）</description></item>
+/// <item><description>DeleteAsync: RepoDb Update（論理削除）</description></item>
+/// </list>
+/// </remarks>
 public class UserAuthSessionRepository : IUserAuthSessionRepository
 {
     private readonly IDbConnectionFactory _connectionFactory;
@@ -61,18 +64,20 @@ public class UserAuthSessionRepository : IUserAuthSessionRepository
     }
 
     /// <summary>
-    /// row_version（timestamp列）を除いた RepoDb Field 一覧を取得する
-    /// 【重要】SQL Server の timestamp は自動管理のため、明示的な値を INSERT/UPDATE に含められない。
+    /// row_version（timestamp列）を除いた RepoDb Field 一覧の取得
     /// </summary>
+    /// <remarks>
+    /// <para>【重要】SQL Server の timestamp は自動管理のため、明示的な値の INSERT/UPDATE への包含は不可</para>
+    /// </remarks>
     private static IEnumerable<Field> FieldsExcludingRowVersion() =>
         Field.Parse(typeof(UserAuthSessionDbModel)).Where(f => f.Name != "row_version");
 
     /// <summary>
-    /// UPDATE 対象から row_version・created_at・created_by を除いた RepoDb Field 一覧を取得する
-    /// 【重要】Mapper.ToDbModel() は CreatedAt/CreatedBy を設定しない（Mapper の責務外）ため、
-    ///         UPDATE 時に DbModel の CreatedAt が既定値（0001-01-01）のまま SET 句に含まれると
-    ///         SqlDateTime overflow が発生する。作成時刻は不変のため UPDATE 対象から除外する。
+    /// UPDATE 対象から row_version・created_at・created_by を除いた RepoDb Field 一覧の取得
     /// </summary>
+    /// <remarks>
+    /// <para>【重要】Mapper.ToDbModel() は CreatedAt/CreatedBy を設定しない（Mapper の責務外）ため、UPDATE 時に DbModel の CreatedAt が既定値（0001-01-01）のまま SET 句に含まれると、SqlDateTime overflow の発生。作成時刻は不変のため UPDATE 対象から除外</para>
+    /// </remarks>
     private static IEnumerable<Field> FieldsExcludingRowVersionAndCreatedAudit() =>
         Field.Parse(typeof(UserAuthSessionDbModel))
             .Where(f => f.Name is not ("row_version" or "created_at" or "created_by"));
@@ -130,16 +135,18 @@ public class UserAuthSessionRepository : IUserAuthSessionRepository
 
     /// <summary>
     /// セッションを保存（新規作成）
-    /// 【責務】
-    /// - RowId が 0 の場合は Sequence で採番
-    /// - RepoDb.InsertAsync でセッションを保存
-    /// - 監査フィールド（CreatedAt/CreatedBy）を設定
-    /// 【CreatedBy】session.AuthorityRowId（このセッションの主体）を使用。
-    ///              ログイン試行中は ICurrentUserService が未設定の場合があるため、
-    ///              Entity 自身が保持する AuthorityRowId を記録する
     /// </summary>
     /// <param name="session">保存するセッション</param>
     /// <returns>保存したセッションの行ID（採番した場合は採番後の値）</returns>
+    /// <remarks>
+    /// <para>【責務】</para>
+    /// <list type="bullet">
+    /// <item><description>RowId が 0 の場合は Sequence で採番</description></item>
+    /// <item><description>RepoDb.InsertAsync でセッションを保存</description></item>
+    /// <item><description>監査フィールド（CreatedAt/CreatedBy）を設定</description></item>
+    /// </list>
+    /// <para>【CreatedBy】session.AuthorityRowId（このセッションの主体）を使用。ログイン試行中は ICurrentUserService が未設定の場合があるため、Entity 自身が保持する AuthorityRowId の記録</para>
+    /// </remarks>
     public async Task<UserAuthSessionRowId> SaveAsync(UserAuthSession session)
     {
         var dbModel = _mapper.ToDbModel(session);
@@ -166,14 +173,18 @@ public class UserAuthSessionRepository : IUserAuthSessionRepository
 
     /// <summary>
     /// セッションを更新
-    /// 【責務】
-    /// - RepoDb.UpdateAsync で更新
-    /// - 楽観ロック（RowVersion）による競合検出
-    /// - 監査フィールド（UpdatedAt/UpdatedBy）を設定
-    /// 【UpdatedBy】session.AuthorityRowId（このセッションの主体）を使用
     /// </summary>
     /// <param name="session">更新するセッション。<c>RowVersion</c> は読み込み時の値であること</param>
     /// <exception cref="InvalidOperationException">更新対象の行がない場合（他のユーザーによる更新・削除で <c>row_version</c> が一致しない場合を含む）</exception>
+    /// <remarks>
+    /// <para>【責務】</para>
+    /// <list type="bullet">
+    /// <item><description>RepoDb.UpdateAsync で更新</description></item>
+    /// <item><description>楽観ロック（RowVersion）による競合検出</description></item>
+    /// <item><description>監査フィールド（UpdatedAt/UpdatedBy）を設定</description></item>
+    /// </list>
+    /// <para>【UpdatedBy】session.AuthorityRowId（このセッションの主体）を使用</para>
+    /// </remarks>
     public async Task UpdateAsync(UserAuthSession session)
     {
         var dbModel = _mapper.ToDbModel(session);
@@ -206,13 +217,16 @@ public class UserAuthSessionRepository : IUserAuthSessionRepository
 
     /// <summary>
     /// セッションを削除（論理削除）
-    /// 【責務】
-    /// - RepoDb.UpdateAsync で論理削除フラグ（DeletedAt/DeletedBy）を設定
-    /// 【DeletedBy】対象セッションの AuthorityRowId（このセッションの主体）を使用。
-    ///              DeleteAsync は RowId のみ受け取るため、事前に GetByIdAsync で取得する
     /// </summary>
     /// <param name="id">削除するセッションの行ID</param>
     /// <exception cref="InvalidOperationException">セッションが見つからない場合</exception>
+    /// <remarks>
+    /// <para>【責務】</para>
+    /// <list type="bullet">
+    /// <item><description>RepoDb.UpdateAsync で論理削除フラグ（DeletedAt/DeletedBy）を設定</description></item>
+    /// </list>
+    /// <para>【DeletedBy】対象セッションの AuthorityRowId（このセッションの主体）を使用。DeleteAsync は RowId のみ受け取るため、事前の GetByIdAsync での取得が必要</para>
+    /// </remarks>
     public async Task DeleteAsync(UserAuthSessionRowId id)
     {
         var existingSession = await GetByIdAsync(id)

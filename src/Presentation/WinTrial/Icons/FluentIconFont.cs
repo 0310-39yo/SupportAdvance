@@ -7,7 +7,7 @@ using SupportAdvance.Presentation.Shared.Icons;
 namespace SupportAdvance.Presentation.WinTrial.Icons;
 
 /// <summary>
-/// Fluent UI System Icons のアイコンフォントを読み込み、アイコンの画像を作成する
+/// Fluent UI System Icons のアイコンフォントを読み込み、アイコンの画像の作成
 /// </summary>
 /// <remarks>
 /// <para>【設計】フォントファイルは WinTrial.csproj で埋め込みリソースとして取り込み、メモリから読み込む（アプリのフォルダーにフォントファイルを置かない）。
@@ -27,7 +27,7 @@ internal static class FluentIconFont
     /// <param name="icon">アイコンの名前</param>
     /// <param name="pixelSize">画像の一辺の大きさ（ピクセル）</param>
     /// <param name="color">アイコンの色</param>
-    /// <returns>透明な背景に、指定した色でアイコンを描いた画像。呼び出し元が破棄する</returns>
+    /// <returns>透明な背景に、指定した色でアイコンを描いた画像。呼び出し元による破棄が必要</returns>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="pixelSize"/> が 1 未満の場合、または <paramref name="icon"/> が対応表に無い場合</exception>
     public static Bitmap CreateBitmap(AppIcon icon, int pixelSize, Color color)
     {

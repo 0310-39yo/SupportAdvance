@@ -631,7 +631,7 @@ CREATE TABLE [dbo].[t_YourTable] (
 - **CLEAN_ARCHITECTURE_GUIDELINES.md**: 詳細なガイドライン
 - **各層の `src/*/CLAUDE.md`**: 層別の作業ルール（Common, SharedKernel, Crosscutting, Application, Infrastructure, Presentation, Contexts）
 - **TABLE_DESIGN_STANDARDS.md**: データベース設計の詳細仕様（docs/Assistance/Guides/）
-- **[XMLドキュメントコメント_ガイド.md](docs/Assistance/Guides/XMLドキュメントコメント_ガイド.md)**: XMLドキュメントコメントの書き方とテンプレート。文体は体言止め（文の区切りに「。」、最後の文には付けない）。コメントの誤り（CS1570/1572/1573/1574/1734）はビルドエラー
+- **[XMLドキュメントコメント_ガイド.md](docs/Assistance/Guides/XMLドキュメントコメント_ガイド.md)**: XMLドキュメントコメントの書き方とテンプレート。文体は体言止め（文の区切りに「。」、最後の文には付けない）。コメントの誤りとコメントなし（CS1570/1572/1573/1574/1591/1734）はビルドエラー。`<summary>` の 3 行形式・最後の文の「。」・【見出し】の位置などは `tests/Architecture.Tests/DocumentationStyleTests.cs` が自動検証（体言止めはレビューで確認）
 - Clean Architecture（Robert C. Martin）
 
 ---

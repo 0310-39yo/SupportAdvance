@@ -31,12 +31,14 @@ public class EmployeeQueryService : IQueryServiceWithBizId<IEmployee, EmployeeRo
 
     /// <summary>
     /// EmployeeRowId で Employee を検索する（IQueryService 実装）
-    /// 【責務】Repository 経由で Employee Aggregate を取得
-    /// 【戻り値】IEmployee インターフェース経由で返す（Domain Entity は隠蔽）
     /// </summary>
     /// <param name="id">検索する従業員の行ID</param>
     /// <returns>見つかった従業員。見つからない場合は <see langword="null"/></returns>
     /// <exception cref="ArgumentNullException"><paramref name="id"/> が <see langword="null"/> の場合</exception>
+    /// <remarks>
+    /// <para>【責務】Repository 経由で Employee Aggregate を取得</para>
+    /// <para>【戻り値】IEmployee インターフェース経由で返す（Domain Entity は隠蔽）</para>
+    /// </remarks>
     public async Task<IEmployee?> GetByIdAsync(EmployeeRowId id)
     {
         ArgumentNullException.ThrowIfNull(id);
@@ -45,12 +47,14 @@ public class EmployeeQueryService : IQueryServiceWithBizId<IEmployee, EmployeeRo
 
     /// <summary>
     /// BizId（ビジネスID）で Employee を検索する（IQueryServiceWithBizId 実装）
-    /// 【責務】Repository 経由で Employee Aggregate を取得
-    /// 【戻り値】IEmployee インターフェース経由で返す
     /// </summary>
     /// <param name="bizId">検索する従業員番号（1 以上）</param>
     /// <returns>見つかった従業員。見つからない場合は <see langword="null"/></returns>
     /// <exception cref="ArgumentException"><paramref name="bizId"/> が 0 以下の場合</exception>
+    /// <remarks>
+    /// <para>【責務】Repository 経由で Employee Aggregate を取得</para>
+    /// <para>【戻り値】IEmployee インターフェース経由で返す</para>
+    /// </remarks>
     public async Task<IEmployee?> GetByBizIdAsync(int bizId)
     {
         if (bizId <= 0)
@@ -62,10 +66,12 @@ public class EmployeeQueryService : IQueryServiceWithBizId<IEmployee, EmployeeRo
 
     /// <summary>
     /// BizId（ビジネスID）で Employee を検索する（IEmployeeQueryService 実装）
-    /// 【責務】Repository 経由で Employee を取得し、EmployeeDto に変換
-    /// 【戻り値】IEmployeeQueryResult インターフェース経由で返す（BC間参照用）
-    /// 【用途】IntegrationPrototype など、他 Context が汎用層インターフェース経由でアクセス
     /// </summary>
+    /// <remarks>
+    /// <para>【責務】Repository 経由で Employee を取得し、EmployeeDto に変換</para>
+    /// <para>【戻り値】IEmployeeQueryResult インターフェース経由で返す（BC間参照用）</para>
+    /// <para>【用途】IntegrationPrototype など、他 Context が汎用層インターフェース経由でアクセス</para>
+    /// </remarks>
     async Task<IEmployeeQueryResult?> IEmployeeQueryService.GetByBizIdAsync(int bizId)
     {
         if (bizId <= 0)
@@ -79,9 +85,11 @@ public class EmployeeQueryService : IQueryServiceWithBizId<IEmployee, EmployeeRo
 
     /// <summary>
     /// EmployeeRowId で Employee を検索する（IEmployeeQueryService 実装）
-    /// 【責務】Repository 経由で Employee を取得し、EmployeeDto に変換
-    /// 【戻り値】IEmployeeQueryResult インターフェース経由で返す（BC間参照用）
     /// </summary>
+    /// <remarks>
+    /// <para>【責務】Repository 経由で Employee を取得し、EmployeeDto に変換</para>
+    /// <para>【戻り値】IEmployeeQueryResult インターフェース経由で返す（BC間参照用）</para>
+    /// </remarks>
     async Task<IEmployeeQueryResult?> IEmployeeQueryService.GetByRowIdAsync(long rowId)
     {
         var employee = await _repository.GetByIdAsync(EmployeeRowId.From(rowId));

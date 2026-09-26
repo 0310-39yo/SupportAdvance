@@ -12,27 +12,33 @@ namespace SupportAdvance.Contexts.Authentication.Application.UseCases;
 
 /// <summary>
 /// ローカル認証 Use Case
-///
-/// 【責務】
-/// - ログインID・パスワードでユーザーを認証
-/// - UserAuthSession を生成してセッションを確立
-///
-/// 【フロー】
-/// 1. ILoginCredentialsQuery でログインID から認証情報を取得
-/// 2. IPasswordHashService でパスワード検証
-/// 3. UserAuthSession を生成
-/// 4. Repository で保存
-///
-/// 【設計上の注意】
-/// - Employee BC への参照は行わない（BC間独立）
-/// - 権限確認は Presentation層で別途実施
-/// - このUseCase は認証のみに専念
-///
-/// 【認証失敗パターン】
-/// - ログインID が見つからない → InvalidOperationException
-/// - パスワード不一致 → InvalidOperationException
-/// - 認証情報が無効（is_active=0）→ InvalidOperationException
 /// </summary>
+/// <remarks>
+/// <para>【責務】</para>
+/// <list type="bullet">
+/// <item><description>ログインID・パスワードでユーザーを認証</description></item>
+/// <item><description>UserAuthSession を生成してセッションを確立</description></item>
+/// </list>
+/// <para>【フロー】</para>
+/// <list type="bullet">
+/// <item><description>ILoginCredentialsQuery でログインID から認証情報を取得</description></item>
+/// <item><description>IPasswordHashService でパスワード検証</description></item>
+/// <item><description>UserAuthSession を生成</description></item>
+/// <item><description>Repository で保存</description></item>
+/// </list>
+/// <para>【設計上の注意】</para>
+/// <list type="bullet">
+/// <item><description>Employee BC への参照は行わない（BC間独立）</description></item>
+/// <item><description>権限確認は Presentation層で別途実施</description></item>
+/// <item><description>このUseCase は認証のみに専念</description></item>
+/// </list>
+/// <para>【認証失敗パターン】</para>
+/// <list type="bullet">
+/// <item><description>ログインID が見つからない → InvalidOperationException</description></item>
+/// <item><description>パスワード不一致 → InvalidOperationException</description></item>
+/// <item><description>認証情報が無効（is_active=0）→ InvalidOperationException</description></item>
+/// </list>
+/// </remarks>
 public sealed class AuthenticateLocalUserUseCase
 {
     private readonly ILoginCredentialsQuery _loginCredentialsQuery;
@@ -43,14 +49,13 @@ public sealed class AuthenticateLocalUserUseCase
 
     /// <summary>
     /// 正体不明ユーザー RowId（ログインID自体が存在しない場合にのみ使用）
-    /// 【用途】失敗ログの current_user_row_id として記録
-    /// 【重要】ログインID不一致時は credentials が取得できず対象の従業員が特定できないため、
-    /// このフォールバック値を使う。credentials が取得できている失敗（アカウント無効・
-    /// パスワード不一致）では、狙われた実在アカウントの credentials.MappingEmployeeRowId を使う
-    /// 【重要】システム自身が行った自動処理を表す SystemUserEmployeeRowId とは意味が異なる。
-    /// こちらは「実在するが特定できない人物によるログイン試行」を表すため UnknownUserEmployeeRowId を使う
-    /// 【重要】値の実体は WellKnownIds（Common）で一元管理
     /// </summary>
+    /// <remarks>
+    /// <para>【用途】失敗ログの current_user_row_id として記録</para>
+    /// <para>【重要】ログインID不一致時は credentials が取得できず対象の従業員が特定できないため、このフォールバック値を使う。credentials が取得できている失敗（アカウント無効・パスワード不一致）では、狙われた実在アカウントの credentials.MappingEmployeeRowId を使う</para>
+    /// <para>【重要】システム自身が行った自動処理を表す SystemUserEmployeeRowId とは意味が別。こちらは「実在するが特定できない人物によるログイン試行」を表すため UnknownUserEmployeeRowId を使用</para>
+    /// <para>【重要】値の実体は WellKnownIds（Common）で一元管理</para>
+    /// </remarks>
     private const long UnknownUserId = WellKnownIds.UnknownUserEmployeeRowId;
 
     /// <summary>

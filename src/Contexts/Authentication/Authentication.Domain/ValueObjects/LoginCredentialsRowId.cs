@@ -4,10 +4,12 @@ namespace SupportAdvance.Contexts.Authentication.Domain.ValueObjects;
 
 /// <summary>
 /// ログイン認証情報マスター RowId
-/// 【型】long（m_login_credentials.row_id に対応）
-/// 【特徴】ローカル認証時のみ参照。UserAuthSession.LoginCredentialsRowId に紐づく
-/// 【不変性】生成後変更不可
 /// </summary>
+/// <remarks>
+/// <para>【型】long（m_login_credentials.row_id に対応）</para>
+/// <para>【特徴】ローカル認証時のみ参照。UserAuthSession.LoginCredentialsRowId に紐づく</para>
+/// <para>【不変性】生成後変更不可</para>
+/// </remarks>
 public sealed class LoginCredentialsRowId : RowId, IEquatable<LoginCredentialsRowId>
 {
     /// <summary>
@@ -16,7 +18,7 @@ public sealed class LoginCredentialsRowId : RowId, IEquatable<LoginCredentialsRo
     public const long MinValue = 1L;
 
     /// <summary>
-    /// ログイン認証情報マスター行IDの値を取得する
+    /// ログイン認証情報マスター行IDの値の取得
     /// </summary>
     public new long Value => ValueField;
 
@@ -24,13 +26,13 @@ public sealed class LoginCredentialsRowId : RowId, IEquatable<LoginCredentialsRo
     /// 指定された long 値から LoginCredentialsRowId を生成する（プライベートコンストラクタ）
     /// </summary>
     /// <param name="value">ログイン認証情報マスター行ID（1以上）</param>
-    /// <remarks>Validate は、基礎クラスのコンストラクタで自動実行される</remarks>
+    /// <remarks>Validate は、基礎クラスのコンストラクタでの自動実行</remarks>
     private LoginCredentialsRowId(long value) : base(value, true)
     {
     }
 
     /// <summary>
-    /// 指定された long 値から LoginCredentialsRowId のインスタンスを生成する
+    /// 指定された long 値からの LoginCredentialsRowId のインスタンスの生成
     /// </summary>
     /// <param name="value">ログイン認証情報マスター行ID（1以上）</param>
     /// <returns>指定された行IDの LoginCredentialsRowId のインスタンス</returns>
@@ -80,7 +82,7 @@ public sealed class LoginCredentialsRowId : RowId, IEquatable<LoginCredentialsRo
     }
 
     /// <summary>
-    /// ログイン認証情報マスター行IDの文字列表現を取得する
+    /// ログイン認証情報マスター行IDの文字列表現の取得
     /// </summary>
     /// <returns>数値文字列</returns>
     public override string ToString() => Value.ToString();
@@ -104,7 +106,7 @@ public sealed class LoginCredentialsRowId : RowId, IEquatable<LoginCredentialsRo
     public override int GetHashCode() => Value.GetHashCode();
 
     /// <summary>
-    /// ログイン認証情報マスター行IDが有効か検証する
+    /// ログイン認証情報マスター行IDが有効か検証
     /// </summary>
     /// <param name="normalized">検証する行ID</param>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="normalized"/> が <see cref="MinValue"/> 未満の場合</exception>

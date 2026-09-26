@@ -11,10 +11,10 @@ namespace SupportAdvance.Presentation.WpfTrial.Markup;
 /// Fluent UI System Icons のアイコンを、<see cref="ImageSource"/> として提供するマークアップ拡張
 /// </summary>
 /// <remarks>
-/// <para>【用途】アイコンを <see cref="System.Windows.Media.ImageSource"/> で受け取るコントロール（Ribbon の <c>SmallIcon</c>／<c>LargeIcon</c> など）に指定する。
+/// <para>【用途】アイコンを <see cref="System.Windows.Media.ImageSource"/> で受け取るコントロール（Ribbon の <c>SmallIcon</c>／<c>LargeIcon</c> など）への指定。
 /// 文字として表示できる場所には <see cref="FluentIcon"/> を使う</para>
 /// <para>【使い方】&lt;syncfusion:RibbonButton SmallIcon="{markup:FluentIconImage Icon=Save, Size=16}" /&gt;</para>
-/// <para>【設計】アイコンフォントの字形をベクターの図形に変換して描画するため、拡大しても粗くならない。
+/// <para>【設計】アイコンフォントの字形をベクターの図形に変換して描画するため、拡大しても粗さなし。
 /// 画像の大きさは一辺 <see cref="Size"/> の正方形（字形の外側の余白も含めるため、アイコンごとに大きさが変わらない）</para>
 /// </remarks>
 [MarkupExtensionReturnType(typeof(ImageSource))]

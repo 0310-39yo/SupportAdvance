@@ -95,8 +95,10 @@ public abstract class RepositoryBase<TEntity, TDbModel, TId>(
 
     /// <summary>
     /// updatedAt（更新日時）を設定
-    /// 【責務】Repository が保存時刻を管理（Mapper ではなく）
     /// </summary>
+    /// <remarks>
+    /// <para>【責務】Repository が保存時刻を管理（Mapper ではなく）</para>
+    /// </remarks>
     private void SetUpdatedAtAudit(TDbModel dbModel)
     {
         var updatedAtProperty = typeof(TDbModel).GetProperty("UpdatedAt");

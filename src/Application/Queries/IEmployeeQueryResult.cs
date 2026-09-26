@@ -2,14 +2,16 @@ namespace SupportAdvance.Application.Queries;
 
 /// <summary>
 /// Employee クエリ結果を表すインターフェース（汎用層）
-///
-/// 【責務】Context間で共通化できる Employee データの定義
-/// 【用途】
-///   - IntegrationPrototype など、他 Context が Employee 情報を取得した際の結果型
-///   - BC間の参照を避けるための中間層インターフェース
-///
-/// 【実装】Employee Context が実装（EmployeeDto または独自の型）
 /// </summary>
+/// <remarks>
+/// <para>【責務】Context間で共通化できる Employee データの定義</para>
+/// <para>【用途】</para>
+/// <list type="bullet">
+/// <item><description>IntegrationPrototype など、他 Context が Employee 情報を取得した際の結果型</description></item>
+/// <item><description>BC間の参照を避けるための中間層インターフェース</description></item>
+/// </list>
+/// <para>【実装】Employee Context が実装（EmployeeDto または独自の型）</para>
+/// </remarks>
 public interface IEmployeeQueryResult
 {
     /// <summary>

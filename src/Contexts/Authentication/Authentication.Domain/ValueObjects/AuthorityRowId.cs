@@ -4,12 +4,14 @@ namespace SupportAdvance.Contexts.Authentication.Domain.ValueObjects;
 
 /// <summary>
 /// 権限主体 RowId（従業員ID）
-/// 【型】long（m_employees.row_id に対応）
-/// 【特徴】UserAuthSession が紐づく従業員。本番環境ではこの従業員の権限が適用される
-/// 【用途】current_user_row_id として t_user_auth_sessions に記録
-/// 【注】Authentication BC がローカルで定義。Employee BC の EmployeeRowId と論理的に同一だが、BC境界を明確化
-/// 【不変性】生成後変更不可
 /// </summary>
+/// <remarks>
+/// <para>【型】long（m_employees.row_id に対応）</para>
+/// <para>【特徴】UserAuthSession が紐づく従業員。本番環境ではこの従業員の権限を適用</para>
+/// <para>【用途】current_user_row_id として t_user_auth_sessions に記録</para>
+/// <para>【注】Authentication BC がローカルで定義。Employee BC の EmployeeRowId と論理的に同一だが、BC境界を明確化</para>
+/// <para>【不変性】生成後変更不可</para>
+/// </remarks>
 public sealed class AuthorityRowId : RowId, IEquatable<AuthorityRowId>
 {
     /// <summary>
@@ -18,7 +20,7 @@ public sealed class AuthorityRowId : RowId, IEquatable<AuthorityRowId>
     public const long MinValue = 1L;
 
     /// <summary>
-    /// 権限主体行IDの値を取得する
+    /// 権限主体行IDの値の取得
     /// </summary>
     public new long Value => ValueField;
 
@@ -26,13 +28,13 @@ public sealed class AuthorityRowId : RowId, IEquatable<AuthorityRowId>
     /// 指定された long 値から AuthorityRowId を生成する（プライベートコンストラクタ）
     /// </summary>
     /// <param name="value">権限主体行ID（1以上）</param>
-    /// <remarks>Validate は、基礎クラスのコンストラクタで自動実行される</remarks>
+    /// <remarks>Validate は、基礎クラスのコンストラクタでの自動実行</remarks>
     private AuthorityRowId(long value) : base(value, true)
     {
     }
 
     /// <summary>
-    /// 指定された long 値から AuthorityRowId のインスタンスを生成する
+    /// 指定された long 値からの AuthorityRowId のインスタンスの生成
     /// </summary>
     /// <param name="value">権限主体行ID（1以上）</param>
     /// <returns>指定された行IDの AuthorityRowId のインスタンス</returns>
@@ -82,7 +84,7 @@ public sealed class AuthorityRowId : RowId, IEquatable<AuthorityRowId>
     }
 
     /// <summary>
-    /// 権限主体行IDの文字列表現を取得する
+    /// 権限主体行IDの文字列表現の取得
     /// </summary>
     /// <returns>数値文字列</returns>
     public override string ToString() => Value.ToString();
@@ -106,7 +108,7 @@ public sealed class AuthorityRowId : RowId, IEquatable<AuthorityRowId>
     public override int GetHashCode() => Value.GetHashCode();
 
     /// <summary>
-    /// 権限主体行IDが有効か検証する
+    /// 権限主体行IDが有効か検証
     /// </summary>
     /// <param name="normalized">検証する行ID</param>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="normalized"/> が <see cref="MinValue"/> 未満の場合</exception>

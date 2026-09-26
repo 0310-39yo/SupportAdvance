@@ -23,8 +23,8 @@ public class AppSettings : IAppSettings
 
     /// <summary>
     /// クロック設定
-    /// JSON バインディング用にクロック設定値を保持します。
-    /// 実際のクロック機能は IClock インターフェース経由で取得してください。
+    /// JSON バインディング用にクロック設定値の保持。
+    /// 実際のクロック機能は IClock インターフェース経由で取得してください
     /// </summary>
     public IClockSettings ClockSettings { get; init; } = new ClockSettings();
 

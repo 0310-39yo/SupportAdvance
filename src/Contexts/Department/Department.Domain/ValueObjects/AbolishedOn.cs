@@ -10,7 +10,7 @@ namespace SupportAdvance.Contexts.Department.Domain.ValueObjects;
 /// <para>【責務】<c>t_departments.abolished_on</c> に対応する値の管理と検証</para>
 /// <para>【業務意味】論理削除ではなく、部署の廃止年月日の記録</para>
 /// <para>【null契約】任意。廃止されていない部署は <see cref="Unset"/>（<see cref="IsAbolished"/> が <see langword="false"/>）で表現。<see cref="TryFrom"/> は <see langword="null"/> の入力を <see cref="Unset"/> に変換して成功</para>
-/// <para>【時刻】JST の <see cref="LocalDateTime"/> で保持。DB の <c>DateTime</c> との変換は Infrastructure（Mapper）の担当。この型は <c>DateTime</c> を公開しない</para>
+/// <para>【時刻】JST の <see cref="LocalDateTime"/> で保持。DB の <c>DateTime</c> との変換は Infrastructure（Mapper）の担当。この型は <c>DateTime</c> の公開なし</para>
 /// </remarks>
 public sealed class AbolishedOn : ValueObject, IEquatable<AbolishedOn>
 {

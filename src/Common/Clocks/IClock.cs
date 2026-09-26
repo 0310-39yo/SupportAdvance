@@ -11,19 +11,19 @@ namespace SupportAdvance.Common.Clocks;
 public interface IClock
 {
     /// <summary>
-    /// 現在のJST日時を取得します
+    /// 現在のJST日時の取得
     /// </summary>
     /// <remarks>
     /// 返却値の DateTime.Kind は常に Unspecified（タイムゾーン情報なし）
-    /// タイムゾーン情報は LocalDateTime の型に埋め込まれています
+    /// タイムゾーン情報は LocalDateTime の型で保持
     /// </remarks>
     LocalDateTime JstNow { get; }
 
     /// <summary>
-    /// 本日（00:00:00）のJST日付を取得します
+    /// 本日（00:00:00）のJST日付の取得
     /// </summary>
     /// <remarks>
-    /// 時刻は常に 00:00:00 です
+    /// 時刻は常に 00:00:00
     /// </remarks>
     LocalDateTime JstToday { get; }
 }

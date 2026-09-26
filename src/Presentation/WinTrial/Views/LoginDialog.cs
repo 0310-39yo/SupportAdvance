@@ -4,23 +4,28 @@ namespace SupportAdvance.Presentation.WinTrial.Views;
 
 /// <summary>
 /// ログインダイアログ（WinForms + MVVM Toolkit）
-///
-/// 【責務】
-/// - ログインID・パスワード入力フォーム
-/// - ViewModel（LoginViewModel）とデータバインディング
-/// - UI イベントハンドリング
-///
-/// 【UI パターン】
-/// - テキストボックス: LoginId（従業員番号） ← ViewModel にバインド
-/// - パスワードボックス: Password ← ViewModel にバインド
-/// - ボタン: ログイン（LoginCommand）、キャンセル
-/// - ステータスラベル: エラーメッセージ（ErrorMessage）← ViewModel にバインド
-///
-/// 【ライフサイクル】
-/// - アプリケーション起動時に表示（モーダル）
-/// - ログイン成功時（LoginSucceeded イベント）に DialogResult.OK で閉じる
-/// - キャンセル時に DialogResult.Cancel で閉じる
 /// </summary>
+/// <remarks>
+/// <para>【責務】</para>
+/// <list type="bullet">
+/// <item><description>ログインID・パスワード入力フォーム</description></item>
+/// <item><description>ViewModel（LoginViewModel）とデータバインディング</description></item>
+/// <item><description>UI イベントハンドリング</description></item>
+/// </list>
+/// <para>【UI パターン】</para>
+/// <list type="bullet">
+/// <item><description>テキストボックス: LoginId（従業員番号） ← ViewModel にバインド</description></item>
+/// <item><description>パスワードボックス: Password ← ViewModel にバインド</description></item>
+/// <item><description>ボタン: ログイン（LoginCommand）、キャンセル</description></item>
+/// <item><description>ステータスラベル: エラーメッセージ（ErrorMessage）← ViewModel にバインド</description></item>
+/// </list>
+/// <para>【ライフサイクル】</para>
+/// <list type="bullet">
+/// <item><description>アプリケーション起動時に表示（モーダル）</description></item>
+/// <item><description>ログイン成功時（LoginSucceeded イベント）に DialogResult.OK で閉じる</description></item>
+/// <item><description>キャンセル時に DialogResult.Cancel で閉じる</description></item>
+/// </list>
+/// </remarks>
 public partial class LoginDialog : Form
 {
     private readonly LoginViewModel _viewModel;

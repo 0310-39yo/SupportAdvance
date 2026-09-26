@@ -10,7 +10,7 @@ namespace SupportAdvance.Presentation.WpfTrial.Controls;
 /// </summary>
 /// <remarks>
 /// <para>【使い方】&lt;controls:FluentIcon Icon="Save" FontSize="18" Foreground="Gray" /&gt;</para>
-/// <para>【設計】アイコンフォントの 1 文字を表示する <see cref="TextBlock"/>。大きさは <see cref="TextBlock.FontSize"/>、色は <see cref="TextBlock.Foreground"/> で指定する。
+/// <para>【設計】アイコンフォントの 1 文字を表示する <see cref="TextBlock"/>。大きさは <see cref="TextBlock.FontSize"/>、色は <see cref="TextBlock.Foreground"/> での指定。
 /// アイコンの追加は <see cref="FluentIconCatalog"/> の手順を参照</para>
 /// <para>【前提】フォントファイルは WpfTrial.csproj で <c>Assets/Fonts</c> にリソースとして取り込む</para>
 /// </remarks>
@@ -45,7 +45,7 @@ public sealed class FluentIcon : TextBlock
     /// <summary>
     /// 表示するアイコン
     /// </summary>
-    /// <value>未設定（<see langword="null"/>）の場合は何も表示しない</value>
+    /// <value>未設定（<see langword="null"/>）の場合は表示なし</value>
     public AppIcon? Icon
     {
         get => (AppIcon?)GetValue(IconProperty);

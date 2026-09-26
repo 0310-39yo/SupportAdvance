@@ -72,7 +72,7 @@ public class FrameworkLoggingAdapter<T>(
 
     /// <summary>
     /// CorrelationId と時刻を GlobalDiagnosticsContext に設定
-    /// 毎回のログ出力時に呼び出される
+    /// 毎回のログ出力時の呼び出し
     /// </summary>
     private void SetContextToGdc()
     {

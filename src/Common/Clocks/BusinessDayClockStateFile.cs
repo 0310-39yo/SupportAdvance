@@ -71,7 +71,7 @@ internal sealed class BusinessDayClockStateFile(string filePath)
     /// <exception cref="IOException">削除に失敗した場合</exception>
     /// <exception cref="UnauthorizedAccessException">削除権限がない場合</exception>
     /// <remarks>
-    /// <para>【注意】ファイルがない場合は何もしない</para>
+    /// <para>【注意】ファイルがない場合は処理なし</para>
     /// </remarks>
     public void Delete()
     {

@@ -4,11 +4,11 @@ namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
 
 /// <summary>
 /// 従業員コードを表すValueObject（ビジネスコード）
-/// 【値】BizDivision + BizId
-/// 【表示】"M01234" 形式（区分+5桁0埋め番号、スペースなし）
-/// 【責務】ビジネスコードの管理、範囲検証
 /// </summary>
 /// <remarks>
+/// <para>【値】BizDivision + BizId</para>
+/// <para>【表示】"M01234" 形式（区分+5桁0埋め番号、スペースなし）</para>
+/// <para>【責務】ビジネスコードの管理、範囲検証</para>
 /// <para>【不変条件】<see cref="BizId"/> は <see cref="Division"/> ごとの有効範囲内</para>
 /// <list type="bullet">
 /// <item><description>従業員（M）: 1001〜6999、または 10000 以上</description></item>

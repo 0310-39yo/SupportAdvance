@@ -4,9 +4,9 @@ namespace SupportAdvance.Presentation.Shared.Icons;
 /// <see cref="AppIcon"/> と Fluent UI System Icons の字形（アイコンフォントの文字）の対応表
 /// </summary>
 /// <remarks>
-/// <para>【方式】アイコンフォント（<c>Assets/Fonts/FluentSystemIcons-Resizable.ttf</c>）を WpfTrial・WinTrial で共用し、アイコンを文字として描画する。
+/// <para>【方式】アイコンフォント（<c>Assets/Fonts/FluentSystemIcons-Resizable.ttf</c>）を WpfTrial・WinTrial で共用し、アイコンの文字としての描画。
 /// 拡大縮小・文字色の変更・高 DPI に強く、フォントファイルは 1 つのみ</para>
-/// <para>【設計】UI（WPF／WinForms）に依存しない。描画は各アプリ側（WpfTrial の <c>FluentIcon</c> コントロール、WinTrial の <c>FluentIconFont</c>）が担当</para>
+/// <para>【設計】UI（WPF／WinForms）への依存なし。描画は各アプリ側（WpfTrial の <c>FluentIcon</c> コントロール、WinTrial の <c>FluentIconFont</c>）が担当</para>
 /// <para>【追加手順】</para>
 /// <list type="number">
 /// <item><description><see cref="AppIcon"/> に用途を表す名前を追加</description></item>

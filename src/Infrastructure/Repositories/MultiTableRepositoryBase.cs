@@ -40,9 +40,11 @@ public abstract class MultiTableRepositoryBase<TEntity, TDbModel, TId>(
 
     /// <summary>
     /// DbModel に監査フィールド（createdBy）を設定
-    /// 【用途】Insert/Create 時
     /// </summary>
     /// <param name="dbModel">設定先の DB モデル</param>
+    /// <remarks>
+    /// <para>【用途】Insert/Create 時</para>
+    /// </remarks>
     protected void SetCreatedByAudit(TDbModel dbModel)
     {
         var createdByProperty = typeof(TDbModel).GetProperty("CreatedBy");
@@ -54,10 +56,12 @@ public abstract class MultiTableRepositoryBase<TEntity, TDbModel, TId>(
 
     /// <summary>
     /// DbModel に監査フィールド（createdAt）を設定
-    /// 【用途】Insert/Create 時
-    /// 【責務】Repository が保存時刻を管理
     /// </summary>
     /// <param name="dbModel">設定先の DB モデル</param>
+    /// <remarks>
+    /// <para>【用途】Insert/Create 時</para>
+    /// <para>【責務】Repository が保存時刻を管理</para>
+    /// </remarks>
     protected void SetCreatedAtAudit(TDbModel dbModel)
     {
         var createdAtProperty = typeof(TDbModel).GetProperty("CreatedAt");
@@ -69,11 +73,13 @@ public abstract class MultiTableRepositoryBase<TEntity, TDbModel, TId>(
 
     /// <summary>
     /// DbModel に監査フィールド（updatedAt）を設定
-    /// 【用途】Update 時
-    /// 【責務】Repository が保存時刻を管理（Mapper ではなく）
-    /// 【注意】複数テーブル集約の場合、どの DbModel 型にも対応
     /// </summary>
     /// <param name="dbModel">設定先の DB モデル</param>
+    /// <remarks>
+    /// <para>【用途】Update 時</para>
+    /// <para>【責務】Repository が保存時刻を管理（Mapper ではなく）</para>
+    /// <para>【注意】複数テーブル集約の場合、どの DbModel 型にも対応</para>
+    /// </remarks>
     protected void SetUpdatedAtAudit(TDbModel dbModel)
     {
         SetAuditField(dbModel, "UpdatedAt", Clock.JstNow.Value);
@@ -81,10 +87,12 @@ public abstract class MultiTableRepositoryBase<TEntity, TDbModel, TId>(
 
     /// <summary>
     /// DbModel に監査フィールド（updatedBy）を設定
-    /// 【用途】Update 時
-    /// 【注意】複数テーブル集約の場合、どの DbModel 型にも対応
     /// </summary>
     /// <param name="dbModel">設定先の DB モデル</param>
+    /// <remarks>
+    /// <para>【用途】Update 時</para>
+    /// <para>【注意】複数テーブル集約の場合、どの DbModel 型にも対応</para>
+    /// </remarks>
     protected void SetUpdatedByAudit(TDbModel dbModel)
     {
         SetAuditField(dbModel, "UpdatedBy", CurrentUser.EmployeeRowId);
@@ -92,12 +100,14 @@ public abstract class MultiTableRepositoryBase<TEntity, TDbModel, TId>(
 
     /// <summary>
     /// 任意の DbModel（複数テーブル集約対応）に監査フィールドを設定
-    /// 【用途】複数の DbModel 型に同じ監査ロジックを適用
     /// </summary>
     /// <typeparam name="T">設定先の DB モデルの型（主テーブル以外の DB モデルも可）</typeparam>
-    /// <param name="dbModel">設定先の DB モデル。<see langword="null"/> の場合は何もしない</param>
-    /// <param name="fieldName">設定するプロパティ名（例: <c>UpdatedAt</c>）。存在しない・書き込み不可の場合は何もしない</param>
+    /// <param name="dbModel">設定先の DB モデル。<see langword="null"/> の場合は処理なし</param>
+    /// <param name="fieldName">設定するプロパティ名（例: <c>UpdatedAt</c>）。存在しない・書き込み不可の場合は処理なし</param>
     /// <param name="value">設定する値</param>
+    /// <remarks>
+    /// <para>【用途】複数の DbModel 型に同じ監査ロジックを適用</para>
+    /// </remarks>
     protected void SetAuditField<T>(T dbModel, string fieldName, object value) where T : class
     {
         if (dbModel == null) return;
@@ -110,9 +120,11 @@ public abstract class MultiTableRepositoryBase<TEntity, TDbModel, TId>(
 
     /// <summary>
     /// DbModel に監査フィールド（deletedBy）を設定
-    /// 【用途】Delete/論理削除 時
     /// </summary>
     /// <param name="dbModel">設定先の DB モデル</param>
+    /// <remarks>
+    /// <para>【用途】Delete/論理削除 時</para>
+    /// </remarks>
     protected void SetDeletedByAudit(TDbModel dbModel)
     {
         var deletedByProperty = typeof(TDbModel).GetProperty("DeletedBy");
@@ -124,10 +136,12 @@ public abstract class MultiTableRepositoryBase<TEntity, TDbModel, TId>(
 
     /// <summary>
     /// DbModel に監査フィールド（deletedAt）を設定
-    /// 【用途】Delete/論理削除 時
-    /// 【責務】Repository が削除時刻を管理
     /// </summary>
     /// <param name="dbModel">設定先の DB モデル</param>
+    /// <remarks>
+    /// <para>【用途】Delete/論理削除 時</para>
+    /// <para>【責務】Repository が削除時刻を管理</para>
+    /// </remarks>
     protected void SetDeletedAtAudit(TDbModel dbModel)
     {
         var deletedAtProperty = typeof(TDbModel).GetProperty("DeletedAt");

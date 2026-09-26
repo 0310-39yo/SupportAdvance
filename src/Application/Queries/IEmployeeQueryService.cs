@@ -21,14 +21,14 @@ namespace SupportAdvance.Application.Queries;
 public interface IEmployeeQueryService
 {
     /// <summary>
-    /// BizId（ビジネスID）で Employee を検索する
+    /// BizId（ビジネスID）で Employee の検索
     /// </summary>
     /// <param name="bizId">ビジネスID（従業員番号、1以上）</param>
     /// <returns>見つかった Employee のクエリ結果、または null</returns>
     Task<IEmployeeQueryResult?> GetByBizIdAsync(int bizId);
 
     /// <summary>
-    /// EmployeeRowId で Employee を検索する
+    /// EmployeeRowId で Employee の検索
     /// </summary>
     /// <param name="rowId">Employee RowId（DB行ID）</param>
     /// <returns>見つかった Employee のクエリ結果、または null</returns>

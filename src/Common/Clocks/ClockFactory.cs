@@ -4,12 +4,12 @@ namespace SupportAdvance.Common.Clocks;
 
 /// <summary>
 /// クロック実装のファクトリクラス
-/// IClockSettings に基づいて、適切なクロック実装を生成する
+/// IClockSettings に基づいて、適切なクロック実装の生成
 /// </summary>
 public static class ClockFactory
 {
     /// <summary>
-    /// 設定に基づいて IClock インスタンスを生成する
+    /// 設定に基づいて IClock インスタンスの生成
     /// </summary>
     /// <param name="settings">クロック設定</param>
     /// <returns>生成されたクロック実装（SystemClock, TickingClock, OffsetClock, または BusinessDayClock）</returns>
@@ -32,7 +32,7 @@ public static class ClockFactory
     }
 
     /// <summary>
-    /// TickingClock を生成する
+    /// TickingClock の生成
     /// 注記：
     /// - StartTime が指定されていない場合、SystemClock.JstNow で現在のJST時刻を取得
     /// - 実行時は TickingClock.JstNow（IClock経由）を通じて時刻を取得
@@ -57,7 +57,7 @@ public static class ClockFactory
     }
 
     /// <summary>
-    /// OffsetClock を生成する
+    /// OffsetClock の生成
     /// 注記：
     /// - OffsetDateTime が未指定の場合、または日付のみの場合、SystemClock.JstNow で現在のJST時刻を取得
     /// - 実行時は OffsetClock.JstNow（IClock経由）を通じて時刻を取得

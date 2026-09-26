@@ -9,7 +9,7 @@ namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Role;
 /// <remarks>
 /// <para>【責務】ロール・権限割り当ての有効終了日時の管理</para>
 /// <para>【null契約】任意。無期限は <see cref="Unlimited"/>（<see cref="HasExpiration"/> が <see langword="false"/>）で表現</para>
-/// <para>【時刻】JST の <see cref="LocalDateTime"/> で保持。DB の <c>DateTime</c> との変換は Infrastructure（Mapper）の担当。この型は <c>DateTime</c> を公開しない</para>
+/// <para>【時刻】JST の <see cref="LocalDateTime"/> で保持。DB の <c>DateTime</c> との変換は Infrastructure（Mapper）の担当。この型は <c>DateTime</c> の公開なし</para>
 /// </remarks>
 public sealed class ExpirationOn : ValueObject, IEquatable<ExpirationOn>
 {

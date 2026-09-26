@@ -4,10 +4,12 @@ namespace SupportAdvance.Contexts.Authentication.Domain.ValueObjects;
 
 /// <summary>
 /// ユーザー認証セッションレコード RowId（主キー）
-/// 【型】long（t_user_auth_sessions.row_id に対応）
-/// 【特徴】UserAuthSession 集約の一意識別子、Sequence自動採番
-/// 【不変性】生成後変更不可
 /// </summary>
+/// <remarks>
+/// <para>【型】long（t_user_auth_sessions.row_id に対応）</para>
+/// <para>【特徴】UserAuthSession 集約の一意識別子、Sequence自動採番</para>
+/// <para>【不変性】生成後変更不可</para>
+/// </remarks>
 public sealed class UserAuthSessionRowId : RowId, IEquatable<UserAuthSessionRowId>
 {
     /// <summary>
@@ -16,7 +18,7 @@ public sealed class UserAuthSessionRowId : RowId, IEquatable<UserAuthSessionRowI
     public const long MinValue = 1L;
 
     /// <summary>
-    /// ユーザー認証セッションレコード行IDの値を取得する
+    /// ユーザー認証セッションレコード行IDの値の取得
     /// </summary>
     public new long Value => ValueField;
 
@@ -24,13 +26,13 @@ public sealed class UserAuthSessionRowId : RowId, IEquatable<UserAuthSessionRowI
     /// 指定された long 値から UserAuthSessionRowId を生成する（プライベートコンストラクタ）
     /// </summary>
     /// <param name="value">ユーザー認証セッションレコード行ID（1以上）</param>
-    /// <remarks>Validate は、基礎クラスのコンストラクタで自動実行される</remarks>
+    /// <remarks>Validate は、基礎クラスのコンストラクタでの自動実行</remarks>
     private UserAuthSessionRowId(long value) : base(value, true)
     {
     }
 
     /// <summary>
-    /// 指定された long 値から UserAuthSessionRowId のインスタンスを生成する
+    /// 指定された long 値からの UserAuthSessionRowId のインスタンスの生成
     /// </summary>
     /// <param name="value">ユーザー認証セッションレコード行ID（1以上）</param>
     /// <returns>指定された行IDの UserAuthSessionRowId のインスタンス</returns>
@@ -80,7 +82,7 @@ public sealed class UserAuthSessionRowId : RowId, IEquatable<UserAuthSessionRowI
     }
 
     /// <summary>
-    /// ユーザー認証セッションレコード行IDの文字列表現を取得する
+    /// ユーザー認証セッションレコード行IDの文字列表現の取得
     /// </summary>
     /// <returns>数値文字列</returns>
     public override string ToString() => Value.ToString();
@@ -104,7 +106,7 @@ public sealed class UserAuthSessionRowId : RowId, IEquatable<UserAuthSessionRowI
     public override int GetHashCode() => Value.GetHashCode();
 
     /// <summary>
-    /// ユーザー認証セッションレコード行IDが有効か検証する
+    /// ユーザー認証セッションレコード行IDが有効か検証
     /// </summary>
     /// <param name="normalized">検証する行ID</param>
     /// <exception cref="ArgumentOutOfRangeException"><paramref name="normalized"/> が <see cref="MinValue"/> 未満の場合</exception>

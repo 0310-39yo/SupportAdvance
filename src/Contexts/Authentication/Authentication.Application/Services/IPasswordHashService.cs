@@ -2,18 +2,23 @@ namespace SupportAdvance.Contexts.Authentication.Application.Services;
 
 /// <summary>
 /// パスワードハッシュ検証サービス インターフェース
-///
-/// 【責務】
-/// - 平文パスワードと保存されたハッシュ値の検証
-/// - bcrypt による安全な検証
-///
-/// 【実装】
-/// - Infrastructure層で BCrypt.Net-Next ライブラリを使用
-///
-/// 【セキュリティ】
-/// - 平文パスワードを Domain/Entity で保持しない
-/// - 検証は Application層の Use Case で実施
 /// </summary>
+/// <remarks>
+/// <para>【責務】</para>
+/// <list type="bullet">
+/// <item><description>平文パスワードと保存されたハッシュ値の検証</description></item>
+/// <item><description>bcrypt による安全な検証</description></item>
+/// </list>
+/// <para>【実装】</para>
+/// <list type="bullet">
+/// <item><description>Infrastructure層で BCrypt.Net-Next ライブラリを使用</description></item>
+/// </list>
+/// <para>【セキュリティ】</para>
+/// <list type="bullet">
+/// <item><description>平文パスワードの Domain/Entity での保持なし</description></item>
+/// <item><description>検証は Application層の Use Case で実施</description></item>
+/// </list>
+/// </remarks>
 public interface IPasswordHashService
 {
     /// <summary>

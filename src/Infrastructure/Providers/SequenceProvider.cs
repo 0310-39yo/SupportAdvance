@@ -8,24 +8,29 @@ namespace SupportAdvance.Infrastructure.Providers;
 
 /// <summary>
 /// SQL Server シーケンス（dbo.s_row_id_sequence）から RowId を採番する実装
-///
-/// 【責務】
-/// - dbo.s_row_id_sequence から次の RowId を取得
-/// - 複数個の採番は単一採番の反復実行で対応
-/// - スレッドセーフな実装（lock による排他制御）
-/// - SqlException を SequenceProviderException にラッピング
-///
-/// 【実装パターン】
-/// - SqlConnection で接続（IAppSettings.ConnectionStrings["Default"]）
-/// - SQL: SELECT NEXT VALUE FOR [dbo].[s_row_id_sequence]
-/// - 複数値取得は同じ SQL を count 回実行（シンプル、SQL Server保証）
-/// - スレッド安全性：lock で保護
-///
-/// 【注記】
-/// - SQL Server の SEQUENCE は自動的に重複排除を保証
-/// - lock による同期は、複数Application instance での競合回避目的
-/// 【設計】appsettings.*.json のすべての設定値は IAppSettings から統一して取得
 /// </summary>
+/// <remarks>
+/// <para>【責務】</para>
+/// <list type="bullet">
+/// <item><description>dbo.s_row_id_sequence から次の RowId を取得</description></item>
+/// <item><description>複数個の採番は単一採番の反復実行で対応</description></item>
+/// <item><description>スレッドセーフな実装（lock による排他制御）</description></item>
+/// <item><description>SqlException を SequenceProviderException にラッピング</description></item>
+/// </list>
+/// <para>【実装パターン】</para>
+/// <list type="bullet">
+/// <item><description>SqlConnection で接続（IAppSettings.ConnectionStrings["Default"]）</description></item>
+/// <item><description>SQL: SELECT NEXT VALUE FOR [dbo].[s_row_id_sequence]</description></item>
+/// <item><description>複数値取得は同じ SQL を count 回実行（シンプル、SQL Server保証）</description></item>
+/// <item><description>スレッド安全性：lock で保護</description></item>
+/// </list>
+/// <para>【注記】</para>
+/// <list type="bullet">
+/// <item><description>SQL Server の SEQUENCE は自動的に重複排除を保証</description></item>
+/// <item><description>lock による同期は、複数Application instance での競合回避目的</description></item>
+/// </list>
+/// <para>【設計】appsettings.*.json のすべての設定値は IAppSettings から統一して取得</para>
+/// </remarks>
 public class SequenceProvider : ISequenceProvider
 {
     private readonly string _connectionString;
@@ -73,7 +78,7 @@ public class SequenceProvider : ISequenceProvider
     }
 
     /// <summary>
-    /// 次の RowId 単一値を取得する
+    /// 次の RowId 単一値の取得
     /// </summary>
     /// <returns>採番した行ID（<c>s_row_id_sequence</c> の次の値）</returns>
     /// <exception cref="SequenceProviderException">DB への接続やシーケンスの取得に失敗した場合</exception>
@@ -84,7 +89,7 @@ public class SequenceProvider : ISequenceProvider
     }
 
     /// <summary>
-    /// 複数個の連続した RowId を取得する
+    /// 複数個の連続した RowId の取得
     /// </summary>
     /// <param name="count">採番する個数（1 以上）</param>
     /// <returns>採番した行ID の一覧（要素数は <paramref name="count"/>）。連番とは限らない値</returns>

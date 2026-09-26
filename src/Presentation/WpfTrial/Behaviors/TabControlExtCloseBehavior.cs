@@ -6,19 +6,20 @@ namespace SupportAdvance.Presentation.WpfTrial.Behaviors;
 
 /// <summary>
 /// <see cref="TabControlExt"/> でタブが閉じられたことを、ViewModel のコマンドに橋渡しする添付ビヘイビア
-///
-/// 【背景】
-/// ItemsSource にバインドした <see cref="TabControlExt"/> のタブを閉じても、元のコレクション（ViewModel のタブの一覧）から
-/// 項目が取り除かれるとは限らない。取り除かれないと、ViewModel は、すべてのタブが閉じたこと
-/// （オープニング画面に戻す条件）を知ることができない。そのため、タブが閉じられたときに、閉じられたタブの項目を、コマンドに渡して通知する。
-///
-/// 【使い方】
-/// &lt;syncfusion:TabControlExt behaviors:TabControlExtCloseBehavior.TabClosedCommand="{Binding CloseTabCommand}" /&gt;
-///
-/// 【動作】
-/// - 個別のタブの閉じるボタン、「他のタブを閉じる」「すべてのタブを閉じる」のいずれの場合も、閉じられた各タブの項目（DataContext）を、コマンドのパラメーターとして 1 つずつ実行する
-/// - すでに元のコレクションから取り除かれている項目に対しては、コマンド側で何もしない（<c>CloseTabCommand</c> は、開いていないタブを無視する）
 /// </summary>
+/// <remarks>
+/// <para>【背景】<c>ItemsSource</c> にバインドした <see cref="TabControlExt"/> のタブを閉じても、元のコレクション（ViewModel のタブの一覧）から項目が取り除かれるとは限らない。取り除かれないと、ViewModel は、すべてのタブが閉じたこと（オープニング画面に戻す条件）を知ることができない。そのため、タブが閉じられたときに、閉じられたタブの項目をコマンドに渡して通知</para>
+/// <para>【動作】</para>
+/// <list type="bullet">
+/// <item><description>個別のタブの閉じるボタン、「他のタブを閉じる」「すべてのタブを閉じる」のいずれの場合も、閉じられた各タブの項目（<c>DataContext</c>）を、コマンドのパラメーターとして 1 つずつ実行</description></item>
+/// <item><description>すでに元のコレクションから取り除かれている項目に対しては、コマンド側で処理なし（<c>CloseTabCommand</c> は、開いていないタブを無視）</description></item>
+/// </list>
+/// </remarks>
+/// <example>
+/// <code>
+/// &lt;syncfusion:TabControlExt behaviors:TabControlExtCloseBehavior.TabClosedCommand="{Binding CloseTabCommand}" /&gt;
+/// </code>
+/// </example>
 public static class TabControlExtCloseBehavior
 {
     /// <summary>

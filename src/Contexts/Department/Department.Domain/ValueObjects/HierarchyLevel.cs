@@ -14,7 +14,7 @@ namespace SupportAdvance.Contexts.Department.Domain.ValueObjects;
 public sealed class HierarchyLevel : EnumValueObject<int>, IEquatable<HierarchyLevel>
 {
     /// <summary>
-    /// 階層レベルの値を取得する
+    /// 階層レベルの値の取得
     /// </summary>
     public int Value => ValueField;
 
@@ -22,13 +22,13 @@ public sealed class HierarchyLevel : EnumValueObject<int>, IEquatable<HierarchyL
     /// 指定された階層レベルから HierarchyLevel を生成する（プライベートコンストラクタ）
     /// </summary>
     /// <param name="value">階層レベル（0-4）</param>
-    /// <remarks>Validate は、基礎クラスのコンストラクタで自動実行される</remarks>
+    /// <remarks>Validate は、基礎クラスのコンストラクタでの自動実行</remarks>
     private HierarchyLevel(int value) : base(value)
     {
     }
 
     /// <summary>
-    /// 指定された階層レベルから HierarchyLevel を生成する
+    /// 指定された階層レベルからの HierarchyLevel の生成
     /// </summary>
     /// <param name="value">階層レベル（0-4）</param>
     /// <returns>生成された HierarchyLevel インスタンス</returns>
@@ -78,31 +78,31 @@ public sealed class HierarchyLevel : EnumValueObject<int>, IEquatable<HierarchyL
     }
 
     /// <summary>
-    /// 会社レベル（0）を生成する
+    /// 会社レベル（0）の生成
     /// </summary>
     /// <returns>値が 0 の <see cref="HierarchyLevel"/></returns>
     public static HierarchyLevel Company() => From(0);
 
     /// <summary>
-    /// 本部レベル（1）を生成する
+    /// 本部レベル（1）の生成
     /// </summary>
     /// <returns>値が 1 の <see cref="HierarchyLevel"/></returns>
     public static HierarchyLevel Division() => From(1);
 
     /// <summary>
-    /// 部レベル（2）を生成する
+    /// 部レベル（2）の生成
     /// </summary>
     /// <returns>値が 2 の <see cref="HierarchyLevel"/></returns>
     public static HierarchyLevel Department() => From(2);
 
     /// <summary>
-    /// グループレベル（3）を生成する
+    /// グループレベル（3）の生成
     /// </summary>
     /// <returns>値が 3 の <see cref="HierarchyLevel"/></returns>
     public static HierarchyLevel Group() => From(3);
 
     /// <summary>
-    /// チームレベル（4）を生成する
+    /// チームレベル（4）の生成
     /// </summary>
     /// <returns>値が 4 の <see cref="HierarchyLevel"/></returns>
     public static HierarchyLevel Team() => From(4);
@@ -130,7 +130,7 @@ public sealed class HierarchyLevel : EnumValueObject<int>, IEquatable<HierarchyL
     public override int GetHashCode() => HashCode.Combine(IsSet, Value);
 
     /// <summary>
-    /// 階層レベルが有効か検証する
+    /// 階層レベルが有効か検証
     /// </summary>
     /// <param name="value">検証対象の値</param>
     /// <exception cref="ArgumentOutOfRangeException">0-4 範囲外</exception>
@@ -146,7 +146,7 @@ public sealed class HierarchyLevel : EnumValueObject<int>, IEquatable<HierarchyL
     }
 
     /// <summary>
-    /// 階層レベルの業務名称を取得する
+    /// 階層レベルの業務名称の取得
     /// </summary>
     /// <returns>業務名称（Company, Division, Department, Group, Team）</returns>
     protected override string GetDisplayName()

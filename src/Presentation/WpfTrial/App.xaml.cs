@@ -23,12 +23,15 @@ namespace SupportAdvance.Presentation.WpfTrial;
 
 /// <summary>
 /// Interaction logic for App.xaml
-///
-/// 【責務】Composition Root
-/// - ホスト（DI コンテナ）の構築
-/// - ログインウィンドウ → メインウィンドウの起動フロー制御
-/// - Infrastructure への参照はこのファイル（Composition Root）内でのみ許可
 /// </summary>
+/// <remarks>
+/// <para>【責務】Composition Root</para>
+/// <list type="bullet">
+/// <item><description>ホスト（DI コンテナ）の構築</description></item>
+/// <item><description>ログインウィンドウ → メインウィンドウの起動フロー制御</description></item>
+/// <item><description>Infrastructure への参照はこのファイル（Composition Root）内でのみ許可</description></item>
+/// </list>
+/// </remarks>
 public partial class App : System.Windows.Application
 {
     private IHost? _host;

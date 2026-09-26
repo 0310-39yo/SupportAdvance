@@ -12,7 +12,7 @@ namespace SupportAdvance.Presentation.Shared.ViewModels;
 /// </summary>
 /// <remarks>
 /// <para>【責務】タブ管理（開いているタブのリスト、選択タブの追跡）、ナビゲーション選択からのタブ追加、タブが無いときのオープニング画面の表示の切り替え</para>
-/// <para>【設計】View 型・UI コントロール型には依存しない。タブの画面は各 <see cref="TabItemViewModel.ContentViewModel"/> の型に対応する DataTemplate で決まる</para>
+/// <para>【設計】View 型・UI コントロール型への依存なし。タブの画面は各 <see cref="TabItemViewModel.ContentViewModel"/> の型に対応する DataTemplate で決定</para>
 /// </remarks>
 public partial class MainWindowViewModel : ObservableObject
 {
@@ -92,7 +92,7 @@ public partial class MainWindowViewModel : ObservableObject
     /// <remarks>
     /// <para>【動作】同じ名前のタブが既に開いていればそのタブを選択。なければ新しいタブを追加して選択</para>
     /// <para>【注意】顧客一覧のタブは <see cref="Form1ViewModel"/> を共有する（同名のタブは 1 つしか開かないため）</para>
-    /// <para>【注意】<paramref name="menuName"/> が <see langword="null"/> または空文字の場合は何もしない</para>
+    /// <para>【注意】<paramref name="menuName"/> が <see langword="null"/> または空文字の場合は処理なし</para>
     /// </remarks>
     [RelayCommand]
     private void OpenTab(string? menuName)
@@ -130,7 +130,7 @@ public partial class MainWindowViewModel : ObservableObject
     /// <param name="tab">閉じるタブ</param>
     /// <remarks>
     /// <para>【動作】閉じたタブが選択中だった場合は、残っている最後のタブを選択（タブが無くなれば選択なし）</para>
-    /// <para>【注意】<paramref name="tab"/> が <see langword="null"/> または開いていないタブの場合は何もしない</para>
+    /// <para>【注意】<paramref name="tab"/> が <see langword="null"/> または開いていないタブの場合は処理なし</para>
     /// <para>【用途】ItemsSource／SelectedItem を自動同期できない UI（WinForms）が、タブの終了を ViewModel に反映するために使用</para>
     /// </remarks>
     [RelayCommand]

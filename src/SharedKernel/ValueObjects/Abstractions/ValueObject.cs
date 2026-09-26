@@ -2,24 +2,22 @@ namespace SupportAdvance.SharedKernel.ValueObjects;
 
 /// <summary>
 /// ValueObjectの基底抽象クラス
-/// すべてのValueObject派生クラスに対して、等価性の比較を提供する
-/// 未設定状態(Unset)をnullに頼らず型で表現する仕組みを強制する
+/// すべてのValueObject派生クラスに対して、等価性の比較の提供
+/// 未設定状態(Unset)をnullに頼らず型で表現する仕組みの強制
 /// </summary>
 public abstract class ValueObject : IEquatable<ValueObject>
 {
     /// <summary>
     /// このValueObjectが設定されているかを示す値
-    ///
-    /// 【初期値】false（Unset）
-    ///
-    /// 【設定方法】
-    /// 派生クラスのコンストラクタで protected setter を使用して設定します。
-    /// テストコード（protected スコープ内）でも設定可能です。
     /// </summary>
+    /// <remarks>
+    /// <para>【初期値】false（Unset）</para>
+    /// <para>【設定方法】派生クラスのコンストラクタで protected setter を使用して設定。テストコード（protected スコープ内）でも設定可能</para>
+    /// </remarks>
     public bool IsSet { get; protected set; }
 
     /// <summary>
-    /// 指定されたValueObjectと等価かどうかを判断する
+    /// 指定されたValueObjectと等価かどうかの判断
     /// </summary>
     /// <param name="other">比較対象のValueObject</param>
     /// <returns>等価であればtrue、それ以外はfalse</returns>
@@ -46,25 +44,21 @@ public abstract class ValueObject : IEquatable<ValueObject>
         return normalizeComponents.SequenceEqual(otherNormalizeComponents);
     }
 
-    /// <summary>
-    /// 指定されたValueObjectと等価かどうかを判断する
-    /// </summary>
-    /// <param name="obj">比較対象のValueObject</param>
-    /// <returns>等価であればtrue、それ以外はfalse</returns>
+    /// <inheritdoc/>
     public override bool Equals(object? obj) => obj is ValueObject other && Equals(other);
 
     /// <summary>
     /// 等価性の比較に使用する値コンポーネントを取得する（IsSet を除く）
-    /// 派生クラスは自身の値フィールドのみを列挙する
-    /// IsSet は GetEqualityComponents で自動的に先頭に付加される
+    /// 派生クラスは自身の値フィールドのみの列挙
+    /// IsSet は GetEqualityComponents による自動的な先頭への付加
     /// </summary>
     /// <returns>等価性の比較に使用する値コンポーネントの列挙</returns>
     protected abstract IEnumerable<object?> GetValueComponents();
 
     /// <summary>
-    /// 等価性の比較に使用するすべてのコンポーネントを取得する
+    /// 等価性の比較に使用するすべてのコンポーネントの取得
     /// IsSet を先頭に追加し、GetValueComponents の結果を続ける
-    /// ValueObjectComponentNormalizer で正規化される
+    /// ValueObjectComponentNormalizer での正規化
     /// </summary>
     /// <returns>IsSet を含むすべての等価性コンポーネント</returns>
     public IEnumerable<object?> GetEqualityComponents()
@@ -76,11 +70,7 @@ public abstract class ValueObject : IEquatable<ValueObject>
         }
     }
 
-    /// <summary>
-    /// このValueObjectのハッシュコードを取得する
-    /// IsSet と値コンポーネントに基づいてハッシュコードを計算します
-    /// </summary>
-    /// <returns>ハッシュコード</returns>
+    /// <inheritdoc/>
     public override int GetHashCode()
     {
         var allComponents = GetEqualityComponents();
@@ -98,7 +88,7 @@ public abstract class ValueObject : IEquatable<ValueObject>
     }
 
     /// <summary>
-    /// このValueObjectの文字列表現を取得する
+    /// このValueObjectの文字列表現の取得
     /// IsSetがfalse(Unset)の場合は"Unset"を返す
     /// IsSetがtrueの場合は、GetEqualityComponents()で取得したコンポーネント（IsSetを除く）の文字列表現をカンマ区切りで返す
     /// </summary>
@@ -122,7 +112,7 @@ public abstract class ValueObject : IEquatable<ValueObject>
     }
 
     /// <summary>
-    /// 2 つのValueObjectが等しいかどうかを判定します。
+    /// 2 つのValueObjectが等しいかどうかの判定
     /// </summary>
     /// <param name="left">左辺のオブジェクト</param>
     /// <param name="right">右辺のオブジェクト</param>
@@ -143,7 +133,7 @@ public abstract class ValueObject : IEquatable<ValueObject>
     }
 
     /// <summary>
-    /// 2 つのValueObjectが等しくないかどうかを判定します。
+    /// 2 つのValueObjectが等しくないかどうかの判定
     /// </summary>
     /// <param name="left">左辺のオブジェクト</param>
     /// <param name="right">右辺のオブジェクト</param>

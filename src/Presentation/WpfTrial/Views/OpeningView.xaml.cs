@@ -6,7 +6,7 @@ namespace SupportAdvance.Presentation.WpfTrial.Views;
 /// オープニング画面（起動後、ナビゲーションが選ばれるまで表示する UserControl）
 /// </summary>
 /// <remarks>
-/// <para>【設計】DataContext は設定しない。<c>OpeningViewModel</c> が DataContext として渡される（MainWindow.xaml の DataTemplate）</para>
+/// <para>【設計】DataContext の設定なし。<c>OpeningViewModel</c> が DataContext として渡される（MainWindow.xaml の DataTemplate）</para>
 /// </remarks>
 public partial class OpeningView : UserControl
 {

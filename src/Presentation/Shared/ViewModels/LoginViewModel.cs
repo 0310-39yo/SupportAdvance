@@ -9,21 +9,25 @@ namespace SupportAdvance.Presentation.Shared.ViewModels;
 
 /// <summary>
 /// ログイン画面 ViewModel（MVVM Toolkit。WpfTrial／WinTrial 共通）
-///
-/// 【責務】
-/// - ログインID・パスワード入力の状態管理
-/// - AuthenticateLocalUserUseCase の実行
-/// - エラーメッセージの管理
-/// - ローディング状態の管理
-/// - ログイン成功時のセッション保存
-///
-/// 【UI バインディング】
-/// - LoginId （ObservableProperty）
-/// - Password （ObservableProperty。WPF の PasswordBox は Behaviors/PasswordBoxAssistant 経由でバインド）
-/// - ErrorMessage （ObservableProperty）
-/// - IsLoading （ObservableProperty。入力欄・ボタンの有効／無効は InverseBooleanConverter で反転してバインド）
-/// - LoginCommand / CancelCommand （RelayCommand）
 /// </summary>
+/// <remarks>
+/// <para>【責務】</para>
+/// <list type="bullet">
+/// <item><description>ログインID・パスワード入力の状態管理</description></item>
+/// <item><description>AuthenticateLocalUserUseCase の実行</description></item>
+/// <item><description>エラーメッセージの管理</description></item>
+/// <item><description>ローディング状態の管理</description></item>
+/// <item><description>ログイン成功時のセッション保存</description></item>
+/// </list>
+/// <para>【UI バインディング】</para>
+/// <list type="bullet">
+/// <item><description>LoginId （ObservableProperty）</description></item>
+/// <item><description>Password （ObservableProperty。WPF の PasswordBox は Behaviors/PasswordBoxAssistant 経由でバインド）</description></item>
+/// <item><description>ErrorMessage （ObservableProperty）</description></item>
+/// <item><description>IsLoading （ObservableProperty。入力欄・ボタンの有効／無効は InverseBooleanConverter で反転してバインド）</description></item>
+/// <item><description>LoginCommand / CancelCommand （RelayCommand）</description></item>
+/// </list>
+/// </remarks>
 public partial class LoginViewModel : ObservableObject
 {
     private readonly AuthenticateLocalUserUseCase _authenticateUseCase;

@@ -9,7 +9,7 @@ namespace SupportAdvance.SharedKernel.ValueObjects.Audit;
 /// <remarks>
 /// <para>【設計】<see cref="LocalDateTime"/> を内部値として保持し、Domain 層での型安全性を確保。未更新は <see cref="ValueObject.IsSet"/> が <see langword="false"/> の状態で表現</para>
 /// <para>【null契約】未更新の状態は <see langword="null"/> ではなく <see cref="Unset"/>（<see cref="HasUpdated"/> が <see langword="false"/>）で表現。Domain 層での null 確認は不要。<see cref="TryFrom"/> は <see langword="null"/> の入力を <see cref="Unset"/> に変換して成功</para>
-/// <para>【時刻】DB の <c>DateTime</c> との変換は Infrastructure（Mapper・Repository）の担当。この型は <c>DateTime</c> を公開しない</para>
+/// <para>【時刻】DB の <c>DateTime</c> との変換は Infrastructure（Mapper・Repository）の担当。この型は <c>DateTime</c> の公開なし</para>
 /// <para>【参照】docs/Assistance/Guides/null厳格性設計ガイド.md</para>
 /// </remarks>
 /// <seealso cref="CreatedAt"/>
@@ -110,7 +110,7 @@ public sealed class UpdatedAt : PrimitiveValueObject<LocalDateTime?>, IEquatable
 
     /// <inheritdoc/>
     /// <remarks>
-    /// <para>【注意】<see cref="ValueObject.IsSet"/> は基底クラスが先頭に自動で付加するため、ここには含めない</para>
+    /// <para>【注意】<see cref="ValueObject.IsSet"/> は基底クラスによる先頭への自動付加のため、ここでの含有は不要</para>
     /// </remarks>
     protected override IEnumerable<object?> GetValueComponents()
     {

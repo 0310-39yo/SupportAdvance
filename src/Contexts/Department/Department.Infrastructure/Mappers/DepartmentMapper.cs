@@ -12,7 +12,7 @@ using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 /// </summary>
 /// <remarks>
 /// <para>【責務】値オブジェクト ↔ プリミティブ型の双方向変換。Domain は値オブジェクト、DB モデルはプリミティブ型で保持し、この型が橋渡しを行う</para>
-/// <para>【重要】監査フィールド（UpdatedAt／UpdatedBy など）は設定しない。設定は Repository の担当</para>
+/// <para>【重要】監査フィールド（UpdatedAt／UpdatedBy など）の設定なし。設定は Repository の担当</para>
 /// <para>【テスト容易性】Clock 依存なし（純粋な型変換）</para>
 /// </remarks>
 public class DepartmentMapper

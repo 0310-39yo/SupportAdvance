@@ -4,24 +4,18 @@ using System.Windows.Controls;
 namespace SupportAdvance.Presentation.WpfTrial.Behaviors;
 
 /// <summary>
-/// PasswordBox.Password をバインド可能にする添付ビヘイビア
-///
-/// 【背景】
-/// PasswordBox.Password はセキュリティ上の理由から DependencyProperty ではないため、
-/// 通常の {Binding} では ViewModel と同期できない。この添付プロパティが仲介する。
-///
-/// 【Attach が必要な理由】
-/// PasswordChanged イベントの購読を BoundPassword の PropertyChangedCallback 内で行うと、
-/// バインディング初期値（既定値の空文字列）と ViewModel 側の初期値（同じく空文字列）が
-/// 一致する場合に WPF が「変更なし」と判断してコールバック自体が一度も呼ばれず、
-/// イベント購読が永久に行われない（＝何を入力しても ViewModel に反映されない）。
-/// Attach は既定値 false → true への遷移が必ず発生するため、これを使って
-/// PasswordChanged の購読タイミングを BoundPassword の初期値と切り離す。
-///
-/// 【使い方】
+/// <see cref="PasswordBox.Password"/> をバインド可能にする添付ビヘイビア
+/// </summary>
+/// <remarks>
+/// <para>【背景】<c>PasswordBox.Password</c> はセキュリティ上の理由から <c>DependencyProperty</c> ではないため、通常の <c>{Binding}</c> では ViewModel と同期できない。この添付プロパティが仲介</para>
+/// <para>【<c>Attach</c> が必要な理由】<c>PasswordChanged</c> イベントの購読を <c>BoundPassword</c> の <c>PropertyChangedCallback</c> 内で行うと、バインディング初期値（既定値の空文字列）と ViewModel 側の初期値（同じく空文字列）が一致する場合に、WPF が「変更なし」と判断してコールバック自体が一度も呼ばれず、イベント購読が永久に行われない（何を入力しても ViewModel に反映されない）。<c>Attach</c> は既定値 <see langword="false"/> → <see langword="true"/> への遷移が必ず発生するため、これを使って <c>PasswordChanged</c> の購読タイミングを <c>BoundPassword</c> の初期値と切り離す</para>
+/// </remarks>
+/// <example>
+/// <code>
 /// &lt;PasswordBox behaviors:PasswordBoxAssistant.Attach="True"
 ///              behaviors:PasswordBoxAssistant.BoundPassword="{Binding Password, Mode=TwoWay}" /&gt;
-/// </summary>
+/// </code>
+/// </example>
 public static class PasswordBoxAssistant
 {
     /// <summary>

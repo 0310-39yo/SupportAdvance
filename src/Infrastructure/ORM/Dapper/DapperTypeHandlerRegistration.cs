@@ -7,13 +7,16 @@ namespace SupportAdvance.Infrastructure.ORM.Dapper;
 
 /// <summary>
 /// Dapper型ハンドラ登録支援ヘルパークラス
-///
-/// 【責務】
-/// - Dapper のグローバルな型マッピング設定
-/// - LocalDateTime（JST）を SqlServer の datetime2 にマッピング
-/// - RowId を long にマッピング
-/// - アンダースコア命名規則（snake_case）を対応
 /// </summary>
+/// <remarks>
+/// <para>【責務】</para>
+/// <list type="bullet">
+/// <item><description>Dapper のグローバルな型マッピング設定</description></item>
+/// <item><description>LocalDateTime（JST）を SqlServer の datetime2 にマッピング</description></item>
+/// <item><description>RowId を long にマッピング</description></item>
+/// <item><description>アンダースコア命名規則（snake_case）を対応</description></item>
+/// </list>
+/// </remarks>
 public static class DapperTypeHandlerRegistration
 {
     /// <summary>

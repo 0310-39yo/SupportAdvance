@@ -4,16 +4,21 @@ namespace SupportAdvance.Infrastructure.Persistence;
 
 /// <summary>
 /// SQL ファイルを埋め込みリソースから読み込むローダー（DI対応版）
-///
-/// 【責務】
-/// - Context 内の Persistence/Sql フォルダから SQL ファイルを解決
-/// - DB方言（SqlServer / PostgreSQL）を AppSettings から読み込み
-/// - SELECT 操作用（Repository で Dapper 実行時に使用）
-///
-/// 【使用例】
+/// </summary>
+/// <remarks>
+/// <para>【責務】</para>
+/// <list type="bullet">
+/// <item><description>Context 内の Persistence/Sql フォルダから SQL ファイルを解決</description></item>
+/// <item><description>DB方言（SqlServer / PostgreSQL）を AppSettings から読み込み</description></item>
+/// <item><description>SELECT 操作用（Repository で Dapper 実行時に使用）</description></item>
+/// </list>
+/// </remarks>
+/// <example>
+/// <code>
 /// var sql = _queryLoader.LoadQuery("Auth.GetLoginCredentialsByLoginId", typeof(LoginCredentialsRepository));
 /// → Authentication.Infrastructure/Persistence/Sql/SqlServer/Auth/GetLoginCredentialsByLoginId.sql
-/// </summary>
+/// </code>
+/// </example>
 public class SqlQueryLoader
 {
     private readonly IAppSettings _appSettings;

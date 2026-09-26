@@ -13,7 +13,7 @@ namespace SupportAdvance.Contexts.Employee.Domain.Entities;
 /// <para>【ID型】<see cref="DepartmentMembershipRowId"/>（独立した Entity の ID）。親参照は <see cref="EmployeeRowId"/>（所属する従業員）</para>
 /// <para>【責務】配属期間の管理</para>
 /// <para>【コレクション構造】従業員が複数の部署に所属可能</para>
-/// <para>【独立性】<see cref="EndOn"/>（配属終了日）は Employee の <c>RetiredOn</c>（雇用終了）と独立。配置転換の場合は前の部署の <see cref="EndOn"/> のみ更新し、<c>RetiredOn</c> は変わらない。退職の場合は <c>RetiredOn</c> を設定し、各部署の <see cref="EndOn"/> は別途管理</para>
+/// <para>【独立性】<see cref="EndOn"/>（配属終了日）は Employee の <c>RetiredOn</c>（雇用終了）と独立。配置転換の場合は前の部署の <see cref="EndOn"/> のみ更新し、<c>RetiredOn</c> は不変。退職の場合は <c>RetiredOn</c> を設定し、各部署の <see cref="EndOn"/> は別途管理</para>
 /// <para>【null契約】名前などの未設定の項目は <see langword="null"/> ではなく、各値オブジェクトの Unset で表現</para>
 /// </remarks>
 public sealed class DepartmentMembership : Entity<DepartmentMembershipRowId>

@@ -2,18 +2,20 @@ namespace SupportAdvance.SharedKernel.Entities;
 
 /// <summary>
 /// Department 集約の Application層インターフェース
-///
-/// 【配置】SharedKernel に定義（すべての層から参照可能）
-/// 【責務】他の Bounded Context に公開する Department の read-only API
-/// 【特徴】Domain の Department Entity がこのインターフェースを実装
-/// 【用途】Query Service を通じた Context間の Aggregate 参照
-///
-/// 【メリット】
-///   - Domain が Application に依存しない（アーキテクチャ準拠）
-///   - 他 Context は具体的な Department Entity を参照しない
-///   - Application層のインターフェース経由で参照可能
-///   - Domain層の実装詳細を隠蔽
 /// </summary>
+/// <remarks>
+/// <para>【配置】SharedKernel に定義（すべての層から参照可能）</para>
+/// <para>【責務】他の Bounded Context に公開する Department の read-only API</para>
+/// <para>【特徴】Domain の Department Entity がこのインターフェースを実装</para>
+/// <para>【用途】Query Service を通じた Context間の Aggregate 参照</para>
+/// <para>【メリット】</para>
+/// <list type="bullet">
+/// <item><description>Domain が Application に依存しない（アーキテクチャ準拠）</description></item>
+/// <item><description>他 Context からの具体的な Department Entity の参照なし</description></item>
+/// <item><description>Application層のインターフェース経由で参照可能</description></item>
+/// <item><description>Domain層の実装詳細を隠蔽</description></item>
+/// </list>
+/// </remarks>
 public interface IDepartment : IAggregateRoot
 {
     // 現時点ではマーカーインターフェース

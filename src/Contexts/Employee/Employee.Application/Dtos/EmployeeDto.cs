@@ -4,8 +4,10 @@ namespace SupportAdvance.Contexts.Employee.Application.Dtos;
 
 /// <summary>
 /// 従業員データ転送オブジェクト
-/// 【実装】IEmployeeQueryResult を実装（汎用層インターフェース経由での参照に対応）
 /// </summary>
+/// <remarks>
+/// <para>【実装】IEmployeeQueryResult を実装（汎用層インターフェース経由での参照に対応）</para>
+/// </remarks>
 public record EmployeeDto : IEmployeeQueryResult
 {
     /// <summary>

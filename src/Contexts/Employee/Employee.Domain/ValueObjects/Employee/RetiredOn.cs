@@ -9,7 +9,7 @@ namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
 /// <remarks>
 /// <para>【用途】従業員の在職状況の判定</para>
 /// <para>【null契約】任意。在職中は <see langword="null"/> ではなく <see cref="Unset"/>（<see cref="HasRetired"/> が <see langword="false"/>）で表現</para>
-/// <para>【時刻】JST の <see cref="LocalDateTime"/> で保持。DB の <c>DateTime</c> との変換は Infrastructure（Mapper）の担当。この型は <c>DateTime</c> を公開しない</para>
+/// <para>【時刻】JST の <see cref="LocalDateTime"/> で保持。DB の <c>DateTime</c> との変換は Infrastructure（Mapper）の担当。この型は <c>DateTime</c> の公開なし</para>
 /// </remarks>
 public sealed class RetiredOn : ValueObject, IEquatable<RetiredOn>
 {

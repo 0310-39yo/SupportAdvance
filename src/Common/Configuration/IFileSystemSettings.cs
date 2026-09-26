@@ -2,14 +2,16 @@ namespace SupportAdvance.Common.Configuration;
 
 /// <summary>
 /// ファイルシステム関連設定インターフェース
-/// 【責務】
-/// アプリケーションが使用するファイルパス、フォルダ構成の管理
-/// 【変更理由】
-/// プロジェクト構成の変更、ファイルパスの再構成が必要な場合
-/// 【関連ファイル】
-/// - HostBuilderFactory.cs（NLog 初期化時に SolutionName, FolderName, ProjectName を使用）
-/// - 将来の Repository 実装（FolderPaths を使用予定）
 /// </summary>
+/// <remarks>
+/// <para>【責務】アプリケーションが使用するファイルパス、フォルダ構成の管理</para>
+/// <para>【変更理由】プロジェクト構成の変更、ファイルパスの再構成が必要な場合</para>
+/// <para>【関連ファイル】</para>
+/// <list type="bullet">
+/// <item><description>HostBuilderFactory.cs（NLog 初期化時に SolutionName, FolderName, ProjectName を使用）</description></item>
+/// <item><description>将来の Repository 実装（FolderPaths を使用予定）</description></item>
+/// </list>
+/// </remarks>
 public interface IFileSystemSettings
 {
     /// <summary>

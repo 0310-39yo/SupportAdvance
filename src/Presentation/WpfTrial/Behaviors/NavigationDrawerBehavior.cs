@@ -6,14 +6,15 @@ namespace SupportAdvance.Presentation.WpfTrial.Behaviors;
 
 /// <summary>
 /// <see cref="SfNavigationDrawer"/> の項目クリックをコマンドに橋渡しする添付ビヘイビア
-///
-/// 【背景】
-/// SfNavigationDrawer は項目クリックのコマンドを持たず <see cref="SfNavigationDrawer.ItemClicked"/> イベントのみを公開する。
-/// コードビハインドを使わずに ViewModel のコマンドを呼び出すため、イベントを添付プロパティ経由でコマンドに変換する。
-///
-/// 【使い方】
-/// &lt;navigationDrawer:SfNavigationDrawer behaviors:NavigationDrawerBehavior.ItemClickedCommand="{Binding OpenTabCommand}" /&gt;
 /// </summary>
+/// <remarks>
+/// <para>【背景】<c>SfNavigationDrawer</c> は項目クリックのコマンドを持たず、<see cref="SfNavigationDrawer.ItemClicked"/> イベントのみを公開。コードビハインドを使わずに ViewModel のコマンドを呼び出すため、イベントを添付プロパティ経由でコマンドに変換</para>
+/// </remarks>
+/// <example>
+/// <code>
+/// &lt;navigationDrawer:SfNavigationDrawer behaviors:NavigationDrawerBehavior.ItemClickedCommand="{Binding OpenTabCommand}" /&gt;
+/// </code>
+/// </example>
 public static class NavigationDrawerBehavior
 {
     /// <summary>

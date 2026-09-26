@@ -9,7 +9,7 @@ namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Role;
 /// <remarks>
 /// <para>【責務】ロール・権限割り当ての有効開始日時の管理</para>
 /// <para>【null契約】必須。常に値を持つ</para>
-/// <para>【時刻】JST の <see cref="LocalDateTime"/> で保持。DB の <c>DateTime</c> との変換は Infrastructure（Mapper）の担当。この型は <c>DateTime</c> を公開しない</para>
+/// <para>【時刻】JST の <see cref="LocalDateTime"/> で保持。DB の <c>DateTime</c> との変換は Infrastructure（Mapper）の担当。この型は <c>DateTime</c> の公開なし</para>
 /// </remarks>
 public sealed class EffectiveAt : ValueObject, IEquatable<EffectiveAt>
 {

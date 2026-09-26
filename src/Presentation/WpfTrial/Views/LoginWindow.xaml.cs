@@ -5,14 +5,16 @@ namespace SupportAdvance.Presentation.WpfTrial.Views;
 
 /// <summary>
 /// ログインウィンドウ（WPF + MVVM Toolkit）
-///
-/// 【責務】
-/// - ViewModel（LoginViewModel）を DataContext に設定
-/// - ログインID・パスワード入力欄、エラーメッセージは XAML の Binding のみで表現
-/// - PasswordBox は仕様上バインド不可のため Behaviors/PasswordBoxAssistant で仲介
-/// - ViewModel の LoginSucceeded / CancelRequested イベントを受けて DialogResult を確定しウィンドウを閉じる
-///   （ウィンドウのライフサイクル制御は View の責務であり ViewModel はダイアログの存在を知らない）
 /// </summary>
+/// <remarks>
+/// <para>【責務】</para>
+/// <list type="bullet">
+/// <item><description>ViewModel（LoginViewModel）を DataContext に設定</description></item>
+/// <item><description>ログインID・パスワード入力欄、エラーメッセージは XAML の Binding のみで表現</description></item>
+/// <item><description>PasswordBox は仕様上バインド不可のため Behaviors/PasswordBoxAssistant で仲介</description></item>
+/// <item><description>ViewModel の LoginSucceeded / CancelRequested イベントを受けて DialogResult を確定しウィンドウを閉じる（ウィンドウのライフサイクル制御は View の責務であり ViewModel はダイアログの存在を知らない）</description></item>
+/// </list>
+/// </remarks>
 public partial class LoginWindow : Window
 {
     private readonly LoginViewModel _viewModel;

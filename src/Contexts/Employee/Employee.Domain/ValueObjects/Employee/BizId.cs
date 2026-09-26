@@ -4,10 +4,12 @@ namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
 
 /// <summary>
 /// 従業員の通し番号を表すValueObject（ビジネスID）
-/// 【範囲】1001以上（1000は管理者予約。区分ごとの有効範囲が検証される）
-/// 【表示】左0埋めで5桁（例："01234"）
-/// 【責務】ビジネスIDとしての従業員番号の管理と検証
 /// </summary>
+/// <remarks>
+/// <para>【範囲】1001以上（1000は管理者予約。区分ごとの有効範囲が検証される）</para>
+/// <para>【表示】左0埋めで5桁（例："01234"）</para>
+/// <para>【責務】ビジネスIDとしての従業員番号の管理と検証</para>
+/// </remarks>
 public sealed class BizId : PrimitiveValueObject<int>, IEquatable<BizId>
 {
     /// <summary>

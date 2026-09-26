@@ -3,7 +3,7 @@ namespace SupportAdvance.Common.Clocks;
 /// <summary>
 /// オフセット付きクロック実装
 /// 過去の日付を設定しながら、現在と同じ速度で時刻が進む
-/// 
+///
 /// 例: 2020年1月1日として、実際の時刻と同じ速度で進行
 /// </summary>
 public class OffsetClock : IClock, IDisposable
@@ -20,8 +20,8 @@ public class OffsetClock : IClock, IDisposable
     /// </summary>
     /// <param name="offsetDateTime">表示する日時（例：2020年1月1日 10:30:00）</param>
     /// <remarks>
-    /// システム時刻とのオフセットを計算します。
-    /// 以降、現在のシステム時刻と同じ速度で時刻が進みます。
+    /// システム時刻とのオフセットの計算。
+    /// 以降、現在のシステム時刻と同じ速度での時刻の進行
     /// </remarks>
     public OffsetClock(DateTime offsetDateTime)
     {

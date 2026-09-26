@@ -7,29 +7,26 @@ using Syncfusion.UI.Xaml.NavigationDrawer;
 namespace SupportAdvance.Presentation.WpfTrial.Behaviors;
 
 /// <summary>
-/// <see cref="SfNavigationDrawer"/> を置いた <see cref="Grid"/> の列の幅を、<see cref="GridSplitter"/> のドラッグで変えられるようにする添付ビヘイビア
-///
-/// 【背景】
-/// SfNavigationDrawer は、展開時の幅（<see cref="SfNavigationDrawer.ExpandedModeWidth"/>）を、実行中に変えても表示に反映しない。
-/// そのため、ドロワーの内側の幅は最大の幅に固定し、ドロワーを置いた列の幅（ドラッグで変える）で、見える範囲を切り取る方式にする。
-///
-/// 【使い方】
-/// ドロワーを Grid の列 N に置き、列 N+1 に <see cref="GridSplitter"/> を置く。ドロワーに次を指定する。
+/// <see cref="SfNavigationDrawer"/> を置いた <see cref="Grid"/> の列の幅を、<see cref="GridSplitter"/> のドラッグで変更可能にする添付ビヘイビア
+/// </summary>
+/// <remarks>
+/// <para>【背景】<c>SfNavigationDrawer</c> は、展開時の幅（<see cref="SfNavigationDrawer.ExpandedModeWidth"/>）を実行中に変えても表示に反映しない。そのため、ドロワーの内側の幅は最大の幅に固定し、ドロワーを置いた列の幅（ドラッグで変更）で、見える範囲を切り取る方式を採用</para>
+/// <para>【使い方】ドロワーを Grid の列 N に置き、列 N+1 に <see cref="GridSplitter"/> を配置。ドロワーには下の例の指定が必要（<c>ExpandedModeWidth</c> は <c>MaxWidth</c> 以上にすること）</para>
+/// <para>【動作】</para>
+/// <list type="bullet">
+/// <item><description>展開表示の場合: 列の幅を <c>MinWidth</c>〜<c>MaxWidth</c> の範囲でドラッグして変更可能</description></item>
+/// <item><description>折りたたみ表示（Compact）になった場合: 列の幅を記憶したうえで <see cref="SfNavigationDrawer.CompactModeWidth"/> に固定し、境界を無効化。展開表示に戻ると、記憶した幅に復元</description></item>
+/// </list>
+/// <para>【注意】展開／折りたたみの判定は、ドロワーのテンプレートが作る <c>ContentViewContentPresenter</c> の左の余白（折りたたみ時は <c>CompactModeWidth</c>）による。テンプレートの構造に依存し、見つからない場合は処理なし</para>
+/// </remarks>
+/// <example>
+/// <code>
 /// &lt;navigationDrawer:SfNavigationDrawer ExpandedModeWidth="500"
 ///         behaviors:NavigationDrawerResizeBehavior.IsResizable="True"
 ///         behaviors:NavigationDrawerResizeBehavior.MinWidth="120"
 ///         behaviors:NavigationDrawerResizeBehavior.MaxWidth="500" /&gt;
-/// （<c>ExpandedModeWidth</c> は <c>MaxWidth</c> 以上にする）
-///
-/// 【動作】
-/// - 展開表示のとき: 列の幅を <c>MinWidth</c>〜<c>MaxWidth</c> の範囲でドラッグして変えられる
-/// - 折りたたみ表示（Compact）になったとき: 列の幅を記憶したうえで <see cref="SfNavigationDrawer.CompactModeWidth"/> に固定し、境界を無効にする。
-///   展開表示に戻ると、記憶した幅に戻す
-///
-/// 【注意】
-/// - 展開／折りたたみの判定は、ドロワーのテンプレートが作る <c>ContentViewContentPresenter</c> の左の余白（折りたたみ時は <c>CompactModeWidth</c> になる）による。
-///   テンプレートの構造に依存し、見つからない場合は何もしない
-/// </summary>
+/// </code>
+/// </example>
 public static class NavigationDrawerResizeBehavior
 {
     // ドロワーのテンプレートが、メインコンテンツの左側に空ける余白（＝現在の展開／折りたたみの幅）を持つ要素の名前
@@ -78,7 +75,7 @@ public static class NavigationDrawerResizeBehavior
     /// <c>IsResizable</c> 添付プロパティの値の設定
     /// </summary>
     /// <param name="d">対象の要素（<see cref="SfNavigationDrawer"/>）</param>
-    /// <param name="value"><see langword="true"/> で、列の幅をドラッグで変えられるようにする</param>
+    /// <param name="value"><see langword="true"/>  の場合は、列の幅のドラッグでの変更が可能</param>
     public static void SetIsResizable(DependencyObject d, bool value) => d.SetValue(IsResizableProperty, value);
 
     /// <summary>

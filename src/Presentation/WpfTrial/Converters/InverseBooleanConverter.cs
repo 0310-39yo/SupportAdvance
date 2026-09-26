@@ -5,8 +5,10 @@ namespace SupportAdvance.Presentation.WpfTrial.Converters;
 
 /// <summary>
 /// 真偽値を反転するコンバーター
-/// 【用途】処理中フラグ（IsLoading）から、入力欄・ボタンの有効／無効（IsEnabled）への変換
 /// </summary>
+/// <remarks>
+/// <para>【用途】処理中フラグ（IsLoading）から、入力欄・ボタンの有効／無効（IsEnabled）への変換</para>
+/// </remarks>
 public sealed class InverseBooleanConverter : IValueConverter
 {
     /// <summary>

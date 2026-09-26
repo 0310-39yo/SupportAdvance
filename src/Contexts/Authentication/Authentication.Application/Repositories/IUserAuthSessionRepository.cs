@@ -5,14 +5,16 @@ namespace SupportAdvance.Contexts.Authentication.Application.Repositories;
 
 /// <summary>
 /// ユーザー認証セッション Repository インターフェース
-///
-/// 【責務】
-/// - UserAuthSession 集約の永続化（保存・取得・更新・削除）
-/// - Application層と Infrastructure層の間の境界
-/// - 監査情報（CreatedAt, UpdatedAt, DeletedAt）の管理
-///
-/// 【実装】Infrastructure層で Dapper/RepoDb を使用
 /// </summary>
+/// <remarks>
+/// <para>【責務】</para>
+/// <list type="bullet">
+/// <item><description>UserAuthSession 集約の永続化（保存・取得・更新・削除）</description></item>
+/// <item><description>Application層と Infrastructure層の間の境界</description></item>
+/// <item><description>監査情報（CreatedAt, UpdatedAt, DeletedAt）の管理</description></item>
+/// </list>
+/// <para>【実装】Infrastructure層で Dapper/RepoDb を使用</para>
+/// </remarks>
 public interface IUserAuthSessionRepository
 {
     /// <summary>

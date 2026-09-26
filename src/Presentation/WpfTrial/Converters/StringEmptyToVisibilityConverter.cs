@@ -6,8 +6,10 @@ namespace SupportAdvance.Presentation.WpfTrial.Converters;
 
 /// <summary>
 /// 文字列が空でない場合に Visible、空の場合に Collapsed を返すコンバーター
-/// 【用途】エラーメッセージラベルの表示/非表示切り替え
 /// </summary>
+/// <remarks>
+/// <para>【用途】エラーメッセージラベルの表示/非表示切り替え</para>
+/// </remarks>
 public sealed class StringEmptyToVisibilityConverter : IValueConverter
 {
     /// <summary>

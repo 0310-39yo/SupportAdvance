@@ -46,7 +46,7 @@ public interface IQueryService<TAggregate, TId>
     where TId : notnull
 {
     /// <summary>
-    /// 集約IDで Aggregate を検索する
+    /// 集約IDで Aggregate の検索
     /// </summary>
     /// <param name="id">検索する集約ID</param>
     /// <returns>見つかった Aggregate、または null</returns>

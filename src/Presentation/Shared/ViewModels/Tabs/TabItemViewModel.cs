@@ -6,7 +6,7 @@ namespace SupportAdvance.Presentation.Shared.ViewModels.Tabs;
 /// メインウィンドウのタブ 1 枚分の ViewModel
 /// </summary>
 /// <remarks>
-/// <para>【設計】View 型（UserControl など）は保持しない。表示する画面は <see cref="ContentViewModel"/> の型に対応する DataTemplate で決まる</para>
+/// <para>【設計】View 型（UserControl など）の保持なし。表示する画面は <see cref="ContentViewModel"/> の型に対応する DataTemplate で決定</para>
 /// </remarks>
 public partial class TabItemViewModel : ObservableObject
 {

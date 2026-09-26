@@ -5,20 +5,25 @@ namespace SupportAdvance.Presentation.WinTrial.Services;
 
 /// <summary>
 /// 現在のユーザー情報サービス 実装
-///
-/// 【責務】
-/// - ログイン中のユーザー情報を保持
-/// - Application全体で現在のユーザーを参照できる
-///
-/// 【ライフサイクル】
-/// - アプリケーション起動時にログイン
-/// - ログイン成功後に情報を設定
-/// - アプリケーション終了時にログアウト
-///
-/// 【スレッドセーフティ】
-/// - UI スレッドでのみ実行される前提
-/// - WinForms の SynchronizationContext に依存
 /// </summary>
+/// <remarks>
+/// <para>【責務】</para>
+/// <list type="bullet">
+/// <item><description>ログイン中のユーザー情報を保持</description></item>
+/// <item><description>Application全体での現在のユーザーの参照が可能</description></item>
+/// </list>
+/// <para>【ライフサイクル】</para>
+/// <list type="bullet">
+/// <item><description>アプリケーション起動時にログイン</description></item>
+/// <item><description>ログイン成功後に情報を設定</description></item>
+/// <item><description>アプリケーション終了時にログアウト</description></item>
+/// </list>
+/// <para>【スレッドセーフティ】</para>
+/// <list type="bullet">
+/// <item><description>UI スレッドでのみ実行される前提</description></item>
+/// <item><description>WinForms の SynchronizationContext に依存</description></item>
+/// </list>
+/// </remarks>
 public sealed class RealCurrentUserService : ICurrentUserService
 {
     private long _employeeRowId;

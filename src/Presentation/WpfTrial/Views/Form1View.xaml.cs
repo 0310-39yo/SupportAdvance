@@ -6,7 +6,7 @@ namespace SupportAdvance.Presentation.WpfTrial.Views;
 /// Form1 の画面（顧客一覧のタブに仮として表示する UserControl）
 /// </summary>
 /// <remarks>
-/// <para>【設計】DataContext は設定しない。タブの内容（<c>Form1ViewModel</c>）が DataContext として渡される（MainWindow.xaml の DataTemplate）</para>
+/// <para>【設計】DataContext の設定なし。タブの内容（<c>Form1ViewModel</c>）が DataContext として渡される（MainWindow.xaml の DataTemplate）</para>
 /// </remarks>
 public partial class Form1View : UserControl
 {

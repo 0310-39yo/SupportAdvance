@@ -9,7 +9,7 @@ namespace SupportAdvance.SharedKernel.ValueObjects.Audit;
 /// <remarks>
 /// <para>【設計】<see cref="LocalDateTime"/> を内部値として保持し、Domain 層での型安全性を確保</para>
 /// <para>【null契約】必須。<see langword="null"/> の入力は <see cref="TryFrom"/> で失敗。Unset なし</para>
-/// <para>【時刻】DB の <c>DateTime</c> との変換は Infrastructure（Mapper・Repository）の担当。この型は <c>DateTime</c> を公開しない</para>
+/// <para>【時刻】DB の <c>DateTime</c> との変換は Infrastructure（Mapper・Repository）の担当。この型は <c>DateTime</c> の公開なし</para>
 /// <para>【参照】docs/Assistance/Guides/FromDbValue_ToDbValue_パターンガイド.md</para>
 /// </remarks>
 /// <seealso cref="UpdatedAt"/>
@@ -90,7 +90,7 @@ public sealed class CreatedAt : PrimitiveValueObject<LocalDateTime>, IEquatable<
 
     /// <inheritdoc/>
     /// <remarks>
-    /// <para>【注意】<see cref="ValueObject.IsSet"/> は基底クラスが先頭に自動で付加するため、ここには含めない</para>
+    /// <para>【注意】<see cref="ValueObject.IsSet"/> は基底クラスによる先頭への自動付加のため、ここでの含有は不要</para>
     /// </remarks>
     protected override IEnumerable<object?> GetValueComponents()
     {

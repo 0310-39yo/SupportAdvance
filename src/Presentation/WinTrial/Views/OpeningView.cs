@@ -7,9 +7,9 @@ namespace SupportAdvance.Presentation.WinTrial.Views;
 /// オープニング画面（起動後、ナビゲーションが選ばれるまで表示する）
 /// </summary>
 /// <remarks>
-/// <para>【表示内容】右下に製品名、その下にアプリケーションの名前（<see cref="OpeningViewModel"/> の内容）を描画する。将来、お知らせなどの通知もここに表示する予定</para>
-/// <para>【設計】文字はコントロールの描画で表示し、<see cref="OpeningViewModel"/> の変更に合わせて再描画する。
-/// メインウィンドウの残りの領域を埋める形で、MDI の領域の手前に重ねて使う（タブは使わない。<see cref="MdiClient"/> には MDI の子フォームしか追加できない）</para>
+/// <para>【表示内容】右下に製品名、その下にアプリケーションの名前（<see cref="OpeningViewModel"/> の内容）の描画。将来、お知らせなどの通知もここに表示する予定</para>
+/// <para>【設計】文字はコントロールの描画で表示し、<see cref="OpeningViewModel"/> の変更に合わせた再描画。
+/// メインウィンドウの残りの領域を埋める形で、MDI の領域の手前に重ねて使用（タブは不使用。<see cref="MdiClient"/> には MDI の子フォームしか追加できない）</para>
 /// </remarks>
 public sealed class OpeningView : UserControl
 {

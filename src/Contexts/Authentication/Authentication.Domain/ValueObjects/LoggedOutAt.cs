@@ -9,7 +9,7 @@ namespace SupportAdvance.Contexts.Authentication.Domain.ValueObjects;
 /// <remarks>
 /// <para>【用途】アプリケーション終了時のログアウト操作の記録。正常終了した場合のみ値を持ち、異常終了（クラッシュなど）の場合は未設定のまま（監査用）</para>
 /// <para>【null契約】任意。未ログアウトは <see langword="null"/> ではなく <see cref="Unset"/>（<see cref="HasLoggedOut"/> が <see langword="false"/>）で表現。<see cref="TryFrom"/> は <see langword="null"/> の入力を <see cref="Unset"/> に変換して成功</para>
-/// <para>【時刻】JST の <see cref="LocalDateTime"/> で保持。DB の <c>DateTime</c> との変換は Infrastructure（Mapper）の担当。この型は <c>DateTime</c> を公開しない</para>
+/// <para>【時刻】JST の <see cref="LocalDateTime"/> で保持。DB の <c>DateTime</c> との変換は Infrastructure（Mapper）の担当。この型は <c>DateTime</c> の公開なし</para>
 /// <para>【参照】docs/Assistance/Guides/null厳格性設計ガイド.md</para>
 /// </remarks>
 public sealed class LoggedOutAt : ValueObject, IEquatable<LoggedOutAt>

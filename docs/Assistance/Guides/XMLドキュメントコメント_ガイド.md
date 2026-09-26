@@ -946,8 +946,8 @@ public const string DebugBuild = "Debug";
 <PropertyGroup>
   <GenerateDocumentationFile>true</GenerateDocumentationFile>
   <!-- コメントの間違いはエラーにする -->
-  <WarningsAsErrors>$(WarningsAsErrors);CS1570;CS1572;CS1573;CS1574;CS1734</WarningsAsErrors>
-  <!-- コメントがないこと（CS1591）は、当面は警告として残す -->
+  <WarningsAsErrors>$(WarningsAsErrors);CS1570;CS1572;CS1573;CS1574;CS1591;CS1734</WarningsAsErrors>
+  <!-- コメントがないこと（CS1591）も、2026-09-26 にエラーへ昇格（導入時点で 0 件） -->
 </PropertyGroup>
 ```
 
@@ -962,7 +962,9 @@ public const string DebugBuild = "Debug";
 
 > **注意**: `Directory.Build.props` は最も近い 1 つしか自動で読み込まれない。そのため `src/Contexts` と `src/Presentation` の `Directory.Build.props` は、先頭の `<Import>` で `src/Directory.Build.props` を取り込んでいる。新しく `src/` 配下に `Directory.Build.props` を作る場合も、同じ `<Import>` を入れること。
 >
-> CS1591（コメントなし）は警告のまま。新しい public メンバーにコメントを書き忘れると、ビルドの警告に出る。
+> CS1591（コメントなし）もビルドエラー。新しい public メンバーにコメントを書き忘れると、ビルドが失敗する。
+>
+> **文体などの機械判定**: 次の規則は `tests/Architecture.Tests/DocumentationStyleTests.cs` が `src/` を走査して検証する。`<summary>` の 3 行形式（A1）、最後の文の「。」（A2）、`<summary>` 内の【見出し】（A4）、プロパティの `<returns>`（A5）、コンストラクターの `<returns>`（A6）、空の `<param>`（A7）、Markdown のコードブロック（A8）、`Equals`／`GetHashCode` の `<inheritdoc/>`（A10）。体言止め（A3）は例外を認めているため、テストにはせず、レビュー（§9 のチェックリスト）で確認する。
 
 > `.editorconfig` の `resharper_xmldoc_*` の設定（子要素をインデントしない、`summary`／`remarks`／`para` などの前で改行する）は、このガイドのテンプレートと合っている。
 
@@ -972,6 +974,7 @@ public const string DebugBuild = "Debug";
 
 | 日付 | 内容 |
 |---|---|
+| 2026-09-26 | CS1591（コメントなし）をビルドエラーに昇格（§10）。文体などの機械判定できる規則を `DocumentationStyleTests` で自動検証する旨を追記 |
 | 2026-09-26 | 日時の DB 変換を Infrastructure に移す方針（値オブジェクトから `DateTime` を排除）に合わせて、§6-3 の `UpdatedAt` の実例（【時刻】）、§6-14 の Try 系の例（`TryFrom(LocalDateTime?)`）、§4-2 の表の例を修正 |
 | 2026-09-18 | `<summary>` は必ず 3 行形式とするルールを追加（§3-1・§3-2・§4-1・チェックリスト）。すべての例を 3 行形式に変更 |
 | 2026-09-18 | §8 の実例に修正済みの旨を追記。§10 のビルド設定を適用済みに変更（子の Directory.Build.props からの Import を追記） |
