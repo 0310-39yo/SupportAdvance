@@ -132,6 +132,11 @@ WinTrial は Phase 3 で `ICurrentUserService` の名前空間変更に追随す
 - `Presentation.Shared` の共有 ViewModel（`BusinessDayClockViewModel`）の使われ方
 - WpfTrial との重複コード（Form1 相当の画面、ログイン処理）の有無
 
+### 実施結果（2026-09-26）
+
+- 調査報告: [20260926_WinTrial_準拠調査報告.md](../Reports/20260926_WinTrial_準拠調査報告.md)
+- 修正計画: [20260926_WinTrial_準拠修正計画.md](20260926_WinTrial_準拠修正計画.md)（承認後に着手）
+
 ### 成果物
 
 - 調査結果を `docs/Assistance/Reports/yyyyMMdd_WinTrial_準拠調査報告.md` に保存（WpfTrial 調査と同じ観点・重大度で整理）
