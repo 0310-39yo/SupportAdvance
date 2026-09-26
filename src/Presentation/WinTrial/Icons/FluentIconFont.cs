@@ -42,13 +42,10 @@ internal static class FluentIconFont
 
         using var font = new Font(Family.Value, pixelSize, FontStyle.Regular, GraphicsUnit.Pixel);
         using var brush = new SolidBrush(color);
-        using var format = new StringFormat(StringFormat.GenericTypographic)
-        {
-            Alignment = StringAlignment.Center,
-            LineAlignment = StringAlignment.Center
-        };
 
-        graphics.DrawString(glyph, font, brush, new RectangleF(0, 0, pixelSize, pixelSize), format);
+        // 【注意】GenericTypographic（余白なし）で左上に描く。矩形に収めて中央揃えにすると何も描かれず、
+        // 既定の書式では余白のぶん右にずれて欠ける（このフォントは 1 文字が 1em の正方形に収まる設計）
+        graphics.DrawString(glyph, font, brush, 0, 0, StringFormat.GenericTypographic);
         return bitmap;
     }
 

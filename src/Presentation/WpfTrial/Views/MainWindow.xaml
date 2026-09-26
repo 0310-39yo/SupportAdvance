@@ -18,6 +18,17 @@
     Height="800">
 
     <Window.Resources>
+        <!-- ナビゲーション項目のスタイル：フォントを少し大きくし（既定 14 → 16）、上下の間隔（最小の高さと余白）を小さくする。
+             テーマ既定のスタイルを引き継ぐ（BasedOn）ため、ここで指定した項目だけが変わる。
+             間隔が変わらない場合は、テーマのテンプレートが高さを固定している可能性がある -->
+        <Style x:Key="NavigationItemStyle"
+               TargetType="navigationDrawer:NavigationItem"
+               BasedOn="{StaticResource {x:Type navigationDrawer:NavigationItem}}">
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="MinHeight" Value="30" />
+            <Setter Property="Padding" Value="0" />
+        </Style>
+
         <!-- タブ内容の ViewModel → View の対応付け（ViewModel-first）。
              画面を追加する場合は、ここに ViewModel 型ごとの DataTemplate を追加する -->
         <DataTemplate DataType="{x:Type tabs:EmptyTabContentViewModel}">
@@ -62,6 +73,7 @@
                              DisplayMode="Expanded"
                              IsToggleButtonVisible="True"
                              ExpandedModeWidth="220"
+                             ItemContainerStyle="{StaticResource NavigationItemStyle}"
                              CompactModeWidth="48"
                              behaviors:NavigationDrawerBehavior.ItemClickedCommand="{Binding OpenTabCommand}">
 
