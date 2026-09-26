@@ -39,23 +39,6 @@ public class AbolishedOnTests
     }
 
     [Fact]
-    public void TryFromDbValue_Null_ReturnsUnset()
-    {
-        var result = AbolishedOn.TryFromDbValue(null, out var abolishedOn);
-        Assert.True(result);
-        Assert.False(abolishedOn.IsAbolished);
-    }
-
-    [Fact]
-    public void TryFromDbValue_ValidValue_ReturnsInstance()
-    {
-        var now = new DateTime(2026, 9, 15, 10, 0, 0);
-        var result = AbolishedOn.TryFromDbValue(now, out var abolishedOn);
-        Assert.True(result);
-        Assert.True(abolishedOn.IsAbolished);
-    }
-
-    [Fact]
     public void Equals_SameValue_ReturnsTrue()
     {
         var abolishedOn1 = AbolishedOn.Unset();

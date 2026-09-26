@@ -17,7 +17,7 @@ Domain / SharedKernel / Application の型（値オブジェクトを含む）�
 
 > **方針の決定**: 2026-09-26。旧バージョン（1.0）は、値オブジェクトが `FromDbValue(DateTime)` / `TryFromDbValue(DateTime?)` / `ToDbValue()` を持つ設計だった。「Domain が DB の型を知らない」という原則に合わせて、変換を Infrastructure に移す。
 >
-> **移行中の注意**: 現状のコードには旧形式が残っている（`CreatedAt` / `UpdatedAt` / `DeletedAt`、`AbolishedOn`、`RetiredOn`、`EndOn`、`ExpirationOn`、`EffectiveAt`）。[原則完全準拠 実装計画](../Plans/20260926_原則完全準拠_実装計画.md) のフェーズ 4 で削除する。**移行が完了するまで、旧形式の新規追加は禁止**。フェーズ 4 完了後に、この注意書きを削除する。
+> **移行完了**: 2026-09-26。旧形式は、8 つの値オブジェクト（`CreatedAt` / `UpdatedAt` / `DeletedAt`、`AbolishedOn`、`RetiredOn`、`EndOn`、`ExpirationOn`、`EffectiveAt`）から全て削除した（[原則完全準拠 実装計画](../Plans/20260926_原則完全準拠_実装計画.md) のフェーズ 4）。旧形式は新規に追加しない。
 
 ### 対象外（現状維持）
 
@@ -113,7 +113,7 @@ RetiredOn = entity.RetiredOn.HasRetired
 
 ## 🧰 変換ヘルパー（Infrastructure）
 
-`DateTime` ↔ `LocalDateTime` の変換は、Infrastructure の拡張メソッドにまとめる（フェーズ 4-A で追加）。
+`DateTime` ↔ `LocalDateTime` の変換は、Infrastructure の拡張メソッド `DbDateTimeExtensions`（`SupportAdvance.Infrastructure.Mappers`。`src/Infrastructure/Mappers/DbDateTimeExtensions.cs`）にまとめている。
 
 | メソッド | 変換 |
 |---|---|

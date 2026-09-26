@@ -11,6 +11,7 @@ using Domain.Entities;
 using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
 using Domain.ValueObjects.Person;
 using Mappers;
+using SupportAdvance.Infrastructure.Mappers;
 using Models;
 using Crosscutting.Logging;
 using SupportAdvance.Infrastructure.Persistence;
@@ -104,34 +105,34 @@ public class EmployeeRepository(
                 new { EmployeeRowId = dbModel.RowId });
 
             // ============ 層間フィルター ============
-            // DB の null を ValueObject の Unset() に変換（Infrastructure層の責務）
-            if (!CreatedAt.TryFromDbValue(dbModel.CreatedAt, out var employeeCreatedAt))
+            // DB の DateTime? を LocalDateTime? に変換し、TryFrom で null を ValueObject の Unset() に変換（Infrastructure層の責務）
+            if (!CreatedAt.TryFrom(dbModel.CreatedAt.ToLocalDateTime(), out var employeeCreatedAt))
             {
                 throw new InvalidOperationException($"Invalid CreatedAt for Employee BizId={bizId}");
             }
 
-            if (!UpdatedAt.TryFromDbValue(dbModel.UpdatedAt, out var employeeUpdatedAt))
+            if (!UpdatedAt.TryFrom(dbModel.UpdatedAt.ToLocalDateTimeOrNull(), out var employeeUpdatedAt))
             {
                 throw new InvalidOperationException($"Invalid UpdatedAt for Employee BizId={bizId}");
             }
 
-            if (!DeletedAt.TryFromDbValue(dbModel.DeletedAt, out var employeeDeletedAt))
+            if (!DeletedAt.TryFrom(dbModel.DeletedAt.ToLocalDateTimeOrNull(), out var employeeDeletedAt))
             {
                 throw new InvalidOperationException($"Invalid DeletedAt for Employee BizId={bizId}");
             }
 
             // Person の監査フィールドも変換
-            if (!CreatedAt.TryFromDbValue(personDbModel.CreatedAt, out var personCreatedAt))
+            if (!CreatedAt.TryFrom(personDbModel.CreatedAt.ToLocalDateTime(), out var personCreatedAt))
             {
                 throw new InvalidOperationException($"Invalid CreatedAt for Person BizId={bizId}");
             }
 
-            if (!UpdatedAt.TryFromDbValue(personDbModel.UpdatedAt, out var personUpdatedAt))
+            if (!UpdatedAt.TryFrom(personDbModel.UpdatedAt.ToLocalDateTimeOrNull(), out var personUpdatedAt))
             {
                 throw new InvalidOperationException($"Invalid UpdatedAt for Person BizId={bizId}");
             }
 
-            if (!DeletedAt.TryFromDbValue(personDbModel.DeletedAt, out var personDeletedAt))
+            if (!DeletedAt.TryFrom(personDbModel.DeletedAt.ToLocalDateTimeOrNull(), out var personDeletedAt))
             {
                 throw new InvalidOperationException($"Invalid DeletedAt for Person BizId={bizId}");
             }
@@ -194,34 +195,34 @@ public class EmployeeRepository(
                 new { EmployeeRowId = id.Value });
 
             // ============ 層間フィルター ============
-            // DB の null を ValueObject の Unset() に変換（Infrastructure層の責務）
-            if (!CreatedAt.TryFromDbValue(employeeDbModel.CreatedAt, out var employeeCreatedAt))
+            // DB の DateTime? を LocalDateTime? に変換し、TryFrom で null を ValueObject の Unset() に変換（Infrastructure層の責務）
+            if (!CreatedAt.TryFrom(employeeDbModel.CreatedAt.ToLocalDateTime(), out var employeeCreatedAt))
             {
                 throw new InvalidOperationException($"Invalid CreatedAt for Employee RowId={id.Value}");
             }
 
-            if (!UpdatedAt.TryFromDbValue(employeeDbModel.UpdatedAt, out var employeeUpdatedAt))
+            if (!UpdatedAt.TryFrom(employeeDbModel.UpdatedAt.ToLocalDateTimeOrNull(), out var employeeUpdatedAt))
             {
                 throw new InvalidOperationException($"Invalid UpdatedAt for Employee RowId={id.Value}");
             }
 
-            if (!DeletedAt.TryFromDbValue(employeeDbModel.DeletedAt, out var employeeDeletedAt))
+            if (!DeletedAt.TryFrom(employeeDbModel.DeletedAt.ToLocalDateTimeOrNull(), out var employeeDeletedAt))
             {
                 throw new InvalidOperationException($"Invalid DeletedAt for Employee RowId={id.Value}");
             }
 
             // Person の監査フィールドも変換
-            if (!CreatedAt.TryFromDbValue(personDbModel.CreatedAt, out var personCreatedAt))
+            if (!CreatedAt.TryFrom(personDbModel.CreatedAt.ToLocalDateTime(), out var personCreatedAt))
             {
                 throw new InvalidOperationException($"Invalid CreatedAt for Person EmployeeRowId={id.Value}");
             }
 
-            if (!UpdatedAt.TryFromDbValue(personDbModel.UpdatedAt, out var personUpdatedAt))
+            if (!UpdatedAt.TryFrom(personDbModel.UpdatedAt.ToLocalDateTimeOrNull(), out var personUpdatedAt))
             {
                 throw new InvalidOperationException($"Invalid UpdatedAt for Person EmployeeRowId={id.Value}");
             }
 
-            if (!DeletedAt.TryFromDbValue(personDbModel.DeletedAt, out var personDeletedAt))
+            if (!DeletedAt.TryFrom(personDbModel.DeletedAt.ToLocalDateTimeOrNull(), out var personDeletedAt))
             {
                 throw new InvalidOperationException($"Invalid DeletedAt for Person EmployeeRowId={id.Value}");
             }

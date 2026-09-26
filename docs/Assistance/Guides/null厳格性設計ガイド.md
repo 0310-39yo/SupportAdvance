@@ -849,7 +849,7 @@ Infrastructure（Mapper / Repository）: DateTime ↔ LocalDateTime の型変換
 Mapper: Entity ↔ DbModel の完全なマッピング
 ```
 
-> **移行中の注意**: 現状のコードには、値オブジェクトが `FromDbValue(DateTime)` / `TryFromDbValue(DateTime?)` / `ToDbValue()` を持つ旧形式が残っている。[原則完全準拠 実装計画](../Plans/20260926_原則完全準拠_実装計画.md) のフェーズ 4 で削除する。詳細は [FromDbValue_ToDbValue_パターンガイド.md](FromDbValue_ToDbValue_パターンガイド.md)。
+> **移行完了**: 値オブジェクトが `FromDbValue(DateTime)` / `TryFromDbValue(DateTime?)` / `ToDbValue()` を持つ旧形式は、2026-09-26 に全て削除した（[原則完全準拠 実装計画](../Plans/20260926_原則完全準拠_実装計画.md) のフェーズ 4）。変換は `DbDateTimeExtensions`（`SupportAdvance.Infrastructure.Mappers`）。詳細は [FromDbValue_ToDbValue_パターンガイド.md](FromDbValue_ToDbValue_パターンガイド.md)。
 
 ---
 

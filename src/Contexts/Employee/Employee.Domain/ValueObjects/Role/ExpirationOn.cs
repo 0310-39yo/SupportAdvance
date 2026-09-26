@@ -4,36 +4,44 @@ using SupportAdvance.SharedKernel.ValueObjects;
 namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Role;
 
 /// <summary>
-/// 有効終了日時を表す ValueObject
-/// 【型】LocalDateTime のラッパー
-/// 【状態】IsSet=true: 有効期限あり、IsSet=false: 無期限
-/// 【責務】ロール・権限割り当ての有効終了日時を管理
+/// 有効終了日時（JST）を表す値オブジェクト
 /// </summary>
+/// <remarks>
+/// <para>【責務】ロール・権限割り当ての有効終了日時の管理</para>
+/// <para>【null契約】任意。無期限は <see cref="Unlimited"/>（<see cref="HasExpiration"/> が <see langword="false"/>）で表現</para>
+/// <para>【時刻】JST の <see cref="LocalDateTime"/> で保持。DB の <c>DateTime</c> との変換は Infrastructure（Mapper）の担当。この型は <c>DateTime</c> を公開しない</para>
+/// </remarks>
 public sealed class ExpirationOn : ValueObject, IEquatable<ExpirationOn>
 {
     /// <summary>
-    /// 有効終了日時（未設定時は LocalDateTime.MinValue）
+    /// 有効終了日時（JST）
     /// </summary>
+    /// <value>無期限の場合は <see cref="LocalDateTime.MinValue"/></value>
     public LocalDateTime Value { get; }
 
     /// <summary>
-    /// 設定状態フラグ（IsSet=true で有効期限あり）
+    /// 有効期限が設定されているかどうかを示す値
     /// </summary>
+    /// <value>設定済み（有効期限あり）の場合は <see langword="true"/></value>
     public new bool IsSet { get; }
 
     /// <summary>
-    /// 無期限フラグ（HasExpiration=false で無期限）
+    /// 有効期限があるかどうかを示す値
     /// </summary>
+    /// <value>有効期限ありの場合は <see langword="true"/>、無期限の場合は <see langword="false"/></value>
     public bool HasExpiration => IsSet;
 
     /// <summary>
-    /// 無期限状態（IsSet=false）を表す静的プロパティ
+    /// 無期限の状態を表す <see cref="ExpirationOn"/>
     /// </summary>
+    /// <value><see cref="HasExpiration"/> が <see langword="false"/> のインスタンス</value>
     public static ExpirationOn Unlimited => new(LocalDateTime.MinValue, false);
 
     /// <summary>
-    /// 指定された有効終了日時から ExpirationOn を生成する（プライベートコンストラクタ）
+    /// 指定日時と設定状態による初期化。生成は <see cref="From"/>／<see cref="Unlimited"/> を使用
     /// </summary>
+    /// <param name="value">有効終了日時（JST）。無期限の場合は <see cref="LocalDateTime.MinValue"/></param>
+    /// <param name="isSet">設定済みかどうかを示す値</param>
     private ExpirationOn(LocalDateTime value, bool isSet)
     {
         Value = value;
@@ -41,38 +49,11 @@ public sealed class ExpirationOn : ValueObject, IEquatable<ExpirationOn>
     }
 
     /// <summary>
-    /// 指定された有効終了日から ExpirationOn を生成する
+    /// 指定された有効終了日を持つ <see cref="ExpirationOn"/> の生成
     /// </summary>
     /// <param name="value">有効終了日（JST）</param>
-    /// <returns>ExpirationOn インスタンス</returns>
+    /// <returns>有効期限ありのインスタンス</returns>
     public static ExpirationOn From(LocalDateTime value) => new(value, true);
-
-    /// <summary>
-    /// DB値から ExpirationOn を復元する（null → Unlimited）
-    /// </summary>
-    /// <param name="value">DB の datetime2 値（NULL 許可）</param>
-    /// <param name="result">復元された ExpirationOn</param>
-    /// <returns>復元成功時 true</returns>
-    public static bool TryFromDbValue(DateTime? value, out ExpirationOn result)
-    {
-        result = null!;
-
-        if (!value.HasValue)
-        {
-            result = Unlimited;
-            return true;
-        }
-
-        try
-        {
-            result = From(new LocalDateTime(value.Value));
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
-    }
 
     /// <inheritdoc/>
     public override bool Equals(object? obj) => Equals(obj as ExpirationOn);
@@ -97,7 +78,7 @@ public sealed class ExpirationOn : ValueObject, IEquatable<ExpirationOn>
     public override int GetHashCode() => HashCode.Combine(IsSet, Value);
 
     /// <summary>
-    /// 文字列表現を取得する
+    /// 文字列表現の取得
     /// </summary>
     /// <returns>有効期限の文字列。未設定の場合は <c>無期限</c></returns>
     public override string ToString() => IsSet ? Value.ToString() : "無期限";

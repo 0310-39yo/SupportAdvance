@@ -4,6 +4,7 @@ using SupportAdvance.Common.Clocks;
 using SupportAdvance.Contexts.Department.Domain.Entities;
 using SupportAdvance.Contexts.Department.Domain.ValueObjects;
 using SupportAdvance.Contexts.Department.Infrastructure.DbModels;
+using SupportAdvance.Infrastructure.Mappers;
 using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 /// <summary>
@@ -57,7 +58,8 @@ public class DepartmentMapper
             throw new InvalidOperationException($"Failed to convert ManagerEmployeeRowId from DB value: {dbModel.ManagerEmployeeRowId}");
         }
 
-        if (!AbolishedOn.TryFromDbValue(dbModel.AbolishedOn, out var abolishedOn))
+        // DB の DateTime? は LocalDateTime? に変換してから TryFrom に渡す（null は Unset に変換）
+        if (!AbolishedOn.TryFrom(dbModel.AbolishedOn.ToLocalDateTimeOrNull(), out var abolishedOn))
         {
             throw new InvalidOperationException($"Failed to convert AbolishedOn from DB value: {dbModel.AbolishedOn}");
         }

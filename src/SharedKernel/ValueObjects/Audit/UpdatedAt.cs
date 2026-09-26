@@ -4,63 +4,56 @@ using SupportAdvance.SharedKernel.ValueObjects.Abstractions;
 namespace SupportAdvance.SharedKernel.ValueObjects.Audit;
 
 /// <summary>
-/// エンティティの最後の更新日時を表すValueObject（LocalDateTime 保持、null許容、IsSet で未更新状態を表現）
-/// 【設計】LocalDateTime を内部値として保持（Domain層での型安全性確保）
-/// 【用途】Domain/Application層: LocalDateTime で扱う、Infrastructure層: DateTime に変換
+/// エンティティの最終更新日時（JST）を表す値オブジェクト
 /// </summary>
+/// <remarks>
+/// <para>【設計】<see cref="LocalDateTime"/> を内部値として保持し、Domain 層での型安全性を確保。未更新は <see cref="ValueObject.IsSet"/> が <see langword="false"/> の状態で表現</para>
+/// <para>【null契約】未更新の状態は <see langword="null"/> ではなく <see cref="Unset"/>（<see cref="HasUpdated"/> が <see langword="false"/>）で表現。Domain 層での null 確認は不要。<see cref="TryFrom"/> は <see langword="null"/> の入力を <see cref="Unset"/> に変換して成功</para>
+/// <para>【時刻】DB の <c>DateTime</c> との変換は Infrastructure（Mapper・Repository）の担当。この型は <c>DateTime</c> を公開しない</para>
+/// <para>【参照】docs/Assistance/Guides/null厳格性設計ガイド.md</para>
+/// </remarks>
+/// <seealso cref="CreatedAt"/>
+/// <seealso cref="DeletedAt"/>
 public sealed class UpdatedAt : PrimitiveValueObject<LocalDateTime?>, IEquatable<UpdatedAt>
 {
     /// <summary>
-    /// 指定された LocalDateTime からUpdatedAtのインスタンスを生成する
-    /// 【責務】指定された日時を持つUpdatedAtを表現する
+    /// 指定日時と設定状態による初期化。生成は <see cref="From"/>／<see cref="Unset"/>／<see cref="TryFrom"/> を使用
     /// </summary>
-    /// <param name="value">LocalDateTime値</param>
-    /// <param name="isSet">IsSet フラグ（デフォルト: true）</param>
-    /// <returns>指定された日時を持つUpdatedAtのインスタンス</returns>
-    /// <remarks>Validate は、基礎クラスのコンストラクタで自動実行される</remarks>
+    /// <param name="value">更新日時（JST）。未更新の場合は <see cref="LocalDateTime.MinValue"/></param>
+    /// <param name="isSet">設定済みかどうかを示す値。既定は <see langword="true"/></param>
+    /// <remarks>
+    /// <para>【注意】検証（<see cref="Validate"/>）は基底クラスのコンストラクターで自動実行</para>
+    /// </remarks>
     private UpdatedAt(LocalDateTime? value, bool isSet = true) : base(value, isSet)
     {
     }
 
     /// <summary>
-    /// 指定された LocalDateTime からUpdatedAtのインスタンスを生成する（推奨: Domain層での生成方式）
-    /// 【責務】指定された日時を持つUpdatedAtを表現する
+    /// 指定日時を持つ <see cref="UpdatedAt"/> の生成
     /// </summary>
-    /// <param name="value">LocalDateTime値（IClock.JstNow から取得）</param>
-    /// <returns>指定された日時を持つUpdatedAtのインスタンス</returns>
+    /// <param name="value">更新日時（JST）。通常は <see cref="IClock.JstNow"/> から取得した値</param>
+    /// <returns>設定済み（<see cref="HasUpdated"/> が <see langword="true"/>）のインスタンス</returns>
+    /// <exception cref="ArgumentException"><paramref name="value"/> が <see cref="LocalDateTime.MinValue"/> または <see cref="LocalDateTime.MaxValue"/> の場合</exception>
     public static UpdatedAt From(LocalDateTime value) => new(value, true);
 
     /// <summary>
-    /// 未更新状態のUpdatedAtのインスタンスを生成する
-    /// 【責務】未更新状態を表現する（IsSet=false）
-    /// 【設計】Value は常に LocalDateTime を保持（Domain層での型安全性確保）。IsSet=false で未更新状態を判定
+    /// 未更新の状態を表す <see cref="UpdatedAt"/> の生成
     /// </summary>
-    /// <returns>未更新状態のUpdatedAtのインスタンス</returns>
+    /// <returns><see cref="HasUpdated"/> が <see langword="false"/> のインスタンス（<see langword="null"/> なし）</returns>
+    /// <remarks>
+    /// <para>【設計】<see cref="Value"/> は <see cref="LocalDateTime.MinValue"/> を保持。未更新かどうかの判定は <see cref="HasUpdated"/> を使用</para>
+    /// </remarks>
     public static UpdatedAt Unset() => new(LocalDateTime.MinValue, false);
 
     /// <summary>
-    /// 指定された DateTime からUpdatedAtのインスタンスを生成する（Infrastructure層での型変換用）
-    /// 【責務】DB から読み込んだ DateTime を LocalDateTime に変換して UpdatedAt を生成
+    /// 日時（JST）からの <see cref="UpdatedAt"/> 生成の試行。例外の送出なし
     /// </summary>
-    /// <param name="value">DateTime値（DB読み込み値）</param>
-    /// <returns>指定された日時を持つUpdatedAtのインスタンス</returns>
-    public static UpdatedAt FromDbValue(DateTime value) => new(new LocalDateTime(value), true);
-
-    /// <summary>
-    /// DB値への変換（DateTime を取得）
-    /// 【責務】Mapper で Entity → DbModel への変換時に使用
-    /// </summary>
-    /// <returns>内部保持の LocalDateTime から DateTime を抽出（HasUpdated=true の場合のみ有効）</returns>
-    /// <exception cref="InvalidOperationException">未更新（<see cref="HasUpdated"/> が <see langword="false"/>）の場合</exception>
-    public DateTime ToDbValue() => IsSet && ValueField.HasValue ? ValueField.Value.Value : throw new InvalidOperationException("UpdatedAt is not set.");
-
-    /// <summary>
-    /// 指定された LocalDateTime からUpdatedAtのインスタンスの生成を試みる（型安全版）
-    /// 【責務】null安全に UpdatedAt を生成する（Domain層での生成方式）
-    /// </summary>
-    /// <param name="input">LocalDateTime? 値</param>
-    /// <param name="result">生成されたUpdatedAtのインスタンス</param>
-    /// <returns>生成に成功した場合、または null 入力を Unset に変換した場合は true；検証失敗時は false</returns>
+    /// <param name="input">更新日時（JST）。<see langword="null"/> は「未更新」（DB の値は Infrastructure が変換して渡す）</param>
+    /// <param name="result">
+    /// 成功した場合は生成したインスタンス（<paramref name="input"/> が <see langword="null"/> の場合は <see cref="Unset"/>）。
+    /// 失敗した場合は <see langword="null"/>（使用禁止）
+    /// </param>
+    /// <returns>成功した場合、または <see langword="null"/> を <see cref="Unset"/> に変換した場合は <see langword="true"/>。値が検証に通らなかった場合は <see langword="false"/></returns>
     public static bool TryFrom(LocalDateTime? input, out UpdatedAt result)
     {
         if (input == null || !input.HasValue)
@@ -82,60 +75,21 @@ public sealed class UpdatedAt : PrimitiveValueObject<LocalDateTime?>, IEquatable
     }
 
     /// <summary>
-    /// 指定された DateTime からUpdatedAtのインスタンスの生成を試みる（NULL安全版、Infrastructure層での型変換用）
-    /// 【責務】DB値から null安全に UpdatedAt を生成する（NULL → Unset 状態に変換）
+    /// 更新日時（JST）
     /// </summary>
-    /// <param name="input">DateTime? 値（DB読み込み値）</param>
-    /// <param name="result">生成されたUpdatedAtのインスタンス</param>
-    /// <returns>生成に成功した場合、または null 入力を Unset に変換した場合は true；検証失敗時は false</returns>
-    public static bool TryFromDbValue(DateTime? input, out UpdatedAt result)
-    {
-        if (input == null)
-        {
-            result = Unset(); // ← null → Unset() で成功
-            return true;
-        }
-
-        try
-        {
-            result = FromDbValue(input.Value);
-            return true;
-        }
-        catch (ArgumentException)
-        {
-            result = null!;
-            return false;
-        }
-    }
-
-    /// <summary>
-    /// 保持する LocalDateTime? 値を取得する
-    /// 【責務】保持する値を取得する（IsSet = true の時のみ有効）
-    /// </summary>
-    /// <returns>保持する LocalDateTime? 値（null 許容）</returns>
+    /// <value>未更新の場合は <see cref="LocalDateTime.MinValue"/>。判定は <see cref="HasUpdated"/> を使用</value>
     public LocalDateTime? Value => ValueField;
 
     /// <summary>
-    /// 更新済み状態を判定する（IsSet の別名）
-    /// 【責務】更新済みか未更新かを判定する
+    /// 更新済みかどうかを示す値
     /// </summary>
-    /// <returns>更新済みの場合は true、未更新の場合は false</returns>
+    /// <value>更新済みの場合は <see langword="true"/>。<see cref="ValueObject.IsSet"/> の、業務上の意味に合わせた別名</value>
     public bool HasUpdated => IsSet;
 
-    /// <summary>
-    /// 指定されたオブジェクトと等価かどうかを判定する
-    /// 【責務】指定されたオブジェクトと等価かどうかを判定する
-    /// </summary>
-    /// <param name="obj">比較対象のオブジェクト</param>
-    /// <returns>等価である場合はtrue、そうでない場合はfalse</returns>
+    /// <inheritdoc/>
     public override bool Equals(object? obj) => Equals(obj as UpdatedAt);
 
-    /// <summary>
-    /// 指定されたUpdatedAtと等価かどうかを判定する
-    /// 【責務】指定されたUpdatedAtと等価かどうかを判定する
-    /// </summary>
-    /// <param name="other">比較対象のUpdatedAt</param>
-    /// <returns>等価である場合はtrue、そうでない場合はfalse</returns>
+    /// <inheritdoc/>
     public bool Equals(UpdatedAt? other)
     {
         if (other is null)
@@ -151,29 +105,20 @@ public sealed class UpdatedAt : PrimitiveValueObject<LocalDateTime?>, IEquatable
         return ValueField == other.ValueField && IsSet == other.IsSet;
     }
 
-    /// <summary>
-    /// ハッシュコードを取得する
-    /// 【責務】オブジェクトのハッシュコードを取得する
-    /// </summary>
-    /// <returns>オブジェクトのハッシュコード</returns>
+    /// <inheritdoc/>
     public override int GetHashCode() => HashCode.Combine(ValueField, IsSet);
 
-    /// <summary>
-    /// 等価性判定のための値コンポーネントを返す（IsSet を除く）
-    /// IsSet は ValueObject.GetEqualityComponents で自動的に先頭に付加される
-    /// </summary>
-    /// <returns>ValueField を含むコンポーネント列</returns>
+    /// <inheritdoc/>
+    /// <remarks>
+    /// <para>【注意】<see cref="ValueObject.IsSet"/> は基底クラスが先頭に自動で付加するため、ここには含めない</para>
+    /// </remarks>
     protected override IEnumerable<object?> GetValueComponents()
     {
         yield return ValueField; // LocalDateTime? を返す
     }
 
-    /// <summary>
-    /// 正規化済み値の検証を行う
-    /// 【責務】業務ルールに基づく値の妥当性のチェック
-    /// </summary>
-    /// <param name="normalized">正規化済みの LocalDateTime? 値</param>
-    /// <exception cref="ArgumentException">値が有効な日時でない場合にスローされる</exception>
+    /// <inheritdoc/>
+    /// <exception cref="ArgumentException"><paramref name="normalized"/> が <see cref="LocalDateTime.MinValue"/> または <see cref="LocalDateTime.MaxValue"/> の場合（未更新を表す <see langword="null"/> は許容）</exception>
     public override void Validate(LocalDateTime? normalized)
     {
         base.Validate(normalized);

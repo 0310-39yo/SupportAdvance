@@ -54,7 +54,7 @@ public class UserPreferencesRepository : IUserPreferencesRepository
 }
 ```
 
-> **移行中の注意**: `ToLocalDateTimeOrNull()`（`DateTime?` → `LocalDateTime?`）は、[原則完全準拠 実装計画](../../docs/Assistance/Plans/20260926_原則完全準拠_実装計画.md) のフェーズ 4 で追加する。現状のコードは、値オブジェクトの旧形式 `TryFromDbValue(DateTime?)` を使っている箇所がある（フェーズ 4 で置き換え）
+> **変換ヘルパー**: `ToLocalDateTime()`（`DateTime` → `LocalDateTime`。NOT NULL の列用）と `ToLocalDateTimeOrNull()`（`DateTime?` → `LocalDateTime?`）は、この `Infrastructure` プロジェクトの `DbDateTimeExtensions`（`SupportAdvance.Infrastructure.Mappers`）。DB の値の `DateTimeKind` が `Unspecified` でない場合は `ArgumentException`
 
 ### 責務
 

@@ -4,70 +4,48 @@ using SupportAdvance.SharedKernel.ValueObjects;
 namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.DepartmentMembership;
 
 /// <summary>
-/// 異動終了日時を表す ValueObject
-/// 【型】LocalDateTime のラッパー（null 許可）
-/// 【状態】null: 無期限（継続中）、value: 異動終了日
-/// 【責務】部署配属・ロール・権限の終了日を管理
+/// 異動終了日時（JST）を表す値オブジェクト
 /// </summary>
+/// <remarks>
+/// <para>【責務】部署配属・ロール・権限の終了日の管理</para>
+/// <para>【null契約】任意。無期限（継続中）は <see cref="Unset"/>（<see cref="Value"/> が <see langword="null"/>、<see cref="HasEnded"/> が <see langword="false"/>）で表現</para>
+/// <para>【時刻】JST の <see cref="LocalDateTime"/> で保持。DB の <c>DateTime</c> との変換は Infrastructure（Mapper）の担当。この型は <c>DateTime</c> を公開しない</para>
+/// </remarks>
 public sealed class EndOn : ValueObject, IEquatable<EndOn>
 {
     /// <summary>
-    /// 終了日時（未設定時は null）
+    /// 終了日時（JST）
     /// </summary>
+    /// <value>無期限の場合は <see langword="null"/></value>
     public LocalDateTime? Value { get; }
 
     /// <summary>
-    /// 終了が設定されているか（Value != null）
+    /// 終了が設定されているかどうかを示す値
     /// </summary>
+    /// <value>終了日が設定済みの場合は <see langword="true"/></value>
     public bool HasEnded => Value.HasValue;
 
     /// <summary>
-    /// 無期限状態（Value == null）を生成する
+    /// 無期限の状態を表す <see cref="EndOn"/> の生成
     /// </summary>
-    /// <returns>終了日が未設定（無期限）のインスタンス（<see langword="null"/> なし）</returns>
+    /// <returns>終了日が未設定（無期限）のインスタンス</returns>
     public static EndOn Unset() => new(null);
 
     /// <summary>
-    /// 指定された終了日時から EndOn を生成する（プライベートコンストラクタ）
+    /// 指定終了日時による初期化。生成は <see cref="From"/>／<see cref="Unset"/> を使用
     /// </summary>
+    /// <param name="value">終了日時（JST）。無期限の場合は <see langword="null"/></param>
     private EndOn(LocalDateTime? value)
     {
         Value = value;
     }
 
     /// <summary>
-    /// 指定された終了日から EndOn を生成する
+    /// 指定された終了日を持つ <see cref="EndOn"/> の生成
     /// </summary>
     /// <param name="value">終了日（JST）</param>
-    /// <returns>EndOn インスタンス</returns>
+    /// <returns>終了日が設定済みのインスタンス</returns>
     public static EndOn From(LocalDateTime value) => new(value);
-
-    /// <summary>
-    /// DB値から EndOn を復元する（null → Unlimited）
-    /// </summary>
-    /// <param name="value">DB の datetime2 値（NULL 許可）</param>
-    /// <param name="result">復元された EndOn</param>
-    /// <returns>復元成功時 true</returns>
-    public static bool TryFromDbValue(DateTime? value, out EndOn result)
-    {
-        result = null!;
-
-        if (!value.HasValue)
-        {
-            result = Unset();
-            return true;
-        }
-
-        try
-        {
-            result = From(new LocalDateTime(value.Value));
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
-    }
 
     /// <inheritdoc/>
     public override bool Equals(object? obj) => Equals(obj as EndOn);
@@ -92,7 +70,7 @@ public sealed class EndOn : ValueObject, IEquatable<EndOn>
     public override int GetHashCode() => Value?.GetHashCode() ?? 0;
 
     /// <summary>
-    /// 文字列表現を取得する
+    /// 文字列表現の取得
     /// </summary>
     /// <returns>終了日の文字列。未設定の場合は <c>無期限</c></returns>
     public override string ToString() => Value?.ToString() ?? "無期限";

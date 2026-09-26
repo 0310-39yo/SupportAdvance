@@ -209,7 +209,7 @@ if (!UpdatedAt.TryFrom(dbModel.UpdatedAt.ToLocalDateTimeOrNull(), out var update
 dbModel.UpdatedAt = entity.UpdatedAt.HasUpdated ? entity.UpdatedAt.Value?.Value : null;   // LocalDateTime.Value = DateTime。未設定（Unset）の場合は null
 ```
 
-> **移行中の注意**: 現状、一部の値オブジェクト（`CreatedAt` / `UpdatedAt` / `DeletedAt`、`AbolishedOn`、`RetiredOn`、`EndOn`、`ExpirationOn`、`EffectiveAt`）に旧形式の `FromDbValue(DateTime)` / `TryFromDbValue(DateTime?)` / `ToDbValue()` が残っている。[原則完全準拠 実装計画](docs/Assistance/Plans/20260926_原則完全準拠_実装計画.md) のフェーズ 4 で削除する。**移行が完了するまで、新規の追加は禁止**。上記の `ToLocalDateTimeOrNull()`（`DateTime?` → `LocalDateTime?`）もフェーズ 4 で Infrastructure に追加する
+> **変換ヘルパー**: `ToLocalDateTime()`（`DateTime` → `LocalDateTime`。NOT NULL の列用）と `ToLocalDateTimeOrNull()`（`DateTime?` → `LocalDateTime?`）は、汎用 Infrastructure の `DbDateTimeExtensions`（`SupportAdvance.Infrastructure.Mappers`）にある。値オブジェクトへの旧形式（`FromDbValue(DateTime)` / `TryFromDbValue(DateTime?)` / `ToDbValue()`）は、2026-09-26 に全て削除済み。新規に追加しない（`Architecture.Tests` での自動検証は [実装計画](docs/Assistance/Plans/20260926_原則完全準拠_実装計画.md) のフェーズ 7 で追加予定）
 
 ### 層別の責務
 
@@ -658,7 +658,7 @@ CREATE TABLE [dbo].[t_YourTable] (
 
 | 日付 | 更新内容 |
 |---|---|
-| 2026-09-26 | ①Composition Root を「`Program.cs`（WPF は `App.xaml.cs`）」に明確化。②「DateTime は Infrastructure の内側に閉じる」を追加：Domain / SharedKernel / Application の公開メンバーに DateTime を持ち込まない（値オブジェクトの `FromDbValue(DateTime)` などの DB 型変換メソッドも同様。例外なし）。変換は Mapper / Repository が行い、値オブジェクトは `TryFrom(LocalDateTime?)` のみ。現状のコードは移行中（[実装計画](docs/Assistance/Plans/20260926_原則完全準拠_実装計画.md) フェーズ 4） |
+| 2026-09-26 | ①Composition Root を「`Program.cs`（WPF は `App.xaml.cs`）」に明確化。②「DateTime は Infrastructure の内側に閉じる」を追加：Domain / SharedKernel / Application の公開メンバーに DateTime を持ち込まない（値オブジェクトの `FromDbValue(DateTime)` などの DB 型変換メソッドも同様。例外なし）。変換は Mapper / Repository が行い、値オブジェクトは `TryFrom(LocalDateTime?)` のみ。コードの移行は同日に完了（[実装計画](docs/Assistance/Plans/20260926_原則完全準拠_実装計画.md) フェーズ 4。変換ヘルパー `DbDateTimeExtensions` を追加し、8 つの値オブジェクトから旧形式を削除） |
 | 2026-09-06 | Context間のデータ共有パターンを追加。ジェネリック Query Service `IQueryService<TAggregate, TId>` パターンを採用。複数Contextがリアルタイムにドメインモデル情報にアクセスするための標準パターン。汎用層肥大化を防止 |
 | 2026-07-31（後）| Application層の依存関係表を修正。汎用Application層と Bounded Context別Application層の区別を明記。「Application（Context別）→ Application（汎用層）」が IUseCase 実装パターンとして許可されることを追記 |
 | 2026-07-31 | CLEAN_ARCHITECTURE_GUIDELINES.md の実コードとの不一致修正に合わせて本ファイルも修正。Domain/Common/SharedKernel の依存関係表を実装に合わせて訂正、Crosscutting→Infrastructure禁止を明記、SlnArch（未検証）の記述をNetArchTest.Rulesへの参照に置き換え |

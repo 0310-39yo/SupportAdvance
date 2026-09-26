@@ -5,7 +5,7 @@
 - `Common` 以外への `ProjectReference` を追加しない
 - ビジネスロジックを置かない。ValueObject基底クラス、Entity基底クラス、監査ValueObject（`CreatedAt`/`UpdatedAt`/`DeletedAt`）など、全層から参照される基盤型のみ
 - 監査ValueObjectで日時を扱う場合は `Common` の `LocalDateTime`/`IClock` 経由で取得する（`DateTime` の直接使用は禁止。ルート CLAUDE.md の「LocalDateTime 使用規則」を参照）
-- **値オブジェクトの公開メンバー（引数・戻り値・プロパティ）に `DateTime` を持たせない**。DB の型との変換（`FromDbValue(DateTime)` / `TryFromDbValue(DateTime?)` / `ToDbValue()`）は持たず、Infrastructure（Mapper / Repository）が行う。入口は `From(LocalDateTime)` / `TryFrom(LocalDateTime?)` のみ（例外なし）。現状の `CreatedAt` / `UpdatedAt` / `DeletedAt` には旧形式が残っており、[実装計画](../../docs/Assistance/Plans/20260926_原則完全準拠_実装計画.md) のフェーズ 4 で削除する（移行完了まで新規追加は禁止）
+- **値オブジェクトの公開メンバー（引数・戻り値・プロパティ）に `DateTime` を持たせない**。DB の型との変換（`FromDbValue(DateTime)` / `TryFromDbValue(DateTime?)` / `ToDbValue()`）は持たず、Infrastructure（Mapper / Repository）が行う。入口は `From(LocalDateTime)` / `TryFrom(LocalDateTime?)` のみ（例外なし）。`CreatedAt` / `UpdatedAt` / `DeletedAt` の旧形式は 2026-09-26 に削除済み（[実装計画](../../docs/Assistance/Plans/20260926_原則完全準拠_実装計画.md) フェーズ 4）
 
 ## 🚫 null 厳格性原則
 
