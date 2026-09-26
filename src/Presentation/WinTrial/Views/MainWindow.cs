@@ -79,9 +79,11 @@ public partial class MainWindow : Form
         };
         SetNavigationCollapsed(false);
 
-        // オープニング画面は、MDI の領域に置く（タブは使わない）。タブが 1 つも無い間だけ表示する
+        // オープニング画面（タブは使わない）。MDI の領域（MdiClient）には MDI の子フォームしか追加できないため、
+        // フォームの残りの領域を埋める（Dock = Fill）形で、MDI の領域の手前に重ねる。タブが 1 つも無い間だけ表示する
         _openingView = new OpeningView(_viewModel.Opening) { Visible = _viewModel.IsOpeningViewVisible };
-        Controls.OfType<MdiClient>().FirstOrDefault()?.Controls.Add(_openingView);
+        Controls.Add(_openingView);
+        _openingView.BringToFront();
 
         _viewModel.OpenTabs.CollectionChanged += OpenTabs_CollectionChanged;
         _viewModel.PropertyChanged += ViewModel_PropertyChanged;
