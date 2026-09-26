@@ -32,8 +32,8 @@ public partial class MainWindow : Form
     private const int NavigationIconSize = 20;
     private const float NavigationFontSize = 11f;
 
-    // Office2016DarkGray の暗い背景で見やすいよう、明るい色で描く（ForeColor は、テーマ適用前の値になるため使わない）
-    private static readonly Color NavigationIconColor = Color.FromArgb(0xE8, 0xE8, 0xE8);
+    // Office2016White の明るい背景で見やすいよう、黒に近い濃い色で描く（ForeColor は、テーマ適用前の値になるため使わない）
+    private static readonly Color NavigationIconColor = Color.FromArgb(0x1A, 0x1A, 0x1A);
     private const int CollapsedNavigationIndent = 4;
 
     private const int ExpandedNavigationWidth = 220;
@@ -58,8 +58,8 @@ public partial class MainWindow : Form
 
         InitializeComponent();
 
-        // テーマは Office2016DarkGray（WpfTrial の Office2019White とは別。WinForms 側の既存の指定を維持）
-        SkinManager.SetVisualStyle(this, "Office2016DarkGray");
+        // テーマは Office2016White 
+        SkinManager.SetVisualStyle(this, "Office2016White");
 
         AddNavigationNodes();
         navigationTree.NodeMouseClick += NavigationTree_NodeMouseClick;

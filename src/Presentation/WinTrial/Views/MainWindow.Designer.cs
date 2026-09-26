@@ -24,67 +24,135 @@ namespace SupportAdvance.Presentation.WinTrial.Views {
         /// </summary>
         private void InitializeComponent() {
             components = new System.ComponentModel.Container();
+            var treeNodeAdvStyleInfo1 = new Syncfusion.Windows.Forms.Tools.TreeNodeAdvStyleInfo();
+            var resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWindow));
             ribbon = new Syncfusion.Windows.Forms.Tools.RibbonControlAdv();
             navigationPanel = new Panel();
-            navigationToggleButton = new Button();
             navigationTree = new Syncfusion.Windows.Forms.Tools.TreeViewAdv();
-            tabbedMdiManager = new Syncfusion.Windows.Forms.Tools.TabbedMDIManager();
+            navigationToggleButton = new Button();
+            tabbedMdiManager = new Syncfusion.Windows.Forms.Tools.TabbedMDIManager(components);
             statusStripEx = new Syncfusion.Windows.Forms.Tools.StatusStripEx();
-
-            // ribbon（上部）
+            ((System.ComponentModel.ISupportInitialize)ribbon).BeginInit();
+            navigationPanel.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)navigationTree).BeginInit();
+            SuspendLayout();
+            // 
+            // ribbon
+            // 
             ribbon.Dock = Syncfusion.Windows.Forms.Tools.DockStyleEx.Top;
+            ribbon.Font = new Font("Segoe UI", 8.25F);
             ribbon.Location = new Point(0, 0);
+            ribbon.MenuButtonFont = new Font("Segoe UI", 8.25F);
+            ribbon.MenuButtonText = "";
+            ribbon.MenuColor = Color.FromArgb(0, 114, 198);
             ribbon.Name = "ribbon";
-            ribbon.Size = new Size(800, 60);
+            ribbon.OfficeColorScheme = Syncfusion.Windows.Forms.Tools.ToolStripEx.ColorScheme.Managed;
+            // 
+            // ribbon.OfficeMenu
+            // 
+            ribbon.OfficeMenu.Name = "OfficeMenu";
+            ribbon.OfficeMenu.Size = new Size(12, 65);
+            ribbon.QuickPanelImageLayout = PictureBoxSizeMode.StretchImage;
+            ribbon.RibbonHeaderImage = Syncfusion.Windows.Forms.Tools.RibbonHeaderImage.None;
+            ribbon.SelectedTab = null;
+            ribbon.ShowRibbonDisplayOptionButton = true;
+            ribbon.Size = new Size(1184, 60);
+            ribbon.SystemText.QuickAccessDialogDropDownName = "Start menu";
+            ribbon.SystemText.RenameDisplayLabelText = "&Display Name:";
             ribbon.TabIndex = 1;
-
-            // navigationPanel（左側。折りたたみ可能なナビゲーション領域。幅の切り替えは MainWindow.cs）
+            // 
+            // navigationPanel
+            // 
+            navigationPanel.Controls.Add(navigationTree);
+            navigationPanel.Controls.Add(navigationToggleButton);
             navigationPanel.Dock = DockStyle.Left;
             navigationPanel.Location = new Point(0, 60);
             navigationPanel.Name = "navigationPanel";
-            navigationPanel.Size = new Size(200, 365);
+            navigationPanel.Size = new Size(200, 679);
             navigationPanel.TabIndex = 2;
-            navigationPanel.Controls.Add(navigationTree);
-            navigationPanel.Controls.Add(navigationToggleButton);
-
-            // navigationToggleButton（ナビゲーションの展開／折りたたみ）
+            // 
+            // navigationTree
+            // 
+            treeNodeAdvStyleInfo1.CheckBoxTickThickness = 1;
+            treeNodeAdvStyleInfo1.CheckColor = Color.FromArgb(109, 109, 109);
+            treeNodeAdvStyleInfo1.EnsureDefaultOptionedChild = true;
+            treeNodeAdvStyleInfo1.IntermediateCheckColor = Color.FromArgb(109, 109, 109);
+            treeNodeAdvStyleInfo1.OptionButtonColor = Color.FromArgb(109, 109, 109);
+            treeNodeAdvStyleInfo1.SelectedOptionButtonColor = Color.FromArgb(210, 210, 210);
+            navigationTree.BaseStylePairs.AddRange(new Syncfusion.Windows.Forms.Tools.StyleNamePair[] { new Syncfusion.Windows.Forms.Tools.StyleNamePair("Standard", treeNodeAdvStyleInfo1) });
+            navigationTree.Dock = DockStyle.Fill;
+            // 
+            // 
+            // 
+            navigationTree.HelpTextControl.BaseThemeName = null;
+            navigationTree.HelpTextControl.Location = new Point(0, 0);
+            navigationTree.HelpTextControl.Name = "";
+            navigationTree.HelpTextControl.TabIndex = 0;
+            navigationTree.HideSelection = false;
+            navigationTree.InactiveSelectedNodeForeColor = SystemColors.ControlText;
+            navigationTree.Location = new Point(0, 28);
+            navigationTree.MetroColor = Color.FromArgb(22, 165, 220);
+            navigationTree.Name = "navigationTree";
+            navigationTree.SelectedNodeForeColor = SystemColors.HighlightText;
+            navigationTree.Size = new Size(200, 651);
+            navigationTree.TabIndex = 1;
+            navigationTree.ThemeStyle.TreeNodeAdvStyle.CheckBoxTickThickness = 0;
+            navigationTree.ThemeStyle.TreeNodeAdvStyle.EnsureDefaultOptionedChild = true;
+            // 
+            // 
+            // 
+            navigationTree.ToolTipControl.BaseThemeName = null;
+            navigationTree.ToolTipControl.Location = new Point(0, 0);
+            navigationTree.ToolTipControl.Name = "";
+            navigationTree.ToolTipControl.TabIndex = 0;
+            // 
+            // navigationToggleButton
+            // 
             navigationToggleButton.Dock = DockStyle.Top;
             navigationToggleButton.FlatStyle = FlatStyle.Flat;
+            navigationToggleButton.Location = new Point(0, 0);
             navigationToggleButton.Name = "navigationToggleButton";
             navigationToggleButton.Size = new Size(200, 28);
             navigationToggleButton.TabIndex = 0;
             navigationToggleButton.Text = "◀";
             navigationToggleButton.UseVisualStyleBackColor = true;
-
-            // navigationTree（階層メニュー。項目は MainWindow.cs で構築）
-            navigationTree.Dock = DockStyle.Fill;
-            navigationTree.HideSelection = false;
-            navigationTree.Name = "navigationTree";
-            navigationTree.TabIndex = 1;
-
-            // statusStripEx（下部）
+            // 
+            // tabbedMdiManager
+            // 
+            tabbedMdiManager.AttachedTo = null;
+            tabbedMdiManager.CloseButtonBackColor = Color.White;
+            tabbedMdiManager.CloseButtonToolTip = "";
+            tabbedMdiManager.DropDownButtonToolTip = "";
+            tabbedMdiManager.ImageSize = new Size(16, 16);
+            // 
+            // statusStripEx
+            // 
+            statusStripEx.BackColor = SystemColors.Control;
+            statusStripEx.BeforeTouchSize = new Size(1184, 22);
             statusStripEx.Dock = Syncfusion.Windows.Forms.Tools.DockStyleEx.Bottom;
-            statusStripEx.Location = new Point(0, 425);
+            statusStripEx.Location = new Point(0, 739);
+            statusStripEx.MetroColor = Color.FromArgb(135, 206, 255);
             statusStripEx.Name = "statusStripEx";
-            statusStripEx.Size = new Size(800, 25);
+            statusStripEx.Size = new Size(1184, 22);
             statusStripEx.TabIndex = 0;
             statusStripEx.Text = "Ready";
-
+            // 
             // MainWindow
+            // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(800, 450);
-            IsMdiContainer = true;
+            ClientSize = new Size(1184, 761);
             Controls.Add(navigationPanel);
             Controls.Add(ribbon);
             Controls.Add(statusStripEx);
+            IsMdiContainer = true;
             Name = "MainWindow";
             Text = "MainWindow";
+            ((System.ComponentModel.ISupportInitialize)ribbon).EndInit();
+            navigationPanel.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)navigationTree).EndInit();
             ResumeLayout(false);
             PerformLayout();
-
-            // TabbedMDIManager を MainWindow にアタッチ
-            tabbedMdiManager.AttachToMdiContainer(this);
         }
 
         #endregion

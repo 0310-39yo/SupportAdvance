@@ -34,8 +34,8 @@ public partial class Form1View : Form
         label1.DataBindings.Add("Text", _viewModel, nameof(Form1ViewModel.EmployeeFullName));
         label2.DataBindings.Add("Text", _viewModel, nameof(Form1ViewModel.DepartmentNames));
 
-        sfButton1.Command = _viewModel.ExecuteSampleUseCaseCommand;
-        sfButton2.Command = _viewModel.SearchEmployeeByBizIdCommand;
+        buttonAdv1.Command = _viewModel.ExecuteSampleUseCaseCommand;
+        buttonAdv2.Command = _viewModel.SearchEmployeeByBizIdCommand;
 
         AddBusinessDayClockPanel(_viewModel.BusinessDayClock);
     }

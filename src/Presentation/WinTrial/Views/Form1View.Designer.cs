@@ -27,81 +27,82 @@ namespace SupportAdvance.Presentation.WinTrial.Views
         /// the contents of this method with the code editor.
         /// </summary>
         private void InitializeComponent() {
-            sfButton1 = new Syncfusion.WinForms.Controls.SfButton();
-            sfButton2 = new Syncfusion.WinForms.Controls.SfButton();
+            buttonAdv1 = new Syncfusion.Windows.Forms.ButtonAdv();
+            buttonAdv2 = new Syncfusion.Windows.Forms.ButtonAdv();
             textBoxExt1 = new Syncfusion.Windows.Forms.Tools.TextBoxExt();
             label1 = new Label();
             label2 = new Label();
             ((System.ComponentModel.ISupportInitialize)textBoxExt1).BeginInit();
             SuspendLayout();
-            //
-            // sfButton1
-            //
-            sfButton1.FlatStyle = FlatStyle.Popup;
-            sfButton1.Location = new Point(35, 35);
-            sfButton1.Name = "sfButton1";
-            sfButton1.Size = new Size(96, 28);
-            sfButton1.TabIndex = 1;
-            sfButton1.Text = "テストボタン";
-            //
-            // sfButton2
-            //
-            sfButton2.FlatStyle = FlatStyle.Popup;
-            sfButton2.Location = new Point(137, 89);
-            sfButton2.Name = "sfButton2";
-            sfButton2.Size = new Size(96, 28);
-            sfButton2.TabIndex = 2;
-            sfButton2.Text = "検索";
-            //
+            // 
+            // buttonAdv1
+            // 
+            buttonAdv1.Font = new Font("Yu Gothic UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 128);
+            buttonAdv1.Location = new Point(35, 35);
+            buttonAdv1.Name = "buttonAdv1";
+            buttonAdv1.Size = new Size(96, 28);
+            buttonAdv1.TabIndex = 1;
+            buttonAdv1.Text = "テストボタン";
+            // 
+            // buttonAdv2
+            // 
+            buttonAdv2.Font = new Font("Yu Gothic UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 128);
+            buttonAdv2.Location = new Point(137, 89);
+            buttonAdv2.Name = "buttonAdv2";
+            buttonAdv2.Size = new Size(96, 28);
+            buttonAdv2.TabIndex = 2;
+            buttonAdv2.Text = "検索";
+            // 
             // textBoxExt1
-            //
-            textBoxExt1.BeforeTouchSize = new Size(100, 23);
+            // 
+            textBoxExt1.BeforeTouchSize = new Size(100, 29);
             textBoxExt1.Location = new Point(31, 94);
             textBoxExt1.Name = "textBoxExt1";
-            textBoxExt1.Size = new Size(100, 23);
+            textBoxExt1.Size = new Size(100, 29);
             textBoxExt1.TabIndex = 3;
             textBoxExt1.Text = "textBoxExt1";
-            //
+            // 
             // label1
-            //
+            // 
             label1.AutoSize = true;
             label1.Location = new Point(246, 99);
             label1.Name = "label1";
-            label1.Size = new Size(38, 15);
+            label1.Size = new Size(52, 21);
             label1.TabIndex = 4;
             label1.Text = "label1";
-            //
+            // 
             // label2
-            //
+            // 
             label2.AutoSize = true;
             label2.Location = new Point(174, 136);
             label2.Name = "label2";
-            label2.Size = new Size(38, 15);
+            label2.Size = new Size(52, 21);
             label2.TabIndex = 5;
             label2.Text = "label2";
-            //
+            // 
             // Form1View
-            //
-            AutoScaleDimensions = new SizeF(7F, 15F);
+            // 
+            AutoScaleDimensions = new SizeF(9F, 21F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(484, 302);
-            Font = new Font("Yu Gothic UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 128);
             Controls.Add(label2);
             Controls.Add(label1);
             Controls.Add(textBoxExt1);
-            Controls.Add(sfButton2);
-            Controls.Add(sfButton1);
+            Controls.Add(buttonAdv2);
+            Controls.Add(buttonAdv1);
+            Font = new Font("Yu Gothic UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 128);
             Name = "Form1View";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "Form1View";
+            WindowState = FormWindowState.Maximized;
             ((System.ComponentModel.ISupportInitialize)textBoxExt1).EndInit();
             ResumeLayout(false);
             PerformLayout();
         }
 
         #endregion
-        private Syncfusion.WinForms.Controls.SfButton sfButton1;
-        private Syncfusion.WinForms.Controls.SfButton sfButton2;
+        private Syncfusion.Windows.Forms.ButtonAdv buttonAdv1;
+        private Syncfusion.Windows.Forms.ButtonAdv buttonAdv2;
         private Syncfusion.Windows.Forms.Tools.TextBoxExt textBoxExt1;
         private Label label1;
         private Label label2;
