@@ -1,25 +1,23 @@
+using SupportAdvance.Common.Clocks;
+
 namespace SupportAdvance.Contexts.Authentication.Application.Dtos;
 
 /// <summary>
-/// ローカル認証レスポンス
-///
-/// 【責務】
-/// - AuthenticateLocalUserUseCase の実行結果
-/// - ログイン成功時のセッション情報
-///
-/// 【特徴】
-/// - 成功時のみ値を保持
-/// - 認証失敗時は例外をスロー（レスポンスではなく例外処理）
+/// ローカル認証の実行結果。ログイン成功時のセッション情報
 /// </summary>
+/// <remarks>
+/// <para>【用途】<c>AuthenticateLocalUserUseCase</c> の戻り値</para>
+/// <para>【注意】認証失敗の場合はこの型を返さず、例外を送出</para>
+/// </remarks>
 public sealed class AuthenticateLocalUserResponse
 {
     /// <summary>
-    /// 生成されたセッション RowId
+    /// 生成されたセッションの行ID
     /// </summary>
     public long UserAuthSessionRowId { get; init; }
 
     /// <summary>
-    /// 認証済みユーザーの従業員 RowId
+    /// 認証済みユーザーの従業員行ID
     /// </summary>
     public long EmployeeRowId { get; init; }
 
@@ -29,7 +27,8 @@ public sealed class AuthenticateLocalUserResponse
     public string LoginId { get; init; } = string.Empty;
 
     /// <summary>
-    /// ログイン日時（ISO 8601 形式）
+    /// ログイン日時（JST）
     /// </summary>
-    public DateTime LoggedInAt { get; init; }
+    /// <value>認証セッションの記録時に <c>IClock</c> から取得した時刻</value>
+    public LocalDateTime LoggedInAt { get; init; }
 }

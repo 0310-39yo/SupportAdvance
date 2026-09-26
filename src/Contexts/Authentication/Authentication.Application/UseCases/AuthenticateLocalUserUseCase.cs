@@ -163,7 +163,7 @@ public sealed class AuthenticateLocalUserUseCase
             UserAuthSessionRowId = sessionRowId.Value,
             EmployeeRowId = credentials.MappingEmployeeRowId,
             LoginId = credentials.LoginId,
-            LoggedInAt = now.Value
+            LoggedInAt = now
         };
     }
 
