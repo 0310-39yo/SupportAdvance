@@ -209,7 +209,7 @@ if (!UpdatedAt.TryFrom(dbModel.UpdatedAt.ToLocalDateTimeOrNull(), out var update
 dbModel.UpdatedAt = entity.UpdatedAt.HasUpdated ? entity.UpdatedAt.Value?.Value : null;   // LocalDateTime.Value = DateTime。未設定（Unset）の場合は null
 ```
 
-> **変換ヘルパー**: `ToLocalDateTime()`（`DateTime` → `LocalDateTime`。NOT NULL の列用）と `ToLocalDateTimeOrNull()`（`DateTime?` → `LocalDateTime?`）は、汎用 Infrastructure の `DbDateTimeExtensions`（`SupportAdvance.Infrastructure.Mappers`）にある。値オブジェクトへの旧形式（`FromDbValue(DateTime)` / `TryFromDbValue(DateTime?)` / `ToDbValue()`）は、2026-09-26 に全て削除済み。新規に追加しない（`Architecture.Tests` での自動検証は [実装計画](docs/Assistance/Plans/20260926_原則完全準拠_実装計画.md) のフェーズ 7 で追加予定）
+> **変換ヘルパー**: `ToLocalDateTime()`（`DateTime` → `LocalDateTime`。NOT NULL の列用）と `ToLocalDateTimeOrNull()`（`DateTime?` → `LocalDateTime?`）は、汎用 Infrastructure の `DbDateTimeExtensions`（`SupportAdvance.Infrastructure.Mappers`）にある。値オブジェクトへの旧形式（`FromDbValue(DateTime)` / `TryFromDbValue(DateTime?)` / `ToDbValue()`）は、2026-09-26 に全て削除済み。新規に追加しない。次の規則は `tests/Architecture.Tests/DataTypeRuleTests.cs` で自動検証している：①Application の公開 API に `DateTime` を持たない ②Domain と SharedKernel の公開メンバーに `DateTime` を持たない（例外なし） ③Mapper が `IClock` を保持しない ④Domain の Entity の公開プロパティに nullable と `string` を持たない（値オブジェクトを使用） ⑤DbModel に `LocalDateTime` を持たない
 
 ### 層別の責務
 

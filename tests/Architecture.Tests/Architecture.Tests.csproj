@@ -33,6 +33,12 @@
     <ProjectReference Include="../../src/Contexts/Employee/Employee.Domain/Employee.Domain.csproj" />
     <ProjectReference Include="../../src/Contexts/Employee/Employee.Application/Employee.Application.csproj" />
     <ProjectReference Include="../../src/Contexts/Employee/Employee.Infrastructure/Employee.Infrastructure.csproj" />
+    <ProjectReference Include="../../src/Contexts/Department/Department.Domain/Department.Domain.csproj" />
+    <ProjectReference Include="../../src/Contexts/Department/Department.Application/Department.Application.csproj" />
+    <ProjectReference Include="../../src/Contexts/Department/Department.Infrastructure/Department.Infrastructure.csproj" />
+    <ProjectReference Include="../../src/Contexts/Authentication/Authentication.Domain/Authentication.Domain.csproj" />
+    <ProjectReference Include="../../src/Contexts/Authentication/Authentication.Application/Authentication.Application.csproj" />
+    <ProjectReference Include="../../src/Contexts/Authentication/Authentication.Infrastructure/Authentication.Infrastructure.csproj" />
     <ProjectReference Include="../../src/Presentation/Shared/Shared.csproj" />
     <ProjectReference Include="../../src/Presentation/WpfTrial/WpfTrial.csproj" />
     <ProjectReference Include="../../src/Presentation/WinTrial/WinTrial.csproj" />
