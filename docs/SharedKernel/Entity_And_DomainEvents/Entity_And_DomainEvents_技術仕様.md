@@ -10,7 +10,7 @@
 
 - **何を実装するのか**: Domain層の状態変化をドメインイベントで記録
 - **どこに実装するのか**: src/SharedKernel/Entities/Abstractions/
-- **誰が使うのか**: Identity.Domain, Employee.Domain など各 Bounded Context の Domain層
+- **誰が使うのか**: Authentication.Domain, Employee.Domain など各 Bounded Context の Domain層
 
 ---
 
@@ -509,9 +509,8 @@ public class UpdatePreferencesUseCase : IUseCase<UpdatePreferencesRequest, Updat
 
 - [Entity_And_DomainEvents_詳細設計.md](Entity_And_DomainEvents_詳細設計.md) — 実装詳細（AI向け）
 - [Entity_And_DomainEvents_単体テスト仕様.md](Entity_And_DomainEvents_単体テスト仕様.md) — テスト仕様
-- [Entity_設計ガイドライン.md](../Guides/Entity_設計ガイドライン.md) — Entity<TId> パターンの詳細
-- [ドメインイベント_設計ガイド.md](../Guides/ドメインイベント_設計ガイド.md) — イベント駆動設計パターン
-- [AggregateId_設計ガイド.md](../Guides/AggregateId_設計ガイド.md) — GUID ベース ID の実装
+- [Entity_設計ガイドライン.md](../../Assistance/Guides/Entity_設計ガイドライン.md) — Entity<TId> パターンの詳細
+- [ドメインイベント_設計ガイド.md](../../Assistance/Guides/ドメインイベント_設計ガイド.md) — イベント駆動設計パターン
 
 ---
 

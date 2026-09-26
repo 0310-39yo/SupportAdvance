@@ -14,7 +14,7 @@ namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Permission;
 public sealed class PermissionCode : PrimitiveValueObject<string>, IEquatable<PermissionCode>
 {
     /// <summary>
-    /// 権限コードの値を取得する
+    /// 権限コードの値の取得
     /// </summary>
     public string Value => ValueField;
 
@@ -27,7 +27,7 @@ public sealed class PermissionCode : PrimitiveValueObject<string>, IEquatable<Pe
     }
 
     /// <summary>
-    /// 指定された権限コードから PermissionCode を生成する
+    /// 指定された権限コードからの PermissionCode の生成
     /// </summary>
     /// <param name="value">権限コード（1-100文字、英数字、_、.のみ）</param>
     /// <returns>生成された PermissionCode インスタンス</returns>
@@ -86,14 +86,10 @@ public sealed class PermissionCode : PrimitiveValueObject<string>, IEquatable<Pe
         }
     }
 
-    /// <summary>
-    /// オブジェクト等価性を判定する
-    /// </summary>
+    /// <inheritdoc/>
     public override bool Equals(object? obj) => Equals(obj as PermissionCode);
 
-    /// <summary>
-    /// PermissionCode 間の等価性を判定する
-    /// </summary>
+    /// <inheritdoc/>
     public bool Equals(PermissionCode? other)
     {
         if (other is null)
@@ -109,26 +105,23 @@ public sealed class PermissionCode : PrimitiveValueObject<string>, IEquatable<Pe
         return Value == other.Value; // 大文字小文字区別
     }
 
-    /// <summary>
-    /// ハッシュコードを取得する
-    /// </summary>
+    /// <inheritdoc/>
     public override int GetHashCode() => Value.GetHashCode();
 
     /// <summary>
-    /// 文字列表現を取得する
+    /// 文字列表現の取得
     /// </summary>
+    /// <returns>権限コードの値そのもの</returns>
     public override string ToString() => Value;
 
-    /// <summary>
-    /// 等価性判定のための値コンポーネントを返す
-    /// </summary>
+    /// <inheritdoc/>
     protected override IEnumerable<object?> GetValueComponents()
     {
         yield return Value;
     }
 
     /// <summary>
-    /// 値を検証する
+    /// 値の検証
     /// </summary>
     /// <param name="normalized">検証対象の値</param>
     /// <exception cref="ArgumentException">不正な値</exception>

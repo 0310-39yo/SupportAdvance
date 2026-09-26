@@ -4,17 +4,22 @@ namespace SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 /// <summary>
 /// データベース行を一意に識別する主キー値を表す抽象基底クラス
-///
-/// 【責務】
-/// - long 型の行ID を型安全に管理
-/// - 派生クラスごとに MinValue（最小有効値）を定義
-/// - 派生クラスごとに Validate（検証ルール）を実装
-///
-/// 【継承パターン】
-/// - 必須型（MinValue 大于等于 1）: PersonRowId, DepartmentRowId, EmployeeRowId
-/// - オプション型（IsSetフラグで未設定表現）: ManagerEmployeeRowId, ParentDepartmentRowId
-///
-/// 【使用例】
+/// </summary>
+/// <remarks>
+/// <para>【責務】</para>
+/// <list type="bullet">
+/// <item><description>long 型の行ID を型安全に管理</description></item>
+/// <item><description>派生クラスごとに MinValue（最小有効値）を定義</description></item>
+/// <item><description>派生クラスごとに Validate（検証ルール）を実装</description></item>
+/// </list>
+/// <para>【継承パターン】</para>
+/// <list type="bullet">
+/// <item><description>必須型（MinValue 大于等于 1）: PersonRowId, DepartmentRowId, EmployeeRowId</description></item>
+/// <item><description>オプション型（IsSetフラグで未設定表現）: ManagerEmployeeRowId, ParentDepartmentRowId</description></item>
+/// </list>
+/// </remarks>
+/// <example>
+/// <code>
 /// public sealed class PersonRowId : RowId
 /// {
 ///     public const long MinValue = 1L;
@@ -29,7 +34,8 @@ namespace SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 ///             throw new ArgumentOutOfRangeException(...);
 ///     }
 /// }
-/// </summary>
+/// </code>
+/// </example>
 public abstract class RowId : PrimitiveValueObject<long>, IEquatable<RowId>
 {
     /// <summary>
@@ -50,42 +56,44 @@ public abstract class RowId : PrimitiveValueObject<long>, IEquatable<RowId>
     }
 
     /// <summary>
-    /// 保持する値を取得する
+    /// 保持する値の取得
     /// </summary>
     public long Value => ValueField;
 
     /// <summary>
     /// 行ID値の検証を行う（派生クラスで実装）
-    ///
-    /// 【実装例】
-    /// public override void Validate(long normalized)
-    /// {
-    ///     if (normalized < MinValue)
-    ///         throw new ArgumentOutOfRangeException(...);
-    /// }
     /// </summary>
     /// <param name="normalized">検証対象の値</param>
+    /// <example>
+    /// <code>
+    /// public override void Validate(long normalized)
+    /// {
+    ///     if (normalized &lt; MinValue)
+    ///         throw new ArgumentOutOfRangeException(...);
+    /// }
+    /// </code>
+    /// </example>
     public abstract override void Validate(long normalized);
 
     /// <summary>
     /// 派生クラスで From() static メソッドを実装してください
-    /// 【実装例】
-    /// public static PersonRowId From(long value) => new PersonRowId(value);
     /// </summary>
+    /// <example>
+    /// <code>
+    /// public static PersonRowId From(long value) => new PersonRowId(value);
+    /// </code>
+    /// </example>
 
     /// <summary>
     /// 文字列表現を返す
     /// </summary>
+    /// <returns>行ID の数値の文字列</returns>
     public override string ToString() => ValueField.ToString();
 
-    /// <summary>
-    /// 指定されたオブジェクトと等価かどうかを判定する
-    /// </summary>
+    /// <inheritdoc/>
     public override bool Equals(object? obj) => Equals(obj as RowId);
 
-    /// <summary>
-    /// 指定された RowId と等価かどうかを判定する
-    /// </summary>
+    /// <inheritdoc/>
     public bool Equals(RowId? other)
     {
         if (other is null)
@@ -101,8 +109,6 @@ public abstract class RowId : PrimitiveValueObject<long>, IEquatable<RowId>
         return GetType() == other.GetType() && Value == other.Value;
     }
 
-    /// <summary>
-    /// ハッシュコードを取得する
-    /// </summary>
+    /// <inheritdoc/>
     public override int GetHashCode() => ValueField.GetHashCode();
 }

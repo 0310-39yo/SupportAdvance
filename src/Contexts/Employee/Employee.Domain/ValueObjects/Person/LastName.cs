@@ -4,12 +4,16 @@ namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Person;
 
 /// <summary>
 /// 個人の姓を表す ValueObject
-/// 【型】string のラッパー
-/// 【制約】1文字以上100文字以下、null 不可
 /// </summary>
+/// <remarks>
+/// <para>【型】string のラッパー</para>
+/// <para>【制約】1文字以上100文字以下、null 不可</para>
+/// </remarks>
 public sealed class LastName : ValueObject, IEquatable<LastName>
 {
-    /// <summary>姓の値</summary>
+    /// <summary>
+    /// 姓の値
+    /// </summary>
     public string Value { get; }
 
     /// <summary>
@@ -21,10 +25,11 @@ public sealed class LastName : ValueObject, IEquatable<LastName>
     }
 
     /// <summary>
-    /// 指定された値から LastName を生成する
+    /// 指定された値からの LastName の生成
     /// </summary>
     /// <param name="value">姓</param>
     /// <returns>LastName インスタンス</returns>
+    /// <exception cref="ArgumentException"><paramref name="value"/> が <see langword="null"/>・空文字・空白のみの場合、または 100 文字を超える場合</exception>
     public static LastName From(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
@@ -41,8 +46,11 @@ public sealed class LastName : ValueObject, IEquatable<LastName>
     }
 
     /// <summary>
-    /// DB値から LastName を復元する
+    /// DB値から LastName の復元
     /// </summary>
+    /// <param name="value">DB から読み込んだ姓</param>
+    /// <param name="result">成功した場合は復元したインスタンス。失敗した場合は <see langword="null"/>（使用禁止）</param>
+    /// <returns>成功した場合は <see langword="true"/>。<see langword="null"/>・空文字・空白のみ・100 文字超の場合は <see langword="false"/>（必須項目）</returns>
     public static bool TryFromDbValue(string? value, out LastName result)
     {
         result = null!;
@@ -63,14 +71,10 @@ public sealed class LastName : ValueObject, IEquatable<LastName>
         }
     }
 
-    /// <summary>
-    /// 指定された LastName と等価かどうかを判定する
-    /// </summary>
+    /// <inheritdoc/>
     public override bool Equals(object? obj) => Equals(obj as LastName);
 
-    /// <summary>
-    /// 指定された LastName と等価かどうかを判定する
-    /// </summary>
+    /// <inheritdoc/>
     public bool Equals(LastName? other)
     {
         if (other is null)
@@ -86,19 +90,16 @@ public sealed class LastName : ValueObject, IEquatable<LastName>
         return Value == other.Value;
     }
 
-    /// <summary>
-    /// ハッシュコードを取得する
-    /// </summary>
+    /// <inheritdoc/>
     public override int GetHashCode() => Value.GetHashCode();
 
     /// <summary>
-    /// 文字列表現を取得する
+    /// 文字列表現の取得
     /// </summary>
+    /// <returns>姓の値そのもの</returns>
     public override string ToString() => Value;
 
-    /// <summary>
-    /// 等価性判定のための値コンポーネントを返す
-    /// </summary>
+    /// <inheritdoc/>
     protected override IEnumerable<object?> GetValueComponents()
     {
         yield return Value;

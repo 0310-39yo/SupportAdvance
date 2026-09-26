@@ -4,53 +4,43 @@ using SupportAdvance.SharedKernel.ValueObjects.Abstractions;
 namespace SupportAdvance.SharedKernel.ValueObjects.Audit;
 
 /// <summary>
-/// エンティティの作成日時を表すValueObject
-/// 【設計】LocalDateTime を内部値として保持（Domain層での型安全性確保）
-/// 【用途】Domain/Application層: LocalDateTime で扱う、Infrastructure層: DateTime に変換
+/// エンティティの作成日時（JST）を表す値オブジェクト
 /// </summary>
+/// <remarks>
+/// <para>【設計】<see cref="LocalDateTime"/> を内部値として保持し、Domain 層での型安全性を確保</para>
+/// <para>【null契約】必須。<see langword="null"/> の入力は <see cref="TryFrom"/> で失敗。Unset なし</para>
+/// <para>【時刻】DB の <c>DateTime</c> との変換は Infrastructure（Mapper・Repository）の担当。この型は <c>DateTime</c> の公開なし</para>
+/// <para>【参照】docs/Assistance/Guides/FromDbValue_ToDbValue_パターンガイド.md</para>
+/// </remarks>
+/// <seealso cref="UpdatedAt"/>
+/// <seealso cref="DeletedAt"/>
 public sealed class CreatedAt : PrimitiveValueObject<LocalDateTime>, IEquatable<CreatedAt>
 {
     /// <summary>
-    /// 指定された LocalDateTime からCreatedAtのインスタンスを生成する
-    /// 【責務】指定された日時を持つCreatedAtを表現する
+    /// 指定日時による初期化。生成は <see cref="From"/>／<see cref="TryFrom"/> を使用
     /// </summary>
-    /// <param name="value">LocalDateTime値</param>
-    /// <returns>指定された日時を持つCreatedAtのインスタンス</returns>
-    /// <remarks>Validate は、基礎クラスのコンストラクタで自動実行される</remarks>
+    /// <param name="value">作成日時（JST）</param>
+    /// <remarks>
+    /// <para>【注意】検証（<see cref="Validate"/>）は基底クラスのコンストラクターで自動実行</para>
+    /// </remarks>
     private CreatedAt(LocalDateTime value) : base(value, true)
     {
     }
 
     /// <summary>
-    /// 指定された LocalDateTime からCreatedAtのインスタンスを生成する（推奨: Domain層での生成方式）
-    /// 【責務】LocalDateTime を持つCreatedAtを表現する
+    /// 指定日時を持つ <see cref="CreatedAt"/> の生成
     /// </summary>
-    /// <param name="value">LocalDateTime値（IClock.JstNow から取得）</param>
-    /// <returns>指定された日時を持つCreatedAtのインスタンス</returns>
+    /// <param name="value">作成日時（JST）。通常は <see cref="IClock.JstNow"/> から取得した値</param>
+    /// <returns>指定日時を持つインスタンス</returns>
+    /// <exception cref="ArgumentException"><paramref name="value"/> が <see cref="LocalDateTime.MinValue"/> または <see cref="LocalDateTime.MaxValue"/> の場合</exception>
     public static CreatedAt From(LocalDateTime value) => new(value);
 
     /// <summary>
-    /// 指定された DateTime からCreatedAtのインスタンスを生成する（Infrastructure層での型変換用）
-    /// 【責務】DB から読み込んだ DateTime を LocalDateTime に変換して CreatedAt を生成
+    /// 日時（JST）からの <see cref="CreatedAt"/> 生成の試行。例外の送出なし
     /// </summary>
-    /// <param name="value">DateTime値（DB読み込み値）</param>
-    /// <returns>指定された日時を持つCreatedAtのインスタンス</returns>
-    public static CreatedAt FromDbValue(DateTime value) => new(new LocalDateTime(value));
-
-    /// <summary>
-    /// DB値への変換（DateTime を取得）
-    /// 【責務】Mapper で Entity → DbModel への変換時に使用
-    /// </summary>
-    /// <returns>内部保持の LocalDateTime から DateTime を抽出</returns>
-    public DateTime ToDbValue() => ValueField.Value;
-
-    /// <summary>
-    /// 指定された LocalDateTime からCreatedAtのインスタンスの生成を試みる（型安全版）
-    /// 【責務】null安全に CreatedAt を生成する（Domain層での生成方式）
-    /// </summary>
-    /// <param name="input">LocalDateTime? 値</param>
-    /// <param name="result">生成されたCreatedAtのインスタンス</param>
-    /// <returns>生成に成功した場合はtrue、失敗した場合はfalse</returns>
+    /// <param name="input">作成日時（JST）。DB の値は Infrastructure が変換して渡す</param>
+    /// <param name="result">成功した場合は生成したインスタンス。失敗した場合は <see langword="null"/>（使用禁止）</param>
+    /// <returns>成功した場合は <see langword="true"/>。<paramref name="input"/> が <see langword="null"/> の場合、または値が検証に通らなかった場合は <see langword="false"/></returns>
     public static bool TryFrom(LocalDateTime? input, out CreatedAt result)
     {
         if (input == null || !input.HasValue)
@@ -72,53 +62,14 @@ public sealed class CreatedAt : PrimitiveValueObject<LocalDateTime>, IEquatable<
     }
 
     /// <summary>
-    /// 指定された DateTime からCreatedAtのインスタンスの生成を試みる（NULL安全版、Infrastructure層での型変換用）
-    /// 【責務】DB値から null安全に CreatedAt を生成する（NULL は失敗）
+    /// 作成日時（JST）
     /// </summary>
-    /// <param name="input">DateTime? 値（DB読み込み値）</param>
-    /// <param name="result">生成されたCreatedAtのインスタンス</param>
-    /// <returns>生成に成功した場合はtrue、失敗した場合はfalse</returns>
-    public static bool TryFromDbValue(DateTime? input, out CreatedAt result)
-    {
-        if (input == null)
-        {
-            result = null!;
-            return false;
-        }
-
-        try
-        {
-            result = FromDbValue(input.Value);
-            return true;
-        }
-        catch (ArgumentException)
-        {
-            result = null!;
-            return false;
-        }
-    }
-
-    /// <summary>
-    /// 保持する LocalDateTime 値を取得する
-    /// 【責務】保持する値を取得する
-    /// </summary>
-    /// <returns>保持する LocalDateTime 値</returns>
     public LocalDateTime Value => ValueField;
 
-    /// <summary>
-    /// 指定されたオブジェクトと等価かどうかを判定する
-    /// 【責務】指定されたオブジェクトと等価かどうかを判定する
-    /// </summary>
-    /// <param name="obj">比較対象のオブジェクト</param>
-    /// <returns>等価である場合はtrue、そうでない場合はfalse</returns>
+    /// <inheritdoc/>
     public override bool Equals(object? obj) => Equals(obj as CreatedAt);
 
-    /// <summary>
-    /// 指定されたCreatedAtと等価かどうかを判定する
-    /// 【責務】指定されたCreatedAtと等価かどうかを判定する
-    /// </summary>
-    /// <param name="other">比較対象のCreatedAt</param>
-    /// <returns>等価である場合はtrue、そうでない場合はfalse</returns>
+    /// <inheritdoc/>
     public bool Equals(CreatedAt? other)
     {
         if (other is null)
@@ -134,29 +85,20 @@ public sealed class CreatedAt : PrimitiveValueObject<LocalDateTime>, IEquatable<
         return ValueField == other.ValueField;
     }
 
-    /// <summary>
-    /// ハッシュコードを取得する
-    /// 【責務】オブジェクトのハッシュコードを取得する
-    /// </summary>
-    /// <returns>オブジェクトのハッシュコード</returns>
+    /// <inheritdoc/>
     public override int GetHashCode() => ValueField.GetHashCode();
 
-    /// <summary>
-    /// 等価性判定のための値コンポーネントを返す（IsSet を除く）
-    /// IsSet は ValueObject.GetEqualityComponents で自動的に先頭に付加される
-    /// </summary>
-    /// <returns>ValueField を含むコンポーネント列</returns>
+    /// <inheritdoc/>
+    /// <remarks>
+    /// <para>【注意】<see cref="ValueObject.IsSet"/> は基底クラスによる先頭への自動付加のため、ここでの含有は不要</para>
+    /// </remarks>
     protected override IEnumerable<object?> GetValueComponents()
     {
         yield return ValueField;
     }
 
-    /// <summary>
-    /// 正規化済み値の検証を行う
-    /// 【責務】業務ルールに基づく値の妥当性のチェック
-    /// </summary>
-    /// <param name="normalized">正規化済みの LocalDateTime 値</param>
-    /// <exception cref="ArgumentException">値が有効な日時でない場合にスローされる</exception>
+    /// <inheritdoc/>
+    /// <exception cref="ArgumentException"><paramref name="normalized"/> が <see cref="LocalDateTime.MinValue"/> または <see cref="LocalDateTime.MaxValue"/> の場合</exception>
     public override void Validate(LocalDateTime normalized)
     {
         base.Validate(normalized);

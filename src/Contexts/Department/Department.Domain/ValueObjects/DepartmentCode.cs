@@ -14,7 +14,7 @@ namespace SupportAdvance.Contexts.Department.Domain.ValueObjects;
 public sealed class DepartmentCode : PrimitiveValueObject<string>, IEquatable<DepartmentCode>
 {
     /// <summary>
-    /// 部署コード（4文字）の値を取得する
+    /// 部署コード（4文字）の値の取得
     /// </summary>
     public string Value => ValueField;
 
@@ -22,13 +22,13 @@ public sealed class DepartmentCode : PrimitiveValueObject<string>, IEquatable<De
     /// 指定された部署コードから DepartmentCode を生成する（プライベートコンストラクタ）
     /// </summary>
     /// <param name="value">部署コード（4文字）</param>
-    /// <remarks>Validate は、基礎クラスのコンストラクタで自動実行される</remarks>
+    /// <remarks>Validate は、基礎クラスのコンストラクタでの自動実行</remarks>
     private DepartmentCode(string value) : base(value, true)
     {
     }
 
     /// <summary>
-    /// 指定された部署コードから DepartmentCode を生成する
+    /// 指定された部署コードからの DepartmentCode の生成
     /// </summary>
     /// <param name="value">部署コード（4文字、英数字のみ）</param>
     /// <returns>生成された DepartmentCode インスタンス</returns>
@@ -87,14 +87,10 @@ public sealed class DepartmentCode : PrimitiveValueObject<string>, IEquatable<De
         }
     }
 
-    /// <summary>
-    /// オブジェクト等価性を判定する
-    /// </summary>
+    /// <inheritdoc/>
     public override bool Equals(object? obj) => Equals(obj as DepartmentCode);
 
-    /// <summary>
-    /// DepartmentCode 間の等価性を判定する
-    /// </summary>
+    /// <inheritdoc/>
     public bool Equals(DepartmentCode? other)
     {
         if (other is null)
@@ -110,26 +106,23 @@ public sealed class DepartmentCode : PrimitiveValueObject<string>, IEquatable<De
         return Value == other.Value; // 大文字小文字区別
     }
 
-    /// <summary>
-    /// ハッシュコードを取得する
-    /// </summary>
+    /// <inheritdoc/>
     public override int GetHashCode() => Value.GetHashCode();
 
     /// <summary>
-    /// 文字列表現を取得する
+    /// 文字列表現の取得
     /// </summary>
+    /// <returns>部署コードの値そのもの</returns>
     public override string ToString() => Value;
 
-    /// <summary>
-    /// 等価性判定のための値コンポーネントを返す
-    /// </summary>
+    /// <inheritdoc/>
     protected override IEnumerable<object?> GetValueComponents()
     {
         yield return Value;
     }
 
     /// <summary>
-    /// 値を検証する
+    /// 値の検証
     /// </summary>
     /// <param name="normalized">検証対象の値</param>
     /// <exception cref="ArgumentException">不正な値</exception>

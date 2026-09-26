@@ -289,19 +289,20 @@ public class YourEntityMapper : IEntityMapper<YourEntity, YourEntityDbModel>
         return new YourEntityDbModel
         {
             RowId = entity.Id,
-            CreatedAt = entity.CreatedAt.ToDbValue(),      // ✓ LocalDateTime → DateTime（ValueObject の変換メソッド）
-            UpdatedAt = entity.UpdatedAt.HasUpdated ? entity.UpdatedAt.ToDbValue() : null    // ✓ LocalDateTime? → DateTime?
+            CreatedAt = entity.CreatedAt.Value.Value,      // ✓ LocalDateTime → DateTime（LocalDateTime.Value）
+            UpdatedAt = entity.UpdatedAt.HasUpdated ? entity.UpdatedAt.Value?.Value : null    // ✓ LocalDateTime? → DateTime?
         };
     }
 
     public YourEntity ToDomainEntity(YourEntityDbModel dbModel, IClock clock)
     {
-        if (!CreatedAt.TryFromDbValue(dbModel.CreatedAt, out var createdAt))
+        // DateTime → LocalDateTime は Infrastructure の変換ヘルパーで行い、値オブジェクトは TryFrom(LocalDateTime?) のみ
+        if (!CreatedAt.TryFrom(dbModel.CreatedAt.ToLocalDateTime(), out var createdAt))
             throw new InvalidOperationException($"Failed to convert CreatedAt: {dbModel.CreatedAt}");
 
         return new YourEntity(
             dbModel.RowId,
-            createdAt,  // ✓ DateTime → LocalDateTime（ValueObject の変換メソッド）
+            createdAt,  // ✓ DateTime → LocalDateTime（Infrastructure の変換 + TryFrom）
             clock
         );
     }
@@ -355,9 +356,9 @@ public async Task ProcessExternalData(string externalTimestamp)
 ### Mapper 層
 
 - [ ] **型変換あり**: LocalDateTime ↔ DateTime の明示的な変換を実装
-  - Entity → DbModel: LocalDateTime.ToDbValue() で DateTime に変換
-  - DbModel → Entity: CreatedAt.TryFromDbValue() で DateTime から LocalDateTime に変換
-- [ ] **ValueObject メソッド使用**: 監査ValueObjects (CreatedAt/UpdatedAt/DeletedAt) の ToDbValue/TryFromDbValue を使用
+  - Entity → DbModel: `LocalDateTime.Value`（DateTime）を DbModel に設定
+  - DbModel → Entity: 変換ヘルパー（`ToLocalDateTime()` / `ToLocalDateTimeOrNull()`）で DateTime から LocalDateTime に変換し、値オブジェクトの `TryFrom(LocalDateTime?)` に渡す
+- [ ] **値オブジェクトに DateTime を持たせない**: 監査ValueObjects (CreatedAt/UpdatedAt/DeletedAt) に `FromDbValue(DateTime)` / `TryFromDbValue(DateTime?)` / `ToDbValue()` を作らない（[FromDbValue_ToDbValue_パターンガイド.md](FromDbValue_ToDbValue_パターンガイド.md)）
 
 ### ORM レベル
 

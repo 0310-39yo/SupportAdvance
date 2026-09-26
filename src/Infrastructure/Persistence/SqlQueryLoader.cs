@@ -4,20 +4,30 @@ namespace SupportAdvance.Infrastructure.Persistence;
 
 /// <summary>
 /// SQL ファイルを埋め込みリソースから読み込むローダー（DI対応版）
-///
-/// 【責務】
-/// - Context 内の Persistence/Sql フォルダから SQL ファイルを解決
-/// - DB方言（SqlServer / PostgreSQL）を AppSettings から読み込み
-/// - SELECT 操作用（Repository で Dapper 実行時に使用）
-///
-/// 【使用例】
-/// var sql = _queryLoader.LoadQuery("Auth.GetLoginCredentialsByLoginId", typeof(LoginCredentialsRepository));
-/// → Identity.Infrastructure/Persistence/Sql/SqlServer/Auth/GetLoginCredentialsByLoginId.sql
 /// </summary>
+/// <remarks>
+/// <para>【責務】</para>
+/// <list type="bullet">
+/// <item><description>Context 内の Persistence/Sql フォルダから SQL ファイルを解決</description></item>
+/// <item><description>DB方言（SqlServer / PostgreSQL）を AppSettings から読み込み</description></item>
+/// <item><description>SELECT 操作用（Repository で Dapper 実行時に使用）</description></item>
+/// </list>
+/// </remarks>
+/// <example>
+/// <code>
+/// var sql = _queryLoader.LoadQuery("Auth.GetLoginCredentialsByLoginId", typeof(LoginCredentialsRepository));
+/// → Authentication.Infrastructure/Persistence/Sql/SqlServer/Auth/GetLoginCredentialsByLoginId.sql
+/// </code>
+/// </example>
 public class SqlQueryLoader
 {
     private readonly IAppSettings _appSettings;
 
+    /// <summary>
+    /// <see cref="SqlQueryLoader"/> クラスの新しいインスタンスの初期化
+    /// </summary>
+    /// <param name="appSettings">DB 方言（<c>Database.Dialect</c>）の取得元</param>
+    /// <exception cref="ArgumentNullException"><paramref name="appSettings"/> が <see langword="null"/> の場合</exception>
     public SqlQueryLoader(IAppSettings appSettings)
     {
         _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
@@ -30,6 +40,12 @@ public class SqlQueryLoader
     /// <param name="repositoryType">Repository の Type（リソース検索用）</param>
     /// <returns>SQL クエリ文字列</returns>
     /// <exception cref="FileNotFoundException">SQL ファイルが見つからない場合</exception>
+    /// <exception cref="ArgumentException"><paramref name="queryPath"/> が <see langword="null"/>・空文字の場合、または <c>分類.クエリ名</c> の形式でない場合</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="repositoryType"/> が <see langword="null"/> の場合</exception>
+    /// <exception cref="InvalidOperationException"><paramref name="repositoryType"/> の名前空間を取得できない場合</exception>
+    /// <remarks>
+    /// <para>【検索場所】<paramref name="repositoryType"/> のアセンブリの埋め込みリソース <c>{Context}.Persistence.Sql.{方言}.{分類}.{クエリ名}.sql</c></para>
+    /// </remarks>
     public string LoadQuery(string queryPath, Type repositoryType)
     {
         ArgumentException.ThrowIfNullOrEmpty(queryPath, nameof(queryPath));
@@ -39,8 +55,8 @@ public class SqlQueryLoader
         var dbDialect = _appSettings.Database.Dialect ?? "SqlServer";
 
         // repositoryType の Namespace から Context を特定
-        // 例: SupportAdvance.Contexts.Identity.Infrastructure.Repositories.LoginCredentialsRepository
-        // → SupportAdvance.Contexts.Identity.Infrastructure
+        // 例: SupportAdvance.Contexts.Authentication.Infrastructure.Repositories.LoginCredentialsRepository
+        // → SupportAdvance.Contexts.Authentication.Infrastructure
         var contextNamespace = repositoryType.Namespace;
         if (string.IsNullOrEmpty(contextNamespace))
             throw new InvalidOperationException($"Cannot determine namespace for type {repositoryType.FullName}");
@@ -66,7 +82,7 @@ public class SqlQueryLoader
         var queryName = parts[1];
 
         // リソース名構築
-        // 例: SupportAdvance.Contexts.Identity.Infrastructure.Persistence.Sql.SqlServer.Auth.GetLoginCredentialsByLoginId.sql
+        // 例: SupportAdvance.Contexts.Authentication.Infrastructure.Persistence.Sql.SqlServer.Auth.GetLoginCredentialsByLoginId.sql
         var resourceName = $"{contextNamespace}.Persistence.Sql.{dbDialect}.{category}.{queryName}.sql";
 
         // Assembly から埋め込みリソースを取得
@@ -85,6 +101,7 @@ public class SqlQueryLoader
     /// <summary>
     /// 現在の DB方言を取得
     /// </summary>
+    /// <returns>設定の <c>Database.Dialect</c>。未設定の場合は <c>SqlServer</c></returns>
     public string GetCurrentDialect()
     {
         return _appSettings.Database.Dialect ?? "SqlServer";

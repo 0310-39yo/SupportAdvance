@@ -269,7 +269,7 @@ using SupportAdvance.Contexts.YourGroup.YourContext.Infrastructure.DataAccess;
 using SupportAdvance.Contexts.YourGroup.YourContext.Infrastructure.DataAccess.Models;
 using SupportAdvance.Contexts.YourGroup.YourContext.Infrastructure.Mappers;
 using SupportAdvance.Infrastructure.Repositories;
-using SupportAdvance.Infrastructure.Services;
+using SupportAdvance.Application.Abstractions.Services;
 
 namespace SupportAdvance.Contexts.YourGroup.YourContext.Infrastructure.Repositories;
 

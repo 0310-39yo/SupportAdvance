@@ -9,23 +9,26 @@ using SupportAdvance.SharedKernel.Entities;
 
 /// <summary>
 /// ロール割り当てエンティティ（ロール有効期間管理）
-///
-/// 【ID型】RoleAssignmentRowId（独立した Entity ID）
-/// 【親参照】EmployeeRowId（所属する従業員）
-/// 【責務】従業員のロール割り当てと有効期間を管理、有効期限チェック
 /// </summary>
+/// <remarks>
+/// <para>【ID型】RoleAssignmentRowId（独立した Entity ID）</para>
+/// <para>【親参照】EmployeeRowId（所属する従業員）</para>
+/// <para>【責務】従業員のロール割り当てと有効期間を管理、有効期限チェック</para>
+/// </remarks>
 public sealed class RoleAssignment : Entity<RoleAssignmentRowId>
 {
-    /// <summary>所属従業員の ID</summary>
+    /// <summary>
+    /// 所属従業員の ID
+    /// </summary>
     public EmployeeRowId EmployeeRowId { get; private set; }
 
     /// <summary>
-    /// ロールコードを取得する
+    /// ロールコードの取得
     /// </summary>
     public RoleCode RoleCode { get; private set; }
 
     /// <summary>
-    /// 有効開始日を取得する
+    /// 有効開始日の取得
     /// </summary>
     public EffectiveAt EffectiveDate { get; private set; }
 
@@ -59,6 +62,12 @@ public sealed class RoleAssignment : Entity<RoleAssignmentRowId>
     /// <summary>
     /// 新しい RoleAssignment を生成する（ファクトリメソッド）
     /// </summary>
+    /// <param name="assignmentRowId">ロール割り当ての行ID</param>
+    /// <param name="employeeRowId">割り当て先の従業員の行ID</param>
+    /// <param name="roleCode">ロールコード</param>
+    /// <param name="effectiveDate">有効開始日時（JST）</param>
+    /// <param name="expirationDate">有効期限。<see langword="null"/> の場合は無期限（<see cref="ExpirationOn.Unlimited"/>）</param>
+    /// <returns>生成したロール割り当て</returns>
     public static RoleAssignment Create(
         RoleAssignmentRowId assignmentRowId,
         EmployeeRowId employeeRowId,
@@ -70,6 +79,12 @@ public sealed class RoleAssignment : Entity<RoleAssignmentRowId>
     /// <summary>
     /// DB から読み込んだ値から RoleAssignment を復元する（ファクトリメソッド）
     /// </summary>
+    /// <param name="assignmentRowId">ロール割り当ての行ID</param>
+    /// <param name="employeeRowId">割り当て先の従業員の行ID</param>
+    /// <param name="roleCode">ロールコード</param>
+    /// <param name="effectiveDate">有効開始日時（JST）</param>
+    /// <param name="expirationDate">有効期限（無期限の場合は <see cref="ExpirationOn.Unlimited"/>）</param>
+    /// <returns>復元したロール割り当て</returns>
     public static RoleAssignment Reconstruct(
         RoleAssignmentRowId assignmentRowId,
         EmployeeRowId employeeRowId,
@@ -79,7 +94,7 @@ public sealed class RoleAssignment : Entity<RoleAssignmentRowId>
         new(assignmentRowId, employeeRowId, roleCode, effectiveDate, expirationDate);
 
     /// <summary>
-    /// このロール割り当てが指定時点で有効かどうかを判定する
+    /// このロール割り当てが指定時点で有効かどうかの判定
     /// </summary>
     /// <param name="asOf">判定時点</param>
     /// <returns>EffectiveDate 以後かつ ExpirationDate 前なら true</returns>
@@ -102,8 +117,9 @@ public sealed class RoleAssignment : Entity<RoleAssignmentRowId>
     }
 
     /// <summary>
-    /// RoleAssignment の文字列表現を取得する
+    /// RoleAssignment の文字列表現の取得
     /// </summary>
+    /// <returns><c>RoleAssignment(RowId=…, Code=…, Effective=…, Expiration=…)</c> 形式のデバッグ用文字列</returns>
     public override string ToString()
         =>
             $"RoleAssignment(RowId={RowId.Value}, Code={RoleCode}, Effective={EffectiveDate}, Expiration={ExpirationDate})";

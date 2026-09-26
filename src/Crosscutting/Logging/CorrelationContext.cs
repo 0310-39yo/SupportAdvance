@@ -25,6 +25,7 @@ public sealed class CorrelationContext : ICorrelationContext
     /// コリレーションID設定処理
     /// </summary>
     /// <param name="id">コリレーションID</param>
+    /// <exception cref="ArgumentNullException"><paramref name="id"/> が <see langword="null"/> の場合</exception>
     public void Set(string id)
     {
         ArgumentNullException.ThrowIfNull(id);

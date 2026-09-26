@@ -13,6 +13,62 @@
 
 ---
 
+## 1. テスト観点一覧
+
+### VO-CONS: コンストラクタ・生成
+
+| 観点ID | 観点（説明） | 分類 | テスト実装 |
+|--------|------|------|-----------|
+| VO-CONS-01 | 有効なパラメータで Employee が生成される | 正常系 | ✅ EmployeeTests.cs::VO_CONS_01_CreateValidEmployeeReturnsValidEmployee |
+| VO-CONS-02 | RegularEmployee（M）で生成できる | 正常系 | ✅ EmployeeTests.cs::VO_CONS_02_CreateRegularEmployeeIsRegularEmployee |
+| VO-CONS-03 | DispatchedEmployee（T）で生成できる | 正常系 | ✅ EmployeeTests.cs::VO_CONS_03_CreateDispatchedEmployeeIsDispatched |
+| VO-CONS-04 | ContractorEmployee（C）で生成できる | 正常系 | ✅ EmployeeTests.cs::VO_CONS_04_CreateContractorEmployeeIsContractor |
+| VO-CONS-05 | RetiredOn を指定して生成できる | 正常系 | ✅ EmployeeTests.cs::VO_CONS_05_CreateWithRetiredOnReturnsRetiredEmployee |
+
+### VO-PROP: プロパティアクセス
+
+| 観点ID | 観点（説明） | 分類 | テスト実装 |
+|--------|------|------|-----------|
+| VO-PROP-01 | RowId プロパティが正しい値を返す | 正常系 | ✅ EmployeeTests.cs::VO_CONS_01_CreateValidEmployeeReturnsValidEmployee |
+| VO-PROP-02 | BizDivision プロパティが正しい値を返す | 正常系 | ✅ EmployeeTests.cs::VO_CONS_02_CreateRegularEmployeeIsRegularEmployee |
+| VO-PROP-03 | BizId プロパティが正しい値を返す | 正常系 | ✅ EmployeeTests.cs::VO_CONS_01_CreateValidEmployeeReturnsValidEmployee |
+| VO-PROP-04 | BizCode プロパティが正しい値を返す | 正常系 | ✅ EmployeeTests.cs::VO_CONS_01_CreateValidEmployeeReturnsValidEmployee |
+| VO-PROP-05 | Person プロパティが正しい値を返す | 正常系 | ✅ EmployeeTests.cs::VO_CONS_01_CreateValidEmployeeReturnsValidEmployee |
+| VO-PROP-06 | RetiredOn プロパティが正しい値を返す | 正常系 | ✅ EmployeeTests.cs::VO_CONS_05_CreateWithRetiredOnReturnsRetiredEmployee |
+| VO-PROP-07 | プロパティが読み取り専用である | 不変性 | ⚠️ 手動確認のみ（コンパイルエラー） |
+
+### VO-EQ: Equals — 等価判定
+
+| 観点ID | 観点（説明） | 分類 | テスト実装 |
+|--------|------|------|-----------|
+| VO-EQ-01 | 同じ RowId を持つ Employee は等価である | 正常系 | ❌ 未実装（実装待ち） |
+| VO-EQ-02 | 同一参照のオブジェクトは等価である | 正常系 | ❌ 未実装（実装待ち） |
+| VO-EQ-03 | object 型で比較しても等価である | 正常系 | ❌ 未実装（実装待ち） |
+
+### VO-NE: Equals — 非等価判定
+
+| 観点ID | 観点（説明） | 分類 | テスト実装 |
+|--------|------|------|-----------|
+| VO-NE-01 | 異なる RowId を持つ Employee は非等価である | 異常系 | ❌ 未実装（実装待ち） |
+| VO-NE-02 | null との比較は非等価である | 異常系 | ❌ 未実装（実装待ち） |
+
+### VO-HC: GetHashCode
+
+| 観点ID | 観点（説明） | 分類 | テスト実装 |
+|--------|------|------|-----------|
+| VO-HC-01 | Equals=true の 2 つのオブジェクトは同一ハッシュ値である | 正常系 | ❌ 未実装（実装待ち） |
+| VO-HC-02 | HashSet / Dictionary で正しく動作する | 正常系 | ❌ 未実装（実装待ち） |
+
+### VO-VALID: 値検証
+
+| 観点ID | 観点（説明） | 分類 | テスト実装 |
+|--------|------|------|-----------|
+| VO-VALID-01 | 無効な BizCode で生成すると例外が発生する | 異常系 | ⚠️ ValueObject の検証に依存 |
+| VO-VALID-02 | 無効な EmployeeRowId で生成すると例外が発生する | 異常系 | ⚠️ ValueObject の検証に依存 |
+| VO-VALID-03 | 無効な PersonRowId で生成すると例外が発生する | 異常系 | ⚠️ ValueObject の検証に依存 |
+
+---
+
 ## 🧪 テストケース一覧
 
 ### グループ 1: 生成メソッド（Create）

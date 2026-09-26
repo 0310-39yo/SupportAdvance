@@ -4,15 +4,19 @@ namespace SupportAdvance.Application;
 
 /// <summary>
 /// Application層のサービス登録を管理するクラス。
-/// 各コンテキストのUseCaseを登録する際にデコレーターパターンを活用します。
+/// 各コンテキストのUseCaseを登録する際にデコレーターパターンの活用
 /// </summary>
 public static class DependencyInjection
 {
     /// <summary>
-    /// Application層の共通サービスを登録します。
-    /// 【注記】各 Context の Application 層との依存を避けるため、
-    /// 具体的な Context の登録は Program.cs で直接呼び出します。
+    /// Application層の共通サービスの登録
     /// </summary>
+    /// <param name="services">登録先のサービスコレクション</param>
+    /// <returns>メソッドチェーン用の <paramref name="services"/> 自身</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="services"/> が <see langword="null"/> の場合</exception>
+    /// <remarks>
+    /// <para>【注記】各 Context の Application 層との依存を避けるため、具体的な Context の登録は Program.cs での直接呼び出し</para>
+    /// </remarks>
     public static IServiceCollection AddApplicationModels(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);

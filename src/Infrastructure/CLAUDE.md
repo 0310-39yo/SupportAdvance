@@ -29,6 +29,8 @@ private readonly CreateUserUseCase _useCase; // 禁止
 
 Infrastructure層は DB の null を Domain の Unset() に変換する責務があります。すべての ValueObject を null-free 状態で Domain に渡す必要があります。
 
+また、**DB の型（`DateTime`）は Infrastructure の内側に閉じ込めます**。DB の `DateTime?` を `LocalDateTime?` に変換してから、値オブジェクトの `TryFrom(LocalDateTime?)` に渡します。値オブジェクトは `DateTime` を知りません（詳細はルート [CLAUDE.md](../../CLAUDE.md) の「DateTime は Infrastructure の内側に閉じる」）。
+
 ### 実装パターン
 
 ```csharp
@@ -40,11 +42,11 @@ public class UserPreferencesRepository : IUserPreferencesRepository
         if (dbModel == null) return null;
         
         // ============ 層間フィルター ============
-        // DB の null を Unset() に変換（TryFromDbValue を呼び出し）
+        // DB の DateTime? を LocalDateTime? に変換し、TryFrom で null を Unset() に変換
         
-        CreatedAt.TryFromDbValue(dbModel.CreatedAtDb, out var createdAt);
-        UpdatedAt.TryFromDbValue(dbModel.UpdatedAtDb, out var updatedAt);
-        DeletedAt.TryFromDbValue(dbModel.DeletedAtDb, out var deletedAt);
+        CreatedAt.TryFrom(dbModel.CreatedAtDb.ToLocalDateTimeOrNull(), out var createdAt);
+        UpdatedAt.TryFrom(dbModel.UpdatedAtDb.ToLocalDateTimeOrNull(), out var updatedAt);
+        DeletedAt.TryFrom(dbModel.DeletedAtDb.ToLocalDateTimeOrNull(), out var deletedAt);
         
         // すべて null-free 状態で Domain に渡す
         return UserPreferences.Reconstruct(userId, createdAt, updatedAt, deletedAt, ...);
@@ -52,9 +54,11 @@ public class UserPreferencesRepository : IUserPreferencesRepository
 }
 ```
 
+> **変換ヘルパー**: `ToLocalDateTime()`（`DateTime` → `LocalDateTime`。NOT NULL の列用）と `ToLocalDateTimeOrNull()`（`DateTime?` → `LocalDateTime?`）は、この `Infrastructure` プロジェクトの `DbDateTimeExtensions`（`SupportAdvance.Infrastructure.Mappers`）。DB の値の `DateTimeKind` が `Unspecified` でない場合は `ArgumentException`
+
 ### 責務
 
-- **TryFromDbValue の呼び出し**: DB の null を自動的に Unset() に変換
+- **DateTime → LocalDateTime の変換と TryFrom の呼び出し**: DB の null を自動的に Unset() に変換
 - **例外投げ**: CreatedAt など必須フィールドが null の場合は例外投げ（DB整合性エラー）
 - **null-free保証**: Domain に渡すすべての ValueObject が null を含まないこと
 

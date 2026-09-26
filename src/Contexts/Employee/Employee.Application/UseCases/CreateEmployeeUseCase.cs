@@ -19,6 +19,13 @@ public class CreateEmployeeUseCase
     private readonly IClock _clock;
     private readonly ISequenceProvider _sequenceProvider;
 
+    /// <summary>
+    /// <see cref="CreateEmployeeUseCase"/> クラスの新しいインスタンスの初期化
+    /// </summary>
+    /// <param name="repository">作成した従業員集約の保存先</param>
+    /// <param name="clock">現在日時（JST）の取得元</param>
+    /// <param name="sequenceProvider">行ID の採番元</param>
+    /// <exception cref="ArgumentNullException">いずれかの引数が <see langword="null"/> の場合</exception>
     public CreateEmployeeUseCase(IEmployeeRepository repository, IClock clock, ISequenceProvider sequenceProvider)
     {
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));
@@ -29,6 +36,12 @@ public class CreateEmployeeUseCase
     /// <summary>
     /// 従業員を新規作成
     /// </summary>
+    /// <param name="request">作成する従業員の内容</param>
+    /// <returns>作成した従業員の DTO（部署への所属なし）</returns>
+    /// <exception cref="ArgumentException">人物行ID が 0 以下の場合、区分コードが不正な場合、従業員番号が 1001〜9999 の範囲外の場合、区分と番号の組み合わせが範囲外の場合、または氏名が空・100 文字超の場合</exception>
+    /// <remarks>
+    /// <para>【副作用】行ID を採番し、従業員を DB に追加</para>
+    /// </remarks>
     public async Task<EmployeeDto> ExecuteAsync(CreateEmployeeRequest request)
     {
         // 【Step 1】入力検証
@@ -59,7 +72,8 @@ public class CreateEmployeeUseCase
             bizCode,
             null,
             person,
-            new List<DepartmentMembership>()
+            new List<DepartmentMembership>(),
+            _clock
         );
 
         // 【Step 6】Repository で永続化

@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="10.0.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.10.1" />
+    <PackageReference Include="Moq" Version="4.21.0" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="4.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../../src/Presentation/Shared/Shared.csproj" />
+    <ProjectReference Include="../../../src/Application/Application.csproj" />
+    <ProjectReference Include="../../../src/Common/Common.csproj" />
+    <ProjectReference Include="../../../src/Crosscutting/Crosscutting.csproj" />
+    <ProjectReference Include="../../../src/Contexts/Authentication/Authentication.Application/Authentication.Application.csproj" />
+    <ProjectReference Include="../../../src/Contexts/IntegrationPrototype/IntegrationPrototype.Application/IntegrationPrototype.Application.csproj" />
+  </ItemGroup>
+
+</Project>

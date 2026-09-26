@@ -21,6 +21,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- アイコンフォント（実体は Presentation.Shared の 1 ファイル。ここでは埋め込みリソースとしてリンクする） -->
+    <EmbeddedResource Include="..\Shared\Assets\Fonts\FluentSystemIcons-Resizable.ttf" Link="Assets\Fonts\FluentSystemIcons-Resizable.ttf" LogicalName="FluentSystemIcons-Resizable.ttf" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Include="..\..\..\configs\NLog\NLog.config" Link="NLog.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -28,7 +33,12 @@
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
-    <PackageReference Include="Syncfusion.Core.WinForms" Version="34.1.33" />
+    <PackageReference Include="Syncfusion.Core.WinForms" Version="34.2.9" />
+    <PackageReference Include="Syncfusion.Office2016Theme.WinForms" Version="34.2.9" />
+    <PackageReference Include="Syncfusion.Office2019Theme.WinForms" Version="34.2.9" />
+    <PackageReference Include="Syncfusion.SfInput.WinForms" Version="34.2.9" />
+    <PackageReference Include="Syncfusion.Tools.Windows" Version="34.2.9" />
+    <PackageReference Include="Syncfusion.Shared.Base" Version="34.2.9" />
   </ItemGroup>
 
   <ItemGroup>
@@ -36,8 +46,8 @@
     <ProjectReference Include="..\..\Contexts\Department\Department.Infrastructure\Department.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Contexts\Employee\Employee.Application\Employee.Application.csproj" />
     <ProjectReference Include="..\..\Contexts\Employee\Employee.Infrastructure\Employee.Infrastructure.csproj" />
-    <ProjectReference Include="..\..\Contexts\Identity\Identity.Application\Identity.Application.csproj" />
-    <ProjectReference Include="..\..\Contexts\Identity\Identity.Infrastructure\Identity.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Contexts\Authentication\Authentication.Application\Authentication.Application.csproj" />
+    <ProjectReference Include="..\..\Contexts\Authentication\Authentication.Infrastructure\Authentication.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Contexts\IntegrationPrototype\IntegrationPrototype.Application\IntegrationPrototype.Application.csproj" />
     <ProjectReference Include="..\..\Infrastructure\Infrastructure.csproj" />
     <ProjectReference Include="..\..\SharedKernel\SharedKernel.csproj" />
@@ -48,10 +58,6 @@
     <None Update="appsettings.Intrinsic.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Forms\" />
   </ItemGroup>
 
 </Project>

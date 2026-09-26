@@ -30,7 +30,7 @@ public sealed class DeletedBy : PrimitiveValueObject<long?>, IEquatable<DeletedB
     }
 
     /// <summary>
-    /// 未削除状態の DeletedBy を生成する
+    /// 未削除状態の DeletedBy の生成
     /// </summary>
     /// <returns>IsSet=false のインスタンス</returns>
     public static DeletedBy Unset()
@@ -39,7 +39,7 @@ public sealed class DeletedBy : PrimitiveValueObject<long?>, IEquatable<DeletedB
     }
 
     /// <summary>
-    /// 指定された従業員行IDから DeletedBy を生成する
+    /// 指定された従業員行IDからの DeletedBy の生成
     /// </summary>
     /// <param name="value">従業員行ID（1以上）</param>
     /// <returns>生成された DeletedBy インスタンス</returns>
@@ -117,14 +117,10 @@ public sealed class DeletedBy : PrimitiveValueObject<long?>, IEquatable<DeletedB
     /// </summary>
     public bool IsDeleted => IsSet;
 
-    /// <summary>
-    /// オブジェクト等価性を判定する
-    /// </summary>
+    /// <inheritdoc/>
     public override bool Equals(object? obj) => Equals(obj as DeletedBy);
 
-    /// <summary>
-    /// DeletedBy 間の等価性を判定する
-    /// </summary>
+    /// <inheritdoc/>
     public bool Equals(DeletedBy? other)
     {
         if (other is null)
@@ -140,28 +136,26 @@ public sealed class DeletedBy : PrimitiveValueObject<long?>, IEquatable<DeletedB
         return IsSet == other.IsSet && Value == other.Value;
     }
 
-    /// <summary>
-    /// ハッシュコードを取得する
-    /// </summary>
+    /// <inheritdoc/>
     public override int GetHashCode() => HashCode.Combine(IsSet, Value);
 
     /// <summary>
-    /// 文字列表現を取得する
+    /// 文字列表現の取得
     /// </summary>
+    /// <returns>削除者の従業員rowId の文字列。未設定の場合は <c>Unset</c></returns>
     public override string ToString() => IsSet ? Value?.ToString() ?? string.Empty : "Unset";
 
-    /// <summary>
-    /// 等価性判定のための値コンポーネントを返す
-    /// </summary>
+    /// <inheritdoc/>
     protected override IEnumerable<object?> GetValueComponents()
     {
         yield return Value;
     }
 
     /// <summary>
-    /// 値を検証する
+    /// 値の検証
     /// </summary>
     /// <param name="normalized">検証対象の値</param>
+    /// <exception cref="ArgumentException"><paramref name="normalized"/> が 0 以下の場合（<see langword="null"/> は許容）</exception>
     public override void Validate(long? normalized)
     {
         base.Validate(normalized);

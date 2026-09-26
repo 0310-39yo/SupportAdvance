@@ -15,6 +15,7 @@ public static class NLogRegistrar
     /// NLog登録処理
     /// </summary>
     /// <param name="context">ホストビルダーコンテキスト</param>
+    /// <exception cref="ArgumentNullException"><paramref name="context"/> が <see langword="null"/> の場合</exception>
     public static void RegisterNLog(HostBuilderContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
@@ -34,6 +35,7 @@ public static class NLogRegistrar
     /// <param name="optional">オプション指定</param>
     /// <param name="reloadOnChange">変更監視指定</param>
     /// <returns>構成ビルダー</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="builder"/> が <see langword="null"/> の場合</exception>
     public static IConfigurationBuilder AddNLogConfiguration(this IConfigurationBuilder builder,
         string path = "Configuration/NLog.config", bool optional = true, bool reloadOnChange = true)
     {

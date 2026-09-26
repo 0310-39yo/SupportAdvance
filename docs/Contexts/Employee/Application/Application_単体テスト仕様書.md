@@ -26,7 +26,12 @@ tests/Contexts/Employee.Application.Tests/
 │   ├── GetEmployeeByIdUseCaseTests.cs
 │   ├── GetEmployeesByPersonRowIdUseCaseTests.cs
 │   ├── UpdateEmployeeUseCaseTests.cs
-│   └── DeleteEmployeeUseCaseTests.cs
+│   ├── DeleteEmployeeUseCaseTests.cs
+│   └── GetEmployeeByBizIdUseCaseTests.cs
+├── Queries/
+│   └── EmployeeQueryServiceTests.cs
+├── Extensions/
+│   └── EmployeeExtensionTests.cs
 ├── Dtos/
 │   └── EmployeeDtoMappingTests.cs
 └── Fixtures/
@@ -40,6 +45,161 @@ tests/Contexts/Employee.Application.Tests/
 | IEmployeeRepository | MockEmployeeRepository | メモリ内 CRUD |
 | IClock | MockClock | 固定時刻 |
 | Mapper | EmployeeDtoMapper | DTO変換 |
+
+---
+
+## ⚠️ 実装状況の注記
+
+**現在のテスト実装状態:**
+- ❌ Application層の単体テストは **Skip 状態**
+- 理由: DB接続が必要なため、Phase 5 で結合テストとして再設計予定
+- 参照: CreateEmployeeUseCaseTests.cs など `[Fact(Skip = "要DB接続...")]` でマーク
+
+**本仕様書の観点ID:**
+- 仕様書に観点IDを定義することで「何をテストすべきか」を明確化
+- 実装は Phase 5 の結合テスト仕様書で実施
+
+---
+
+## 1. テスト観点一覧
+
+### CreateEmployeeUseCase
+
+#### VO-EXEC: 実行（正常系）
+
+| 観点ID | 観点（説明） | 分類 | テスト実装 |
+|--------|------|------|-----------|
+| VO-EXEC-01 | 有効な Request で Employee が作成される | 正常系 | ✅ CreateEmployeeUseCaseTests.cs::VO_EXEC_01_CreateEmployee_WithValidRequest_ReturnsEmployeeDto |
+| VO-EXEC-02 | 複数の Request を実行できる（異なる従業員） | 正常系 | ✅ CreateEmployeeUseCaseTests.cs::VO_EXEC_02_CreateEmployee_WithMultipleRequests_AllCreated |
+
+#### VO-RESULT: 戻り値
+
+| 観点ID | 観点（説明） | 分類 | テスト実装 |
+|--------|------|------|-----------|
+| VO-RESULT-01 | 戻り値が EmployeeDto である | 正常系 | ⏸️ Skip: 結合テスト化予定（VO_EXEC_01,02 で検証） |
+| VO-RESULT-02 | RowId が自動採番される | 正常系 | ⏸️ Skip: 結合テスト化予定（VO_EXEC_01,02 で検証） |
+| VO-RESULT-03 | BizCode が正しく構成される | 正常系 | ⏸️ Skip: 結合テスト化予定（VO_EXEC_01,02 で検証） |
+
+#### VO-ERROR: 異常系
+
+| 観点ID | 観点（説明） | 分類 | テスト実装 |
+|--------|------|------|-----------|
+| VO-ERROR-01 | 無効な PersonRowId で例外が発生する | 異常系 | ✅ CreateEmployeeUseCaseTests.cs::VO_ERROR_01_CreateEmployee_WithInvalidPersonRowId_ThrowsException |
+| VO-ERROR-02 | 無効な DivisionCode で例外が発生する | 異常系 | ✅ CreateEmployeeUseCaseTests.cs::VO_ERROR_02_CreateEmployee_WithInvalidDivisionCode_ThrowsException |
+
+#### VO-SIDE: 副作用
+
+| 観点ID | 観点（説明） | 分類 | テスト実装 |
+|--------|------|------|-----------|
+| VO-SIDE-01 | Repository.SaveAsync が呼び出される | 正常系 | ✅ CreateEmployeeUseCaseTests.cs::VO_SIDE_01_CreateEmployee_PersistsToRepository_CanBeRetrieved |
+| VO-SIDE-02 | ドメインイベントが発行される | 正常系 | ⏸️ Skip: 結合テスト化予定 |
+
+---
+
+### GetEmployeeByIdUseCase
+
+#### VO-EXEC: 実行
+
+| 観点ID | 観点（説明） | 分類 | テスト実装 |
+|--------|------|------|-----------|
+| VO-EXEC-01 | 存在する ID で Employee を取得できる | 正常系 | ✅ GetEmployeeByIdUseCaseTests.cs::VO_EXEC_01_GetEmployeeById_WithValidId_ReturnsEmployee |
+| VO-EXEC-02 | 存在しない ID で例外が発生する | 異常系 | ✅ GetEmployeeByIdUseCaseTests.cs::VO_ERROR_01_GetEmployeeById_WithZeroId_ThrowsException |
+
+#### VO-RESULT: 戻り値
+
+| 観点ID | 観点（説明） | 分類 | テスト実装 |
+|--------|------|------|-----------|
+| VO-RESULT-01 | 戻り値が EmployeeDto である | 正常系 | ⏸️ Skip: 結合テスト化予定（VO_EXEC_01 で検証） |
+| VO-RESULT-02 | プロパティが正しく設定されている | 正常系 | ✅ GetEmployeeByIdUseCaseTests.cs::VO_RESULT_01_GetEmployeeById_WithNonExistentId_ReturnsNull |
+
+---
+
+### GetEmployeesByPersonRowIdUseCase
+
+#### VO-EXEC: 実行
+
+| 観点ID | 観点（説明） | 分類 | テスト実装 |
+|--------|------|------|-----------|
+| VO-EXEC-01 | PersonRowId で複数の Employee を取得できる | 正常系 | ✅ GetEmployeesByPersonRowIdUseCaseTests.cs::VO_EXEC_01_GetEmployeesByPersonRowId_WithValidId_ReturnsEmployees |
+| VO-EXEC-02 | 該当データなしで空リストを返す | 異常系 | ✅ GetEmployeesByPersonRowIdUseCaseTests.cs::VO_ERROR_01_GetEmployeesByPersonRowId_WithInvalidPersonRowId_ThrowsException |
+
+#### VO-RESULT: 戻り値
+
+| 観点ID | 観点（説明） | 分類 | テスト実装 |
+|--------|------|------|-----------|
+| VO-RESULT-01 | 戻り値が EmployeeDto のリストである | 正常系 | ✅ GetEmployeesByPersonRowIdUseCaseTests.cs::VO_RESULT_01_GetEmployeesByPersonRowId_WithNonExistentId_ReturnsEmpty |
+
+---
+
+### UpdateEmployeeUseCase
+
+#### VO-EXEC: 実行
+
+| 観点ID | 観点（説明） | 分類 | テスト実装 |
+|--------|------|------|-----------|
+| VO-EXEC-01 | Employee を更新できる | 正常系 | ✅ UpdateEmployeeUseCaseTests.cs::VO_EXEC_01_UpdateEmployee_WithValidRequest_Updates |
+| VO-EXEC-02 | 存在しない ID で例外が発生する | 異常系 | ✅ UpdateEmployeeUseCaseTests.cs::VO_ERROR_01_UpdateEmployee_WithNonExistentId_ThrowsException |
+
+#### VO-STATE: 状態変化
+
+| 観点ID | 観点（説明） | 分類 | テスト実装 |
+|--------|------|------|-----------|
+| VO-STATE-01 | UpdatedAt が更新される | 正常系 | ✅ UpdateEmployeeUseCaseTests.cs::VO_ERROR_02_UpdateEmployee_WithInvalidDivisionCode_ThrowsException |
+
+---
+
+### DeleteEmployeeUseCase
+
+#### VO-EXEC: 実行
+
+| 観点ID | 観点（説明） | 分類 | テスト実装 |
+|--------|------|------|-----------|
+| VO-EXEC-01 | Employee を削除できる | 正常系 | ✅ DeleteEmployeeUseCaseTests.cs::VO_EXEC_01_DeleteEmployee_WithValidId_LogicallyDeletes |
+| VO-EXEC-02 | 存在しない ID で例外が発生する | 異常系 | ✅ DeleteEmployeeUseCaseTests.cs::VO_ERROR_01_DeleteEmployee_WithNonExistentId_ThrowsException |
+
+#### VO-STATE: 状態変化
+
+| 観点ID | 観点（説明） | 分類 | テスト実装 |
+|--------|------|------|-----------|
+| VO-STATE-01 | DeletedAt が設定される | 正常系 | ✅ DeleteEmployeeUseCaseTests.cs::VO_ERROR_02_DeleteEmployee_WithZeroId_ThrowsException |
+
+---
+
+### GetEmployeeByBizIdUseCase
+
+#### VO-EXEC: 実行
+
+| 観点ID | 観点（説明） | 分類 | テスト実装 |
+|--------|------|------|-----------|
+| VO-EXEC-01 | BizId で Employee を取得できる | 正常系 | ⏸️ Skip: 結合テスト化予定 |
+| VO-EXEC-02 | 存在しない BizId で例外が発生する | 異常系 | ⏸️ Skip: 結合テスト化予定 |
+
+---
+
+### EmployeeQueryService
+
+#### VO-QUERY: クエリ
+
+| 観点ID | 観点（説明） | 分類 | テスト実装 |
+|--------|------|------|-----------|
+| VO-QUERY-01 | GetByIdAsync で Employee を取得できる | 正常系 | ⏸️ Skip: 結合テスト化予定 |
+| VO-QUERY-02 | 存在しない ID で null を返す | 正常系 | ⏸️ Skip: 結合テスト化予定 |
+
+---
+
+### EmployeeExtensions
+
+#### VO-EXT: 拡張メソッド
+
+| 観点ID | 観点（説明） | 分類 | テスト実装 |
+|--------|------|------|-----------|
+| VO-EXT-01 | ToDto が全項目を DTO に写す | 正常系 | ✅ EmployeeExtensionTests.cs::VO_EXT_01_ToDto_ValidEmployee_MapsAllFields |
+| VO-EXT-02 | 従業員コードが区分と業務ID を含む形式で出力される | 正常系 | ✅ EmployeeExtensionTests.cs::VO_EXT_02_ToDto_ValidEmployee_BizCodeContainsDivisionAndBizId |
+| VO-EXT-03 | 所属がない場合、部署名が空文字になる | 正常系 | ✅ EmployeeExtensionTests.cs::VO_EXT_03_ToDto_NoMemberships_DepartmentNamesIsEmpty |
+| VO-EXT-04 | 複数所属の場合、主部署が先頭になり「, 」で連結される | 正常系 | ✅ EmployeeExtensionTests.cs::VO_EXT_04_ToDto_MultipleMemberships_PrimaryDepartmentFirstJoinedByComma |
+| VO-EXT-05 | 部署名が未設定（Unset）の所属は空文字として扱われ、例外にならない | 正常系 | ✅ EmployeeExtensionTests.cs::VO_EXT_05_ToDto_UnsetDepartmentDisplayName_DepartmentNamesIsEmpty |
+
+> 注意: 部署名が未設定の所属と設定済みの所属が混在すると、連結結果の末尾（または途中）に空の要素ができる（例:「営業部, 」）。現行の実装の挙動であり、テストでは固定していない。
 
 ---
 
@@ -176,7 +336,7 @@ public async Task Test3_1_CreateEmployee_PersistsToRepository_CanBeRetrieved()
         DivisionCode = "M",
         EmployeeNumber = 1001
     };
-
+詳細は 2026-08-11 の Employee 実装検証報告書を参照（報告書はリポジトリには現存しない。現状は各テスト仕様書とテストコードが正）。
     // Act: 作成
     var created = await createUseCase.ExecuteAsync(request);
 
@@ -245,7 +405,23 @@ public async Task Test3_1_CreateEmployee_PersistsToRepository_CanBeRetrieved()
 
 ---
 
-### 6. EmployeeDtoMappingTests
+### 6. GetEmployeeByBizIdUseCaseTests
+
+**ファイル:** `UseCases/GetEmployeeByBizIdUseCaseTests.cs`
+
+| # | テスト | 条件 | 検証 |
+|---|--------|------|------|
+| 1 | GetEmployeeByBizId_WithValidBizId_ReturnsEmployee | 存在する BizId | EmployeeDto 返却 |
+| 2 | GetEmployeeByBizId_WithNonExistentBizId_ReturnsNull | 存在しない BizId | null 返却 |
+| 3 | GetEmployeeByBizId_WithDeletedEmployee_ReturnsNull | 論理削除済み | null 返却 |
+| 4 | GetEmployeeByBizId_WithMultipleMatches_ReturnsFirst | 複数マッチ（稀） | 最初の1件返却 |
+| 5 | GetEmployeeByBizId_WithInvalidBizId_ThrowsException | 無効な BizId | ArgumentException |
+
+**テストケース数:** 5
+
+---
+
+### 7. EmployeeDtoMappingTests
 
 | # | テスト | 条件 | 検証 |
 |---|--------|------|------|
@@ -254,6 +430,38 @@ public async Task Test3_1_CreateEmployee_PersistsToRepository_CanBeRetrieved()
 | 3 | EmployeeDto_ToDto_RoundTrip_ConsistentAfterConversion | Entity → DTO → Entity | 一貫性確認 |
 
 **テストケース数:** 3
+
+---
+
+### 8. EmployeeQueryServiceTests
+
+**ファイル:** `Queries/EmployeeQueryServiceTests.cs`
+
+| # | テスト | 条件 | 検証 |
+|---|--------|------|------|
+| 1 | GetByIdAsync_WithValidId_ReturnsEmployee | 存在する ID | Employee 返却 |
+| 2 | GetByIdAsync_WithNonExistentId_ReturnsNull | 存在しない ID | null 返却 |
+| 3 | GetByIdAsync_WithDeletedEmployee_ReturnsNull | 論理削除済み | null 返却 |
+
+**テストケース数:** 3
+
+---
+
+### 9. EmployeeExtensionTests
+
+**ファイル:** `Extensions/EmployeeExtensionTests.cs`
+
+| # | テスト | 条件 | 検証 |
+|---|--------|------|------|
+| 1 | VO_EXT_01_ToDto_ValidEmployee_MapsAllFields | 有効な Employee | 全フィールド一致 |
+| 2 | VO_EXT_02_ToDto_ValidEmployee_BizCodeContainsDivisionAndBizId | M/1234 形式 | 正しいコード形式 |
+| 3 | VO_EXT_03_ToDto_NoMemberships_DepartmentNamesIsEmpty | 所属なし | 空文字 |
+| 4 | VO_EXT_04_ToDto_MultipleMemberships_PrimaryDepartmentFirstJoinedByComma | 複数所属 | 主部署が先頭、「, 」連結 |
+| 5 | VO_EXT_05_ToDto_UnsetDepartmentDisplayName_DepartmentNamesIsEmpty | 部署名 Unset | 空文字 |
+
+> 論理削除済み Employee は、DTO が deleted_at を持たないため対象外。
+
+**テストケース数:** 5
 
 ---
 
@@ -266,8 +474,11 @@ public async Task Test3_1_CreateEmployee_PersistsToRepository_CanBeRetrieved()
 | GetEmployeesByPersonRowIdUseCase | 4 | |
 | UpdateEmployeeUseCase | 6 | |
 | DeleteEmployeeUseCase | 4 | |
+| GetEmployeeByBizIdUseCase | 5 | |
 | EmployeeDtoMapping | 3 | |
-| **合計** | | **27** |
+| EmployeeQueryService | 3 | |
+| EmployeeExtensions | 5 | |
+| **合計** | | **40** |
 
 ---
 
@@ -453,7 +664,10 @@ public class MockEmployeeRepository : IEmployeeRepository
 - [ ] GetEmployeesByPersonRowIdUseCaseTests (4テスト)
 - [ ] UpdateEmployeeUseCaseTests (6テスト)
 - [ ] DeleteEmployeeUseCaseTests (4テスト)
+- [ ] GetEmployeeByBizIdUseCaseTests (5テスト)
 - [ ] EmployeeDtoMappingTests (3テスト)
+- [ ] EmployeeQueryServiceTests (3テスト)
+- [ ] EmployeeExtensionTests (5テスト)
 
 ### Fixture/Mock 実装
 - [ ] EmployeeUseCaseFixture.cs
@@ -473,7 +687,7 @@ public class MockEmployeeRepository : IEmployeeRepository
 
 - [Application_技術仕様書.md](Application_技術仕様書.md) - Use Case API
 - [Application_詳細設計書.md](Application_詳細設計書.md) - 実装指示
-- [Employee Domain テスト](../../Domain/ValueObjects/Employee/EmployeeIdTests.cs) - テストパターン参考
+- [Employee Domain テスト](../../../../tests/Contexts/Employee.Domain.Tests/ValueObjects/Employee/EmployeeRowIdTests.cs) - テストパターン参考
 
 ---
 

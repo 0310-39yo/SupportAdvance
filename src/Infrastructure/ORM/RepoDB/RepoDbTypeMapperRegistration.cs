@@ -7,13 +7,16 @@ namespace SupportAdvance.Infrastructure.ORM.RepoDB;
 
 /// <summary>
 /// RepoDb型マッパー登録支援ヘルパークラス
-///
-/// 【責務】
-/// - RepoDb のグローバルな型マッピング設定
-/// - LocalDateTime（JST）を SqlServer の datetime2 にマッピング
-/// - RowId を long にマッピング
-/// 【原則】Dapper と同じ方針で LocalDateTime と RowId を統一使用
 /// </summary>
+/// <remarks>
+/// <para>【責務】</para>
+/// <list type="bullet">
+/// <item><description>RepoDb のグローバルな型マッピング設定</description></item>
+/// <item><description>LocalDateTime（JST）を SqlServer の datetime2 にマッピング</description></item>
+/// <item><description>RowId を long にマッピング</description></item>
+/// </list>
+/// <para>【原則】Dapper と同じ方針で LocalDateTime と RowId を統一使用</para>
+/// </remarks>
 public static class RepoDbTypeMapperRegistration
 {
     /// <summary>

@@ -5,15 +5,14 @@ using SupportAdvance.Crosscutting.Logging;
 namespace SupportAdvance.Presentation.Shared.Decorators;
 
 /// <summary>
-/// UseCase のパフォーマンス計測 デコレーター。
-/// インナーの UseCase 実行時間を計測し、実行時間をログに記録する。
-/// 実行時間が閾値を超える場合は Warning ログを出力。
-/// 相関コンテキスト(CorrelationContext)を使用してパフォーマンスログを関連付ける。
-///
-/// 【単一責務】実行時間の計測とログ記録のみ。
+/// UseCase のパフォーマンス計測 デコレーター
 /// </summary>
 /// <typeparam name="TRequest">リクエストの型</typeparam>
 /// <typeparam name="TResponse">レスポンスの型</typeparam>
+/// <remarks>
+/// <para>インナーの UseCase 実行時間の計測と、実行時間のログへの記録。実行時間が閾値を超える場合は Warning ログを出力。相関コンテキスト(CorrelationContext)を使用したパフォーマンスログの関連付け</para>
+/// <para>【単一責務】実行時間の計測とログ記録のみ</para>
+/// </remarks>
 public sealed class PerformanceDecorator<TRequest, TResponse> : IUseCase<TRequest, TResponse>
     where TRequest : IRequest
     where TResponse : IResponse
@@ -24,6 +23,15 @@ public sealed class PerformanceDecorator<TRequest, TResponse> : IUseCase<TReques
     private readonly IClock _clock;
     private readonly int _warningThresholdMs;
 
+    /// <summary>
+    /// <see cref="PerformanceDecorator{TRequest, TResponse}"/> クラスの新しいインスタンスの初期化
+    /// </summary>
+    /// <param name="innerUseCase">装飾対象のユースケース（次に実行されるデコレーターまたは本体）</param>
+    /// <param name="logger">ログの出力先</param>
+    /// <param name="correlationContext">ログに付与する CorrelationId の取得元</param>
+    /// <param name="clock">実行時間の計測に使う現在時刻（JST）の取得元</param>
+    /// <param name="warningThresholdMs">Warning ログを出力する実行時間のしきい値（ミリ秒）。この値を超えた場合に Warning</param>
+    /// <exception cref="ArgumentNullException"><paramref name="warningThresholdMs"/> 以外のいずれかの引数が <see langword="null"/> の場合</exception>
     public PerformanceDecorator(
         IUseCase<TRequest, TResponse> innerUseCase,
         IAppLogging<PerformanceDecorator<TRequest, TResponse>> logger,
@@ -44,12 +52,14 @@ public sealed class PerformanceDecorator<TRequest, TResponse> : IUseCase<TReques
     }
 
     /// <summary>
-    /// UseCase を実行し、実行時間を計測してログに記録する。
-    ///
-    /// 【単一責務】実行時間の計測とログ記録のみ
+    /// UseCase の実行と、実行時間の計測およびログへの記録
     /// </summary>
     /// <param name="request">リクエストの内容</param>
     /// <returns>レスポンスの内容</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="request"/> が <see langword="null"/> の場合</exception>
+    /// <remarks>
+    /// <para>【単一責務】実行時間の計測とログ記録のみ</para>
+    /// </remarks>
     public async Task<TResponse> ExecuteAsync(TRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);

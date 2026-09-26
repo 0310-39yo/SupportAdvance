@@ -49,14 +49,15 @@ public class EmployeeTests
             bizCode,
             null,
             person,
-            new List<DepartmentMembership>()
+            new List<DepartmentMembership>(),
+            _clock
             );
     }
 
     #region グループ 1: 生成メソッド（Create）
 
     [Fact]
-    public void TestEMPCREATE01_CreateValidEmployeeReturnsValidEmployee()
+    public void VO_CONS_01_CreateValidEmployeeReturnsValidEmployee()
     {
         // Act
         var employee = CreateTestEmployee();
@@ -71,7 +72,7 @@ public class EmployeeTests
     }
 
     [Fact]
-    public void TestEMPCREATE02_CreateRegularEmployeeIsRegularEmployee()
+    public void VO_CONS_02_CreateRegularEmployeeIsRegularEmployee()
     {
         // Act
         var employee = CreateTestEmployee(divisionCode: "M");
@@ -83,7 +84,7 @@ public class EmployeeTests
     }
 
     [Fact]
-    public void TestEMPCREATE03_CreateDispatchedEmployeeIsDispatched()
+    public void VO_CONS_03_CreateDispatchedEmployeeIsDispatched()
     {
         // Act
         var employee = CreateTestEmployee(bizId: 7500, divisionCode: "T");
@@ -95,7 +96,7 @@ public class EmployeeTests
     }
 
     [Fact]
-    public void TestEMPCREATE04_CreateContractorEmployeeIsContractor()
+    public void VO_CONS_04_CreateContractorEmployeeIsContractor()
     {
         // Act
         var employee = CreateTestEmployee(bizId: 8000, divisionCode: "C");
@@ -111,7 +112,7 @@ public class EmployeeTests
     #region グループ 2: オプションプロパティ（RetiredOn）
 
     [Fact]
-    public void TestEMPRETIRED01_CreateWithRetiredOnReturnsRetiredEmployee()
+    public void VO_CONS_05_CreateWithRetiredOnReturnsRetiredEmployee()
     {
         // Arrange
         var rowId = EmployeeRowId.From(12345L);
@@ -135,7 +136,8 @@ public class EmployeeTests
             bizCode,
             retiredOn,
             person,
-            new List<DepartmentMembership>()
+            new List<DepartmentMembership>(),
+            _clock
             );
 
         // Assert
@@ -280,7 +282,8 @@ public class EmployeeTests
             BizCode.From(BizDivision.RegularEmployee(), BizId.From(1234)),
             retiredOn,
             person,
-            new List<DepartmentMembership>()
+            new List<DepartmentMembership>(),
+            _clock
             );
 
         // Act

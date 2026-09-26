@@ -2,8 +2,8 @@ namespace SupportAdvance.Common.Clocks;
 
 /// <summary>
 /// JST (日本標準時) を表現する不変の日時値オブジェクト
-/// このstructは、アプリケーション内部で常にJSTとして解釈される日時を表現します。
-/// DateTime.Kind は常に Unspecified であり、タイムゾーン情報は型に埋め込まれています。
+/// このstructは、アプリケーション内部で常にJSTとして解釈される日時の表現。
+/// DateTime.Kind は常に Unspecified。タイムゾーン情報は型で保持
 /// </summary>
 public readonly struct LocalDateTime : IComparable<LocalDateTime>, IEquatable<LocalDateTime>
 {
@@ -16,20 +16,24 @@ public readonly struct LocalDateTime : IComparable<LocalDateTime>, IEquatable<Lo
 
     /// <summary>
     /// LocalDateTime の最小値（DateTime.MinValue）
-    /// 【用途】Unset 状態の表現、形式検証での境界値チェック
     /// </summary>
+    /// <remarks>
+    /// <para>【用途】Unset 状態の表現、形式検証での境界値チェック</para>
+    /// </remarks>
     public static readonly LocalDateTime MinValue = new(DateTime.MinValue);
 
     /// <summary>
     /// LocalDateTime の最大値（DateTime.MaxValue）
-    /// 【用途】形式検証での無効値チェック
     /// </summary>
+    /// <remarks>
+    /// <para>【用途】形式検証での無効値チェック</para>
+    /// </remarks>
     public static readonly LocalDateTime MaxValue = new(DateTime.MaxValue);
 
     /// <summary>
-    /// JST日時を指定して LocalDateTime を構築します
+    /// JST日時を指定して LocalDateTime の構築
     /// </summary>
-    /// <param name="jstValue">JST として解釈される DateTime。Kind は Unspecified である必要があります。</param>
+    /// <param name="jstValue">JST として解釈される DateTime。Kind は Unspecified 必須</param>
     /// <exception cref="ArgumentException">Kind が Unspecified でない場合</exception>
     public LocalDateTime(DateTime jstValue)
     {
@@ -45,37 +49,37 @@ public readonly struct LocalDateTime : IComparable<LocalDateTime>, IEquatable<Lo
     }
 
     /// <summary>
-    /// 年を取得します
+    /// 年の取得
     /// </summary>
     public int Year => Value.Year;
 
     /// <summary>
-    /// 月を取得します
+    /// 月の取得
     /// </summary>
     public int Month => Value.Month;
 
     /// <summary>
-    /// 日を取得します
+    /// 日の取得
     /// </summary>
     public int Day => Value.Day;
 
     /// <summary>
-    /// 時を取得します
+    /// 時の取得
     /// </summary>
     public int Hour => Value.Hour;
 
     /// <summary>
-    /// 分を取得します
+    /// 分の取得
     /// </summary>
     public int Minute => Value.Minute;
 
     /// <summary>
-    /// 秒を取得します
+    /// 秒の取得
     /// </summary>
     public int Second => Value.Second;
 
     /// <summary>
-    /// ミリ秒を取得します
+    /// ミリ秒の取得
     /// </summary>
     public int Millisecond => Value.Millisecond;
 
@@ -86,7 +90,7 @@ public readonly struct LocalDateTime : IComparable<LocalDateTime>, IEquatable<Lo
         new(new DateTime(Value.Year, Value.Month, Value.Day, 0, 0, 0, DateTimeKind.Unspecified));
 
     /// <summary>
-    /// このJST日時をUTCに変換します
+    /// このJST日時のUTCへの変換
     /// </summary>
     /// <returns>UTC時刻（Kind = Utc）</returns>
     public DateTime ToUtc()
@@ -96,7 +100,7 @@ public readonly struct LocalDateTime : IComparable<LocalDateTime>, IEquatable<Lo
     }
 
     /// <summary>
-    /// UTC時刻をJST（LocalDateTime）に変換します
+    /// UTC時刻のJST（LocalDateTime）への変換
     /// </summary>
     /// <param name="utcValue">UTC時刻（Kind は Utc である必要があります）</param>
     /// <returns>JST の LocalDateTime</returns>
@@ -116,72 +120,65 @@ public readonly struct LocalDateTime : IComparable<LocalDateTime>, IEquatable<Lo
     }
 
     /// <summary>
-    /// このLocalDateTimeに指定した TimeSpan を加算します
+    /// このLocalDateTimeに指定した TimeSpan の加算
     /// </summary>
     public static LocalDateTime operator +(LocalDateTime left, TimeSpan right) => new(left.Value.Add(right));
 
     /// <summary>
-    /// このLocalDateTimeから指定した TimeSpan を減算します
+    /// このLocalDateTimeから指定した TimeSpan の減算
     /// </summary>
     public static LocalDateTime operator -(LocalDateTime left, TimeSpan right) => new(left.Value.Subtract(right));
 
     /// <summary>
-    /// 2つの LocalDateTime の差を求めます
+    /// 2つの LocalDateTime の差の算出
     /// </summary>
     public static TimeSpan operator -(LocalDateTime left, LocalDateTime right) => left.Value.Subtract(right.Value);
 
     /// <summary>
-    /// 2つの LocalDateTime が等しいかどうかを判定します
+    /// 2つの LocalDateTime が等しいかどうかの判定
     /// </summary>
     public static bool operator ==(LocalDateTime left, LocalDateTime right) => left.Value == right.Value;
 
     /// <summary>
-    /// 2つの LocalDateTime が異なるかどうかを判定します
+    /// 2つの LocalDateTime が異なるかどうかの判定
     /// </summary>
     public static bool operator !=(LocalDateTime left, LocalDateTime right) => left.Value != right.Value;
 
     /// <summary>
-    /// 左辺が右辺より大きいかどうかを判定します
+    /// 左辺が右辺より大きいかどうかの判定
     /// </summary>
     public static bool operator >(LocalDateTime left, LocalDateTime right) => left.Value > right.Value;
 
     /// <summary>
-    /// 左辺が右辺より小さいかどうかを判定します
+    /// 左辺が右辺より小さいかどうかの判定
     /// </summary>
     public static bool operator <(LocalDateTime left, LocalDateTime right) => left.Value < right.Value;
 
     /// <summary>
-    /// 左辺が右辺以上かどうかを判定します
+    /// 左辺が右辺以上かどうかの判定
     /// </summary>
     public static bool operator >=(LocalDateTime left, LocalDateTime right) => left.Value >= right.Value;
 
     /// <summary>
-    /// 左辺が右辺以下かどうかを判定します
+    /// 左辺が右辺以下かどうかの判定
     /// </summary>
     public static bool operator <=(LocalDateTime left, LocalDateTime right) => left.Value <= right.Value;
 
-    /// <summary>
-    /// このインスタンスと指定したオブジェクトが等しいかどうかを判定します
-    /// </summary>
+    /// <inheritdoc/>
     public override bool Equals(object? obj) => obj is LocalDateTime other && Equals(other);
 
-    /// <summary>
-    /// このインスタンスと指定した LocalDateTime が等しいかどうかを判定します
-    /// </summary>
+    /// <inheritdoc/>
     public bool Equals(LocalDateTime other) => Value == other.Value;
 
-    /// <summary>
-    /// このインスタンスのハッシュコードを取得します
-    /// </summary>
+    /// <inheritdoc/>
     public override int GetHashCode() => Value.GetHashCode();
 
     /// <summary>
-    /// このインスタンスの文字列表現を取得します
+    /// このインスタンスの文字列表現の取得
     /// </summary>
+    /// <returns><c>yyyy-MM-dd HH:mm:ss</c> 形式の文字列（JST）</returns>
     public override string ToString() => Value.ToString("yyyy-MM-dd HH:mm:ss");
 
-    /// <summary>
-    /// このインスタンスと指定した LocalDateTime を比較します
-    /// </summary>
+    /// <inheritdoc/>
     public int CompareTo(LocalDateTime other) => Value.CompareTo(other.Value);
 }

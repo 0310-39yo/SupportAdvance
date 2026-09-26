@@ -18,7 +18,7 @@ public class RoleAssignmentTests
     #region グループ 1: 生成メソッド（Create）
 
     [Fact]
-    public void TestCreate01_WithExpirationDateReturnsValidRoleAssignment()
+    public void VO_CONS_01_WithExpirationDateReturnsValidRoleAssignment()
     {
         // Arrange
         var assignmentRowId = RoleAssignmentRowId.From(1L);
@@ -40,7 +40,7 @@ public class RoleAssignmentTests
     }
 
     [Fact]
-    public void TestCreate02_WithoutExpirationDateReturnsValidRoleAssignment()
+    public void VO_CONS_02_WithoutExpirationDateReturnsValidRoleAssignment()
     {
         // Arrange
         var assignmentRowId = RoleAssignmentRowId.From(2L);
@@ -65,7 +65,7 @@ public class RoleAssignmentTests
     #region グループ 2: 復元メソッド（Reconstruct）
 
     [Fact]
-    public void TestReconstruct01_ReconstructFromDbValuesReturnsValidRoleAssignment()
+    public void VO_CONS_04_ReconstructFromDbValuesReturnsValidRoleAssignment()
     {
         // Arrange
         var assignmentRowId = RoleAssignmentRowId.From(100L);
@@ -90,7 +90,7 @@ public class RoleAssignmentTests
     #region グループ 3: IsActive メソッド
 
     [Fact]
-    public void TestIsActive01_BeforeEffectiveDateReturnsFalse()
+    public void VO_METHOD_02_BeforeEffectiveDateReturnsFalse()
     {
         // Arrange
         var assignmentRowId = RoleAssignmentRowId.From(3L);
@@ -108,7 +108,7 @@ public class RoleAssignmentTests
     }
 
     [Fact]
-    public void TestIsActive02_OnOrAfterEffectiveDateReturnsTrue()
+    public void VO_METHOD_05_OnOrAfterEffectiveDateReturnsTrue()
     {
         // Arrange
         var assignmentRowId = RoleAssignmentRowId.From(4L);
@@ -125,7 +125,7 @@ public class RoleAssignmentTests
     }
 
     [Fact]
-    public void TestIsActive03_AfterExpirationDateReturnsFalse()
+    public void VO_METHOD_03_AfterExpirationDateReturnsFalse()
     {
         // Arrange
         var assignmentRowId = RoleAssignmentRowId.From(5L);

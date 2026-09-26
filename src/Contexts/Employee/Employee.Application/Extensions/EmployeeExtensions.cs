@@ -4,21 +4,25 @@ using Domain.Entities;
 using Dtos;
 
 /// <summary>
-/// Employee Entity の拡張メソッド
+/// <see cref="Employee"/> の拡張メソッド
 /// </summary>
 public static class EmployeeExtensions
 {
     /// <summary>
-    /// Employee Entity を EmployeeDto に変換
-    /// 【責務】部署名をカンマ区切りで連結（主部署を先頭に）
+    /// <see cref="Employee"/> の <see cref="EmployeeDto"/> への変換
     /// </summary>
+    /// <param name="entity">変換する従業員</param>
+    /// <returns>変換した DTO。<c>DepartmentNames</c> は主所属を先頭にしたカンマ区切り（所属なしの場合は空文字）</returns>
+    /// <remarks>
+    /// <para>【責務】部署名のカンマ区切りでの連結（主部署を先頭に）</para>
+    /// </remarks>
     public static EmployeeDto ToDto(this Employee entity)
     {
         // DepartmentMembership から部署名を取得（主部署を先頭に）
         var departmentNames = string.Join(", ",
             entity.DepartmentMemberships
                 .OrderByDescending(m => m.IsPrimary.Value)  // 主部署を先頭に
-                .Select(m => m.DepartmentName ?? string.Empty));
+                .Select(m => m.DepartmentDisplayName.Value));  // 名前なしの場合は空文字
 
         return new EmployeeDto
         {

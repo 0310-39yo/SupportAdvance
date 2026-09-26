@@ -17,6 +17,13 @@ public class UpdateEmployeeUseCase(IEmployeeRepository repository)
     /// <summary>
     /// 従業員を更新
     /// </summary>
+    /// <param name="request">更新する従業員の内容</param>
+    /// <returns>更新後の従業員の DTO</returns>
+    /// <exception cref="ArgumentException">従業員の行ID が 0 以下の場合、区分コードが不正な場合、または従業員番号が 1001〜9999 の範囲外の場合</exception>
+    /// <exception cref="InvalidOperationException">従業員が見つからない場合</exception>
+    /// <remarks>
+    /// <para>【注意】区分コードと従業員番号は検証のみで、従業員への反映は未実装（TODO）</para>
+    /// </remarks>
     public async Task<EmployeeDto> ExecuteAsync(UpdateEmployeeRequest request)
     {
         if (request.EmployeeRowId <= 0)

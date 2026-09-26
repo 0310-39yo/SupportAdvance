@@ -5,7 +5,10 @@ using SupportAdvance.Contexts.Employee.Application.Repositories;
 using SupportAdvance.Common.Clocks;
 using SupportAdvance.Contexts.Employee.Application.Dtos;
 using SupportAdvance.Contexts.Employee.Application.UseCases;
+using SupportAdvance.Contexts.Employee.Domain.Entities;
+using SupportAdvance.Contexts.Employee.Domain.ValueObjects.DepartmentMembership;
 using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
+using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Person;
 using SupportAdvance.Contexts.Employee.Infrastructure.Mappers;
 using SupportAdvance.Contexts.Employee.Infrastructure.Repositories;
 using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
@@ -19,7 +22,7 @@ public class CreateEmployeeUseCaseTests
     #region グループ 1: 正常系 - 従業員作成成功
 
     [Fact]
-    public async Task Test1_1_CreateEmployee_WithValidRequest_ReturnsEmployeeDto()
+    public async Task VO_EXEC_01_CreateEmployee_WithValidRequest_ReturnsEmployeeDto()
     {
         // Arrange
         var (useCase, _) = CreateUseCase();
@@ -46,7 +49,7 @@ public class CreateEmployeeUseCaseTests
     }
 
     [Fact]
-    public async Task Test1_2_CreateEmployee_WithMultipleRequests_AllCreated()
+    public async Task VO_EXEC_02_CreateEmployee_WithMultipleRequests_AllCreated()
     {
         // Arrange
         var (useCase, _) = CreateUseCase();
@@ -86,7 +89,7 @@ public class CreateEmployeeUseCaseTests
     #region グループ 2: 異常系 - 入力値検証
 
     [Fact]
-    public async Task Test2_1_CreateEmployee_WithInvalidPersonRowId_ThrowsException()
+    public async Task VO_ERROR_01_CreateEmployee_WithInvalidPersonRowId_ThrowsException()
     {
         // Arrange
         var (useCase, _) = CreateUseCase();
@@ -106,7 +109,7 @@ public class CreateEmployeeUseCaseTests
     }
 
     [Fact]
-    public async Task Test2_2_CreateEmployee_WithInvalidDivisionCode_ThrowsException()
+    public async Task VO_ERROR_02_CreateEmployee_WithInvalidDivisionCode_ThrowsException()
     {
         // Arrange
         var (useCase, _) = CreateUseCase();
@@ -126,7 +129,7 @@ public class CreateEmployeeUseCaseTests
     }
 
     [Fact]
-    public async Task Test2_3_CreateEmployee_WithInvalidEmployeeNumber_ThrowsException()
+    public async Task VO_ERROR_03_CreateEmployee_WithInvalidEmployeeNumber_ThrowsException()
     {
         // Arrange
         var (useCase, _) = CreateUseCase();
@@ -146,7 +149,7 @@ public class CreateEmployeeUseCaseTests
     }
 
     [Fact]
-    public async Task Test2_4_CreateEmployee_WithEmployeeNumberTooHigh_ThrowsException()
+    public async Task VO_ERROR_04_CreateEmployee_WithEmployeeNumberTooHigh_ThrowsException()
     {
         // Arrange
         var (useCase, _) = CreateUseCase();
@@ -170,7 +173,7 @@ public class CreateEmployeeUseCaseTests
     #region グループ 3: 統合 - Repository との連携
 
     [Fact]
-    public async Task Test3_1_CreateEmployee_PersistsToRepository_CanBeRetrieved()
+    public async Task VO_SIDE_01_CreateEmployee_PersistsToRepository_CanBeRetrieved()
     {
         // Arrange
         var (createUseCase, repository) = CreateUseCase();
@@ -232,12 +235,55 @@ public class CreateEmployeeUseCaseTests
     {
         var fixedDateTime = new DateTime(2026, 8, 11, 0, 0, 0, DateTimeKind.Unspecified);
         var clock = new MockClock(fixedDateTime);
-        var mapper = new EmployeeMapper(clock);  // ← IClock を渡す
-        var repository = new EmployeeRepository(mapper, clock);
-        var sequenceProvider = new MockSequenceProvider();  // ← MockSequenceProvider を追加
-        var useCase = new CreateEmployeeUseCase(repository, clock, sequenceProvider);  // ← ISequenceProvider 注入
+        var sequenceProvider = new MockSequenceProvider();
+        var repository = new MockEmployeeRepository();
+        var useCase = new CreateEmployeeUseCase(repository, clock, sequenceProvider);
         return (useCase, repository);
     }
 
     #endregion
+
+    /// <summary>
+    /// テスト用インメモリ Repository 実装（Application層の単体テスト用、DB接続不要）
+    /// </summary>
+    private class MockEmployeeRepository : SupportAdvance.Contexts.Employee.Application.Repositories.IEmployeeRepository
+    {
+        private readonly Dictionary<long, Employee> _store = new();
+
+        public Task AddAsync(Employee employee)
+        {
+            _store[employee.RowId.Value] = employee;
+            return Task.CompletedTask;
+        }
+
+        public Task SaveAsync(Employee employee)
+        {
+            _store[employee.RowId.Value] = employee;
+            return Task.CompletedTask;
+        }
+
+        public Task<Employee?> GetByIdAsync(EmployeeRowId id) =>
+            Task.FromResult(_store.GetValueOrDefault(id.Value));
+
+        public Task<Employee?> GetByRowIdAsync(EmployeeRowId rowId) => GetByIdAsync(rowId);
+
+        public Task<Employee?> GetByBizIdAsync(int bizId) =>
+            Task.FromResult(_store.Values.FirstOrDefault(e => e.BizId.Value == bizId));
+
+        public Task<IReadOnlyList<Employee>> GetByPersonRowIdAsync(PersonRowId personRowId) =>
+            Task.FromResult<IReadOnlyList<Employee>>(
+                _store.Values.Where(e => e.Person.RowId == personRowId).ToList());
+
+        public Task UpdateAsync(Employee employee)
+        {
+            _store[employee.RowId.Value] = employee;
+            return Task.CompletedTask;
+        }
+
+        public Task DeleteAsync(EmployeeRowId id)
+        {
+            _store.Remove(id.Value);
+            return Task.CompletedTask;
+        }
+    }
 }

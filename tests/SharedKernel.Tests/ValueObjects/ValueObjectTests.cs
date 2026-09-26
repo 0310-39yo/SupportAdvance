@@ -187,7 +187,9 @@ public class ValueObjectTests
 
         // Act
         var equalsResult = obj.Equals(obj);
+#pragma warning disable CS1718 // 同じ変数の比較（意図的）
         var operatorResult = obj == obj;
+#pragma warning restore CS1718
 
         // Assert
         Assert.True(equalsResult);

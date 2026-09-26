@@ -28,7 +28,7 @@ Presentation → Application → Domain ← Infrastructure
 | Domain | SharedKernel, Common | ✓ | ドメインロジック完全独立。ドメインイベント発行は Entity.RaiseDomainEvent()で内部完結 |
 | Application（Context別）| Domain, SharedKernel, Common, Crosscutting, Application（汎用層） | ✓ | 汎用層の IUseCase 等インターフェースを実装。Infrastructure は DI で注入 |
 | Infrastructure | Domain, SharedKernel, Common, Crosscutting, Application（インターフェースのみ） | ✓ | ✓ Repository等のインターフェース実装のため。✗ Use Case 等の実装には依存禁止。Crosscutting → Infrastructure は逆方向で禁止（循環参照） |
-| Presentation | Application, Crosscutting, SharedKernel, Common | ✓ | Program.cs のみ Infrastructure 可（型レベルでNetArchTestにより検証） |
+| Presentation | Application, Crosscutting, SharedKernel, Common | ✓ | Composition Root（`Program.cs`。WPF は `App.xaml.cs`）のみ Infrastructure 可（型レベルでNetArchTestにより検証） |
 
 ### 違反してはいけない依存関係
 
@@ -38,7 +38,7 @@ Presentation → Application → Domain ← Infrastructure
 - Application → Infrastructure / Presentation
 - **Infrastructure → Application の実装**（Use Case等）/ Presentation（インターフェースのみの参照はOK）
 - Crosscutting → Infrastructure（循環参照になるため）
-- Presentation → Domain / Infrastructure（Program.cs を除く）
+- Presentation → Domain / Infrastructure（Composition Root（`Program.cs` / WPF の `App.xaml.cs`）を除く）
 
 **✓ 許可される例:**
 - Infrastructure → Application.Repositories（IRepository等のインターフェース実装）
@@ -55,19 +55,18 @@ src/
 ├── Crosscutting/          # ロギング、監査、横断的関心事
 ├── Application/           # Use Cases / Application Services
 ├── Infrastructure/        # DB, ORM, 外部サービス実装
-├── Contexts/
-│   └── Samples/
-│       └── CarPreferences/
-│           ├── Domain/     # ドメインロジック
-│           ├── Application/ # Use Cases
-│           └── Infrastructure/ # DB実装
+├── Contexts/               # Bounded Context ごとに <Context>.Domain / .Application / .Infrastructure
+│   ├── Authentication/     # 認証（Authentication.Domain / .Application / .Infrastructure）
+│   ├── Department/         # 部署
+│   ├── Employee/           # 従業員
+│   └── Samples/            # サンプル（CarPreferences.Domain / .Application / .Infrastructure）
 └── Presentation/
     ├── Shared/           # 共有 UI コンポーネント
     ├── WinTrial/         # Windows Forms UI
     └── WpfTrial/         # WPF UI
 ```
 
-各層の詳細は [docs/Assistance/Guides/CLEAN_ARCHITECTURE_GUIDELINES.md](../docs/Assistance/Guides/CLEAN_ARCHITECTURE_GUIDELINES.md) を参照
+各層の詳細は [docs/Assistance/Guides/CLEAN_ARCHITECTURE_GUIDELINES.md](docs/Assistance/Guides/CLEAN_ARCHITECTURE_GUIDELINES.md) を参照
 
 ---
 
@@ -108,7 +107,7 @@ dotnet build --no-incremental
 ### 5. コードレビューポイント
 - Domain層のコード: 他層への依存がないか
 - Application層: Infrastructure は注入されているか
-- 依存注入: Program.cs で正しく構成されているか
+- 依存注入: Composition Root（Program.cs / WPF の App.xaml.cs）で正しく構成されているか
 
 ---
 
@@ -186,19 +185,40 @@ public class UpdateOrderService
 ## ⏰ LocalDateTime 使用規則
 
 ### 基本原則
-- **Domain/Application 層**: LocalDateTime を使用（DateTime の直接使用は禁止）
+- **Domain/SharedKernel/Application 層**: LocalDateTime を使用（DateTime の直接使用は禁止）
 - **Infrastructure/DbModel 層**: DateTime プリミティブ型を使用（ORM マッピング用）
 - **Mapper 層**: DateTime ↔ LocalDateTime の明示的な双方向変換を実装
 - IClock 経由でのみ日時を取得
+
+### DateTime は Infrastructure の内側に閉じる
+
+`DateTime`（DB の型）は Infrastructure（DbModel・Mapper・Repository）の内側に閉じ込め、**Domain / SharedKernel / Application の公開メンバー（引数・戻り値・プロパティ）には持ち込まない**。**例外は設けない。**
+
+- **値オブジェクトも同じ**: `FromDbValue(DateTime)` / `TryFromDbValue(DateTime?)` / `ToDbValue()`（日時を DB 型で受け渡すメソッド）を値オブジェクトに持たせない。値オブジェクトの入口は `From(LocalDateTime)` / `TryFrom(LocalDateTime?)` のみ
+- **DB → Domain**: Infrastructure（Mapper / Repository）が `DateTime?` を `LocalDateTime?` に変換してから、`TryFrom` に渡す（`null` は `TryFrom` が `Unset()` に変換）
+- **Domain → DB**: Infrastructure が `LocalDateTime.Value`（DateTime）を DbModel に設定する
+- 監査値（CreatedAt / UpdatedAt / DeletedAt）を Repository が読み書きする場合も同じ
+
+```csharp
+// Infrastructure（Mapper / Repository）での DB → Domain
+if (!UpdatedAt.TryFrom(dbModel.UpdatedAt.ToLocalDateTimeOrNull(), out var updatedAt))   // null → Unset()
+    throw new InvalidOperationException("Invalid UpdatedAt");
+
+// Domain → DB
+dbModel.UpdatedAt = entity.UpdatedAt.HasUpdated ? entity.UpdatedAt.Value?.Value : null;   // LocalDateTime.Value = DateTime。未設定（Unset）の場合は null
+```
+
+> **変換ヘルパー**: `ToLocalDateTime()`（`DateTime` → `LocalDateTime`。NOT NULL の列用）と `ToLocalDateTimeOrNull()`（`DateTime?` → `LocalDateTime?`）は、汎用 Infrastructure の `DbDateTimeExtensions`（`SupportAdvance.Infrastructure.Mappers`）にある。値オブジェクトへの旧形式（`FromDbValue(DateTime)` / `TryFromDbValue(DateTime?)` / `ToDbValue()`）は、2026-09-26 に全て削除済み。新規に追加しない。次の規則は `tests/Architecture.Tests/DataTypeRuleTests.cs` で自動検証している：①Application の公開 API に `DateTime` を持たない ②Domain と SharedKernel の公開メンバーに `DateTime` を持たない（例外なし） ③Mapper が `IClock` を保持しない ④Domain の Entity の公開プロパティに nullable と `string` を持たない（値オブジェクトを使用） ⑤DbModel に `LocalDateTime` を持たない
 
 ### 層別の責務
 
 | 層 | 型 | 責務 |
 |----|----|------|
-| **Domain/Entity** | LocalDateTime | ビジネスロジック（型安全） |
+| **Domain/Entity・値オブジェクト** | LocalDateTime | ビジネスロジック（型安全）。DateTime を持たない |
+| **SharedKernel（監査 VO など）** | LocalDateTime | Domain と同じ。DateTime を持たない |
 | **Application/DTO** | LocalDateTime | 外部インターフェース |
 | **DbModel** | DateTime | ORM マッピング（プリミティブ型） |
-| **Mapper** | 双方向変換 | DateTime ↔ LocalDateTime 変換 |
+| **Mapper / Repository** | 双方向変換 | DateTime ↔ LocalDateTime 変換 |
 
 ### DbModel での DateTime 使用
 
@@ -309,7 +329,7 @@ Domain層では **「未設定状態を null ではなく型で表現」**（Opt
 |----|------|-----|
 | **Domain層** | IsSet フラグで状態管理<br/>ビジネスロジックは null-free | `if (entity.UpdatedAt.HasUpdated)` |
 | **Application層** | 外部入力で null 許容<br/>TryFrom で自動変換 | `RespondentName.TryFrom(request.Name, out var name)` |
-| **Infrastructure層** | TryFromDbValue で DB null → Unset() に変換<br/>すべての ValueObject が null-free で Domain に渡す | Repository で TryFromDbValue を呼び出し |
+| **Infrastructure層** | DB の `DateTime?` を `LocalDateTime?` に変換し、TryFrom で DB null → Unset() に変換<br/>すべての ValueObject が null-free で Domain に渡す | Mapper / Repository で TryFrom を呼び出し |
 | **DB層** | DateTime / DateTime? ネイティブ型<br/>null が存在する可能性 | `updated_at DATETIME2 NULL` |
 
 ### 3つの基本実装パターン
@@ -346,19 +366,23 @@ public static bool TryFrom(string? input, out RespondentName result)
 
 #### 3. 監査ValueObjects（UpdatedAt/DeletedAt パターン）
 
-DB専用。DB の null を自動的に Unset() に変換。
+オプションValueObject と同じ形。DB の null は、Infrastructure が `DateTime?` を `LocalDateTime?` に変換した後、TryFrom が Unset() に変換する。**値オブジェクトは DB の型（DateTime）を知らない。**
 
 ```csharp
-public static bool TryFromDbValue(DateTime? input, out UpdatedAt result)
+// 値オブジェクト（Domain / SharedKernel）：LocalDateTime? だけを受け取る
+public static bool TryFrom(LocalDateTime? input, out UpdatedAt result)
 {
     if (input == null)
     {
-        result = Unset();  // ← DB null → Unset（未更新状態）
+        result = Unset();  // ← null → Unset（未更新状態）
         return true;
     }
-    try { result = FromDbValue(input.Value); return true; }
-    catch { return false; }
+    try { result = From(input.Value); return true; }
+    catch { result = null!; return false; }
 }
+
+// Infrastructure（Mapper / Repository）：DB の DateTime? を変換して渡す
+UpdatedAt.TryFrom(dbModel.UpdatedAt.ToLocalDateTimeOrNull(), out var updatedAt);
 ```
 
 ### Unset 状態の本質
@@ -496,6 +520,8 @@ services.AddScoped<IQueryService<Employee, EmployeeId>, EmployeeQueryService>();
 services.AddScoped<IQueryService<InsuranceProfile, InsuranceId>, InsuranceQueryService>();
 ```
 
+> **実装との違い（2026-09-26 確認）**: 上のコードは考え方を示す簡略化した例。実際の `IQueryService<TAggregate, TId>` は `where TId : notnull` も持つ。Employee の実装は `EmployeeQueryService : IQueryServiceWithBizId<IEmployee, EmployeeRowId>, IEmployeeQueryService`（`src/Contexts/Employee/Employee.Application/Queries/`）で、識別子は `EmployeeRowId`。Department は `DepartmentQueryService`。Authentication は現状、他 Context の Aggregate を読まないため使っていない。
+
 ### メリット
 
 ✅ **汎用層が肥大化しない** — ジェネリック定義のみ  
@@ -586,8 +612,9 @@ CREATE TABLE [dbo].[t_YourTable] (
 
 ### 実装例
 
-- **CarPreferences.Infrastructure**: `t_UserPreferences` テーブル
-  - 参考: `src/Contexts/Samples/CarPreferences.Infrastructure/Migrations/002_CreateUserPreferencesTable.sql`
+- **m_departments**: 8 つの監査カラムを持つテーブルの実例
+  - 参考: `docs/Database/SQL/CREATE_m_departments.sql`
+  - 参考: `Department.Infrastructure/Migrations/001_CreateDepartmentsTable.sql`（列名・型は上記の実 DB の定義に合わせ済み。この Migration は現在どのプロジェクトにも埋め込まれておらず、実行されない）
 
 ---
 
@@ -606,6 +633,7 @@ CREATE TABLE [dbo].[t_YourTable] (
 - **CLEAN_ARCHITECTURE_GUIDELINES.md**: 詳細なガイドライン
 - **各層の `src/*/CLAUDE.md`**: 層別の作業ルール（Common, SharedKernel, Crosscutting, Application, Infrastructure, Presentation, Contexts）
 - **TABLE_DESIGN_STANDARDS.md**: データベース設計の詳細仕様（docs/Assistance/Guides/）
+- **[XMLドキュメントコメント_ガイド.md](docs/Assistance/Guides/XMLドキュメントコメント_ガイド.md)**: XMLドキュメントコメントの書き方とテンプレート。文体は体言止め（文の区切りに「。」、最後の文には付けない）。コメントの誤りとコメントなし（CS1570/1572/1573/1574/1591/1734）はビルドエラー。`<summary>` の 3 行形式・最後の文の「。」・【見出し】の位置などは `tests/Architecture.Tests/DocumentationStyleTests.cs` が自動検証（体言止めはレビューで確認）
 - Clean Architecture（Robert C. Martin）
 
 ---
@@ -624,7 +652,7 @@ CREATE TABLE [dbo].[t_YourTable] (
 
 ## 🚀 CI/CD での自動検証
 
-依存関係の遵守は現状コードレビューに依存している。`NetArchTest.Rules` を使った型レベルの検証テスト例は [CLEAN_ARCHITECTURE_GUIDELINES.md の「自動検証の導入」](docs/Assistance/Guides/CLEAN_ARCHITECTURE_GUIDELINES.md#自動検証の導入) を参照。特に「Presentation → Infrastructure は Program.cs のみ」は `.csproj` の `ProjectReference` だけでは強制できないため、このテストでの担保が必須。
+依存関係の遵守は現状コードレビューに依存している。`NetArchTest.Rules` を使った型レベルの検証テスト例は [CLEAN_ARCHITECTURE_GUIDELINES.md の「自動検証の導入」](docs/Assistance/Guides/CLEAN_ARCHITECTURE_GUIDELINES.md#自動検証の導入) を参照。特に「Presentation → Infrastructure は Composition Root（`Program.cs` / WPF の `App.xaml.cs`）のみ」は `.csproj` の `ProjectReference` だけでは強制できないため、このテストでの担保が必須。
 
 ---
 
@@ -632,6 +660,8 @@ CREATE TABLE [dbo].[t_YourTable] (
 
 | 日付 | 更新内容 |
 |---|---|
+| 2026-09-26（後） | ドキュメント過不足是正（[実装計画](docs/Assistance/Plans/20260926_ドキュメント過不足是正計画.md)）: ディレクトリ構成を実際の Context 構成に修正、存在しなかった CarPreferences の Migration 参照を `m_departments` の DDL に差し替え、Query Service の例に実装との違いを追記 |
+| 2026-09-26 | ①Composition Root を「`Program.cs`（WPF は `App.xaml.cs`）」に明確化。②「DateTime は Infrastructure の内側に閉じる」を追加：Domain / SharedKernel / Application の公開メンバーに DateTime を持ち込まない（値オブジェクトの `FromDbValue(DateTime)` などの DB 型変換メソッドも同様。例外なし）。変換は Mapper / Repository が行い、値オブジェクトは `TryFrom(LocalDateTime?)` のみ。コードの移行は同日に完了（[実装計画](docs/Assistance/Plans/20260926_原則完全準拠_実装計画.md) フェーズ 4。変換ヘルパー `DbDateTimeExtensions` を追加し、8 つの値オブジェクトから旧形式を削除） |
 | 2026-09-06 | Context間のデータ共有パターンを追加。ジェネリック Query Service `IQueryService<TAggregate, TId>` パターンを採用。複数Contextがリアルタイムにドメインモデル情報にアクセスするための標準パターン。汎用層肥大化を防止 |
 | 2026-07-31（後）| Application層の依存関係表を修正。汎用Application層と Bounded Context別Application層の区別を明記。「Application（Context別）→ Application（汎用層）」が IUseCase 実装パターンとして許可されることを追記 |
 | 2026-07-31 | CLEAN_ARCHITECTURE_GUIDELINES.md の実コードとの不一致修正に合わせて本ファイルも修正。Domain/Common/SharedKernel の依存関係表を実装に合わせて訂正、Crosscutting→Infrastructure禁止を明記、SlnArch（未検証）の記述をNetArchTest.Rulesへの参照に置き換え |

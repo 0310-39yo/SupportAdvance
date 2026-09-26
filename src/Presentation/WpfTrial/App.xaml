@@ -1,9 +1,17 @@
-﻿<Application x:Class="WpfTrial.App"
+<Application x:Class="SupportAdvance.Presentation.WpfTrial.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:WpfTrial"
-             StartupUri="MainWindow.xaml">
+             xmlns:local="clr-namespace:SupportAdvance.Presentation.WpfTrial"
+             xmlns:syncfusion="http://schemas.syncfusion.com/wpf">
     <Application.Resources>
-         
+        <!-- Yu Gothic UI フォント設定 - Implicit Style（すべての Window に自動適用） -->
+        <Style TargetType="Window">
+            <Setter Property="FontFamily" Value="Yu Gothic UI" />
+            <Setter Property="FontSize" Value="14" />
+        </Style>
+
+        <!-- 【注意】RibbonWindow 向けの暗黙的スタイルは定義しない。
+             定義すると、SfSkinManager（テーマ）が適用するスタイル（タイトルバーのテンプレートを含む）が置き換わる恐れがある。
+             MainWindow のフォントは、MainWindow.xaml で直接指定する -->
     </Application.Resources>
 </Application>

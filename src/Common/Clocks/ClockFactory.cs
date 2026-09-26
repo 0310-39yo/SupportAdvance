@@ -4,18 +4,18 @@ namespace SupportAdvance.Common.Clocks;
 
 /// <summary>
 /// クロック実装のファクトリクラス
-/// IClockSettings に基づいて、適切なクロック実装を生成する
+/// IClockSettings に基づいて、適切なクロック実装の生成
 /// </summary>
 public static class ClockFactory
 {
     /// <summary>
-    /// 設定に基づいて IClock インスタンスを生成する
+    /// 設定に基づいて IClock インスタンスの生成
     /// </summary>
     /// <param name="settings">クロック設定</param>
-    /// <returns>生成されたクロック実装（SystemClock, TickingClock, または OffsetClock）</returns>
+    /// <returns>生成されたクロック実装（SystemClock, TickingClock, OffsetClock, または BusinessDayClock）</returns>
     /// <exception cref="ArgumentNullException">settings が null の場合</exception>
-    /// <exception cref="ArgumentException">無効な ClockType が指定された場合</exception>
-    /// <exception cref="FormatException">OffsetDateTime または StartTime の形式が不正な場合</exception>
+    /// <exception cref="ArgumentException">無効な ClockType が指定された場合、または BusinessDay で BusinessDayStartDate が未指定の場合</exception>
+    /// <exception cref="FormatException">OffsetDateTime・StartTime・BusinessDayStartDate の形式が不正な場合</exception>
     public static IClock CreateClock(IClockSettings settings)
     {
         ArgumentNullException.ThrowIfNull(settings);
@@ -25,13 +25,14 @@ public static class ClockFactory
             "SYSTEM" => new SystemClock(),
             "TICKING" => CreateTickingClock(settings),
             "OFFSET" => CreateOffsetClock(settings),
+            "BUSINESSDAY" => CreateBusinessDayClock(settings),
             null => throw new ArgumentException("ClockType is null.", nameof(settings)),
             _ => throw new ArgumentException($"Unknown ClockType: '{settings.ClockType}'.", nameof(settings))
         };
     }
 
     /// <summary>
-    /// TickingClock を生成する
+    /// TickingClock の生成
     /// 注記：
     /// - StartTime が指定されていない場合、SystemClock.JstNow で現在のJST時刻を取得
     /// - 実行時は TickingClock.JstNow（IClock経由）を通じて時刻を取得
@@ -56,7 +57,7 @@ public static class ClockFactory
     }
 
     /// <summary>
-    /// OffsetClock を生成する
+    /// OffsetClock の生成
     /// 注記：
     /// - OffsetDateTime が未指定の場合、または日付のみの場合、SystemClock.JstNow で現在のJST時刻を取得
     /// - 実行時は OffsetClock.JstNow（IClock経由）を通じて時刻を取得
@@ -103,5 +104,26 @@ public static class ClockFactory
         offsetDateTime = DateTime.SpecifyKind(offsetDateTime, DateTimeKind.Unspecified);
 
         return new OffsetClock(offsetDateTime);
+    }
+
+    /// <summary>
+    /// BusinessDayClock の生成
+    /// </summary>
+    /// <param name="settings">クロック設定（BusinessDayStartDate が必須）</param>
+    /// <returns>まだ ON していない BusinessDayClock。ON／OFF は Composition Root が実施</returns>
+    /// <exception cref="ArgumentException">BusinessDayStartDate が未指定・空白の場合</exception>
+    /// <exception cref="FormatException">BusinessDayStartDate が <c>yyyy-MM-dd</c> 形式でない場合</exception>
+    private static BusinessDayClock CreateBusinessDayClock(IClockSettings settings)
+    {
+        if (string.IsNullOrWhiteSpace(settings.BusinessDayStartDate))
+        {
+            throw new ArgumentException(
+                "BusinessDayStartDate is required when ClockType is 'BusinessDay'.", nameof(settings));
+        }
+
+        var startDate = DateOnly.ParseExact(
+            settings.BusinessDayStartDate.Trim(), "yyyy-MM-dd", CultureInfo.InvariantCulture);
+
+        return new BusinessDayClock(startDate, settings.BusinessDayStateFilePath);
     }
 }

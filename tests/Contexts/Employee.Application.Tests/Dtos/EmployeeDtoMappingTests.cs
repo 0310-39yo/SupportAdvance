@@ -1,7 +1,10 @@
 namespace SupportAdvance.Contexts.Employee.Application.Tests.Dtos;
 
+using SupportAdvance.Common.Clocks;
 using SupportAdvance.Contexts.Employee.Domain.Entities;
+using SupportAdvance.Contexts.Employee.Domain.ValueObjects.DepartmentMembership;
 using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
+using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Person;
 using SupportAdvance.Contexts.Employee.Application.Dtos;
 using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 using Xunit;
@@ -11,6 +14,7 @@ using Xunit;
 /// </summary>
 public class EmployeeDtoMappingTests
 {
+    private readonly IClock _clock = new SystemClock();
     #region グループ 1: DTO マッピング
 
     [Fact]
@@ -19,12 +23,13 @@ public class EmployeeDtoMappingTests
         // Arrange
         var employee = Employee.Create(
             EmployeeRowId.From(100),
-            EmployeeTypeDivision.RegularEmployee(),
-            EmployeeBizId.From(1001),
-            EmployeeBizCode.From(EmployeeTypeDivision.RegularEmployee(), EmployeeBizId.From(1001)),
+            BizDivision.RegularEmployee(),
+            BizId.From(1001),
+            BizCode.From(BizDivision.RegularEmployee(), BizId.From(1001)),
             null,
-            Person.Create(PersonRowId.From(50), PersonLastName.From("山田"), PersonFirstName.From("太郎"), PersonLastNameKana.From("ヤマダ"), PersonFirstNameKana.From("タロウ")),
-            new List<DepartmentMembership>()
+            Person.Create(PersonRowId.From(50), LastName.From("山田"), FirstName.From("太郎"), LastNameKana.From("ヤマダ"), FirstNameKana.From("タロウ")),
+            new List<DepartmentMembership>(),
+            _clock
         );
 
         // Act
@@ -43,12 +48,13 @@ public class EmployeeDtoMappingTests
         // Arrange
         var employee = Employee.Create(
             EmployeeRowId.From(1),
-            EmployeeTypeDivision.RegularEmployee(),
-            EmployeeBizId.From(1234),
-            EmployeeBizCode.From(EmployeeTypeDivision.RegularEmployee(), EmployeeBizId.From(1234)),
+            BizDivision.RegularEmployee(),
+            BizId.From(1234),
+            BizCode.From(BizDivision.RegularEmployee(), BizId.From(1234)),
             null,
-            Person.Create(PersonRowId.From(1), PersonLastName.From("山田"), PersonFirstName.From("太郎"), PersonLastNameKana.From("ヤマダ"), PersonFirstNameKana.From("タロウ")),
-            new List<DepartmentMembership>()
+            Person.Create(PersonRowId.From(1), LastName.From("山田"), FirstName.From("太郎"), LastNameKana.From("ヤマダ"), FirstNameKana.From("タロウ")),
+            new List<DepartmentMembership>(),
+            _clock
         );
 
         // Act
@@ -63,34 +69,37 @@ public class EmployeeDtoMappingTests
     public void Test1_3_EmployeeDto_ToDto_WithDifferentDivisions()
     {
         // Arrange
-        var person = Person.Create(PersonRowId.From(1), PersonLastName.From("山田"), PersonFirstName.From("太郎"), PersonLastNameKana.From("ヤマダ"), PersonFirstNameKana.From("タロウ"));
+        var person = Person.Create(PersonRowId.From(1), LastName.From("山田"), FirstName.From("太郎"), LastNameKana.From("ヤマダ"), FirstNameKana.From("タロウ"));
 
         var employee1 = Employee.Create(
             EmployeeRowId.From(1),
-            EmployeeTypeDivision.RegularEmployee(),
-            EmployeeBizId.From(1001),
-            EmployeeBizCode.From(EmployeeTypeDivision.RegularEmployee(), EmployeeBizId.From(1001)),
+            BizDivision.RegularEmployee(),
+            BizId.From(1001),
+            BizCode.From(BizDivision.RegularEmployee(), BizId.From(1001)),
             null,
             person,
-            new List<DepartmentMembership>()
+            new List<DepartmentMembership>(),
+            _clock
         );
         var employee2 = Employee.Create(
             EmployeeRowId.From(2),
-            EmployeeTypeDivision.Dispatched(),
-            EmployeeBizId.From(7501),
-            EmployeeBizCode.From(EmployeeTypeDivision.Dispatched(), EmployeeBizId.From(7501)),
+            BizDivision.Dispatched(),
+            BizId.From(7501),
+            BizCode.From(BizDivision.Dispatched(), BizId.From(7501)),
             null,
             person,
-            new List<DepartmentMembership>()
+            new List<DepartmentMembership>(),
+            _clock
         );
         var employee3 = Employee.Create(
             EmployeeRowId.From(3),
-            EmployeeTypeDivision.Contractor(),
-            EmployeeBizId.From(8001),
-            EmployeeBizCode.From(EmployeeTypeDivision.Contractor(), EmployeeBizId.From(8001)),
+            BizDivision.Contractor(),
+            BizId.From(8001),
+            BizCode.From(BizDivision.Contractor(), BizId.From(8001)),
             null,
             person,
-            new List<DepartmentMembership>()
+            new List<DepartmentMembership>(),
+            _clock
         );
 
         // Act

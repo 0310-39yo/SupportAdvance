@@ -4,60 +4,40 @@ using SupportAdvance.SharedKernel.ValueObjects;
 namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Role;
 
 /// <summary>
-/// 有効開始日時を表す ValueObject
-/// 【型】LocalDateTime のラッパー
-/// 【責務】ロール・権限割り当ての有効開始日時を管理
-/// 【制約】常に値を持つ（必須）
+/// 有効開始日時（JST）を表す値オブジェクト
 /// </summary>
+/// <remarks>
+/// <para>【責務】ロール・権限割り当ての有効開始日時の管理</para>
+/// <para>【null契約】必須。常に値を持つ</para>
+/// <para>【時刻】JST の <see cref="LocalDateTime"/> で保持。DB の <c>DateTime</c> との変換は Infrastructure（Mapper）の担当。この型は <c>DateTime</c> の公開なし</para>
+/// </remarks>
 public sealed class EffectiveAt : ValueObject, IEquatable<EffectiveAt>
 {
-    /// <summary>有効開始日時（JST）</summary>
+    /// <summary>
+    /// 有効開始日時（JST）
+    /// </summary>
     public LocalDateTime Value { get; }
 
     /// <summary>
-    /// 指定された有効開始日時から EffectiveAt を生成する（プライベートコンストラクタ）
+    /// 指定有効開始日時による初期化。生成は <see cref="From"/> を使用
     /// </summary>
+    /// <param name="value">有効開始日時（JST）</param>
     private EffectiveAt(LocalDateTime value)
     {
         Value = value;
     }
 
     /// <summary>
-    /// 指定された有効開始日時から EffectiveAt を生成する
+    /// 指定された有効開始日時を持つ <see cref="EffectiveAt"/> の生成
     /// </summary>
     /// <param name="value">有効開始日時（JST）</param>
-    /// <returns>EffectiveAt インスタンス</returns>
+    /// <returns>指定日時を持つインスタンス</returns>
     public static EffectiveAt From(LocalDateTime value) => new(value);
 
-    /// <summary>
-    /// DB値から EffectiveAt を復元する
-    /// </summary>
-    /// <param name="value">DB の datetime2 値</param>
-    /// <param name="result">復元された EffectiveAt</param>
-    /// <returns>復元成功時 true</returns>
-    public static bool TryFromDbValue(DateTime value, out EffectiveAt result)
-    {
-        result = null!;
-
-        try
-        {
-            result = From(new LocalDateTime(value));
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
-    /// <summary>
-    /// 指定された EffectiveAt と等価かどうかを判定する
-    /// </summary>
+    /// <inheritdoc/>
     public override bool Equals(object? obj) => Equals(obj as EffectiveAt);
 
-    /// <summary>
-    /// 指定された EffectiveAt と等価かどうかを判定する
-    /// </summary>
+    /// <inheritdoc/>
     public bool Equals(EffectiveAt? other)
     {
         if (other is null)
@@ -68,19 +48,16 @@ public sealed class EffectiveAt : ValueObject, IEquatable<EffectiveAt>
         return Value == other.Value;
     }
 
-    /// <summary>
-    /// ハッシュコードを取得する
-    /// </summary>
+    /// <inheritdoc/>
     public override int GetHashCode() => Value.GetHashCode();
 
     /// <summary>
-    /// 文字列表現を取得する
+    /// 文字列表現の取得
     /// </summary>
+    /// <returns>有効開始日時の文字列</returns>
     public override string ToString() => Value.ToString();
 
-    /// <summary>
-    /// 等価性判定のための値コンポーネントを返す
-    /// </summary>
+    /// <inheritdoc/>
     protected override IEnumerable<object?> GetValueComponents()
     {
         yield return Value;

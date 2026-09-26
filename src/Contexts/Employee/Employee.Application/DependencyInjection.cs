@@ -16,6 +16,12 @@ public static class DependencyInjection
     /// <summary>
     /// Employee Context の Use Cases と Query Service を DI に登録
     /// </summary>
+    /// <param name="services">登録先のサービスコレクション</param>
+    /// <returns>メソッドチェーン用の <paramref name="services"/> 自身</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="services"/> が <see langword="null"/> の場合</exception>
+    /// <remarks>
+    /// <para>【登録内容】<c>EmployeeQueryService</c> は 1 つのインスタンスを <c>IQueryServiceWithBizId</c>／<c>IQueryService</c>／<c>IEmployeeQueryService</c> の 3 つの型で共有（いずれも Scoped）</para>
+    /// </remarks>
     public static IServiceCollection AddEmployeeApplicationModels(
         this IServiceCollection services)
     {

@@ -1,0 +1,216 @@
+<syncfusion:RibbonWindow
+    x:Class="SupportAdvance.Presentation.WpfTrial.Views.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:syncfusion="http://schemas.syncfusion.com/wpf"
+    xmlns:navigationDrawer="clr-namespace:Syncfusion.UI.Xaml.NavigationDrawer;assembly=Syncfusion.SfNavigationDrawer.WPF"
+    xmlns:behaviors="clr-namespace:SupportAdvance.Presentation.WpfTrial.Behaviors"
+    xmlns:controls="clr-namespace:SupportAdvance.Presentation.WpfTrial.Controls"
+    xmlns:markup="clr-namespace:SupportAdvance.Presentation.WpfTrial.Markup"
+    xmlns:tabs="clr-namespace:SupportAdvance.Presentation.Shared.ViewModels.Tabs;assembly=Shared"
+    xmlns:vm="clr-namespace:SupportAdvance.Presentation.Shared.ViewModels;assembly=Shared"
+    xmlns:views="clr-namespace:SupportAdvance.Presentation.WpfTrial.Views"
+    mc:Ignorable="d"
+    d:DataContext="{d:DesignInstance Type=vm:MainWindowViewModel}"
+    Title="MainWindow"
+    Width="1200"
+    Height="800"
+    FontFamily="Yu Gothic UI"
+    FontSize="14">
+    <!-- ウィンドウの基底は RibbonWindow：テーマ（Office2019Colorful）が対応しており、閉じる等のボタンが表示される。
+         SfChromelessWindow は同テーマに対応せず、ボタンの記号が描画されなかった。
+         フォントは、App.xaml の暗黙的スタイルではなく、ここで直接指定する -->
+
+
+    <Window.Resources>
+        <!-- ナビゲーション項目のスタイル：フォントを少し大きくし（既定 14 → 16）、上下の間隔（最小の高さと余白）を小さくする。
+             テーマ既定のスタイルを引き継ぐ（BasedOn）ため、ここで指定した項目だけが変わる。
+             ただし項目の高さは、テーマのテンプレートが固定したアイコン欄（高さ 25 + 余白 10 = 35）で決まり、スタイルでは 35 より小さくならない。
+             そのため、上下の間隔は NavigationItemDensityBehavior.IconRowHeight（下の SfNavigationDrawer に指定）で詰める -->
+        <!-- タブの見出し：タブどうしの境が分かるように、枠線と隙間を付ける（選択中のタブは、TabControlExt の TabItemSelected* で白地に強調）。
+             テーマ既定のスタイルを引き継ぐ（BasedOn）ため、ここで指定した項目だけが変わる -->
+        <Style x:Key="MainTabItemStyle"
+               TargetType="syncfusion:TabItemExt"
+               BasedOn="{StaticResource {x:Type syncfusion:TabItemExt}}">
+            <Setter Property="Background" Value="#FFDCDCDC" />
+            <Setter Property="BorderBrush" Value="#FFB0B0B0" />
+            <Setter Property="BorderThickness" Value="1,1,1,0" />
+            <Setter Property="Margin" Value="0,0,2,0" />
+        </Style>
+
+        <Style x:Key="NavigationItemStyle"
+               TargetType="navigationDrawer:NavigationItem"
+               BasedOn="{StaticResource {x:Type navigationDrawer:NavigationItem}}">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="MinHeight" Value="18" />
+            <Setter Property="Padding" Value="0" />
+        </Style>
+
+        <!-- タブ内容の ViewModel → View の対応付け（ViewModel-first）。
+             画面を追加する場合は、ここに ViewModel 型ごとの DataTemplate を追加する -->
+        <DataTemplate DataType="{x:Type tabs:EmptyTabContentViewModel}">
+            <views:EmptyView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:Form1ViewModel}">
+            <views:Form1View />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:OpeningViewModel}">
+            <views:OpeningView />
+        </DataTemplate>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+    </Window.Resources>
+
+    <Grid>
+
+        <!-- 行：Ribbon / Main / StatusBar -->
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Ribbon（Tools系）- シンプルリボン表示 -->
+        <syncfusion:Ribbon Grid.Row="0"
+                           EnableSimplifiedLayoutMode="True">
+            <syncfusion:RibbonTab Caption="Home">
+                <!-- CollapseImage：ウィンドウが狭くなり、グループがドロップダウンに縮小されたときに表示する大きめのアイコン -->
+                <syncfusion:RibbonBar Header="File"
+                                      CollapseImage="{markup:FluentIconImage Icon=Save, Size=32}">
+                    <!-- アイコン：SmallIcon（16。通常レイアウトの小サイズ）、MediumIcon（20。シンプルレイアウト = EnableSimplifiedLayoutMode）、LargeIcon（32。通常レイアウトの大サイズ） -->
+                    <syncfusion:RibbonButton Label="Save"
+                                             SmallIcon="{markup:FluentIconImage Icon=Save, Size=16}"
+                                             MediumIcon="{markup:FluentIconImage Icon=Save, Size=20}"
+                                             LargeIcon="{markup:FluentIconImage Icon=Save, Size=32}"
+                                             Command="{Binding SaveCommand}"/>
+                </syncfusion:RibbonBar>
+            </syncfusion:RibbonTab>
+        </syncfusion:Ribbon>
+
+        <!-- NavigationPane（SfNavigationDrawer / モダン系） -->
+        <!-- ナビゲーション項目（NavigationItem）は SfNavigationDrawer 直下に XAML で宣言する
+             （SfNavigationDrawer.ContentPropertyAttribute が Items のため公式に想定された書き方）。
+             ContentView にはナビゲーション選択後のメインコンテンツ（TabControlExt）を配置し、
+             ナビゲーション項目とコンテンツ領域を混在させない。
+             旧実装（ContentView 内に NavigationItemsView を配置）で発生した
+             NullReferenceException は、このパターンでは実機検証（スモークテスト）で
+             再現しないことを確認済み（詳細は
+             docs/Assistance/Plans/20260926_SfNavigationDrawer再検証計画.md）。 -->
+        <!-- 行 1：ナビゲーション | 境界（GridSplitter） | タブ。
+             ナビゲーションの幅は、境界のドラッグで変える（列の幅）。折りたたみ（Compact）のときは、幅を 48 に固定して境界を無効にする。
+             列の幅の管理は NavigationDrawerResizeBehavior が行う。 -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="220" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <navigationDrawer:SfNavigationDrawer
+                                 x:Name="NavigationPane"
+                                 DisplayMode="Expanded"
+                                 IsToggleButtonVisible="True"
+                                 ExpandedModeWidth="500"
+                                 ItemContainerStyle="{StaticResource NavigationItemStyle}"
+                                 CompactModeWidth="48"
+                                 behaviors:NavigationItemDensityBehavior.IconRowHeight="24"
+                                 behaviors:NavigationDrawerResizeBehavior.MinWidth="120"
+                                 behaviors:NavigationDrawerResizeBehavior.MaxWidth="500"
+                                 behaviors:NavigationDrawerResizeBehavior.IsResizable="True"
+                                 behaviors:NavigationDrawerBehavior.ItemClickedCommand="{Binding OpenTabCommand}">
+
+                <!-- 折りたたみ：トグルボタンで幅 220（Expanded）⇔ 48（Compact。アイコンのみの細い縦バー）を切り替える。
+                     Compact 時はアイコンのみ表示されるため、各項目にアイコンを指定する -->
+                <navigationDrawer:NavigationItem Header="顧客管理">
+                    <navigationDrawer:NavigationItem.Icon>
+                        <controls:FluentIcon Icon="Customers" FontSize="22" Foreground="#FF555555"/>
+                    </navigationDrawer:NavigationItem.Icon>
+                    <navigationDrawer:NavigationItem Header="顧客一覧">
+                        <navigationDrawer:NavigationItem.Icon>
+                            <controls:FluentIcon Icon="List" FontSize="20" Foreground="#FF555555"/>
+                        </navigationDrawer:NavigationItem.Icon>
+                    </navigationDrawer:NavigationItem>
+                    <navigationDrawer:NavigationItem Header="顧客登録">
+                        <navigationDrawer:NavigationItem.Icon>
+                            <controls:FluentIcon Icon="Register" FontSize="20" Foreground="#FF555555"/>
+                        </navigationDrawer:NavigationItem.Icon>
+                    </navigationDrawer:NavigationItem>
+                </navigationDrawer:NavigationItem>
+
+                <navigationDrawer:NavigationItem Header="受注管理">
+                    <navigationDrawer:NavigationItem.Icon>
+                        <controls:FluentIcon Icon="Orders" FontSize="22" Foreground="#FF555555"/>
+                    </navigationDrawer:NavigationItem.Icon>
+                    <navigationDrawer:NavigationItem Header="受注一覧">
+                        <navigationDrawer:NavigationItem.Icon>
+                            <controls:FluentIcon Icon="List" FontSize="20" Foreground="#FF555555"/>
+                        </navigationDrawer:NavigationItem.Icon>
+                    </navigationDrawer:NavigationItem>
+                    <navigationDrawer:NavigationItem Header="受注登録">
+                        <navigationDrawer:NavigationItem.Icon>
+                            <controls:FluentIcon Icon="Register" FontSize="20" Foreground="#FF555555"/>
+                        </navigationDrawer:NavigationItem.Icon>
+                    </navigationDrawer:NavigationItem>
+                </navigationDrawer:NavigationItem>
+
+
+            </navigationDrawer:SfNavigationDrawer>
+
+            <GridSplitter Grid.Column="1"
+                          Width="5"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Stretch"
+                          ResizeDirection="Columns"
+                          ResizeBehavior="PreviousAndNext"
+                          Cursor="SizeWE"
+                          Background="Transparent" />
+
+            <!-- TabbedWindow（TabControlExt / Tools系） -->
+            <!-- ItemsSource: ViewModel の OpenTabs（読み取り専用コレクションのため OneWay） -->
+            <!-- SelectedItem: ViewModel の SelectedTab -->
+            <!-- オープニング画面：タブが 1 つも無い間（起動後、ナビゲーションが選ばれるまで）表示する。タブ領域と同じ場所に重ねる -->
+            <ContentControl Grid.Column="2"
+                            Content="{Binding Opening}"
+                            Visibility="{Binding IsOpeningViewVisible, Converter={StaticResource BoolToVisibility}}" />
+
+            <syncfusion:TabControlExt x:Name="MainTabs"
+                                      Grid.Column="2"
+                                      Visibility="{Binding HasOpenTabs, Converter={StaticResource BoolToVisibility}}"
+                                      ItemsSource="{Binding OpenTabs}"
+                                      SelectedItem="{Binding SelectedTab, Mode=TwoWay}"
+                                      behaviors:TabControlExtCloseBehavior.TabClosedCommand="{Binding CloseTabCommand}"
+                                      AllowDragDrop="True"
+                                      CloseButtonType="Individual"
+                                      ItemContainerStyle="{StaticResource MainTabItemStyle}"
+                                      TabItemHeaderStyle="Fill"
+                                      TabPanelBackground="#FFE6E6E6"
+                                      TabItemSelectedBackground="White"
+                                      TabItemSelectedBorderBrush="#FF808080"
+                                      TabItemSelectedForeground="#FF1A1A1A"
+                                      TabItemHoverBackground="#FFF2F2F2"
+                                      TabItemHoverBorderBrush="#FF9A9A9A"
+                                      SelectedItemFontWeight="SemiBold">
+                <!-- TabItem の表示テンプレート -->
+                <syncfusion:TabControlExt.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Header}" />
+                    </DataTemplate>
+                </syncfusion:TabControlExt.ItemTemplate>
+                <!-- TabItem の コンテンツテンプレート（ContentViewModel の型に対応する DataTemplate で View が決まる） -->
+                <syncfusion:TabControlExt.ContentTemplate>
+                    <DataTemplate>
+                        <ContentPresenter Content="{Binding ContentViewModel}"/>
+                    </DataTemplate>
+                </syncfusion:TabControlExt.ContentTemplate>
+            </syncfusion:TabControlExt>
+        </Grid>
+
+
+        <!-- StatusBar（Tools系） -->
+        <syncfusion:RibbonStatusBar Grid.Row="2">
+            <TextBlock Text="Ready"/>
+        </syncfusion:RibbonStatusBar>
+
+    </Grid>
+</syncfusion:RibbonWindow>

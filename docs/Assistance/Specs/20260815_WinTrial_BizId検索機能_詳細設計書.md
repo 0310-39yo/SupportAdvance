@@ -128,7 +128,7 @@ WinTrial（Windows Forms）のForm1で、EmployeeBizId（従業員番号）を�
 | GetEmployeeByBizIdUseCase | Employee (Domain) | ✅ | Entity 参照 |
 | EmployeeRepository | EmployeeDbModel | ✅ | Infrastructure |
 | EmployeeRepository | Mapper | ✅ | Infrastructure |
-| Form1ViewModel | Infrastructure | ❌ | Program.cs のみ |
+| Form1ViewModel | Infrastructure | ❌ | Composition Root（Program.cs）のみ |
 
 ---
 

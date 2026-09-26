@@ -397,7 +397,6 @@ public class PreferencesUpdatedEventHandler : IDomainEventHandler<PreferencesUpd
 ### 実装時期
 
 SharedKernel に Entity基底クラスと IDomainEvent の実装が完了した後を予定。
-参照: [実施者実装計画](../../memory/project_actor_implementation_plan.md)
 
 ---
 

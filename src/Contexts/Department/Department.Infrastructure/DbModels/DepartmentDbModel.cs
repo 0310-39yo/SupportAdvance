@@ -4,14 +4,19 @@ namespace SupportAdvance.Contexts.Department.Infrastructure.DbModels;
 
 /// <summary>
 /// 部署データベースモデル
-///
-/// 【責務】
-///   - m_departments テーブルのマッピング
-///   - プリミティブ型のデータベーススキーマ表現
-/// 【注意】
-///   - 監査フィールド（CreatedAt/UpdatedAt/DeletedAt）は DateTime プリミティブ型
-///   - ビジネスフィールドも DateTime（LocalDateTime ↔ DateTime は Mapper で変換）
 /// </summary>
+/// <remarks>
+/// <para>【責務】</para>
+/// <list type="bullet">
+/// <item><description>m_departments テーブルのマッピング</description></item>
+/// <item><description>プリミティブ型のデータベーススキーマ表現</description></item>
+/// </list>
+/// <para>【注意】</para>
+/// <list type="bullet">
+/// <item><description>監査フィールド（CreatedAt/UpdatedAt/DeletedAt）は DateTime プリミティブ型</description></item>
+/// <item><description>ビジネスフィールドも DateTime（LocalDateTime ↔ DateTime は Mapper で変換）</description></item>
+/// </list>
+/// </remarks>
 [Table("m_departments")]
 public class DepartmentDbModel
 {
@@ -24,20 +29,20 @@ public class DepartmentDbModel
     /// <summary>
     /// 部署コード（4文字、一意）
     /// </summary>
-    [Column("code")]
-    public string Code { get; set; } = string.Empty;
+    [Column("department_code")]
+    public string DepartmentCode { get; set; } = string.Empty;
 
     /// <summary>
     /// 部署名
     /// </summary>
-    [Column("name")]
-    public string Name { get; set; } = string.Empty;
+    [Column("department_name")]
+    public string DepartmentName { get; set; } = string.Empty;
 
     /// <summary>
     /// 階層レベル（0-4）
     /// </summary>
-    [Column("level")]
-    public int Level { get; set; }
+    [Column("hierarchy_level")]
+    public int HierarchyLevel { get; set; }
 
     /// <summary>
     /// 親部署の行ID（NULL で「トップレベル」）
@@ -60,8 +65,11 @@ public class DepartmentDbModel
     /// <summary>
     /// 楽観ロック用タイムスタンプ
     /// </summary>
+    /// <remarks>
+    /// <para>【重要】SQL Server の timestamp は自動管理のため、RepoDb の fields パラメータで INSERT/UPDATE から除外</para>
+    /// </remarks>
     [Column("row_version")]
-    public byte[] RowVersion { get; set; } = [];
+    public byte[]? RowVersion { get; set; }
 
     /// <summary>
     /// 作成日時（JST）

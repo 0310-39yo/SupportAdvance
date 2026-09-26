@@ -4,12 +4,16 @@ namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Person;
 
 /// <summary>
 /// 個人の名（カナ）を表す ValueObject
-/// 【型】string のラッパー
-/// 【制約】1文字以上100文字以下、null 不可、カナ文字のみ
 /// </summary>
+/// <remarks>
+/// <para>【型】string のラッパー</para>
+/// <para>【制約】1文字以上100文字以下、null 不可、カナ文字のみ</para>
+/// </remarks>
 public sealed class FirstNameKana : ValueObject, IEquatable<FirstNameKana>
 {
-    /// <summary>名（カナ）の値</summary>
+    /// <summary>
+    /// 名（カナ）の値
+    /// </summary>
     public string Value { get; }
 
     /// <summary>
@@ -21,10 +25,11 @@ public sealed class FirstNameKana : ValueObject, IEquatable<FirstNameKana>
     }
 
     /// <summary>
-    /// 指定された値から FirstNameKana を生成する
+    /// 指定された値からの FirstNameKana の生成
     /// </summary>
     /// <param name="value">名（カナ）</param>
     /// <returns>FirstNameKana インスタンス</returns>
+    /// <exception cref="ArgumentException"><paramref name="value"/> が <see langword="null"/>・空文字・空白のみの場合、または 100 文字を超える場合</exception>
     public static FirstNameKana From(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
@@ -41,8 +46,11 @@ public sealed class FirstNameKana : ValueObject, IEquatable<FirstNameKana>
     }
 
     /// <summary>
-    /// DB値から FirstNameKana を復元する
+    /// DB値から FirstNameKana の復元
     /// </summary>
+    /// <param name="value">DB から読み込んだ名（カナ）</param>
+    /// <param name="result">成功した場合は復元したインスタンス。失敗した場合は <see langword="null"/>（使用禁止）</param>
+    /// <returns>成功した場合は <see langword="true"/>。<see langword="null"/>・空文字・空白のみ・100 文字超の場合は <see langword="false"/>（必須項目）</returns>
     public static bool TryFromDbValue(string? value, out FirstNameKana result)
     {
         result = null!;
@@ -63,14 +71,10 @@ public sealed class FirstNameKana : ValueObject, IEquatable<FirstNameKana>
         }
     }
 
-    /// <summary>
-    /// 指定された FirstNameKana と等価かどうかを判定する
-    /// </summary>
+    /// <inheritdoc/>
     public override bool Equals(object? obj) => Equals(obj as FirstNameKana);
 
-    /// <summary>
-    /// 指定された FirstNameKana と等価かどうかを判定する
-    /// </summary>
+    /// <inheritdoc/>
     public bool Equals(FirstNameKana? other)
     {
         if (other is null)
@@ -86,19 +90,16 @@ public sealed class FirstNameKana : ValueObject, IEquatable<FirstNameKana>
         return Value == other.Value;
     }
 
-    /// <summary>
-    /// ハッシュコードを取得する
-    /// </summary>
+    /// <inheritdoc/>
     public override int GetHashCode() => Value.GetHashCode();
 
     /// <summary>
-    /// 文字列表現を取得する
+    /// 文字列表現の取得
     /// </summary>
+    /// <returns>名（カナ）の値そのもの</returns>
     public override string ToString() => Value;
 
-    /// <summary>
-    /// 等価性判定のための値コンポーネントを返す
-    /// </summary>
+    /// <inheritdoc/>
     protected override IEnumerable<object?> GetValueComponents()
     {
         yield return Value;

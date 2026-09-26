@@ -10,6 +10,11 @@ public static class EmployeeDtoMapper
     /// <summary>
     /// Domain Entity を DTO に変換
     /// </summary>
+    /// <param name="employee">変換する従業員</param>
+    /// <returns>変換した DTO</returns>
+    /// <remarks>
+    /// <para>【注意】<c>DepartmentNames</c> は未設定。部署名が必要な場合は <c>EmployeeExtensions.ToDto</c> を使用</para>
+    /// </remarks>
     public static EmployeeDto ToDto(this Employee employee)
     {
         return new EmployeeDto

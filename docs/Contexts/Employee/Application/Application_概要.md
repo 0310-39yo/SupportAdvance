@@ -227,9 +227,9 @@ Employee.Application.Tests (テストプロジェクト)
 ## 📖 参照資料
 
 ### 関連ドキュメント
-- [CLAUDE.md](../../CLAUDE.md) - Clean Architecture 原則
-- [Phase 3 Repository計画](../Repository_設計計画.md)
-- [Entity設計ガイドライン](../../Guides/Entity_設計ガイドライン.md)
+- [CLAUDE.md](../../../../CLAUDE.md) - Clean Architecture 原則
+- [Phase 3 Repository計画](../Infrastructure/Repository_設計計画.md)
+- [Entity設計ガイドライン](../../../Assistance/Guides/Entity_設計ガイドライン.md)
 
 ### 実装参考
 - **Use Case パターン:** Clean Architecture (Robert C. Martin)
@@ -250,7 +250,7 @@ Employee.Application.Tests (テストプロジェクト)
 | **Red フェーズ** | ✅ 完成 | 2026-08-10 | テスト作成完了 (24テスト) |
 | **Green フェーズ** | ✅ 完成 | 2026-08-11 | 実装完了 (全 Use Cases, Dtos, Repositories) |
 | **統合検証** | ✅ 完成 | 2026-08-11 | テスト実行: 24/24 成功 (100%) |
-| **本番リリース検証** | ✅ 完成 | 2026-08-11 | [20260811_Employee実装検証報告書](../../Assistance/Reports/20260811_Employee実装検証報告書.md) |
+| **本番リリース検証** | ✅ 完成 | 2026-08-11 | 20260811_Employee実装検証報告書（リポジトリには現存しない） |
 
 ---
 
@@ -336,7 +336,7 @@ public class AddDepartmentMembershipUseCase
 2. `EmployeeRepository` のハードコード値 (1L) を テストプロバイダーに変更
    - ICurrentUser / IUserContext の注入を検討
 
-詳細は [20260811_Employee実装検証報告書.md](../../Assistance/Reports/20260811_Employee実装検証報告書.md) を参照。
+詳細は 2026-08-11 の Employee 実装検証報告書を参照（報告書はリポジトリには現存しない。現状は各テスト仕様書とテストコードが正）。
 
 ---
 

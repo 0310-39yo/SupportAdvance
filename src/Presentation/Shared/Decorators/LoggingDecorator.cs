@@ -4,15 +4,14 @@ using SupportAdvance.Crosscutting.Logging;
 namespace SupportAdvance.Presentation.Shared.Decorators;
 
 /// <summary>
-/// UseCase のロギング デコレーター。
-/// インナーの UseCase 実行時に、リクエストとレスポンスの内容をログに記録する。
-/// 相関コンテキスト(CorrelationContext)を使用してログを関連付け、分散トレース対応を実現する。
-///
-/// 【単一責務】リクエスト/レスポンスのログ記録のみ。
-/// 他の責務（パフォーマンス計測、エラーハンドリング）は別デコレーターに委譲。
+/// UseCase のロギング デコレーター
 /// </summary>
 /// <typeparam name="TRequest">リクエストの型</typeparam>
 /// <typeparam name="TResponse">レスポンスの型</typeparam>
+/// <remarks>
+/// <para>インナーの UseCase 実行時に、リクエストとレスポンスの内容をログへの記録。相関コンテキスト(CorrelationContext)を使用してログを関連付け、分散トレース対応の実現</para>
+/// <para>【単一責務】リクエスト/レスポンスのログ記録のみ。他の責務（パフォーマンス計測、エラーハンドリング）は別デコレーターに委譲</para>
+/// </remarks>
 public sealed class LoggingDecorator<TRequest, TResponse> : IUseCase<TRequest, TResponse>
     where TRequest : IRequest
     where TResponse : IResponse
@@ -21,6 +20,13 @@ public sealed class LoggingDecorator<TRequest, TResponse> : IUseCase<TRequest, T
     private readonly IUseCase<TRequest, TResponse> _innerUseCase;
     private readonly IAppLogging<LoggingDecorator<TRequest, TResponse>> _logger;
 
+    /// <summary>
+    /// <see cref="LoggingDecorator{TRequest, TResponse}"/> クラスの新しいインスタンスの初期化
+    /// </summary>
+    /// <param name="innerUseCase">装飾対象のユースケース（次に実行されるデコレーターまたは本体）</param>
+    /// <param name="logger">ログの出力先</param>
+    /// <param name="correlationContext">ログに付与する CorrelationId の取得元</param>
+    /// <exception cref="ArgumentNullException">いずれかの引数が <see langword="null"/> の場合</exception>
     public LoggingDecorator(
         IUseCase<TRequest, TResponse> innerUseCase,
         IAppLogging<LoggingDecorator<TRequest, TResponse>> logger,
@@ -36,12 +42,14 @@ public sealed class LoggingDecorator<TRequest, TResponse> : IUseCase<TRequest, T
     }
 
     /// <summary>
-    /// UseCase を実行し、リクエストとレスポンスの内容をログに記録する。
-    ///
-    /// 【単一責務】リクエスト/レスポンスのログ記録のみ
+    /// UseCase の実行と、リクエストとレスポンスの内容のログへの記録
     /// </summary>
     /// <param name="request">リクエストの内容</param>
     /// <returns>レスポンスの内容</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="request"/> が <see langword="null"/> の場合</exception>
+    /// <remarks>
+    /// <para>【単一責務】リクエスト/レスポンスのログ記録のみ</para>
+    /// </remarks>
     public async Task<TResponse> ExecuteAsync(TRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);

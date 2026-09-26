@@ -48,7 +48,7 @@ public class TickingClock : IClock, IDisposable
 
     /// <summary>
     /// 現在のJST日時を LocalDateTime で取得
-    /// 自動進行モード時は、Timer により自動的に更新される
+    /// 自動進行モード時は、Timer による自動更新
     /// </summary>
     public LocalDateTime JstNow
     {
@@ -147,6 +147,7 @@ public class TickingClock : IClock, IDisposable
     /// 時刻を指定した量だけ進める
     /// </summary>
     /// <param name="count">ティック回数</param>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="count"/> が 0 未満の場合</exception>
     public void Tick(int count)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(count, 0);

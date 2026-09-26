@@ -14,7 +14,7 @@ namespace SupportAdvance.Contexts.Employee.Domain.ValueObjects.Role;
 public sealed class RoleCode : PrimitiveValueObject<string>, IEquatable<RoleCode>
 {
     /// <summary>
-    /// ロールコードの値を取得する
+    /// ロールコードの値の取得
     /// </summary>
     public string Value => ValueField;
 
@@ -27,7 +27,7 @@ public sealed class RoleCode : PrimitiveValueObject<string>, IEquatable<RoleCode
     }
 
     /// <summary>
-    /// 指定されたロールコードから RoleCode を生成する
+    /// 指定されたロールコードからの RoleCode の生成
     /// </summary>
     /// <param name="value">ロールコード（1-50文字、英数字、_、.のみ）</param>
     /// <returns>生成された RoleCode インスタンス</returns>
@@ -86,14 +86,10 @@ public sealed class RoleCode : PrimitiveValueObject<string>, IEquatable<RoleCode
         }
     }
 
-    /// <summary>
-    /// オブジェクト等価性を判定する
-    /// </summary>
+    /// <inheritdoc/>
     public override bool Equals(object? obj) => Equals(obj as RoleCode);
 
-    /// <summary>
-    /// RoleCode 間の等価性を判定する
-    /// </summary>
+    /// <inheritdoc/>
     public bool Equals(RoleCode? other)
     {
         if (other is null)
@@ -109,26 +105,23 @@ public sealed class RoleCode : PrimitiveValueObject<string>, IEquatable<RoleCode
         return Value == other.Value; // 大文字小文字区別
     }
 
-    /// <summary>
-    /// ハッシュコードを取得する
-    /// </summary>
+    /// <inheritdoc/>
     public override int GetHashCode() => Value.GetHashCode();
 
     /// <summary>
-    /// 文字列表現を取得する
+    /// 文字列表現の取得
     /// </summary>
+    /// <returns>ロールコードの値そのもの</returns>
     public override string ToString() => Value;
 
-    /// <summary>
-    /// 等価性判定のための値コンポーネントを返す
-    /// </summary>
+    /// <inheritdoc/>
     protected override IEnumerable<object?> GetValueComponents()
     {
         yield return Value;
     }
 
     /// <summary>
-    /// 値を検証する
+    /// 値の検証
     /// </summary>
     /// <param name="normalized">検証対象の値</param>
     /// <exception cref="ArgumentException">不正な値</exception>

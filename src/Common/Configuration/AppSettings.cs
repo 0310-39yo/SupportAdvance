@@ -2,22 +2,29 @@ using SupportAdvance.Common.Clocks;
 
 namespace SupportAdvance.Common.Configuration;
 
+/// <summary>
+/// appsettings.*.json の <c>AppSettings</c> セクションをバインドする設定クラス
+/// </summary>
+/// <remarks>
+/// <para>【用途】すべての設定値は <see cref="IAppSettings"/> 経由で統一して取得</para>
+/// <para>【注意】初期値（<c>YOUR_DOMAIN</c> など）はプレースホルダー。実際の値は appsettings.*.json で設定</para>
+/// </remarks>
 public class AppSettings : IAppSettings
 {
     /// <summary>
-    /// DebugBuild = "Debug"
+    /// <see cref="ApplicationBuildType"/> における Debug ビルドを表す値
     /// </summary>
     public const string DebugBuild = "Debug";
 
     /// <summary>
-    /// ReleaseBuild = "Release"
+    /// <see cref="ApplicationBuildType"/> における Release ビルドを表す値
     /// </summary>
     public const string ReleaseBuild = "Release";
 
     /// <summary>
     /// クロック設定
-    /// JSON バインディング用にクロック設定値を保持します。
-    /// 実際のクロック機能は IClock インターフェース経由で取得してください。
+    /// JSON バインディング用にクロック設定値の保持。
+    /// 実際のクロック機能は IClock インターフェース経由で取得してください
     /// </summary>
     public IClockSettings ClockSettings { get; init; } = new ClockSettings();
 

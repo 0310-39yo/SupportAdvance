@@ -5,26 +5,37 @@ namespace SupportAdvance.Contexts.IntegrationPrototype.Application.UseCases;
 
 /// <summary>
 /// BizId で Employee を取得する統合 Use Case（プロトタイプ）
-///
-/// 【責務】
-///   - 汎用 Application層の IEmployeeQueryService 経由で Employee を取得
-///   - Context間連携（BC間直接参照なし）のプロトタイプを示す
-///
-/// 【依存関係】
-///   - IEmployeeQueryService（汎用層）
-///   - Employee Context Application への直接参照なし ✓ アーキテクチャ準拠
-///   - Employee Context の型（EmployeeDto）への参照なし ✓ BC間参照なし
-///
-/// 【アーキテクチャ】
-///   - IntegrationPrototype → 汎用 Application層（IEmployeeQueryService）
-///   - Employee Context が汎用層のインターフェースを実装
-///   - BC間の直接参照を完全に回避（型参照も含む）
 /// </summary>
+/// <remarks>
+/// <para>【責務】</para>
+/// <list type="bullet">
+/// <item><description>汎用 Application層の IEmployeeQueryService 経由で Employee を取得</description></item>
+/// <item><description>Context間連携（BC間直接参照なし）のプロトタイプを示す</description></item>
+/// </list>
+/// <para>【依存関係】</para>
+/// <list type="bullet">
+/// <item><description>IEmployeeQueryService（汎用層）</description></item>
+/// <item><description>Employee Context Application への直接参照なし ✓ アーキテクチャ準拠</description></item>
+/// <item><description>Employee Context の型（EmployeeDto）への参照なし ✓ BC間参照なし</description></item>
+/// </list>
+/// <para>【アーキテクチャ】</para>
+/// <list type="bullet">
+/// <item><description>IntegrationPrototype → 汎用 Application層（IEmployeeQueryService）</description></item>
+/// <item><description>Employee Context が汎用層のインターフェースを実装</description></item>
+/// <item><description>BC間の直接参照を完全に回避（型参照も含む）</description></item>
+/// </list>
+/// </remarks>
 public class GetEmployeeByBizIdIntegrationUseCase
 {
     private readonly IEmployeeQueryService _employeeQuery;
     private readonly IAppLogging<GetEmployeeByBizIdIntegrationUseCase> _logger;
 
+    /// <summary>
+    /// <see cref="GetEmployeeByBizIdIntegrationUseCase"/> クラスの新しいインスタンスの初期化
+    /// </summary>
+    /// <param name="employeeQuery">汎用層経由で従業員を検索する問い合わせサービス</param>
+    /// <param name="logger">ログの出力先</param>
+    /// <exception cref="ArgumentNullException">いずれかの引数が <see langword="null"/> の場合</exception>
     public GetEmployeeByBizIdIntegrationUseCase(
         IEmployeeQueryService employeeQuery,
         IAppLogging<GetEmployeeByBizIdIntegrationUseCase> logger)
@@ -35,12 +46,14 @@ public class GetEmployeeByBizIdIntegrationUseCase
 
     /// <summary>
     /// BizId で Employee を検索（汎用層経由）
-    /// 【責務】Query Service 経由で IEmployeeQueryResult を取得
-    /// 【特徴】Employee Context の型に依存しない（汎用層のインターフェースのみ）
     /// </summary>
     /// <param name="bizId">ビジネスID（従業員番号、1以上）</param>
     /// <returns>見つかった従業員のクエリ結果（IEmployeeQueryResult）、または null</returns>
     /// <exception cref="ArgumentException">bizId が無効な場合</exception>
+    /// <remarks>
+    /// <para>【責務】Query Service 経由で IEmployeeQueryResult を取得</para>
+    /// <para>【特徴】Employee Context の型に依存しない（汎用層のインターフェースのみ）</para>
+    /// </remarks>
     public async Task<IEmployeeQueryResult?> ExecuteAsync(int bizId)
     {
         if (bizId <= 0)

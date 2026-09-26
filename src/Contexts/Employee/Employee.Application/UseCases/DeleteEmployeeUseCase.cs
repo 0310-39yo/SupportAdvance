@@ -16,6 +16,9 @@ public class DeleteEmployeeUseCase(IEmployeeRepository repository)
     /// <summary>
     /// 従業員を論理削除
     /// </summary>
+    /// <param name="employeeRowId">削除する従業員の行ID</param>
+    /// <exception cref="ArgumentException"><paramref name="employeeRowId"/> が 0 以下の場合</exception>
+    /// <exception cref="InvalidOperationException">従業員が見つからない場合</exception>
     public async Task ExecuteAsync(long employeeRowId)
     {
         if (employeeRowId <= 0)

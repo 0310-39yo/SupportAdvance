@@ -3,11 +3,12 @@
   <Folder Name="/docs/" />
   <Folder Name="/docs/Common/" />
   <Folder Name="/docs/Contexts/" />
-  <Folder Name="/docs/Contexts/Samples/" />
+  <Folder Name="/docs/Contexts/Authentication/" />
+  <Folder Name="/docs/Contexts/Department/" />
+  <Folder Name="/docs/Contexts/Employee/" />
   <Folder Name="/docs/Crosscutting/" />
   <Folder Name="/docs/Infrastructure/" />
   <Folder Name="/docs/Presentation/" />
-  <Folder Name="/docs/Presentation/SharedKernel/" />
   <Folder Name="/src/">
     <Project Path="src/Application/Application.csproj" Id="06caa5a8-60a0-42fb-bd3d-0409e79a3aad" />
     <Project Path="src/Common/Common.csproj" Id="43a271a2-3ea9-41ca-a1c4-fdeb6e57f59c" />
@@ -26,12 +27,12 @@
     <Project Path="src/Contexts/Employee/Employee.Domain/Employee.Domain.csproj" />
     <Project Path="src/Contexts/Employee/Employee.Infrastructure/Employee.Infrastructure.csproj" />
   </Folder>
-  <Folder Name="/src/Contexts/Identity/">
-    <Project Path="src/Contexts/Identity/Identity.Application/Identity.Application.csproj" Id="a2f1a20d-8b26-47d0-b56b-d95eae028905" />
-    <Project Path="src/Contexts/Identity/Identity.Domain/Identity.Domain.csproj" Id="1a3d74c5-5de0-4c77-bcc8-75857f198601" />
-    <Project Path="src/Contexts/Identity/Identity.Infrastructure/Identity.Infrastructure.csproj" Id="08b3771a-d8cf-4fe9-88f6-39bb91f13fd2" />
+  <Folder Name="/src/Contexts/Authentication/">
+    <Project Path="src/Contexts/Authentication/Authentication.Application/Authentication.Application.csproj" Id="a2f1a20d-8b26-47d0-b56b-d95eae028905" />
+    <Project Path="src/Contexts/Authentication/Authentication.Domain/Authentication.Domain.csproj" Id="1a3d74c5-5de0-4c77-bcc8-75857f198601" />
+    <Project Path="src/Contexts/Authentication/Authentication.Infrastructure/Authentication.Infrastructure.csproj" Id="08b3771a-d8cf-4fe9-88f6-39bb91f13fd2" />
   </Folder>
-  <Folder Name="/src/Contexts/IntegrationPrototype/">
+  <Folder Name="/src/Contexts/Employee/IntegrationPrototype/">
     <Project Path="src/Contexts/IntegrationPrototype/IntegrationPrototype.Application/IntegrationPrototype.Application.csproj" Id="0fde8c01-03d3-4d37-9a19-d81d0af81eaf" />
     <Project Path="src/Contexts/IntegrationPrototype/IntegrationPrototype.Domain/IntegrationPrototype.Domain.csproj" Id="e24ca77d-aae0-45cc-943a-0ebd13a252e8" />
     <Project Path="src/Contexts/IntegrationPrototype/IntegrationPrototype.Infrastructure/IntegrationPrototype.Infrastructure.csproj" Id="96333fa3-4290-454e-ae42-22462e679e82" />
@@ -46,18 +47,25 @@
       <Folder Name="/tests/Contexts/Samples/">
       </Folder>
     </Folder>
-    <Folder Name="/tests/Presentation/" />
     <Project Path="tests/Architecture.Tests/Architecture.Tests.csproj" Id="c1c2d3e4-f5a6-47b8-9c0d-3e4f5a6b7c8d" />
     <Project Path="tests/Common.Tests/Common.Tests.csproj" Id="f1a2b3c4-d5e6-47f8-9a0b-1c2d3e4f5a6b" />
     <Project Path="tests/Crosscutting.Tests/Crosscutting.Tests.csproj" Id="a1b2c3d4-e5f6-47a8-9b0c-2d3e4f5a6b7c" />
     <Project Path="tests/Infrastructure.Tests/Infrastructure.Tests.csproj" Id="f1f2a3b4-c5d6-47f8-9f0a-6b7c8d9e0f1b" />
     <Project Path="tests/SharedKernel.Tests/SharedKernel.Tests.csproj" Id="b1c2d3e4-f5a6-47b8-9c0d-3e4f5a6b7c8d" />
   </Folder>
+  <Folder Name="/tests/Presentation/">
+    <Project Path="tests/Presentation/Shared.Tests/Shared.Tests.csproj" />
+  </Folder>
   <Folder Name="/tests/Contexts/">
     <Project Path="tests/Contexts/Employee.Domain.Tests/Employee.Domain.Tests.csproj" />
-    <Project Path="tests/Contexts/Identity.Domain.Tests/Identity.Domain.Tests.csproj" />
-    <Project Path="tests/Contexts/Identity.Application.Tests/Identity.Application.Tests.csproj" />
-    <Project Path="tests/Contexts/Identity.Infrastructure.Tests/Identity.Infrastructure.Tests.csproj" />
+    <Project Path="tests/Contexts/Employee.Application.Tests/Employee.Application.Tests.csproj" />
+    <Project Path="tests/Contexts/Employee.Infrastructure.Tests/Employee.Infrastructure.Tests.csproj" />
+    <Project Path="tests/Contexts/Authentication.Domain.Tests/Authentication.Domain.Tests.csproj" />
+    <Project Path="tests/Contexts/Authentication.Application.Tests/Authentication.Application.Tests.csproj" />
+    <Project Path="tests/Contexts/Authentication.Infrastructure.Tests/Authentication.Infrastructure.Tests.csproj" />
     <Project Path="tests/Contexts/Department.Domain.Tests/Department.Domain.Tests.csproj" />
+    <Project Path="tests/Contexts/Department.Application.Tests/Department.Application.Tests.csproj" />
+    <Project Path="tests/Contexts/Department.Infrastructure.Tests/Department.Infrastructure.Tests.csproj" />
   </Folder>
 </Solution>
+

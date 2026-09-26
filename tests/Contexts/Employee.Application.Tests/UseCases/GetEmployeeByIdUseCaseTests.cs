@@ -2,8 +2,9 @@ namespace SupportAdvance.Contexts.Employee.Application.Tests.UseCases;
 
 using SupportAdvance.Contexts.Employee.Application.UseCases;
 using SupportAdvance.Contexts.Employee.Domain.Entities;
+using SupportAdvance.Contexts.Employee.Domain.ValueObjects.DepartmentMembership;
 using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
-using SupportAdvance.Contexts.Employee.Infrastructure.Mappers;
+using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Person;
 using SupportAdvance.Contexts.Employee.Infrastructure.Repositories;
 using SupportAdvance.Common.Clocks;
 using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
@@ -14,23 +15,26 @@ using Xunit;
 /// </summary>
 public class GetEmployeeByIdUseCaseTests
 {
+    private readonly IClock _clock = new SystemClock();
+
     #region グループ 1: 正常系
 
     [Fact]
-    public async Task Test1_1_GetEmployeeById_WithValidId_ReturnsEmployee()
+    public async Task VO_EXEC_01_GetEmployeeById_WithValidId_ReturnsEmployee()
     {
         // Arrange
         var (useCase, repository) = CreateUseCase();
         var rowId = EmployeeRowId.From(1L);
-        var person = Person.Create(PersonRowId.From(100L), PersonLastName.From("山田"), PersonFirstName.From("太郎"), PersonLastNameKana.From("ヤマダ"), PersonFirstNameKana.From("タロウ"));
+        var person = Person.Create(PersonRowId.From(100L), LastName.From("山田"), FirstName.From("太郎"), LastNameKana.From("ヤマダ"), FirstNameKana.From("タロウ"));
         var employee = Employee.Create(
             rowId,
-            EmployeeTypeDivision.RegularEmployee(),
-            EmployeeBizId.From(1001),
-            EmployeeBizCode.From(EmployeeTypeDivision.RegularEmployee(), EmployeeBizId.From(1001)),
+            BizDivision.RegularEmployee(),
+            BizId.From(1001),
+            BizCode.From(BizDivision.RegularEmployee(), BizId.From(1001)),
             null,
             person,
-            new List<DepartmentMembership>()
+            new List<DepartmentMembership>(),
+            _clock
         );
         await repository.AddAsync(employee);
 
@@ -47,7 +51,7 @@ public class GetEmployeeByIdUseCaseTests
     #region グループ 2: 異常系
 
     [Fact]
-    public async Task Test2_1_GetEmployeeById_WithNonExistentId_ReturnsNull()
+    public async Task VO_RESULT_01_GetEmployeeById_WithNonExistentId_ReturnsNull()
     {
         // Arrange
         var (useCase, _) = CreateUseCase();
@@ -61,7 +65,7 @@ public class GetEmployeeByIdUseCaseTests
     }
 
     [Fact]
-    public async Task Test2_2_GetEmployeeById_WithZeroId_ThrowsException()
+    public async Task VO_ERROR_01_GetEmployeeById_WithZeroId_ThrowsException()
     {
         // Arrange
         var (useCase, _) = CreateUseCase();
@@ -76,13 +80,54 @@ public class GetEmployeeByIdUseCaseTests
 
     private (GetEmployeeByIdUseCase, SupportAdvance.Contexts.Employee.Application.Repositories.IEmployeeRepository) CreateUseCase()
     {
-        var fixedDateTime = new DateTime(2026, 8, 11, 0, 0, 0, DateTimeKind.Unspecified);
-        var clock = new MockClock(fixedDateTime);
-        var mapper = new EmployeeMapper(clock);
-        var repository = new EmployeeRepository(mapper, clock);
+        var repository = new MockEmployeeRepository();
         var useCase = new GetEmployeeByIdUseCase(repository);
         return (useCase, repository);
     }
 
     #endregion
+
+    /// <summary>
+    /// テスト用インメモリ Repository 実装（Application層の単体テスト用、DB接続不要）
+    /// </summary>
+    private class MockEmployeeRepository : SupportAdvance.Contexts.Employee.Application.Repositories.IEmployeeRepository
+    {
+        private readonly Dictionary<long, Employee> _store = new();
+
+        public Task AddAsync(Employee employee)
+        {
+            _store[employee.RowId.Value] = employee;
+            return Task.CompletedTask;
+        }
+
+        public Task SaveAsync(Employee employee)
+        {
+            _store[employee.RowId.Value] = employee;
+            return Task.CompletedTask;
+        }
+
+        public Task<Employee?> GetByIdAsync(EmployeeRowId id) =>
+            Task.FromResult(_store.GetValueOrDefault(id.Value));
+
+        public Task<Employee?> GetByRowIdAsync(EmployeeRowId rowId) => GetByIdAsync(rowId);
+
+        public Task<Employee?> GetByBizIdAsync(int bizId) =>
+            Task.FromResult(_store.Values.FirstOrDefault(e => e.BizId.Value == bizId));
+
+        public Task<IReadOnlyList<Employee>> GetByPersonRowIdAsync(PersonRowId personRowId) =>
+            Task.FromResult<IReadOnlyList<Employee>>(
+                _store.Values.Where(e => e.Person.RowId == personRowId).ToList());
+
+        public Task UpdateAsync(Employee employee)
+        {
+            _store[employee.RowId.Value] = employee;
+            return Task.CompletedTask;
+        }
+
+        public Task DeleteAsync(EmployeeRowId id)
+        {
+            _store.Remove(id.Value);
+            return Task.CompletedTask;
+        }
+    }
 }

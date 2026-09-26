@@ -463,7 +463,7 @@ public interface ICarPreferenceRepository
 ## 7. 関連ドキュメント
 
 - `CLEAN_ARCHITECTURE_GUIDELINES実装齟齬レポート.md` — 本計画の根拠
-- `アーキテクチャ検証_詳細分析.md` — 検証結果の詳細
+- `20260801_アーキテクチャ検証_詳細分析.md` — 検証結果の詳細
 - `CLAUDE.md`（ルート）— アーキテクチャ全体ガイド
 
 ---

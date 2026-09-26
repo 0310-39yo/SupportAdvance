@@ -12,20 +12,25 @@ using SupportAdvance.Contexts.Department.Domain.ValueObjects;
 using SupportAdvance.Contexts.Department.Infrastructure.DbModels;
 using SupportAdvance.Contexts.Department.Infrastructure.Mappers;
 using SupportAdvance.Infrastructure.Persistence;
-using SupportAdvance.Infrastructure.Services;
+using SupportAdvance.Application.Abstractions.Services;
 
 /// <summary>
 /// 部署リポジトリの実装
-///
-/// 【責務】
-///   - Department 集約の永続化（保存・取得・削除）
-///   - DbModel ↔ Entity のマッピング
-///   - 監査フィールドの設定
-/// 【実装】
-///   - Dapper でジェネリック CRUD
-///   - Mapper で型変換
-///   - SQL ファイルで実行（単一テーブル集約）
 /// </summary>
+/// <remarks>
+/// <para>【責務】</para>
+/// <list type="bullet">
+/// <item><description>Department 集約の永続化（保存・取得・削除）</description></item>
+/// <item><description>DbModel ↔ Entity のマッピング</description></item>
+/// <item><description>監査フィールドの設定</description></item>
+/// </list>
+/// <para>【実装】</para>
+/// <list type="bullet">
+/// <item><description>Dapper でジェネリック CRUD</description></item>
+/// <item><description>Mapper で型変換</description></item>
+/// <item><description>SQL ファイルで実行（単一テーブル集約）</description></item>
+/// </list>
+/// </remarks>
 public class DepartmentRepository(
     SqlQueryLoader queryLoader,
     DepartmentMapper mapper,
@@ -42,8 +47,11 @@ public class DepartmentRepository(
     private readonly IClock _clock = clock ?? throw new ArgumentNullException(nameof(clock));
 
     /// <summary>
-    /// 部署を行IDで取得する
+    /// 部署の行IDでの取得
     /// </summary>
+    /// <param name="id">取得する部署の行ID</param>
+    /// <returns>見つかった部署。見つからない場合は <see langword="null"/></returns>
+    /// <exception cref="ArgumentNullException"><paramref name="id"/> が <see langword="null"/> の場合</exception>
     public async Task<Department?> GetByIdAsync(DepartmentRowId id)
     {
         ArgumentNullException.ThrowIfNull(id);
@@ -64,8 +72,11 @@ public class DepartmentRepository(
     }
 
     /// <summary>
-    /// 部署をコードで取得する
+    /// 部署のコードでの取得
     /// </summary>
+    /// <param name="code">取得する部署のコード</param>
+    /// <returns>見つかった部署。見つからない場合は <see langword="null"/></returns>
+    /// <exception cref="ArgumentNullException"><paramref name="code"/> が <see langword="null"/> の場合</exception>
     public async Task<Department?> GetByCodeAsync(DepartmentCode code)
     {
         ArgumentNullException.ThrowIfNull(code);
@@ -88,6 +99,7 @@ public class DepartmentRepository(
     /// <summary>
     /// すべての部署を取得する（廃止済みを含む）
     /// </summary>
+    /// <returns>すべての部署（廃止済みを含む）。部署なしの場合は空の一覧</returns>
     public async Task<IReadOnlyList<Department>> GetAllAsync()
     {
         var sql = _queryLoader.LoadQuery("Departments.GetAllDepartments", typeof(DepartmentRepository));
@@ -102,9 +114,33 @@ public class DepartmentRepository(
     }
 
     /// <summary>
-    /// 部署を保存する（新規作成または更新）
-    /// 【責務】UpdatedAt/UpdatedBy を設定、RepoDb でDB操作
+    /// row_version（timestamp列）を除いた RepoDb Field 一覧の取得
     /// </summary>
+    /// <remarks>
+    /// <para>【重要】SQL Server の timestamp は自動管理のため、明示的な値の INSERT/UPDATE への包含は不可。RepoDb の fields パラメータでの対象列の絞り込みによる除外</para>
+    /// </remarks>
+    private static IEnumerable<Field> FieldsExcludingRowVersion() =>
+        Field.Parse(typeof(DepartmentDbModel)).Where(f => f.Name != "row_version");
+
+    /// <summary>
+    /// UPDATE 対象から row_version・created_at・created_by を除いた RepoDb Field 一覧の取得
+    /// </summary>
+    /// <remarks>
+    /// <para>【重要】_mapper.ToDbModel() は CreatedAt/CreatedBy を設定しない（Mapper の責務外）ため、UPDATE 時に DbModel の CreatedAt が既定値（0001-01-01）のまま SET 句に含まれると、SqlDateTime overflow の発生。作成時刻は不変のため UPDATE 対象から除外</para>
+    /// </remarks>
+    private static IEnumerable<Field> FieldsExcludingRowVersionAndCreatedAudit() =>
+        Field.Parse(typeof(DepartmentDbModel))
+            .Where(f => f.Name is not ("row_version" or "created_at" or "created_by"));
+
+    /// <summary>
+    /// 部署を保存する（新規作成または更新）
+    /// </summary>
+    /// <param name="department">保存する部署。<c>RowVersion</c> が空の場合は新規作成、それ以外は更新</param>
+    /// <exception cref="ArgumentNullException"><paramref name="department"/> が <see langword="null"/> の場合</exception>
+    /// <remarks>
+    /// <para>【責務】UpdatedAt/UpdatedBy を設定、RepoDb でDB操作（row_version は fields で除外）</para>
+    /// <para>【注意】更新時の楽観ロック（<c>row_version</c> の照合）なし</para>
+    /// </remarks>
     public async Task SaveAsync(Department department)
     {
         ArgumentNullException.ThrowIfNull(department);
@@ -115,8 +151,14 @@ public class DepartmentRepository(
         var now = _clock.JstNow.Value;
         var userId = _currentUser.EmployeeRowId;
 
-        // 新規作成判定（CreatedAt が未設定の場合）
-        if (dbModel.CreatedAt == default)
+        // 新規作成判定：RowVersion が未設定（空配列）なら Insert
+        // 【重要】RowVersion は GetByIdAsync 経由（Mapper.ToDomainEntity → Reconstruct）でのみ設定される。
+        //         Department.Create() による新規作成では空配列のまま。
+        //         この性質を利用することで、GetByIdAsync によるDB再読込を避けられる
+        //         （呼び出し元が Update 前に GetByIdAsync 済みであることが多く、二重読込を防止）。
+        bool isInsert = department.RowVersion.Length == 0;
+
+        if (isInsert)
         {
             dbModel.CreatedAt = now;
             dbModel.CreatedBy = userId;
@@ -129,22 +171,28 @@ public class DepartmentRepository(
         }
 
         using var connection = _connectionFactory.CreateConnection();
-        if (dbModel.RowId == 0)
+
+        if (isInsert)
         {
-            // 新規作成：RepoDb InsertAsync
-            await connection.InsertAsync<DepartmentDbModel>(dbModel);
+            // 新規作成：RepoDb InsertAsync（row_version は fields で除外）
+            await connection.InsertAsync(dbModel, fields: FieldsExcludingRowVersion());
         }
         else
         {
-            // 更新：RepoDb UpdateAsync
-            await connection.UpdateAsync<DepartmentDbModel>(dbModel);
+            // 更新：RepoDb UpdateAsync（row_version・created_at・created_by は fields で除外）
+            await connection.UpdateAsync(dbModel, fields: FieldsExcludingRowVersionAndCreatedAudit());
         }
     }
 
     /// <summary>
-    /// 部署を論理削除する
-    /// 【責務】DeletedAt/DeletedBy を設定、RepoDb で更新
+    /// 部署の論理削除
     /// </summary>
+    /// <param name="id">削除する部署の行ID</param>
+    /// <exception cref="ArgumentNullException"><paramref name="id"/> が <see langword="null"/> の場合</exception>
+    /// <exception cref="InvalidOperationException">部署が見つからない場合</exception>
+    /// <remarks>
+    /// <para>【責務】DeletedAt/DeletedBy を設定、RepoDb で更新（row_version は fields で除外）</para>
+    /// </remarks>
     public async Task DeleteAsync(DepartmentRowId id)
     {
         ArgumentNullException.ThrowIfNull(id);
@@ -165,7 +213,7 @@ public class DepartmentRepository(
         dbModel.UpdatedBy = userId;
 
         using var connection = _connectionFactory.CreateConnection();
-        // RepoDb UpdateAsync で更新
-        await connection.UpdateAsync<DepartmentDbModel>(dbModel);
+        // RepoDb UpdateAsync で更新（row_version・created_at・created_by は fields で除外）
+        await connection.UpdateAsync(dbModel, fields: FieldsExcludingRowVersionAndCreatedAudit());
     }
 }

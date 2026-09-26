@@ -9,8 +9,8 @@ public interface IOptionalValueObject<TSelf, TValue> : IValidatable<TValue>
     where TSelf : IOptionalValueObject<TSelf, TValue>
 {
     /// <summary>
-    /// 内部値を取得する
-    /// 値が設定されている場合は true を返し、<paramref name="value" /> に値を設定する
+    /// 内部値の取得
+    /// 値が設定されている場合は true を返し、<paramref name="value" /> に値の設定
     /// 値が未設定の場合は false を返す
     /// </summary>
     /// <param name="value">取得した内部値（out パラメータ）</param>
@@ -39,10 +39,10 @@ public interface IOptionalValueObject<TSelf, TValue> : IValidatable<TValue>
     static abstract TSelf From(TValue value);
 
     /// <summary>
-    /// 指定された値からインスタンスの生成を試みます。
+    /// 指定された値からインスタンスの生成の試行。
     /// <paramref name="input" /> が null の場合は <see cref="Unset" /> を返して true を返します（正常）。
     /// 値が無効な場合は <see cref="Unset" /> を返して false を返します（エラー）。
-    /// API 層で null 許容の入力を処理する場合に使用します。
+    /// API 層で null 許容の入力を処理する場合の使用
     /// </summary>
     /// <param name="input">生成に使用する値（nullable）</param>
     /// <param name="result">生成結果を受け取る out パラメータ</param>

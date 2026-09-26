@@ -4,9 +4,11 @@ namespace SupportAdvance.Contexts.Department.Domain.ValueObjects;
 
 /// <summary>
 /// 部署の管理者（従業員）の行IDを表すオプション ValueObject
-/// 【範囲】IsSet=true の場合は 1以上、IsSet=false で「管理者なし」を表現
-/// 【責務】t_departments.manager_row_id の管理と検証
 /// </summary>
+/// <remarks>
+/// <para>【範囲】IsSet=true の場合は 1以上、IsSet=false で「管理者なし」を表現</para>
+/// <para>【責務】t_departments.manager_row_id の管理と検証</para>
+/// </remarks>
 public sealed class ManagerEmployeeRowId : RowId, IEquatable<ManagerEmployeeRowId>
 {
     /// <summary>
@@ -24,13 +26,13 @@ public sealed class ManagerEmployeeRowId : RowId, IEquatable<ManagerEmployeeRowI
     }
 
     /// <summary>
-    /// 管理者がいない部署を表す Unset インスタンスを生成する
+    /// 管理者がいない部署を表す Unset インスタンスの生成
     /// </summary>
     /// <returns>IsSet=false のインスタンス</returns>
     public static ManagerEmployeeRowId Unset() => new(false);
 
     /// <summary>
-    /// 指定された管理者従業員行IDから ManagerEmployeeRowId を生成する
+    /// 指定された管理者従業員行IDからの ManagerEmployeeRowId の生成
     /// </summary>
     /// <param name="value">管理者従業員行ID（1以上）</param>
     /// <returns>生成された ManagerEmployeeRowId インスタンス</returns>
@@ -113,14 +115,10 @@ public sealed class ManagerEmployeeRowId : RowId, IEquatable<ManagerEmployeeRowI
         }
     }
 
-    /// <summary>
-    /// オブジェクト等価性を判定する
-    /// </summary>
+    /// <inheritdoc/>
     public override bool Equals(object? obj) => Equals(obj as ManagerEmployeeRowId);
 
-    /// <summary>
-    /// ManagerEmployeeRowId 間の等価性を判定する
-    /// </summary>
+    /// <inheritdoc/>
     public bool Equals(ManagerEmployeeRowId? other)
     {
         if (other is null)
@@ -135,4 +133,7 @@ public sealed class ManagerEmployeeRowId : RowId, IEquatable<ManagerEmployeeRowI
 
         return IsSet == other.IsSet && Value == other.Value;
     }
+
+    /// <inheritdoc/>
+    public override int GetHashCode() => Value.GetHashCode();
 }

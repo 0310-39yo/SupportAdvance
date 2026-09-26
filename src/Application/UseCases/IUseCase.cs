@@ -10,7 +10,7 @@ public interface IUseCase<in TRequest, TResponse>
     where TResponse : IResponse
 {
     /// <summary>
-    /// UseCase を実行する
+    /// UseCase の実行
     /// </summary>
     /// <param name="request">リクエストのインスタンス</param>
     /// <returns>レスポンスのインスタンス</returns>

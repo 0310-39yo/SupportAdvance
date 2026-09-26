@@ -2,9 +2,9 @@ namespace SupportAdvance.SharedKernel.ValueObjects;
 
 /// <summary>
 /// 選択肢型値オブジェクトの抽象基底クラス
-/// 選択肢に対応する内部値を保持し、業務名称（表示名）を管理する。
+/// 選択肢に対応する内部値を保持し、業務名称（表示名）の管理。
 /// 派生クラスは Validate と GetDisplayName をオーバーライドして
-/// 選択肢ごとの検証と名称変換を実装する。
+/// 選択肢ごとの検証と名称変換の実装。
 /// IsSet の初期値は protected コンストラクタで制御可能
 /// GetEqualityComponents では IsSet と ValueField に基づき等価性を判定
 /// </summary>
@@ -27,7 +27,7 @@ public abstract class EnumValueObject<TValue> : ValueObject
 
     /// <summary>
     /// 派生クラスから呼び出すコンストラクタ
-    /// 値を設定して IsSet を true で初期化し、Validate を実行する
+    /// 値を設定して IsSet を true で初期化し、Validate の実行
     /// </summary>
     /// <param name="value">設定する選択肢の内部値</param>
     protected EnumValueObject(TValue value) : this(value, true)
@@ -69,7 +69,7 @@ public abstract class EnumValueObject<TValue> : ValueObject
     }
 
     /// <summary>
-    /// 派生クラスが実装し、選択肢の妥当性を検証する
+    /// 派生クラスが実装し、選択肢の妥当性の検証
     /// 無効な value の場合、ArgumentOutOfRangeException をスロー
     /// </summary>
     /// <param name="value">検証対象の選択肢の内部値</param>
@@ -84,7 +84,7 @@ public abstract class EnumValueObject<TValue> : ValueObject
 
     /// <summary>
     /// 等価性判定のための値コンポーネントを返す（IsSet を除く）
-    /// IsSet は ValueObject.GetEqualityComponents で自動的に先頭に付加される
+    /// IsSet は ValueObject.GetEqualityComponents による自動的な先頭への付加
     /// </summary>
     /// <returns>ValueField（IsSet = true の場合）を含むコンポーネント列挙</returns>
     protected override IEnumerable<object?> GetValueComponents()

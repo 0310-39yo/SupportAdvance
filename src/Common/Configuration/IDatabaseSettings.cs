@@ -2,19 +2,22 @@ namespace SupportAdvance.Common.Configuration;
 
 /// <summary>
 /// データベース接続設定インターフェース
-/// 【責務】
-/// データベース接続に必要な設定値（サーバ名、カタログ名、接続文字列）の管理
-/// 【変更理由】
-/// - DB サーバの切替（本番環境変更）
-/// - DB エンジンの切替（SQL Server → PostgreSQL など）
-/// - 接続情報の更新（セキュリティキー更新など）
-/// 【設計上の考慮】
-/// 将来的に PostgreSQL への切替を想定し、DB固有の設定で拡張可能な設計
-/// 現在は SQL Server を基準に設計
-/// 【関連ファイル】
-/// - Infrastructure/Repositories/*.cs（将来実装時に使用予定）
-/// - Infrastructure/DependencyInjection.cs（登録時に使用）
 /// </summary>
+/// <remarks>
+/// <para>【責務】データベース接続に必要な設定値（サーバ名、カタログ名、接続文字列）の管理</para>
+/// <para>【変更理由】</para>
+/// <list type="bullet">
+/// <item><description>DB サーバの切替（本番環境変更）</description></item>
+/// <item><description>DB エンジンの切替（SQL Server → PostgreSQL など）</description></item>
+/// <item><description>接続情報の更新（セキュリティキー更新など）</description></item>
+/// </list>
+/// <para>【設計上の考慮】将来的に PostgreSQL への切替を想定し、DB固有の設定で拡張可能な設計。現在は SQL Server を基準に設計</para>
+/// <para>【関連ファイル】</para>
+/// <list type="bullet">
+/// <item><description>Infrastructure/Repositories/*.cs（将来実装時に使用予定）</description></item>
+/// <item><description>Infrastructure/DependencyInjection.cs（登録時に使用）</description></item>
+/// </list>
+/// </remarks>
 public interface IDatabaseSettings
 {
     /// <summary>

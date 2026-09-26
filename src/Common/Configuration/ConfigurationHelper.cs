@@ -12,6 +12,8 @@ public static class ConfigurationHelper
     /// </summary>
     /// <param name="config">構成ビルダー</param>
     /// <param name="environmentName">環境名</param>
+    /// <exception cref="ArgumentNullException"><paramref name="config"/> が <see langword="null"/> の場合</exception>
+    /// <exception cref="ArgumentException"><paramref name="environmentName"/> が <see langword="null"/> または空文字の場合</exception>
     public static void ConfigureApp(IConfigurationBuilder config, string? environmentName)
     {
         ArgumentNullException.ThrowIfNull(config);
