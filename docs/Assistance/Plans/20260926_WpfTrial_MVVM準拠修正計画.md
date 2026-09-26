@@ -107,6 +107,15 @@
 - Window の ViewModel 紐付けを DataTemplate／`d:DataContext` 設計時サポートへ整理
 - `TabItemViewModel` が `Header` 変更を通知するか（ObservableObject 化で対応済み）確認
 
+### 実施結果（2026-09-26）
+
+- `IsNotLoading` を廃止し、`InverseBooleanConverter`（新設）で `IsLoading` を反転してバインド（WpfTrial のみ。WinTrial の `LoginDialogViewModel.IsNotLoading` は WinForms のバインディング都合のため Phase 6 で判断）
+- `[ObservableProperty]` のフィールド命名を `_camelCase` に統一（`LoginWindowViewModel`、`BusinessDayClockViewModel`。生成されるプロパティ名は不変のため WinTrial への影響なし）
+- LoginWindow／Form1View の Window 要素の `FontFamily`／`FontSize`（App.xaml の暗黙スタイルと同値）を削除
+- 各 View に `d:DataContext`（設計時のバインディング補完用）を追加
+- 見送り: 各コントロール要素（ButtonAdv／SfTextBoxExt／PasswordBox）の個別 `FontFamily`／`FontSize`。Syncfusion のテーマがコントロールの既定フォントを上書きする可能性があり、実機で見た目を確認できるまでは維持（`FontSize="18"` は既定 14 とは異なる意図的な指定）
+- 見送り: ViewModel-first の DataTemplate による Window の紐付け。Window は DI で ViewModel を受け取る現行方式が Composition Root と整合しているため維持
+
 ## Phase 6: WinTrial の準拠調査（WpfTrial 改修完了後）
 
 ### 背景

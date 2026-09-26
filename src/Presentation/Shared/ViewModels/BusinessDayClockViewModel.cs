@@ -24,25 +24,25 @@ public partial class BusinessDayClockViewModel : ObservableObject
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(TurnOnCommand))]
     [NotifyCanExecuteChangedFor(nameof(TurnOffCommand))]
-    private bool isOn;
+    private bool _isOn;
 
     /// <summary>
     /// 現在の業務日の表示用文字列（<c>yyyy/MM/dd</c>）。クロックが BusinessDay 以外の場合は空文字
     /// </summary>
     [ObservableProperty]
-    private string currentBusinessDateText = string.Empty;
+    private string _currentBusinessDateText = string.Empty;
 
     /// <summary>
     /// 状態の表示用文字列（<c>ON 中</c>／<c>OFF 中</c>）。クロックが BusinessDay 以外の場合は空文字
     /// </summary>
     [ObservableProperty]
-    private string statusText = string.Empty;
+    private string _statusText = string.Empty;
 
     /// <summary>
     /// 操作に失敗した場合のエラーメッセージ。エラーなしの場合は空文字
     /// </summary>
     [ObservableProperty]
-    private string errorMessage = string.Empty;
+    private string _errorMessage = string.Empty;
 
     /// <summary>
     /// <see cref="BusinessDayClockViewModel"/> クラスの新しいインスタンスの初期化

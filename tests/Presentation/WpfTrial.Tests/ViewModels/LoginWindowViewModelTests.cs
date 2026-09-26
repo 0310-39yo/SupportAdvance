@@ -126,18 +126,6 @@ public class LoginWindowViewModelTests
     }
 
     [Fact]
-    public void IsLoading_WhenChanged_SyncsIsNotLoading()
-    {
-        var sut = CreateSut();
-
-        sut.IsLoading = true;
-        Assert.False(sut.IsNotLoading);
-
-        sut.IsLoading = false;
-        Assert.True(sut.IsNotLoading);
-    }
-
-    [Fact]
     public void CancelCommand_RaisesCancelRequested()
     {
         var sut = CreateSut();

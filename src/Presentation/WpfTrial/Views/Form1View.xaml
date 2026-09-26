@@ -6,11 +6,11 @@
         xmlns:local="clr-namespace:SupportAdvance.Presentation.WpfTrial.Views"
         xmlns:input="clr-namespace:Syncfusion.Windows.Controls.Input;assembly=Syncfusion.SfInput.WPF"
         xmlns:syncfusion="http://schemas.syncfusion.com/wpf"
+        xmlns:vm="clr-namespace:SupportAdvance.Presentation.WpfTrial.ViewModels"
         mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance Type=vm:Form1ViewModel}"
         Title="Form1 View" Height="380" Width="484"
-        WindowStartupLocation="CenterScreen"
-        FontFamily="Yu Gothic UI"
-        FontSize="14">
+        WindowStartupLocation="CenterScreen">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
     </Window.Resources>

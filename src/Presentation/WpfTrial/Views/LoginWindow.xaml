@@ -7,15 +7,16 @@
         xmlns:converters="clr-namespace:SupportAdvance.Presentation.WpfTrial.Converters"
         xmlns:input="clr-namespace:Syncfusion.Windows.Controls.Input;assembly=Syncfusion.SfInput.WPF"
         xmlns:syncfusion="http://schemas.syncfusion.com/wpf"
+        xmlns:vm="clr-namespace:SupportAdvance.Presentation.WpfTrial.ViewModels"
         mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance Type=vm:LoginWindowViewModel}"
         Title="ログイン" Height="220" Width="400"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
-        ShowInTaskbar="False"
-        FontFamily="Yu Gothic UI"
-        FontSize="14">
+        ShowInTaskbar="False">
     <Window.Resources>
         <converters:StringEmptyToVisibilityConverter x:Key="StringEmptyToVisibilityConverter" />
+        <converters:InverseBooleanConverter x:Key="InverseBooleanConverter" />
     </Window.Resources>
     <Window.InputBindings>
         <KeyBinding Key="Escape" Command="{Binding CancelCommand}" />
@@ -41,7 +42,7 @@
                  FontFamily="Yu Gothic UI"
                  FontSize="18"
                  Text="{Binding LoginId, UpdateSourceTrigger=PropertyChanged}"
-                 IsEnabled="{Binding IsNotLoading}" />
+                 IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBooleanConverter}}" />
 
         <TextBlock Grid.Row="1" Grid.Column="0" Text="パスワード:" VerticalAlignment="Center" />
         <PasswordBox Grid.Row="1" Grid.Column="1"
@@ -52,7 +53,7 @@
                      FontSize="18"
                      behaviors:PasswordBoxAssistant.Attach="True"
                      behaviors:PasswordBoxAssistant.BoundPassword="{Binding Password, Mode=TwoWay}"
-                     IsEnabled="{Binding IsNotLoading}" />
+                     IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBooleanConverter}}" />
 
         <TextBlock Grid.Row="2" Grid.Column="1"
                    Text="{Binding ErrorMessage}"
@@ -73,7 +74,7 @@
                     FontFamily="Yu Gothic UI"
                     FontSize="18"
                     IsDefault="True"
-                    IsEnabled="{Binding IsNotLoading}"
+                    IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBooleanConverter}}"
                     Command="{Binding LoginCommand}" />
             <syncfusion:ButtonAdv Label="キャンセル"
                     Width="100"

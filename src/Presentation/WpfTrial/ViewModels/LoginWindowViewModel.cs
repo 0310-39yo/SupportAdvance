@@ -21,7 +21,7 @@ namespace SupportAdvance.Presentation.WpfTrial.ViewModels;
 /// - LoginId （ObservableProperty）
 /// - Password （ObservableProperty。PasswordBox は Behaviors/PasswordBoxAssistant 経由でバインド）
 /// - ErrorMessage （ObservableProperty）
-/// - IsLoading / IsNotLoading （ObservableProperty）
+/// - IsLoading （ObservableProperty。入力欄・ボタンの有効／無効は InverseBooleanConverter で反転してバインド）
 /// - LoginCommand / CancelCommand （RelayCommand）
 /// </summary>
 public partial class LoginWindowViewModel : ObservableObject
@@ -34,32 +34,25 @@ public partial class LoginWindowViewModel : ObservableObject
     /// ログインID の入力値
     /// </summary>
     [ObservableProperty]
-    private string loginId = string.Empty;
+    private string _loginId = string.Empty;
 
     /// <summary>
     /// パスワードの入力値（ログイン失敗時にクリア）
     /// </summary>
     [ObservableProperty]
-    private string password = string.Empty;
+    private string _password = string.Empty;
 
     /// <summary>
     /// 画面に表示するエラーメッセージ。エラーなしの場合は空文字
     /// </summary>
     [ObservableProperty]
-    private string errorMessage = string.Empty;
+    private string _errorMessage = string.Empty;
 
     /// <summary>
     /// ログイン処理中かどうかを示す値
     /// </summary>
     [ObservableProperty]
-    private bool isLoading;
-
-    /// <summary>
-    /// ログイン処理中でないかどうかを示す値（入力欄・ボタンの有効／無効のバインド用）
-    /// </summary>
-    /// <remarks>【注意】<c>IsLoading</c> の変更時に自動で反転。直接の設定は不要</remarks>
-    [ObservableProperty]
-    private bool isNotLoading = true;
+    private bool _isLoading;
 
     /// <summary>
     /// ログイン成功イベント（View 側でウィンドウを閉じるために使用）
@@ -92,14 +85,6 @@ public partial class LoginWindowViewModel : ObservableObject
         _logger = logger;
 
         _logger.LogInformation("LoginWindowViewModel initialized.");
-    }
-
-    /// <summary>
-    /// IsLoading が変更されたときに IsNotLoading を同期
-    /// </summary>
-    partial void OnIsLoadingChanged(bool oldValue, bool newValue)
-    {
-        IsNotLoading = !newValue;
     }
 
     /// <summary>
