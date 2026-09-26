@@ -10,9 +10,8 @@
             <Setter Property="FontSize" Value="14" />
         </Style>
 
-        <!-- 【注意】SfChromelessWindow 向けの暗黙的スタイルは定義しない。
-             定義すると、SfSkinManager（テーマ）が適用するスタイル（タイトルバーのテンプレートを含む）が置き換わり、
-             タイトルバー（タイトル、最小化・最大化・閉じるのボタン）が表示されなくなる。
+        <!-- 【注意】RibbonWindow 向けの暗黙的スタイルは定義しない。
+             定義すると、SfSkinManager（テーマ）が適用するスタイル（タイトルバーのテンプレートを含む）が置き換わる恐れがある。
              MainWindow のフォントは、MainWindow.xaml で直接指定する -->
     </Application.Resources>
 </Application>

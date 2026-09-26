@@ -1,4 +1,4 @@
-<syncfusion:SfChromelessWindow
+<syncfusion:RibbonWindow
     x:Class="SupportAdvance.Presentation.WpfTrial.Views.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -19,7 +19,10 @@
     Height="800"
     FontFamily="Yu Gothic UI"
     FontSize="14">
-    <!-- フォントは、App.xaml の暗黙的スタイルではなく、ここで直接指定する（暗黙的スタイルはテーマのタイトルバーを消すため） -->
+    <!-- ウィンドウの基底は RibbonWindow：テーマ（Office2019Colorful）が対応しており、閉じる等のボタンが表示される。
+         SfChromelessWindow は同テーマに対応せず、ボタンの記号が描画されなかった。
+         フォントは、App.xaml の暗黙的スタイルではなく、ここで直接指定する -->
+
 
     <Window.Resources>
         <!-- ナビゲーション項目のスタイル：フォントを少し大きくし（既定 14 → 16）、上下の間隔（最小の高さと余白）を小さくする。
@@ -210,4 +213,4 @@
         </syncfusion:RibbonStatusBar>
 
     </Grid>
-</syncfusion:SfChromelessWindow>
+</syncfusion:RibbonWindow>

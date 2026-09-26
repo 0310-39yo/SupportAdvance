@@ -1,5 +1,5 @@
 using SupportAdvance.Presentation.Shared.ViewModels;
-using Syncfusion.Windows.Controls;
+using Syncfusion.Windows.Tools.Controls;
 
 namespace SupportAdvance.Presentation.WpfTrial.Views;
 
@@ -23,7 +23,7 @@ namespace SupportAdvance.Presentation.WpfTrial.Views;
 /// - TabControlExt（タブペイン）：ItemsSource／SelectedItem を ViewModel にバインド
 /// - RibbonStatusBar：ステータス表示
 /// </summary>
-public partial class MainWindow : SfChromelessWindow
+public partial class MainWindow : RibbonWindow
 {
     /// <summary>
     /// <see cref="MainWindow"/> クラスの新しいインスタンスの初期化
