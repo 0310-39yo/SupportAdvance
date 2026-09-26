@@ -177,6 +177,7 @@
                                       AllowDragDrop="True"
                                       CloseButtonType="Individual"
                                       ItemContainerStyle="{StaticResource MainTabItemStyle}"
+                                      TabItemHeaderStyle="Fill"
                                       TabPanelBackground="#FFE6E6E6"
                                       TabItemSelectedBackground="White"
                                       TabItemSelectedBorderBrush="#FF808080"

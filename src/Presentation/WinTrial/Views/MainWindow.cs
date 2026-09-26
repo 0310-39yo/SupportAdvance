@@ -29,6 +29,10 @@ public partial class MainWindow : Form
         ("受注管理", AppIcon.Orders, [("受注一覧", AppIcon.List), ("受注登録", AppIcon.Register)])
     ];
 
+    // タブの高さは、タブ内のアイコンの大きさ（TabIconSize）で決まる（高さ ≒ アイコンの大きさ + 7）。文字の大きさはタブの高さにほぼ影響しない
+    private const int TabIconSize = 24;
+    private const float TabFontSize = 12f;
+
     private const int NavigationIconSize = 20;
     private const float NavigationFontSize = 11f;
 
@@ -77,6 +81,11 @@ public partial class MainWindow : Form
         tabbedMdiManager.TabForeColor = Color.FromArgb(0x40, 0x40, 0x40);
         tabbedMdiManager.TabPanelBackColor = Color.FromArgb(0xF0, 0xF0, 0xF0);
         tabbedMdiManager.TabPanelBorderColor = Color.FromArgb(0xB0, 0xB0, 0xB0);
+
+        // タブの高さと文字の大きさ（既定の高さ 23 では窮屈なため、大きくする）
+        tabbedMdiManager.ImageSize = new Size(TabIconSize, TabIconSize);
+        tabbedMdiManager.TabFont = new Font("Yu Gothic UI", TabFontSize, FontStyle.Regular, GraphicsUnit.Point, 128);
+        tabbedMdiManager.ActiveTabFont = new Font("Yu Gothic UI", TabFontSize, FontStyle.Regular, GraphicsUnit.Point, 128);
 
         AddNavigationNodes();
         navigationTree.NodeMouseClick += NavigationTree_NodeMouseClick;
