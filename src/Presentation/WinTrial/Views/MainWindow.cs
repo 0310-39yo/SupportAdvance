@@ -29,7 +29,11 @@ public partial class MainWindow : Form
         ("受注管理", AppIcon.Orders, [("受注一覧", AppIcon.List), ("受注登録", AppIcon.Register)])
     ];
 
-    private const int NavigationIconSize = 16;
+    private const int NavigationIconSize = 20;
+    private const float NavigationFontSize = 11f;
+
+    // Office2016DarkGray の暗い背景で見やすいよう、明るい色で描く（ForeColor は、テーマ適用前の値になるため使わない）
+    private static readonly Color NavigationIconColor = Color.FromArgb(0xE8, 0xE8, 0xE8);
     private const int CollapsedNavigationIndent = 4;
 
     private const int ExpandedNavigationWidth = 220;
@@ -83,7 +87,7 @@ public partial class MainWindow : Form
         {
             if (!imageIndexes.TryGetValue(icon, out var index))
             {
-                using var bitmap = FluentIconFont.CreateBitmap(icon, iconPixelSize, navigationTree.ForeColor);
+                using var bitmap = FluentIconFont.CreateBitmap(icon, iconPixelSize, NavigationIconColor);
                 imageList.Images.Add(bitmap);
 
                 // ImageList は、ハンドルが作られるまで元の画像を参照し続ける。
@@ -98,6 +102,8 @@ public partial class MainWindow : Form
         }
 
         navigationTree.LeftImageList = imageList;
+        navigationTree.Font = new Font(navigationTree.Font.FontFamily, NavigationFontSize);
+        navigationTree.ItemHeight = iconPixelSize + 10;
 
         foreach (var (parent, parentIcon, children) in NavigationMenu)
         {
