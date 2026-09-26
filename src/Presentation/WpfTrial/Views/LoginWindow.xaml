@@ -72,7 +72,7 @@
                     IconWidth="0"
                     IconHeight="0"
                     FontFamily="Yu Gothic UI"
-                    FontSize="18"
+                    FontSize="14"
                     IsDefault="True"
                     IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBooleanConverter}}"
                     Command="{Binding LoginCommand}" />
@@ -84,7 +84,7 @@
                     IconWidth="0"
                     IconHeight="0"
                     FontFamily="Yu Gothic UI"
-                    FontSize="18"
+                    FontSize="14"
                     Command="{Binding CancelCommand}" />
         </StackPanel>
     </Grid>

@@ -52,8 +52,10 @@ public sealed class OpeningView : UserControl
         const TextFormatFlags flags = TextFormatFlags.NoPadding | TextFormatFlags.SingleLine;
 
         // 下から順に、アプリケーションの名前、その上に製品名を、右端にそろえて描く
-        var applicationNameSize = TextRenderer.MeasureText(e.Graphics, _viewModel.ApplicationName, _applicationNameFont, Size.Empty, flags);
-        var productNameSize = TextRenderer.MeasureText(e.Graphics, _viewModel.ProductName, _productNameFont, Size.Empty, flags);
+        var applicationNameSize = TextRenderer.MeasureText(e.Graphics, _viewModel.ApplicationName, _applicationNameFont,
+            Size.Empty, flags);
+        var productNameSize =
+            TextRenderer.MeasureText(e.Graphics, _viewModel.ProductName, _productNameFont, Size.Empty, flags);
 
         var applicationNameBounds = new Rectangle(
             ClientSize.Width - RightMargin - applicationNameSize.Width,
@@ -66,8 +68,10 @@ public sealed class OpeningView : UserControl
             productNameSize.Width,
             productNameSize.Height);
 
-        TextRenderer.DrawText(e.Graphics, _viewModel.ProductName, _productNameFont, productNameBounds, ProductNameColor, flags);
-        TextRenderer.DrawText(e.Graphics, _viewModel.ApplicationName, _applicationNameFont, applicationNameBounds, ApplicationNameColor, flags);
+        TextRenderer.DrawText(e.Graphics, _viewModel.ProductName, _productNameFont, productNameBounds, ProductNameColor,
+            flags);
+        TextRenderer.DrawText(e.Graphics, _viewModel.ApplicationName, _applicationNameFont, applicationNameBounds,
+            ApplicationNameColor, flags);
     }
 
     /// <inheritdoc/>

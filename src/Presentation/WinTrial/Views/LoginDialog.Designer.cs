@@ -86,7 +86,8 @@ namespace SupportAdvance.Presentation.WinTrial.Views
             // btnLogin
             // 
             btnLogin.BeforeTouchSize = new Size(100, 35);
-            btnLogin.Location = new Point(150, 145);
+            btnLogin.Font = new Font("Yu Gothic UI", 12F);
+            btnLogin.Location = new Point(160, 143);
             btnLogin.Name = "btnLogin";
             btnLogin.Size = new Size(100, 35);
             btnLogin.TabIndex = 5;
@@ -97,7 +98,8 @@ namespace SupportAdvance.Presentation.WinTrial.Views
             // 
             btnCancel.BeforeTouchSize = new Size(100, 35);
             btnCancel.DialogResult = DialogResult.Cancel;
-            btnCancel.Location = new Point(260, 145);
+            btnCancel.Font = new Font("Yu Gothic UI", 12F);
+            btnCancel.Location = new Point(270, 143);
             btnCancel.Name = "btnCancel";
             btnCancel.Size = new Size(100, 35);
             btnCancel.TabIndex = 6;
