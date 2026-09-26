@@ -39,7 +39,7 @@
      │   Infrastructure     │               │    Presentation      │
      │ (DB / ORM / 外部API) │               │ (UI / ViewModel)     │
      └───────────▲───────────┘               └──────────▲───────────┘
-                 │ 実装                                  │ Program.cs（Composition Root）でのみ
+                 │ 実装                                  │ Composition Root（Program.cs / WPF は App.xaml.cs）でのみ
                  └──────────────── 参照 ──────────────────┘
                 Crosscutting はロギング等のインターフェース＋実装を自己完結で持つ横断的関心事
                 （実装に必要な外部ライブラリはNuGetで直接取得。Infrastructureには依存しない）
@@ -48,7 +48,7 @@
 **ポイント:**
 - `Infrastructure` は最も内側ではなく、`Presentation` と対称な**最も外側の層**（実装の詳細）
 - `Crosscutting` はロギング等のインターフェースと実装の両方を持つ（例：`IAppLogging<T>` とその NLog 実装 `FrameworkLoggingAdapter`）。実装に必要な NLog 等は NuGet パッケージとして Crosscutting が直接参照し、`Infrastructure` プロジェクトには依存しない。したがって参照方向は **Infrastructure → Crosscutting** の一方向のみ
-- `Presentation` から `Infrastructure` への参照は、DIコンテナを組み立てる **Composition Root（`Program.cs`）に限定**される（詳細は後述の「自動検証の導入」参照）
+- `Presentation` から `Infrastructure` への参照は、DIコンテナを組み立てる **Composition Root（`Program.cs`。WPF は `App.xaml.cs`）に限定**される（詳細は後述の「自動検証の導入」参照）
 
 ---
 
@@ -687,7 +687,7 @@ public class EmployeeRepository(
 
 **禁止される参照:**
 - Domain（直接参照は避け、Application DTO 経由）
-- Infrastructure（**Program.cs を除く**）
+- Infrastructure（**Composition Root の `Program.cs` / WPF の `App.xaml.cs` を除く**）
 
 **例:**
 ```csharp
@@ -732,7 +732,7 @@ services.AddApplicationServices();
 
 - `✓` = 許可
 - `✗` = 禁止
-- `**` = Presentation → Infrastructure：Program.cs（Composition Root）のみ許可。プロジェクト参照上は Infrastructure に到達可能な構成だが、`Program` 型を除く全ての型が Infrastructure 名前空間に依存しないことを [自動検証](#自動検証の導入) で担保する
+- `**` = Presentation → Infrastructure：Composition Root（`Program.cs`。WPF は `App.xaml.cs`）のみ許可。プロジェクト参照上は Infrastructure に到達可能な構成だが、`Program` 型（WPF は `App` 型）を除く全ての型が Infrastructure 名前空間に依存しないことを [自動検証](#自動検証の導入) で担保する
 - `***` = Infrastructure → Application：**インターフェース実装パターンのみ許可**。Application層で定義されたインターフェース（例：IRepository）を Infrastructure層が実装する場合、Application プロジェクトへの参照が必須。直接型を参照することは禁止（DI により逆転）
   - 設計パターン：汎用 Infrastructure（`src/Infrastructure`）は稀にのみ参照。通常は **Bounded Context別 Infrastructure**（例：`CarPreferences.Infrastructure`）が汎用 Application を参照し、Context固有のインターフェースを実装する
 - `Common` は依存ゼロの最内層
@@ -1047,7 +1047,7 @@ public class UserViewModel
 
 現状、依存関係の遵守は**コードレビューによる目視確認のみ**に依存している。特に以下の点は `.csproj` の `ProjectReference` だけでは強制できないため、型レベルの検証が必要：
 
-- `Presentation` → `Infrastructure` は `Program.cs`（Composition Root）のみ許可（例：`WinTrial.csproj` は DI 配線のため `CarPreferences.Infrastructure` を参照せざるを得ないが、`Program` 型以外がそれを使ってはならない）
+- `Presentation` → `Infrastructure` は Composition Root（`Program.cs`。WPF は `App.xaml.cs`）のみ許可（例：`WinTrial.csproj` は DI 配線のため `CarPreferences.Infrastructure` を参照せざるを得ないが、`Program` 型（WPF は `App` 型）以外がそれを使ってはならない）
 - `Crosscutting` → `Infrastructure` は禁止（循環参照防止）
 
 ### NetArchTest.Rules による検証（推奨）
@@ -1106,7 +1106,7 @@ public class DependencyRuleTests
         Assert.True(result.IsSuccessful, string.Join(", ", result.FailingTypeNames ?? []));
     }
 
-    // 「Program.cs のみ Infrastructure 参照可」を型レベルで検証。
+    // 「Composition Root（Program.cs / WPF は App.xaml.cs）のみ Infrastructure 参照可」を型レベルで検証。
     // WinTrial.csproj 自体は Infrastructure への参照を持つが、
     // Program 型以外がそれを使っていなければ合格する。
     [Fact]

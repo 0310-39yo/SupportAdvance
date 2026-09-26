@@ -166,17 +166,17 @@ public class YourEntityMapper : IEntityMapper<YourEntity, YourEntityDbModel, You
         {
             RowId = entity.RowId.Value,
             YourEntityId = entity.Id.Value,
-            CreatedAt = entity.CreatedAt.ToDbValue(),   // LocalDateTime → DateTime
-            UpdatedAt = entity.UpdatedAt.HasUpdated ? entity.UpdatedAt.ToDbValue() : null    // LocalDateTime? → DateTime?
+            CreatedAt = entity.CreatedAt.Value.Value,   // LocalDateTime → DateTime（LocalDateTime.Value）
+            UpdatedAt = entity.UpdatedAt.HasUpdated ? entity.UpdatedAt.Value?.Value : null    // LocalDateTime? → DateTime?
         };
     }
 
     public YourEntity ToDomainEntity(YourEntityDbModel dbModel, IClock clock)
     {
-        if (!CreatedAt.TryFromDbValue(dbModel.CreatedAt, out var createdAt))
+        if (!CreatedAt.TryFrom(dbModel.CreatedAt.ToLocalDateTime(), out var createdAt))
             throw new InvalidOperationException($"Failed to convert CreatedAt: {dbModel.CreatedAt}");
         
-        if (!UpdatedAt.TryFromDbValue(dbModel.UpdatedAt, out var updatedAt))
+        if (!UpdatedAt.TryFrom(dbModel.UpdatedAt.ToLocalDateTimeOrNull(), out var updatedAt))
             throw new InvalidOperationException($"Failed to convert UpdatedAt: {dbModel.UpdatedAt}");
 
         return new YourEntity(
@@ -267,8 +267,8 @@ public class YourAggregateMapper : IEntityMapper<YourAggregate, YourAggregateDbM
             // 親テーブル：YourAggregate → YourAggregateDbModel（1:1マッピング）
             RowId = aggregate.AggregateRowId.Value,
             YourAggregateId = aggregate.Id.Value,
-            CreatedAt = aggregate.CreatedAt.ToDbValue(),      // LocalDateTime → DateTime
-            UpdatedAt = aggregate.UpdatedAt.HasUpdated ? aggregate.UpdatedAt.ToDbValue() : null,      // LocalDateTime? → DateTime?
+            CreatedAt = aggregate.CreatedAt.Value.Value,      // LocalDateTime → DateTime（LocalDateTime.Value）
+            UpdatedAt = aggregate.UpdatedAt.HasUpdated ? aggregate.UpdatedAt.Value?.Value : null,      // LocalDateTime? → DateTime?
             
             // 子テーブル：各YourChild → YourChildDbModel（複数の1:1マッピング）
             Children = aggregate.Children
@@ -280,10 +280,10 @@ public class YourAggregateMapper : IEntityMapper<YourAggregate, YourAggregateDbM
     public YourAggregate ToDomainEntity(YourAggregateDbModel dbModel, IClock clock)
     {
         // 親Entity復元：YourAggregateDbModel → YourAggregate（1:1マッピング）
-        if (!CreatedAt.TryFromDbValue(dbModel.CreatedAt, out var createdAt))
+        if (!CreatedAt.TryFrom(dbModel.CreatedAt.ToLocalDateTime(), out var createdAt))
             throw new InvalidOperationException($"Failed to convert CreatedAt: {dbModel.CreatedAt}");
         
-        if (!UpdatedAt.TryFromDbValue(dbModel.UpdatedAt, out var updatedAt))
+        if (!UpdatedAt.TryFrom(dbModel.UpdatedAt.ToLocalDateTimeOrNull(), out var updatedAt))
             throw new InvalidOperationException($"Failed to convert UpdatedAt: {dbModel.UpdatedAt}");
 
         var aggregate = new YourAggregate(
@@ -314,17 +314,17 @@ public class YourChildMapper : IEntityMapper<YourChild, YourChildDbModel, YourCh
         {
             RowId = entity.ChildRowId.Value,
             YourChildId = entity.Id.Value,
-            CreatedAt = entity.CreatedAt.ToDbValue(),   // LocalDateTime → DateTime
-            UpdatedAt = entity.UpdatedAt.HasUpdated ? entity.UpdatedAt.ToDbValue() : null    // LocalDateTime? → DateTime?
+            CreatedAt = entity.CreatedAt.Value.Value,   // LocalDateTime → DateTime（LocalDateTime.Value）
+            UpdatedAt = entity.UpdatedAt.HasUpdated ? entity.UpdatedAt.Value?.Value : null    // LocalDateTime? → DateTime?
         };
     }
 
     public YourChild ToDomainEntity(YourChildDbModel dbModel, IClock clock)
     {
-        if (!CreatedAt.TryFromDbValue(dbModel.CreatedAt, out var createdAt))
+        if (!CreatedAt.TryFrom(dbModel.CreatedAt.ToLocalDateTime(), out var createdAt))
             throw new InvalidOperationException($"Failed to convert CreatedAt: {dbModel.CreatedAt}");
         
-        if (!UpdatedAt.TryFromDbValue(dbModel.UpdatedAt, out var updatedAt))
+        if (!UpdatedAt.TryFrom(dbModel.UpdatedAt.ToLocalDateTimeOrNull(), out var updatedAt))
             throw new InvalidOperationException($"Failed to convert UpdatedAt: {dbModel.UpdatedAt}");
 
         return new YourChild(
@@ -363,7 +363,7 @@ public class YourChildMapper : IEntityMapper<YourChild, YourChildDbModel, YourCh
 
 - [ ] **すべての日時カラムが DateTime**: LocalDateTime ではなく（プリミティブ型）
 - [ ] **nullable 日時は DateTime?**: updated_at, deleted_at など
-- [ ] **Mapper で型変換を実装**: LocalDateTime → DateTime (ToDbValue)、DateTime → LocalDateTime (TryFromDbValue)
+- [ ] **Mapper で型変換を実装**: LocalDateTime → DateTime（`LocalDateTime.Value`）、DateTime → LocalDateTime（変換ヘルパー `ToLocalDateTime()` / `ToLocalDateTimeOrNull()` + 値オブジェクトの `TryFrom`）。値オブジェクトは `DateTime` を持たない
 
 ---
 
@@ -405,18 +405,18 @@ public YourEntityDbModel ToDbModel(YourEntity entity)
 
 **修正:**
 ```csharp
-// ✓ Mapper は型変換を実装（ValueObject メソッド使用）
+// ✓ Mapper は型変換を実装（LocalDateTime.Value と変換ヘルパーを使用。値オブジェクトは DateTime を知らない）
 public YourEntityDbModel ToDbModel(YourEntity entity)
 {
     return new YourEntityDbModel
     {
-        CreatedAt = entity.CreatedAt.ToDbValue()  // ✓ LocalDateTime → DateTime（ValueObject メソッド）
+        CreatedAt = entity.CreatedAt.Value.Value  // ✓ LocalDateTime → DateTime（LocalDateTime.Value）
     };
 }
 
 public YourEntity ToDomainEntity(YourEntityDbModel dbModel, IClock clock)
 {
-    if (!CreatedAt.TryFromDbValue(dbModel.CreatedAt, out var createdAt))
+    if (!CreatedAt.TryFrom(dbModel.CreatedAt.ToLocalDateTime(), out var createdAt))
         throw new InvalidOperationException($"Failed to convert CreatedAt: {dbModel.CreatedAt}");
     
     return new YourEntity(dbModel.RowId, createdAt, clock);  // ✓ DateTime → LocalDateTime

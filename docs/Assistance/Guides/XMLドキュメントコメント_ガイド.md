@@ -190,7 +190,7 @@ IntelliSense は `///` の改行を**すべて空白1つにまとめて**表示�
 | コンストラクター | 「`<see cref="X"/>` クラスの新しいインスタンスの初期化」 | |
 | メソッド | 「〜の〇〇」「〜処理」 | 従業員の退職処理 |
 | 非同期メソッド | 「〜の非同期〇〇」 | ログインID に対応する認証情報の非同期取得 |
-| Try 系メソッド | 「〜の試行」 | DB 値からの `<see cref="UpdatedAt"/>` 生成の試行 |
+| Try 系メソッド | 「〜の試行」 | 日時（JST）からの `<see cref="UpdatedAt"/>` 生成の試行 |
 | bool を返すメソッド | 「〜かどうかの判定」 | 指定日時に在職しているかどうかの判定 |
 | ファクトリーメソッド | 「〜を持つ〇〇の生成」 | 指定日時を持つ `<see cref="UpdatedAt"/>` の生成 |
 | プロパティ | 名詞句 | 退職日（JST） |
@@ -309,8 +309,8 @@ public sealed class ［Name］ : PrimitiveValueObject<［T］>
 /// <remarks>
 /// <para>【null契約】未更新の状態は <see langword="null"/> ではなく <see cref="Unset"/>（<see cref="HasUpdated"/> が
 /// <see langword="false"/>）で表現。Domain 層での null 確認は不要</para>
-/// <para>【時刻】値は <see cref="LocalDateTime"/>（JST）で保持。DB の <see cref="DateTime"/> との変換は
-/// <see cref="FromDbValue"/>／<see cref="ToDbValue"/> の担当</para>
+/// <para>【時刻】値は <see cref="LocalDateTime"/>（JST）で保持。DB の <c>DateTime</c> との変換は
+/// Infrastructure（Mapper・Repository）の担当。この型は <c>DateTime</c> を公開しない</para>
 /// <para>【参照】docs/Assistance/Guides/null厳格性設計ガイド.md</para>
 /// </remarks>
 /// <seealso cref="CreatedAt"/>
@@ -626,18 +626,18 @@ public void RetireEmployee(LocalDateTime retiredOn)
 
 ```csharp
 /// <summary>
-/// DB 値からの <see cref="UpdatedAt"/> 生成の試行。例外の送出なし
+/// 日時（JST）からの <see cref="UpdatedAt"/> 生成の試行。例外の送出なし
 /// </summary>
-/// <param name="input">DB から読み込んだ値。<see langword="null"/> は「未更新」</param>
+/// <param name="input">更新日時（JST）。<see langword="null"/> は「未更新」（DB の値は Infrastructure が変換して渡す）</param>
 /// <param name="result">
 /// 成功した場合は生成したインスタンス（<paramref name="input"/> が <see langword="null"/> の場合は <see cref="Unset"/>）。
 /// 失敗した場合は <see langword="null"/>（使用禁止）
 /// </param>
 /// <returns>成功した場合は <see langword="true"/>。値が検証に通らなかった場合は <see langword="false"/></returns>
-public static bool TryFromDbValue(DateTime? input, out UpdatedAt result)
+public static bool TryFrom(LocalDateTime? input, out UpdatedAt result)
 ```
 
-#### ファクトリーメソッド（From／Unset／FromDbValue／Reconstruct）
+#### ファクトリーメソッド（From／Unset／Reconstruct）
 
 ```csharp
 /// <summary>
@@ -972,6 +972,7 @@ public const string DebugBuild = "Debug";
 
 | 日付 | 内容 |
 |---|---|
+| 2026-09-26 | 日時の DB 変換を Infrastructure に移す方針（値オブジェクトから `DateTime` を排除）に合わせて、§6-3 の `UpdatedAt` の実例（【時刻】）、§6-14 の Try 系の例（`TryFrom(LocalDateTime?)`）、§4-2 の表の例を修正 |
 | 2026-09-18 | `<summary>` は必ず 3 行形式とするルールを追加（§3-1・§3-2・§4-1・チェックリスト）。すべての例を 3 行形式に変更 |
 | 2026-09-18 | §8 の実例に修正済みの旨を追記。§10 のビルド設定を適用済みに変更（子の Directory.Build.props からの Import を追記） |
 | 2026-09-18 | 句点のルールを「文の区切りには「。」、最後の文には付けない」に決定。すべての例から最後の「。」を削除 |

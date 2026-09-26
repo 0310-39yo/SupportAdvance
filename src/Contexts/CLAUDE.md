@@ -18,4 +18,4 @@ Contexts/
 
 - **異なる Bounded Context 間は直接参照しない**（例：`CarPreferences.Domain` → `Authentication.Domain` は禁止）。連携が必要な場合は Presentation 層や汎用 Application 層でのオーケストレーション、またはドメインイベント経由の疎結合連携を検討する
 - 各層（Domain/Application/Infrastructure）の許可される参照はルート CLAUDE.md の依存関係表に従う。「Context別」という点以外の追加ルールはない
-- Presentation 層からは `<Context名>.Application` のみを参照させる（`<Context名>.Infrastructure` への参照は Composition Root の `Program.cs` のみ）
+- Presentation 層からは `<Context名>.Application` のみを参照させる（`<Context名>.Infrastructure` への参照は Composition Root のみ。`Program.cs`、WPF は `App.xaml.cs`）

@@ -216,8 +216,9 @@ public interface IOptionalValueObject<TSelf> where TSelf : class
 
 ```
 Infrastructure層は「汚い外界（DB）」と「clean な Domain」の境界。
-TryFromDbValue で DB の null を自動変換して、
+DB の DateTime? を LocalDateTime? に変換し、TryFrom で null を自動変換して、
 Domain に渡す前にすべての値を null-free にする。
+DB の型（DateTime）は Infrastructure の内側に閉じ込め、値オブジェクトには持ち込まない。
 ```
 
 #### 3段階フロー
@@ -225,7 +226,9 @@ Domain に渡す前にすべての値を null-free にする。
 ```
 DB値（nullable DateTime/DateTime?）
     ↓
-Repository の TryFromDbValue 呼び出し
+Infrastructure（Mapper / Repository）：DateTime? → LocalDateTime? に変換
+    ↓
+値オブジェクトの TryFrom(LocalDateTime?) 呼び出し
     ├─ 必須フィールド: null → false（例外投げ）
     └─ オプション/監査: null → Unset()（成功）
     ↓
@@ -249,16 +252,19 @@ public class UserPreferencesRepository
         // ============ 層間の境界 ============
         // すべての値を null → Unset に変換（フィルター）
         
-        // createdAt: DB NOT NULL だが、TryFromDbValue で検証
-        if (!CreatedAt.TryFromDbValue(dbModel.CreatedAtDb, out var createdAt))
-            throw new InvalidOperationException("DB integrity error: CreatedAt is null");
+        // DB の DateTime? は Infrastructure が LocalDateTime? に変換してから TryFrom に渡す
+        // （ToLocalDateTime / ToLocalDateTimeOrNull は Infrastructure の変換ヘルパー）
+
+        // createdAt: DB NOT NULL だが、TryFrom で検証
+        if (!CreatedAt.TryFrom(dbModel.CreatedAtDb.ToLocalDateTime(), out var createdAt))
+            throw new InvalidOperationException("DB integrity error: CreatedAt is invalid");
         
         // updatedAt: DB NULL OK、null → Unset()
-        if (!UpdatedAt.TryFromDbValue(dbModel.UpdatedAtDb, out var updatedAt))
+        if (!UpdatedAt.TryFrom(dbModel.UpdatedAtDb.ToLocalDateTimeOrNull(), out var updatedAt))
             throw new InvalidOperationException("Invalid UpdatedAt in DB");
         
         // deletedAt: DB NULL OK、null → Unset()（未削除状態）
-        if (!DeletedAt.TryFromDbValue(dbModel.DeletedAtDb, out var deletedAt))
+        if (!DeletedAt.TryFrom(dbModel.DeletedAtDb.ToLocalDateTimeOrNull(), out var deletedAt))
             throw new InvalidOperationException("Invalid DeletedAt in DB");
         
         // ============ Domain層へ渡す ============
@@ -341,25 +347,6 @@ public sealed class CreatedAt : PrimitiveValueObject<LocalDateTime>
         }
     }
     
-    // TryFromDbValue: DB null も失敗（NOT NULL制約）
-    public static bool TryFromDbValue(DateTime? input, out CreatedAt result)
-    {
-        result = default!;
-        
-        if (input == null)
-            return false;  // ← DB null は DB制約違反
-        
-        try
-        {
-            result = From(new LocalDateTime(input.Value));
-            return true;
-        }
-        catch (ArgumentException)
-        {
-            return false;
-        }
-    }
-    
     public LocalDateTime Value => ValueField;
 }
 ```
@@ -368,8 +355,8 @@ public sealed class CreatedAt : PrimitiveValueObject<LocalDateTime>
 - **用途**: システム管理フィールド（作成日時、最終更新者など）
 - **DB**: NOT NULL
 - **Unset 状態**: なし（常に値を持つ）
-- **TryFrom(null)**: false（失敗）
-- **TryFromDbValue(null)**: false（失敗）
+- **TryFrom(null)**: false（失敗。DB の NOT NULL 制約違反も、Infrastructure が変換した `null` をここで検出する）
+- **DB の型（DateTime）は知らない**: `DateTime` → `LocalDateTime` の変換は Infrastructure（`ToLocalDateTime()`）が行う
 
 ### 3.2 オプションValueObject（入力オプション）
 
@@ -416,9 +403,11 @@ public sealed class RespondentName : PrimitiveValueObject<string>,
 - **Unset 状態**: あり（IsSet=false で表現）
 - **TryFrom(null)**: true（成功、Unset 状態）
 
-### 3.3 監査ValueObjects（DB → Domain 変換専用）
+### 3.3 監査ValueObjects（オプション型の日時）
 
 #### パターン：UpdatedAt, DeletedAt
+
+値オブジェクトは `LocalDateTime?` だけを受け取る。DB の `DateTime?` は、Infrastructure（Mapper / Repository）が `ToLocalDateTimeOrNull()` で変換してから `TryFrom` に渡す。
 
 ```csharp
 public sealed class UpdatedAt : PrimitiveValueObject<LocalDateTime?>
@@ -431,28 +420,7 @@ public sealed class UpdatedAt : PrimitiveValueObject<LocalDateTime?>
     public static UpdatedAt From(LocalDateTime value) 
         => new(value, true);
     
-    // TryFromDbValue: DB の null を Unset に変換（Infrastructure専用）
-    public static bool TryFromDbValue(DateTime? input, out UpdatedAt result)
-    {
-        if (input == null)
-        {
-            result = Unset();  // DB null → Unset（未更新状態）
-            return true;
-        }
-        
-        try
-        {
-            result = From(new LocalDateTime(input.Value));
-            return true;
-        }
-        catch (ArgumentException)
-        {
-            result = Unset();
-            return false;
-        }
-    }
-    
-    // TryFrom: LocalDateTime? null → Unset
+    // TryFrom: LocalDateTime? null → Unset（DB の null も、変換後の null としてここで Unset になる）
     public static bool TryFrom(LocalDateTime? input, out UpdatedAt result)
     {
         if (input == null || !input.HasValue)
@@ -492,28 +460,7 @@ public sealed class DeletedAt : PrimitiveValueObject<LocalDateTime?>
     public static DeletedAt From(LocalDateTime value) 
         => new(value, true);
     
-    // TryFromDbValue: DB の null を Unset に変換
-    public static bool TryFromDbValue(DateTime? input, out DeletedAt result)
-    {
-        if (input == null)
-        {
-            result = Unset();  // DB null → Unset（未削除状態）
-            return true;
-        }
-        
-        try
-        {
-            result = From(new LocalDateTime(input.Value));
-            return true;
-        }
-        catch (ArgumentException)
-        {
-            result = Unset();
-            return false;
-        }
-    }
-    
-    // TryFrom: LocalDateTime? null → Unset
+    // TryFrom: LocalDateTime? null → Unset（未削除状態）
     public static bool TryFrom(LocalDateTime? input, out DeletedAt result)
     {
         if (input == null || !input.HasValue)
@@ -544,7 +491,7 @@ public sealed class DeletedAt : PrimitiveValueObject<LocalDateTime?>
 - **DB**: NULL OK（未更新/未削除の場合）
 - **Unset 状態**: あり（IsSet=false で表現、Domain では LocalDateTime.MinValue を保持）
 - **DB への変換**: Mapper が IsSet=false を null に、IsSet=true を DateTime に変換
-- **TryFromDbValue(null)**: true（成功、Unset 状態に変換）
+- **TryFrom(null)**: true（成功、Unset 状態に変換。DB の null は Infrastructure が `null` のまま渡す）
 - **別名**: HasUpdated（UpdatedAt）, IsDeleted（DeletedAt）
 - **重要**: LocalDateTime.MinValue はセンチネル値として予約済み。ビジネスロジックとして使用不可
 
@@ -562,8 +509,9 @@ public sealed class DeletedAt : PrimitiveValueObject<LocalDateTime?>
 └──────────────────────┬────────────────────────────┘
                        ↓
 ┌─────────────────────────────────────────────────────┐
-│ Stage 2: TryFromDbValue（層間フィルター）            │
-│ - Repository で呼び出し                             │
+│ Stage 2: 変換 + TryFrom（層間フィルター）            │
+│ - Infrastructure で DateTime? → LocalDateTime? に変換 │
+│ - Mapper / Repository から TryFrom を呼び出し       │
 │ - 必須: null → false（例外）                        │
 │ - オプション/監査: null → Unset()                   │
 └──────────────────────┬────────────────────────────┘
@@ -582,8 +530,8 @@ public sealed class DeletedAt : PrimitiveValueObject<LocalDateTime?>
 【Stage 1: DB層】
 DB: updated_at = NULL（未更新を示す）
   
-【Stage 2: Repository の TryFromDbValue（層間フィルター）】
-Repository: UpdatedAt.TryFromDbValue(null)
+【Stage 2: Infrastructure の変換と TryFrom（層間フィルター）】
+Repository: UpdatedAt.TryFrom(dbModel.UpdatedAt.ToLocalDateTimeOrNull())   // null のまま渡る
   ↓
 null → Unset() に変換: new(LocalDateTime.MinValue, isSet: false)
   
@@ -659,14 +607,14 @@ if (entity.CreatedAt.IsSet && entity.UpdatedAt.HasUpdated) { ... }
 - [ ] 入力パターンは？
   - **必須**: CreatedAt パターン（入力必須、null → false）
   - **オプション**: RespondentName パターン（入力オプション、null → Unset）
-  - **監査**: UpdatedAt パターン（DB専用、TryFromDbValue で自動変換）
+  - **監査**: UpdatedAt パターン（オプション型の日時。DB の DateTime? は Infrastructure が LocalDateTime? に変換して TryFrom に渡す）
 
 **実装段階**
 - [ ] コンストラクタは `private` 
 - [ ] フィールドは `readonly`
 - [ ] `From()` static メソッド（値を持つ状態）
 - [ ] `Unset()` static メソッド（未設定状態、不要な場合は省略）
-- [ ] `TryFrom()` または `TryFromDbValue()` メソッド
+- [ ] `TryFrom()` メソッド（日時は `TryFrom(LocalDateTime?)`。`DateTime` を受け取るメソッドは作らない）
 - [ ] `Value` プロパティ（IsSet に応じた値）
 - [ ] `Normalize()` メソッド（入力を正規化、必要に応じて）
 - [ ] `Validate()` メソッド（ビジネスルール検証）
@@ -786,28 +734,8 @@ public sealed class YourAuditValueObject : PrimitiveValueObject<LocalDateTime?>
     public static YourAuditValueObject From(LocalDateTime value) 
         => new(value, true);
     
-    // TryFromDbValue: DB の null を Unset に変換（Infrastructure専用）
-    public static bool TryFromDbValue(DateTime? input, out YourAuditValueObject result)
-    {
-        if (input == null)
-        {
-            result = Unset();  // DB null → Unset
-            return true;
-        }
-        
-        try
-        {
-            result = From(new LocalDateTime(input.Value));
-            return true;
-        }
-        catch (ArgumentException)
-        {
-            result = Unset();
-            return false;
-        }
-    }
-    
     // TryFrom: LocalDateTime? null → Unset
+    // （DB の DateTime? は、Infrastructure が LocalDateTime? に変換してからここに渡す。DateTime を受け取るメソッドは作らない）
     public static bool TryFrom(LocalDateTime? input, out YourAuditValueObject result)
     {
         if (input == null || !input.HasValue)
@@ -853,23 +781,23 @@ public DbModel ToDbModel(Entity entity)
     return new DbModel
     {
         // CreatedAt: 常に値がある（必須）
-        // Domain: LocalDateTime 値
+        // Domain: LocalDateTime 値（.Value が DateTime）
         // DB: DateTime 値に変換
-        CreatedAtDb = entity.CreatedAt.ToDbValue(),
+        CreatedAtDb = entity.CreatedAt.Value.Value,
         
         // UpdatedAt: IsSet フラグに基づいて null/値を決定（層間フィルター）
         // Domain: IsSet=false で LocalDateTime.MinValue → DB では null
         //         IsSet=true で LocalDateTime 値 → DB では DateTime 値
-        UpdatedAtDb = entity.UpdatedAt.IsSet
-            ? entity.UpdatedAt.ToDbValue()
-            : (DateTime?)null,
+        UpdatedAtDb = entity.UpdatedAt.HasUpdated
+            ? entity.UpdatedAt.Value?.Value
+            : null,
         
         // DeletedAt: IsDeleted フラグに基づいて null/値を決定（層間フィルター）
         // Domain: IsSet=false で LocalDateTime.MinValue → DB では null（未削除）
         //         IsSet=true で LocalDateTime 値 → DB では DateTime 値（削除済み）
         DeletedAtDb = entity.DeletedAt.IsDeleted
-            ? entity.DeletedAt.ToDbValue()
-            : (DateTime?)null,
+            ? entity.DeletedAt.Value?.Value
+            : null,
     };
 }
 ```
@@ -884,20 +812,20 @@ public DbModel ToDbModel(Entity entity)
 ```csharp
 public Entity ToDomainEntity(DbModel dbModel)
 {
-    // TryFromDbValue で自動的に DB の null → Unset() に変換（層間フィルター）
+    // DateTime? → LocalDateTime? の変換後、TryFrom で DB の null → Unset() に変換（層間フィルター）
     
     // CreatedAt: DB NOT NULL → Domain LocalDateTime
-    if (!CreatedAt.TryFromDbValue(dbModel.CreatedAtDb, out var createdAt))
+    if (!CreatedAt.TryFrom(dbModel.CreatedAtDb.ToLocalDateTime(), out var createdAt))
         throw new InvalidOperationException("Invalid CreatedAt from DB");
     
     // UpdatedAt: DB null → Unset() with LocalDateTime.MinValue / IsSet=false
     //            DB 値 → From(LocalDateTime) with IsSet=true
-    if (!UpdatedAt.TryFromDbValue(dbModel.UpdatedAtDb, out var updatedAt))
+    if (!UpdatedAt.TryFrom(dbModel.UpdatedAtDb.ToLocalDateTimeOrNull(), out var updatedAt))
         throw new InvalidOperationException("Invalid UpdatedAt from DB");
     
     // DeletedAt: DB null → Unset() with LocalDateTime.MinValue / IsSet=false（未削除）
     //            DB 値 → From(LocalDateTime) with IsSet=true（削除済み）
-    if (!DeletedAt.TryFromDbValue(dbModel.DeletedAtDb, out var deletedAt))
+    if (!DeletedAt.TryFrom(dbModel.DeletedAtDb.ToLocalDateTimeOrNull(), out var deletedAt))
         throw new InvalidOperationException("Invalid DeletedAt from DB");
     
     // ============ 結果 ============
@@ -909,16 +837,19 @@ public Entity ToDomainEntity(DbModel dbModel)
 
 **層間フィルターの保証:**
 - **DB → Repository**: DB の null/値を読み込む
-- **TryFromDbValue**: DB の null を Unset() に変換、値を LocalDateTime に変換
+- **Infrastructure の変換ヘルパー**: `DateTime?` を `LocalDateTime?` に変換（`ToLocalDateTime()` / `ToLocalDateTimeOrNull()`）
+- **TryFrom**: null を Unset() に変換（必須型は失敗）
 - **Domain ← Repository**: すべて null-free の ValueObject が渡される
 
 ### 7.3 重要な責務分離
 
 ```
-ToDbValue/FromDbValue: LocalDateTime ↔ DateTime の型変換のみ
-TryFromDbValue: 型変換 + null 処理
+Infrastructure（Mapper / Repository）: DateTime ↔ LocalDateTime の型変換（変換ヘルパー、LocalDateTime.Value）
+値オブジェクト（Domain / SharedKernel）: LocalDateTime? の null 処理（TryFrom）。DateTime は知らない
 Mapper: Entity ↔ DbModel の完全なマッピング
 ```
+
+> **移行中の注意**: 現状のコードには、値オブジェクトが `FromDbValue(DateTime)` / `TryFromDbValue(DateTime?)` / `ToDbValue()` を持つ旧形式が残っている。[原則完全準拠 実装計画](../Plans/20260926_原則完全準拠_実装計画.md) のフェーズ 4 で削除する。詳細は [FromDbValue_ToDbValue_パターンガイド.md](FromDbValue_ToDbValue_パターンガイド.md)。
 
 ---
 
@@ -930,7 +861,7 @@ Mapper: Entity ↔ DbModel の完全なマッピング
 |------|------|--------|
 | `if (value != null)` | Domain は null を含まない | `if (value.IsSet)` |
 | `value.Value?? fallback` | Value は常に値を保持 | 不要 |
-| `new LocalDateTime(dbValue)` | 型変換の責務分離 | `TryFromDbValue()` |
+| `new LocalDateTime(dbValue)` を Domain 側で書く | 型変換の責務分離（DB の型は Infrastructure に閉じる） | Infrastructure で `ToLocalDateTimeOrNull()` → `TryFrom()` |
 | `entity.UpdatedAt.Value!` | Domain では !（null-forced）不要 | `entity.UpdatedAt.Value`（安全） |
 | Application での `if (value == null)` | 型チェック後に処理 | TryFrom で事前に Unset に変換 |
 
@@ -983,15 +914,15 @@ public DbModel ToDbModel(Entity entity)
 }
 ```
 
-#### ✅ 正しい：ToDbValue で明示的変換
+#### ✅ 正しい：LocalDateTime.Value で明示的変換
 
 ```csharp
 public DbModel ToDbModel(Entity entity)
 {
-    // ✅ ToDbValue で LocalDateTime → DateTime 変換
+    // ✅ LocalDateTime.Value（DateTime）で LocalDateTime → DateTime 変換（Mapper の責務）
     return new DbModel
     {
-        CreatedAtDb = entity.CreatedAt.ToDbValue(),
+        CreatedAtDb = entity.CreatedAt.Value.Value,
     };
 }
 ```
@@ -1004,14 +935,14 @@ public async Task<Car?> GetByIdAsync(CarId carId)
     var dbModel = await _context.Cars.FindAsync(carId.Value);
     if (dbModel == null) return null;
     
-    // ❌ TryFromDbValue を呼ばず、直接コンストラクタに渡す
+    // ❌ TryFrom を呼ばず、直接コンストラクタに渡す
     var updatedAt = new UpdatedAt(dbModel.UpdatedAtDb);  // ← db値をそのまま使用
     
     return Car.Reconstruct(..., updatedAt, ...);
 }
 ```
 
-#### ✅ 正しい：TryFromDbValue で変換
+#### ✅ 正しい：変換して TryFrom で Unset に変換
 
 ```csharp
 public async Task<Car?> GetByIdAsync(CarId carId)
@@ -1019,13 +950,23 @@ public async Task<Car?> GetByIdAsync(CarId carId)
     var dbModel = await _context.Cars.FindAsync(carId.Value);
     if (dbModel == null) return null;
     
-    // ✅ TryFromDbValue で null を自動的に Unset に変換
-    if (!UpdatedAt.TryFromDbValue(dbModel.UpdatedAtDb, out var updatedAt))
+    // ✅ DateTime? を LocalDateTime? に変換し、TryFrom で null を自動的に Unset に変換
+    if (!UpdatedAt.TryFrom(dbModel.UpdatedAtDb.ToLocalDateTimeOrNull(), out var updatedAt))
         throw new InvalidOperationException("Invalid UpdatedAt");
     
     return Car.Reconstruct(..., updatedAt, ...);
 }
 ```
+
+#### ❌ 間違い：値オブジェクトに DateTime を持ち込む
+
+```csharp
+// ❌ 値オブジェクトが DB の型（DateTime）を知っている
+public static bool TryFromDbValue(DateTime? input, out UpdatedAt result) { ... }
+public DateTime ToDbValue() => ...;
+```
+
+日時の入口は `TryFrom(LocalDateTime?)` のみ。DB の型との変換は Infrastructure が行う。
 
 ---
 
@@ -1065,12 +1006,14 @@ public LocalDateTime Value => ValueField;
 
 Domain層が null を含まないことを**型システムで保証**するため。
 
-### Q5: TryFrom と TryFromDbValue の違いは？
+### Q5: DB の DateTime? はどう Domain に渡すのか？（旧 `TryFromDbValue` との違い）
 
-| メソッド | 入力型 | null 処理 | 用途 |
-|---------|--------|---------|------|
-| **TryFrom** | LocalDateTime? | LocalDateTime? null → Unset | Application層（型変換） |
-| **TryFromDbValue** | DateTime? | DateTime null → Unset | Infrastructure層（DB値変換） |
+| 呼び出す層 | 手順 | null 処理 |
+|---------|------|---------|
+| **Infrastructure（Mapper / Repository）** | `dbModel.UpdatedAt.ToLocalDateTimeOrNull()` で `DateTime?` → `LocalDateTime?` に変換 | null のまま渡す |
+| **値オブジェクト（`TryFrom(LocalDateTime?)`）** | 変換後の値を受け取る。Application 層の入力変換と同じ入口 | null → Unset（必須型は失敗） |
+
+旧形式の `TryFromDbValue(DateTime?)`（値オブジェクトが DB の型を受け取る）は、2026-09-26 に廃止方針とした。移行中は現状のコードに残っているため、新規には使わない。
 
 ---
 
@@ -1081,7 +1024,7 @@ Domain層が null を含まないことを**型システムで保証**するた�
 - [C# Nullable Reference Types](https://docs.microsoft.com/en-us/dotnet/csharp/nullable-references)
 - [ValueObject_設計ガイド.md](ValueObject_設計ガイド.md)（セクション 12: レイヤ制約）
 - [Clean Architecture - Robert C. Martin](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
-- [CLAUDE.md - LocalDateTime使用規則](../../CLAUDE.md)
+- [CLAUDE.md - LocalDateTime使用規則](../../../CLAUDE.md)
 
 ---
 
@@ -1111,6 +1054,7 @@ Domain層が null を含まないことを**型システムで保証**するた�
 
 | 版 | 日付 | 内容 |
 |---|------|------|
+| 1.2 | 2026-09-26 | 日時の DB 変換を値オブジェクトから Infrastructure に移す方針に合わせて改訂。`TryFromDbValue(DateTime?)` / `ToDbValue()` の記述を、`ToLocalDateTimeOrNull()` + `TryFrom(LocalDateTime?)` の形に置き換え。移行中の注意を追加 |
 | 1.1 | 2026-09-01 | Mapper での層間変換を明確化。Domain の null-free ← → DB の null 許容の変換フローを詳細説明。IsSet フラグと LocalDateTime.MinValue の役割を統一的に記述。Unset 状態の本質（セクション 1.3）と 3段階フロー（セクション 4）を改善。 |
 | 1.0 | 2026-08-08 | 初版：Option/Maybe パターン理論、3段階フロー、レイヤ別責務の統一的記述。既存2つのドキュメントを統合。 |
 
