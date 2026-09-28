@@ -24,8 +24,7 @@ public class MainWindowViewModelTests
         return new Form1ViewModel(
             Mock.Of<IAppLogging<Form1ViewModel>>(),
             Mock.Of<IClock>(),
-            useCase,
-            new BusinessDayClockViewModel());
+            useCase);
     }
 
     private static MainWindowViewModel CreateSut(Form1ViewModel? form1ViewModel = null)
@@ -36,7 +35,8 @@ public class MainWindowViewModelTests
             Mock.Of<IAppLogging<MainWindowViewModel>>(),
             settings.Object,
             form1ViewModel ?? CreateForm1ViewModel(),
-            new AppIdentity("TestApp"));
+            new AppIdentity("TestApp"),
+            new BusinessDayClockViewModel());
     }
 
     [Fact]
@@ -211,9 +211,11 @@ public class MainWindowViewModelTests
         var identity = new AppIdentity("TestApp");
         var logger = Mock.Of<IAppLogging<MainWindowViewModel>>();
         var settings = Mock.Of<IAppSettings>();
-        Assert.Throws<ArgumentNullException>(() => new MainWindowViewModel(null!, settings, form1, identity));
-        Assert.Throws<ArgumentNullException>(() => new MainWindowViewModel(logger, null!, form1, identity));
-        Assert.Throws<ArgumentNullException>(() => new MainWindowViewModel(logger, settings, null!, identity));
-        Assert.Throws<ArgumentNullException>(() => new MainWindowViewModel(logger, settings, form1, null!));
+        var businessDayClock = new BusinessDayClockViewModel();
+        Assert.Throws<ArgumentNullException>(() => new MainWindowViewModel(null!, settings, form1, identity, businessDayClock));
+        Assert.Throws<ArgumentNullException>(() => new MainWindowViewModel(logger, null!, form1, identity, businessDayClock));
+        Assert.Throws<ArgumentNullException>(() => new MainWindowViewModel(logger, settings, null!, identity, businessDayClock));
+        Assert.Throws<ArgumentNullException>(() => new MainWindowViewModel(logger, settings, form1, null!, businessDayClock));
+        Assert.Throws<ArgumentNullException>(() => new MainWindowViewModel(logger, settings, form1, identity, null!));
     }
 }

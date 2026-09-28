@@ -208,8 +208,53 @@
 
 
         <!-- StatusBar（Tools系） -->
+        <!-- BusinessDayClockの操作パネル（ClockType が BusinessDay の場合のみ表示。検証用） -->
         <syncfusion:RibbonStatusBar Grid.Row="2">
-            <TextBlock Text="Ready"/>
+            <StackPanel Orientation="Horizontal"
+                        DataContext="{Binding BusinessDayClock}"
+                        Visibility="{Binding IsAvailable, Converter={StaticResource BoolToVisibility}}">
+                <TextBlock Text="業務日: " VerticalAlignment="Center" Margin="4,0,0,0" />
+                <TextBlock Text="{Binding CurrentBusinessDateText}"
+                           FontWeight="Bold"
+                           VerticalAlignment="Center" />
+                <TextBlock Text="{Binding StatusText, StringFormat='（{0}）'}"
+                           Margin="4,0,0,0"
+                           VerticalAlignment="Center" />
+                <syncfusion:ButtonAdv Label="開始"
+                        Width="60"
+                        Height="20"
+                        Margin="12,0,0,0"
+                        SizeMode="Normal"
+                        IconWidth="0"
+                        IconHeight="0"
+                        FontFamily="Yu Gothic UI"
+                        FontSize="11"
+                        Command="{Binding TurnOnCommand}" />
+                <syncfusion:ButtonAdv Label="終了"
+                        Width="60"
+                        Height="20"
+                        Margin="4,0,0,0"
+                        SizeMode="Normal"
+                        IconWidth="0"
+                        IconHeight="0"
+                        FontFamily="Yu Gothic UI"
+                        FontSize="11"
+                        Command="{Binding TurnOffCommand}" />
+                <syncfusion:ButtonAdv Label="やり直す"
+                        Width="70"
+                        Height="20"
+                        Margin="4,0,0,0"
+                        SizeMode="Normal"
+                        IconWidth="0"
+                        IconHeight="0"
+                        FontFamily="Yu Gothic UI"
+                        FontSize="11"
+                        Command="{Binding ResetCommand}" />
+                <TextBlock Text="{Binding ErrorMessage}"
+                           Foreground="Red"
+                           VerticalAlignment="Center"
+                           Margin="8,0,0,0" />
+            </StackPanel>
         </syncfusion:RibbonStatusBar>
 
     </Grid>

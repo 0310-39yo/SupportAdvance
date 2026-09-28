@@ -10,16 +10,12 @@
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=vm:Form1ViewModel}"
         d:DesignHeight="380" d:DesignWidth="484">
-    <UserControl.Resources>
-        <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
-    </UserControl.Resources>
     <Grid Margin="12">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <syncfusion:ButtonAdv Grid.Row="0"
@@ -56,55 +52,5 @@
         <TextBlock Grid.Row="2"
                    Text="{Binding DepartmentNames}"
                    Margin="0,16,0,0" />
-
-        <!-- BusinessDayClockの操作パネル（ClockType が BusinessDay の場合のみ表示） -->
-        <GroupBox Grid.Row="4"
-                  Header="BusinessDayClockクロック（検証用）"
-                  DataContext="{Binding BusinessDayClock}"
-                  Visibility="{Binding IsAvailable, Converter={StaticResource BoolToVisibility}}">
-            <StackPanel Margin="4">
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="業務日: " VerticalAlignment="Center" />
-                    <TextBlock Text="{Binding CurrentBusinessDateText}"
-                               FontWeight="Bold"
-                               VerticalAlignment="Center" />
-                    <TextBlock Text="{Binding StatusText, StringFormat='（{0}）'}"
-                               Margin="4,0,0,0"
-                               VerticalAlignment="Center" />
-                </StackPanel>
-                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                    <syncfusion:ButtonAdv Label="BusinessDayClockを開始"
-                            Width="96"
-                            SizeMode="Normal"
-                            IconWidth="0"
-                            IconHeight="0"
-                            FontFamily="Yu Gothic UI"
-                            FontSize="18"
-                            Command="{Binding TurnOnCommand}" />
-                    <syncfusion:ButtonAdv Label="BusinessDayClockを終了"
-                            Width="96"
-                            Margin="8,0,0,0"
-                            SizeMode="Normal"
-                            IconWidth="0"
-                            IconHeight="0"
-                            FontFamily="Yu Gothic UI"
-                            FontSize="18"
-                            Command="{Binding TurnOffCommand}" />
-                    <syncfusion:ButtonAdv Label="最初からやり直す"
-                            Width="110"
-                            Margin="8,0,0,0"
-                            SizeMode="Normal"
-                            IconWidth="0"
-                            IconHeight="0"
-                            FontFamily="Yu Gothic UI"
-                            FontSize="18"
-                            Command="{Binding ResetCommand}" />
-                </StackPanel>
-                <TextBlock Text="{Binding ErrorMessage}"
-                           Foreground="Red"
-                           TextWrapping="Wrap"
-                           Margin="0,4,0,0" />
-            </StackPanel>
-        </GroupBox>
     </Grid>
 </UserControl>

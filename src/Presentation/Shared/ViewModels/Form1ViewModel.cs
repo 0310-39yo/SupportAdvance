@@ -42,31 +42,20 @@ public partial class Form1ViewModel : ObservableObject
     /// <param name="logger">ログの出力先</param>
     /// <param name="clock">現在日時（JST）の取得元</param>
     /// <param name="getEmployeeByBizIdUseCase">BizId による従業員検索のユースケース</param>
-    /// <param name="businessDayClock">BusinessDayClockの操作パネルの ViewModel</param>
     /// <exception cref="ArgumentNullException">いずれかの引数が <see langword="null"/> の場合</exception>
     public Form1ViewModel(IAppLogging<Form1ViewModel> logger,
         IClock clock,
-        GetEmployeeByBizIdIntegrationUseCase getEmployeeByBizIdUseCase,
-        BusinessDayClockViewModel businessDayClock)
+        GetEmployeeByBizIdIntegrationUseCase getEmployeeByBizIdUseCase)
     {
         ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(clock);
         ArgumentNullException.ThrowIfNull(getEmployeeByBizIdUseCase);
-        ArgumentNullException.ThrowIfNull(businessDayClock);
-
-        BusinessDayClock = businessDayClock;
 
         _logger = logger;
         _clock = clock;
         _getEmployeeByBizIdUseCase = getEmployeeByBizIdUseCase;
         _logger.LogInformation("Form1ViewModel initialized.");
     }
-
-    /// <summary>
-    /// BusinessDayClockの操作パネルの ViewModel
-    /// </summary>
-    /// <value>ClockType が BusinessDay 以外の場合、<see cref="BusinessDayClockViewModel.IsAvailable"/> は <see langword="false"/>（パネルは非表示）</value>
-    public BusinessDayClockViewModel BusinessDayClock { get; }
 
     /// <summary>
     /// BizId で従業員を検索

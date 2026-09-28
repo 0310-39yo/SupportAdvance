@@ -37,20 +37,24 @@ public partial class MainWindowViewModel : ObservableObject
     /// <param name="appSettings">アプリケーション設定</param>
     /// <param name="form1ViewModel">顧客一覧のタブ（仮）に表示する画面の ViewModel</param>
     /// <param name="appIdentity">起動しているアプリケーションの識別情報（オープニング画面に表示する名前）</param>
+    /// <param name="businessDayClock">StatusBar に表示する BusinessDayClock 操作パネルの ViewModel</param>
     /// <exception cref="ArgumentNullException">いずれかの引数が <see langword="null"/> の場合</exception>
     public MainWindowViewModel(
         IAppLogging<MainWindowViewModel> logger,
         IAppSettings appSettings,
         Form1ViewModel form1ViewModel,
-        AppIdentity appIdentity)
+        AppIdentity appIdentity,
+        BusinessDayClockViewModel businessDayClock)
     {
         ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(appSettings);
         ArgumentNullException.ThrowIfNull(form1ViewModel);
         ArgumentNullException.ThrowIfNull(appIdentity);
+        ArgumentNullException.ThrowIfNull(businessDayClock);
 
         _logger = logger;
         _form1ViewModel = form1ViewModel;
+        BusinessDayClock = businessDayClock;
         Opening = new OpeningViewModel(appIdentity);
 
         // タブの有無が変わったら、タブ領域とオープニング画面の表示の切り替えを通知する
@@ -73,6 +77,12 @@ public partial class MainWindowViewModel : ObservableObject
     /// オープニング画面の ViewModel
     /// </summary>
     public OpeningViewModel Opening { get; }
+
+    /// <summary>
+    /// StatusBar に表示する BusinessDayClock 操作パネルの ViewModel
+    /// </summary>
+    /// <value>ClockType が BusinessDay 以外の場合、<see cref="BusinessDayClockViewModel.IsAvailable"/> は <see langword="false"/>（パネルは非表示）</value>
+    public BusinessDayClockViewModel BusinessDayClock { get; }
 
     /// <summary>
     /// タブが 1 つ以上開いているかどうかを示す値（タブ領域の表示に使う）

@@ -23,8 +23,7 @@ public class Form1ViewModelTests
         return new Form1ViewModel(
             Mock.Of<IAppLogging<Form1ViewModel>>(),
             Mock.Of<IClock>(),
-            useCase,
-            new BusinessDayClockViewModel());
+            useCase);
     }
 
     private static IEmployeeQueryResult CreateEmployee()

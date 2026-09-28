@@ -121,6 +121,45 @@ public partial class MainWindow : Form
 
         _viewModel.OpenTabs.CollectionChanged += OpenTabs_CollectionChanged;
         _viewModel.PropertyChanged += ViewModel_PropertyChanged;
+
+        AddBusinessDayClockStatusItems(_viewModel.BusinessDayClock);
+    }
+
+    /// <summary>
+    /// StatusBar への BusinessDayClock 操作項目の配置（ClockType が BusinessDay の場合のみ）
+    /// </summary>
+    /// <param name="clockViewModel">項目にバインドする ViewModel</param>
+    /// <remarks>
+    /// <para>【設計】<see cref="ToolStripItem"/> は <see cref="Control"/> を継承せず <c>DataBindings</c> を持たないため、
+    /// <c>BusinessDayClockViewModel.PropertyChanged</c> で手動更新する</para>
+    /// </remarks>
+    private void AddBusinessDayClockStatusItems(BusinessDayClockViewModel clockViewModel)
+    {
+        if (!clockViewModel.IsAvailable)
+        {
+            return;
+        }
+
+        var dateLabel = new ToolStripStatusLabel();
+        var turnOnButton = new ToolStripButton { Text = "開始", Command = clockViewModel.TurnOnCommand };
+        var turnOffButton = new ToolStripButton { Text = "終了", Command = clockViewModel.TurnOffCommand };
+        var resetButton = new ToolStripButton { Text = "やり直す", Command = clockViewModel.ResetCommand };
+        var errorLabel = new ToolStripStatusLabel { ForeColor = Color.Red };
+
+        void Refresh()
+        {
+            dateLabel.Text = $"業務日: {clockViewModel.CurrentBusinessDateText}（{clockViewModel.StatusText}）";
+            errorLabel.Text = clockViewModel.ErrorMessage;
+        }
+
+        Refresh();
+        clockViewModel.PropertyChanged += (_, _) => Refresh();
+
+        statusStripEx.Items.Add(dateLabel);
+        statusStripEx.Items.Add(turnOnButton);
+        statusStripEx.Items.Add(turnOffButton);
+        statusStripEx.Items.Add(resetButton);
+        statusStripEx.Items.Add(errorLabel);
     }
 
     private void AddNavigationNodes()
