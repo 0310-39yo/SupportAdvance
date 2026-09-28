@@ -130,7 +130,12 @@ public partial class LoginViewModel : ObservableObject
             var response = await _authenticateUseCase.ExecuteAsync(request);
 
             // ログイン成功時の処理
-            _currentUserService.SetLoggedInUser(response.EmployeeRowId, response.LoginId);
+            _currentUserService.SetLoggedInUser(
+                response.EmployeeRowId,
+                response.UserAuthSessionRowId,
+                response.LoginId,
+                response.LoggedInAt,  // LocalDateTime
+                isAdAuthenticated: false);
 
             _logger.LogInformation($"User '{LoginId}' logged in successfully.");
 

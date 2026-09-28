@@ -69,7 +69,7 @@ public class LoginViewModelTests
 
         Assert.False(string.IsNullOrEmpty(sut.ErrorMessage));
         _credentialsQuery.Verify(q => q.GetByLoginIdAsync(It.IsAny<string>()), Times.Never);
-        _currentUserService.Verify(c => c.SetLoggedInUser(It.IsAny<long>(), It.IsAny<string>()), Times.Never);
+        _currentUserService.Verify(c => c.SetLoggedInUser(It.IsAny<long>(), It.IsAny<long>(), It.IsAny<string>(), It.IsAny<LocalDateTime>(), It.IsAny<bool>()), Times.Never);
     }
 
     [Fact]
@@ -87,7 +87,7 @@ public class LoginViewModelTests
         Assert.Equal(1, succeeded);
         Assert.Equal(string.Empty, sut.ErrorMessage);
         Assert.False(sut.IsLoading);
-        _currentUserService.Verify(c => c.SetLoggedInUser(20, "user01"), Times.Once);
+        _currentUserService.Verify(c => c.SetLoggedInUser(20, 1000, "user01", It.IsAny<LocalDateTime>(), false), Times.Once);
     }
 
     [Fact]
@@ -106,7 +106,7 @@ public class LoginViewModelTests
         Assert.Equal("パスワードが間違っています", sut.ErrorMessage);
         Assert.Equal(string.Empty, sut.Password);
         Assert.False(sut.IsLoading);
-        _currentUserService.Verify(c => c.SetLoggedInUser(It.IsAny<long>(), It.IsAny<string>()), Times.Never);
+        _currentUserService.Verify(c => c.SetLoggedInUser(It.IsAny<long>(), It.IsAny<long>(), It.IsAny<string>(), It.IsAny<LocalDateTime>(), It.IsAny<bool>()), Times.Never);
     }
 
     [Fact]

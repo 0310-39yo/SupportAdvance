@@ -36,9 +36,15 @@ internal sealed class NoOpAppLogging<T> : IAppLogging<T>
 internal sealed class TestCurrentUserService : ICurrentUserService
 {
     private const long TestUserEmployeeRowId = 999999999L;
+    private const long TestUserSessionRowId = 888888888L;
+
     public long EmployeeRowId => TestUserEmployeeRowId;
+    public long CurrentUserSessionRowId => TestUserSessionRowId;
+    public LocalDateTime LoggedInAt => new(DateTime.Now);
+    public bool IsAdAuthenticated => false;
     public bool IsAuthenticated => true;
-    public void SetLoggedInUser(long employeeRowId, string loginId) { }
+
+    public void SetLoggedInUser(long employeeRowId, long sessionRowId, string loginId, LocalDateTime loggedInAt, bool isAdAuthenticated) { }
     public void SetLoggedOut() { }
 }
 

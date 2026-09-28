@@ -1,3 +1,5 @@
+using SupportAdvance.Common.Clocks;
+
 namespace SupportAdvance.Application.Abstractions.Services;
 
 /// <summary>
@@ -33,6 +35,24 @@ public interface ICurrentUserService
     long EmployeeRowId { get; }
 
     /// <summary>
+    /// 現在のセッションのrowId
+    /// </summary>
+    /// <exception cref="InvalidOperationException">ログインしていない場合</exception>
+    long CurrentUserSessionRowId { get; }
+
+    /// <summary>
+    /// ログイン時刻（JST）
+    /// </summary>
+    /// <exception cref="InvalidOperationException">ログインしていない場合</exception>
+    LocalDateTime LoggedInAt { get; }
+
+    /// <summary>
+    /// AD認証かどうか（true=AD認証、false=ローカル認証）
+    /// </summary>
+    /// <exception cref="InvalidOperationException">ログインしていない場合</exception>
+    bool IsAdAuthenticated { get; }
+
+    /// <summary>
     /// 現在のユーザーが認証されているか
     /// </summary>
     bool IsAuthenticated { get; }
@@ -41,8 +61,11 @@ public interface ICurrentUserService
     /// ログイン時にユーザー情報を記録
     /// </summary>
     /// <param name="employeeRowId">従業員rowId</param>
+    /// <param name="sessionRowId">セッションのrowId</param>
     /// <param name="loginId">ログインID</param>
-    void SetLoggedInUser(long employeeRowId, string loginId);
+    /// <param name="loggedInAt">ログイン時刻（JST）</param>
+    /// <param name="isAdAuthenticated">AD認証の場合はtrue、ローカル認証の場合はfalse</param>
+    void SetLoggedInUser(long employeeRowId, long sessionRowId, string loginId, LocalDateTime loggedInAt, bool isAdAuthenticated);
 
     /// <summary>
     /// ログアウト時にユーザー情報をクリア

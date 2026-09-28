@@ -1,5 +1,6 @@
 using SupportAdvance.Application.Abstractions.Services;
 using SupportAdvance.Common;
+using SupportAdvance.Common.Clocks;
 
 namespace SupportAdvance.Infrastructure.Services;
 
@@ -29,6 +30,21 @@ public sealed class SystemCurrentUserService : ICurrentUserService
     public long EmployeeRowId => SystemUserEmployeeRowId;
 
     /// <summary>
+    /// 認証機能が未実装のため暫定実装（no-op）
+    /// </summary>
+    public long CurrentUserSessionRowId => 0;
+
+    /// <summary>
+    /// 認証機能が未実装のため暫定実装（no-op）
+    /// </summary>
+    public LocalDateTime LoggedInAt => LocalDateTime.MinValue;
+
+    /// <summary>
+    /// 認証機能が未実装のため暫定実装（常に false）
+    /// </summary>
+    public bool IsAdAuthenticated => false;
+
+    /// <summary>
     /// 認証機能が未実装のため常に false（未認証扱い）
     /// </summary>
     public bool IsAuthenticated => false;
@@ -38,8 +54,11 @@ public sealed class SystemCurrentUserService : ICurrentUserService
     /// Authentication BC 実装時は RealCurrentUserService に置き換え
     /// </summary>
     /// <param name="employeeRowId">ログインした従業員の行ID（未使用）</param>
+    /// <param name="sessionRowId">セッションの行ID（未使用）</param>
     /// <param name="loginId">ログインID（未使用）</param>
-    public void SetLoggedInUser(long employeeRowId, string loginId)
+    /// <param name="loggedInAt">ログイン時刻（未使用）</param>
+    /// <param name="isAdAuthenticated">AD認証かどうか（未使用）</param>
+    public void SetLoggedInUser(long employeeRowId, long sessionRowId, string loginId, LocalDateTime loggedInAt, bool isAdAuthenticated)
     {
         // 暫定実装のため何もしない
     }

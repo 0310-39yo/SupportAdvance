@@ -1,10 +1,13 @@
-using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using SupportAdvance.Application;
+using SupportAdvance.Application.Abstractions.Services;
 using SupportAdvance.Common.Clocks;
 using SupportAdvance.Common.Configuration;
 using SupportAdvance.Contexts.Authentication.Application;
+using SupportAdvance.Contexts.Authentication.Application.Repositories;
+using SupportAdvance.Contexts.Authentication.Application.UseCases;
+using SupportAdvance.Contexts.Authentication.Domain.ValueObjects;
 using SupportAdvance.Contexts.Authentication.Infrastructure;
 using SupportAdvance.Contexts.Department.Application;
 using SupportAdvance.Contexts.Department.Infrastructure;
@@ -13,11 +16,11 @@ using SupportAdvance.Contexts.Employee.Infrastructure;
 using SupportAdvance.Contexts.IntegrationPrototype.Application;
 using SupportAdvance.Crosscutting;
 using SupportAdvance.Infrastructure;
-using SupportAdvance.Application.Abstractions.Services;
 using SupportAdvance.Presentation.Shared;
 using SupportAdvance.Presentation.WpfTrial.Services;
 using SupportAdvance.Presentation.WpfTrial.Views;
 using Syncfusion.SfSkinManager;
+using System.Windows;
 
 namespace SupportAdvance.Presentation.WpfTrial;
 
@@ -74,8 +77,10 @@ public partial class App : System.Windows.Application
                     .AddAuthenticationApplicationModels() // Authentication Context Application を登録
                     .AddIntegrationPrototypeApplicationModels() // IntegrationPrototype Application を登録
                     .AddWpfTrialModules()
-                    // Authentication BC 実装により RealCurrentUserService に切り替え
-                    .AddScoped<ICurrentUserService, RealCurrentUserService>();
+                    // 【重要】Singleton とする。ログイン画面（Scope A）で設定した情報を、
+                    // アプリケーション終了時（別の Scope B）から参照する必要があるため。
+                    // Scoped にすると Scope ごとに別インスタンスとなり、ログイン情報が引き継がれない
+                    .AddSingleton<ICurrentUserService, RealCurrentUserService>();
             })
             .Build();
 
@@ -113,16 +118,74 @@ public partial class App : System.Windows.Application
     }
 
     /// <summary>
-    /// BusinessDayClockの終了（OFF）と、DI ホストの停止と破棄
+    /// ログアウト処理、BusinessDayClockの終了（OFF）、DI ホストの停止と破棄
     /// </summary>
     /// <param name="e">終了イベントの引数</param>
+    /// <remarks>
+    /// <para>【処理の流れ】</para>
+    /// <list type="number">
+    /// <item><description>ログイン中のセッションをログアウト（LogoutUseCase で logged_out_at を DB に記録）</description></item>
+    /// <item><description>BusinessDayClockの場合は業務日の終了（OFF）</description></item>
+    /// <item><description>DI ホストを停止</description></item>
+    /// <item><description>リソースを解放</description></item>
+    /// </list>
+    /// </remarks>
     protected override void OnExit(ExitEventArgs e)
     {
-        // BusinessDayClockの場合のみ、終了を業務日の終了とする
-        _host?.Services.GetService<IBusinessDayClockControl>()?.TurnOff();
+        try
+        {
+            // ステップ1: ログアウト処理（セッションのログアウト日時を記録）
+            using (var scope = _host?.Services.CreateScope())
+            {
+                var currentUser = scope?.ServiceProvider.GetService<ICurrentUserService>();
 
-        _host?.StopAsync().GetAwaiter().GetResult();
-        _host?.Dispose();
+                if (currentUser?.IsAuthenticated == true)
+                {
+                    try
+                    {
+                        var sessionRowId = UserAuthSessionRowId.From(currentUser.CurrentUserSessionRowId);
+                        var logoutUseCase = scope?.ServiceProvider.GetService<LogoutUseCase>();
+                        if (logoutUseCase != null)
+                        {
+                            // 【重要】UI スレッドから直接 .GetAwaiter().GetResult() すると、
+                            // ExecuteAsync 内部の await が UI スレッドの SynchronizationContext に
+                            // 戻ろうとしてデッドロックする。Task.Run でスレッドプール上で実行し回避
+                            Task.Run(() => logoutUseCase.ExecuteAsync(sessionRowId)).GetAwaiter().GetResult();
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Logout failed: {ex.Message}");
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Logout initialization failed: {ex.Message}");
+        }
+
+        try
+        {
+            // ステップ2: BusinessDayClockの場合のみ、終了を業務日の終了とする
+            _host?.Services.GetService<IBusinessDayClockControl>()?.TurnOff();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"BusinessDayClock TurnOff failed: {ex.Message}");
+        }
+
+        try
+        {
+            // ステップ3: DI ホストの停止と破棄
+            _host?.StopAsync().GetAwaiter().GetResult();
+            _host?.Dispose();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Host cleanup failed: {ex.Message}");
+        }
+
         base.OnExit(e);
     }
 }
