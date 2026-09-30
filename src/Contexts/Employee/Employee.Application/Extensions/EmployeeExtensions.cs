@@ -2,6 +2,7 @@ namespace SupportAdvance.Contexts.Employee.Application.Extensions;
 
 using Domain.Entities;
 using Dtos;
+using SupportAdvance.SharedKernel.Entities;
 
 /// <summary>
 /// <see cref="Employee"/> の拡張メソッド
@@ -18,24 +19,21 @@ public static class EmployeeExtensions
     /// </remarks>
     public static EmployeeDto ToDto(this Employee entity)
     {
-        // DepartmentMembership から部署名を取得（主部署を先頭に）
-        var departmentNames = string.Join(", ",
-            entity.DepartmentMemberships
-                .OrderByDescending(m => m.IsPrimary.Value)  // 主部署を先頭に
-                .Select(m => m.DepartmentDisplayName.Value));  // 名前なしの場合は空文字
+        // 要約（IEmployee.ToSummary）を唯一の変換元とする（部署名の連結規則を重複させない）
+        var summary = ((IEmployee)entity).ToSummary();
 
         return new EmployeeDto
         {
-            RowId = entity.RowId.Value,
-            TypeDivision = entity.TypeDivision.ToString(),
-            BizId = entity.BizId.Value.ToString(),
-            BizCode = entity.BizCode.ToString(),
-            PersonRowId = entity.Person.RowId.Value,
-            PersonLastName = entity.Person.LastName.Value,
-            PersonFirstName = entity.Person.FirstName.Value,
-            PersonLastNameKana = entity.Person.LastNameKana.Value,
-            PersonFirstNameKana = entity.Person.FirstNameKana.Value,
-            DepartmentNames = departmentNames
+            RowId = summary.RowId,
+            TypeDivision = summary.TypeDivision,
+            BizId = summary.BizId,
+            BizCode = summary.BizCode,
+            PersonRowId = summary.PersonRowId,
+            PersonLastName = summary.PersonLastName,
+            PersonFirstName = summary.PersonFirstName,
+            PersonLastNameKana = summary.PersonLastNameKana,
+            PersonFirstNameKana = summary.PersonFirstNameKana,
+            DepartmentNames = summary.DepartmentNames
         };
     }
 }

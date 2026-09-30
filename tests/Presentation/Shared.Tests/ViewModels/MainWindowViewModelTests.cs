@@ -7,6 +7,8 @@ using SupportAdvance.Presentation.Shared.ViewModels.Tabs;
 using SupportAdvance.Common.Configuration;
 using SupportAdvance.Crosscutting.Logging;
 using SupportAdvance.Presentation.Shared.ViewModels;
+using SupportAdvance.SharedKernel.Entities;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 namespace SupportAdvance.Tests.Presentation.Shared.Tests.ViewModels;
 
@@ -17,10 +19,14 @@ public class MainWindowViewModelTests
 {
     private static Form1ViewModel CreateForm1ViewModel()
     {
+        var useCase = new GetEmployeeByBizIdIntegrationUseCase(
+            Mock.Of<IQueryServiceWithBizId<IEmployee, EmployeeRowId>>(),
+            Mock.Of<IAppLogging<GetEmployeeByBizIdIntegrationUseCase>>());
+
         return new Form1ViewModel(
             Mock.Of<IAppLogging<Form1ViewModel>>(),
             Mock.Of<IClock>(),
-            Mock.Of<GetEmployeeByBizIdIntegrationUseCase>());
+            useCase);
     }
 
     private static MainWindowViewModel CreateSut(Form1ViewModel? form1ViewModel = null)

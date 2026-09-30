@@ -243,6 +243,30 @@ public sealed class Employee : AggregateRoot<EmployeeRowId>, IEmployee
     }
 
     /// <summary>
+    /// 読み取り専用の要約の取得（<see cref="IEmployee"/> 実装）
+    /// </summary>
+    /// <returns>他 Context へ公開する従業員の要約。<c>DepartmentNames</c> は主所属を先頭にしたカンマ区切り（所属なしの場合は空文字）</returns>
+    EmployeeSummary IEmployee.ToSummary()
+    {
+        var departmentNames = string.Join(", ",
+            DepartmentMemberships
+                .OrderByDescending(m => m.IsPrimary.Value)  // 主部署を先頭に
+                .Select(m => m.DepartmentDisplayName.Value));  // 名前なしの場合は空文字
+
+        return new EmployeeSummary(
+            RowId.Value,
+            TypeDivision.ToString(),
+            BizId.Value.ToString(),
+            BizCode.ToString(),
+            Person.RowId.Value,
+            Person.LastName.Value,
+            Person.FirstName.Value,
+            Person.LastNameKana.Value,
+            Person.FirstNameKana.Value,
+            departmentNames);
+    }
+
+    /// <summary>
     /// Employee の文字列表現の取得
     /// </summary>
     /// <returns><c>Employee(RowId=…, TypeDivision=…, BizId=…)</c> 形式のデバッグ用文字列。画面表示やデータの解析には使用禁止</returns>

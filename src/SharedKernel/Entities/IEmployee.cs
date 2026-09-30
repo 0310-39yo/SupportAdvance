@@ -18,6 +18,9 @@ namespace SupportAdvance.SharedKernel.Entities;
 /// </remarks>
 public interface IEmployee : IAggregateRoot
 {
-    // 現時点ではマーカーインターフェース
-    // 将来的に public なプロパティを定義可能
+    /// <summary>
+    /// 読み取り専用の要約の取得
+    /// </summary>
+    /// <returns>他 Context へ公開する従業員の要約。<see cref="EmployeeSummary.DepartmentNames"/> は主所属を先頭にしたカンマ区切り</returns>
+    EmployeeSummary ToSummary();
 }

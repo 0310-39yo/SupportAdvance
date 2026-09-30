@@ -14,29 +14,41 @@ namespace SupportAdvance.Tests.Presentation.Shared.Tests.ViewModels;
 /// </summary>
 public class Form1ViewModelTests
 {
-    private readonly Mock<GetEmployeeByBizIdIntegrationUseCase> _useCase = new();
+    private readonly Mock<IQueryServiceWithBizId<IEmployee, EmployeeRowId>> _queryService = new();
 
     private Form1ViewModel CreateSut()
     {
+        var useCase = new GetEmployeeByBizIdIntegrationUseCase(
+            _queryService.Object,
+            Mock.Of<IAppLogging<GetEmployeeByBizIdIntegrationUseCase>>());
+
         return new Form1ViewModel(
             Mock.Of<IAppLogging<Form1ViewModel>>(),
             Mock.Of<IClock>(),
-            _useCase.Object);
+            useCase);
     }
 
-    private static IEmployeeQueryResult CreateEmployee()
+    private static IEmployee CreateEmployee()
     {
-        var employee = new Mock<IEmployeeQueryResult>();
-        employee.SetupGet(e => e.PersonLastName).Returns("山田");
-        employee.SetupGet(e => e.PersonFirstName).Returns("太郎");
-        employee.SetupGet(e => e.DepartmentNames).Returns("営業部");
+        var employee = new Mock<IEmployee>();
+        employee.Setup(e => e.ToSummary()).Returns(new EmployeeSummary(
+            RowId: 1,
+            TypeDivision: "Regular",
+            BizId: "100",
+            BizCode: "E100",
+            PersonRowId: 1,
+            PersonLastName: "山田",
+            PersonFirstName: "太郎",
+            PersonLastNameKana: "ヤマダ",
+            PersonFirstNameKana: "タロウ",
+            DepartmentNames: "営業部"));
         return employee.Object;
     }
 
     [Fact]
     public async Task Search_EmployeeFound_SetsFullNameAndDepartmentNames()
     {
-        _useCase.Setup(u => u.ExecuteAsync(100)).ReturnsAsync(CreateEmployee());
+        _queryService.Setup(q => q.GetByBizIdAsync(100)).ReturnsAsync(CreateEmployee());
         var sut = CreateSut();
         sut.BizIdSearchInput = "100";
 
@@ -49,8 +61,8 @@ public class Form1ViewModelTests
     [Fact]
     public async Task Search_EmployeeNotFound_ClearsPreviousDepartmentNames()
     {
-        _useCase.Setup(u => u.ExecuteAsync(100)).ReturnsAsync(CreateEmployee());
-        _useCase.Setup(u => u.ExecuteAsync(200)).ReturnsAsync((IEmployeeQueryResult?)null);
+        _queryService.Setup(q => q.GetByBizIdAsync(100)).ReturnsAsync(CreateEmployee());
+        _queryService.Setup(q => q.GetByBizIdAsync(200)).ReturnsAsync((IEmployee?)null);
         var sut = CreateSut();
         sut.BizIdSearchInput = "100";
         await sut.SearchEmployeeByBizIdCommand.ExecuteAsync(null);
@@ -67,7 +79,7 @@ public class Form1ViewModelTests
     [InlineData("   ")]
     public async Task Search_EmptyInput_ClearsResults(string input)
     {
-        _useCase.Setup(u => u.ExecuteAsync(100)).ReturnsAsync(CreateEmployee());
+        _queryService.Setup(q => q.GetByBizIdAsync(100)).ReturnsAsync(CreateEmployee());
         var sut = CreateSut();
         sut.BizIdSearchInput = "100";
         await sut.SearchEmployeeByBizIdCommand.ExecuteAsync(null);
@@ -77,7 +89,7 @@ public class Form1ViewModelTests
 
         Assert.Equal(string.Empty, sut.EmployeeFullName);
         Assert.Equal(string.Empty, sut.DepartmentNames);
-        _useCase.Verify(u => u.ExecuteAsync(It.IsAny<int>()), Times.Once);
+        _queryService.Verify(q => q.GetByBizIdAsync(It.IsAny<int>()), Times.Once);
     }
 
     [Fact]
@@ -89,13 +101,13 @@ public class Form1ViewModelTests
         await sut.SearchEmployeeByBizIdCommand.ExecuteAsync(null);
 
         Assert.StartsWith("入力エラー", sut.EmployeeFullName);
-        _useCase.Verify(u => u.ExecuteAsync(It.IsAny<int>()), Times.Never);
+        _queryService.Verify(q => q.GetByBizIdAsync(It.IsAny<int>()), Times.Never);
     }
 
     [Fact]
     public async Task Search_QueryThrows_ShowsErrorAndClearsDepartmentNames()
     {
-        _useCase.Setup(u => u.ExecuteAsync(100)).ThrowsAsync(new InvalidOperationException("boom"));
+        _queryService.Setup(q => q.GetByBizIdAsync(100)).ThrowsAsync(new InvalidOperationException("boom"));
         var sut = CreateSut();
         sut.BizIdSearchInput = "100";
 

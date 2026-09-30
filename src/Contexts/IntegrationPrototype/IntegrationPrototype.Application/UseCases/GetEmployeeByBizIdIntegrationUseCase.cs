@@ -1,6 +1,4 @@
 using SupportAdvance.Application.Queries;
-using SupportAdvance.Contexts.Employee.Application.Extensions;
-using SupportAdvance.Contexts.Employee.Domain.Entities;
 using SupportAdvance.Crosscutting.Logging;
 using SupportAdvance.SharedKernel.Entities;
 using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
@@ -20,13 +18,13 @@ namespace SupportAdvance.Contexts.IntegrationPrototype.Application.UseCases;
 /// <para>【依存関係】</para>
 /// <list type="bullet">
 /// <item><description>IQueryServiceWithBizId&lt;IEmployee, EmployeeRowId&gt;（汎用層）— Entity を返す標準パターン</description></item>
-/// <item><description>IEmployee, EmployeeRowId（SharedKernel）— BC間で共有可能な型</description></item>
-/// <item><description>EmployeeExtensions.ToDto（Employee Context の拡張メソッド）— Entity → DTO 変換</description></item>
+/// <item><description>IEmployee, EmployeeSummary, EmployeeRowId（SharedKernel）— BC間で共有可能な型</description></item>
+/// <item><description>Employee Context への参照なし ✓ BC間参照なし</description></item>
 /// </list>
 /// <para>【アーキテクチャ】</para>
 /// <list type="bullet">
 /// <item><description>IntegrationPrototype → ジェネリック Query Service（IQueryServiceWithBizId、汎用層）</description></item>
-/// <item><description>Entity → DTO 変換は IntegrationPrototype が責務を持つ</description></item>
+/// <item><description>IEmployee.ToSummary() の要約を IEmployeeQueryResult に詰め替えて返却（Employee の具象型には触れない）</description></item>
 /// </list>
 /// </remarks>
 public class GetEmployeeByBizIdIntegrationUseCase
@@ -58,7 +56,7 @@ public class GetEmployeeByBizIdIntegrationUseCase
     /// <para>【処理フロー】</para>
     /// <list type="number">
     /// <item><description>ジェネリック Query Service で Entity を取得</description></item>
-    /// <item><description>Entity を IEmployeeQueryResult（DTO）に変換</description></item>
+    /// <item><description>IEmployee.ToSummary() の要約を IEmployeeQueryResult に詰め替え</description></item>
     /// <item><description>DTO を返却（BC間での型隠蔽）</description></item>
     /// </list>
     /// </remarks>
@@ -82,10 +80,8 @@ public class GetEmployeeByBizIdIntegrationUseCase
                 return null;
             }
 
-            // Entity を DTO に変換して返却（BC間での型隠蔽）
-            // IEmployee インターフェース経由で受け取った Entity を具体型にキャストして拡張メソッドを呼び出す
-            var employeeEntity = (SupportAdvance.Contexts.Employee.Domain.Entities.Employee)employee;
-            var employeeResult = employeeEntity.ToDto();
+            // IEmployee が公開する要約を、結果の型に詰め替えて返却（BC間での型隠蔽）
+            var employeeResult = new EmployeeQueryResult(employee.ToSummary());
 
             _logger.LogInformation(
                 $"[IntegrationPrototype] Employee found: {employeeResult.PersonLastName} {employeeResult.PersonFirstName}, BizId: {bizId}");
@@ -96,5 +92,32 @@ public class GetEmployeeByBizIdIntegrationUseCase
             _logger.LogError($"[IntegrationPrototype] Failed to query Employee by BizId: {bizId}", ex);
             throw;
         }
+    }
+
+    /// <summary>
+    /// <see cref="EmployeeSummary"/> を <see cref="IEmployeeQueryResult"/> として公開する結果型
+    /// </summary>
+    /// <param name="Summary">Employee が公開する要約</param>
+    private sealed record EmployeeQueryResult(EmployeeSummary Summary) : IEmployeeQueryResult
+    {
+        public long RowId => Summary.RowId;
+
+        public string TypeDivision => Summary.TypeDivision;
+
+        public string BizId => Summary.BizId;
+
+        public string BizCode => Summary.BizCode;
+
+        public long PersonRowId => Summary.PersonRowId;
+
+        public string PersonLastName => Summary.PersonLastName;
+
+        public string PersonFirstName => Summary.PersonFirstName;
+
+        public string PersonLastNameKana => Summary.PersonLastNameKana;
+
+        public string PersonFirstNameKana => Summary.PersonFirstNameKana;
+
+        public string DepartmentNames => Summary.DepartmentNames;
     }
 }
