@@ -17,14 +17,10 @@ public class MainWindowViewModelTests
 {
     private static Form1ViewModel CreateForm1ViewModel()
     {
-        var useCase = new GetEmployeeByBizIdIntegrationUseCase(
-            Mock.Of<IEmployeeQueryService>(),
-            Mock.Of<IAppLogging<GetEmployeeByBizIdIntegrationUseCase>>());
-
         return new Form1ViewModel(
             Mock.Of<IAppLogging<Form1ViewModel>>(),
             Mock.Of<IClock>(),
-            useCase);
+            Mock.Of<GetEmployeeByBizIdIntegrationUseCase>());
     }
 
     private static MainWindowViewModel CreateSut(Form1ViewModel? form1ViewModel = null)

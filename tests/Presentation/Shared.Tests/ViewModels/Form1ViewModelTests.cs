@@ -4,6 +4,8 @@ using SupportAdvance.Common.Clocks;
 using SupportAdvance.Contexts.IntegrationPrototype.Application.UseCases;
 using SupportAdvance.Crosscutting.Logging;
 using SupportAdvance.Presentation.Shared.ViewModels;
+using SupportAdvance.SharedKernel.Entities;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 namespace SupportAdvance.Tests.Presentation.Shared.Tests.ViewModels;
 
@@ -12,18 +14,14 @@ namespace SupportAdvance.Tests.Presentation.Shared.Tests.ViewModels;
 /// </summary>
 public class Form1ViewModelTests
 {
-    private readonly Mock<IEmployeeQueryService> _queryService = new();
+    private readonly Mock<GetEmployeeByBizIdIntegrationUseCase> _useCase = new();
 
     private Form1ViewModel CreateSut()
     {
-        var useCase = new GetEmployeeByBizIdIntegrationUseCase(
-            _queryService.Object,
-            Mock.Of<IAppLogging<GetEmployeeByBizIdIntegrationUseCase>>());
-
         return new Form1ViewModel(
             Mock.Of<IAppLogging<Form1ViewModel>>(),
             Mock.Of<IClock>(),
-            useCase);
+            _useCase.Object);
     }
 
     private static IEmployeeQueryResult CreateEmployee()
@@ -38,7 +36,7 @@ public class Form1ViewModelTests
     [Fact]
     public async Task Search_EmployeeFound_SetsFullNameAndDepartmentNames()
     {
-        _queryService.Setup(q => q.GetByBizIdAsync(100)).ReturnsAsync(CreateEmployee());
+        _useCase.Setup(u => u.ExecuteAsync(100)).ReturnsAsync(CreateEmployee());
         var sut = CreateSut();
         sut.BizIdSearchInput = "100";
 
@@ -51,8 +49,8 @@ public class Form1ViewModelTests
     [Fact]
     public async Task Search_EmployeeNotFound_ClearsPreviousDepartmentNames()
     {
-        _queryService.Setup(q => q.GetByBizIdAsync(100)).ReturnsAsync(CreateEmployee());
-        _queryService.Setup(q => q.GetByBizIdAsync(200)).ReturnsAsync((IEmployeeQueryResult?)null);
+        _useCase.Setup(u => u.ExecuteAsync(100)).ReturnsAsync(CreateEmployee());
+        _useCase.Setup(u => u.ExecuteAsync(200)).ReturnsAsync((IEmployeeQueryResult?)null);
         var sut = CreateSut();
         sut.BizIdSearchInput = "100";
         await sut.SearchEmployeeByBizIdCommand.ExecuteAsync(null);
@@ -69,7 +67,7 @@ public class Form1ViewModelTests
     [InlineData("   ")]
     public async Task Search_EmptyInput_ClearsResults(string input)
     {
-        _queryService.Setup(q => q.GetByBizIdAsync(100)).ReturnsAsync(CreateEmployee());
+        _useCase.Setup(u => u.ExecuteAsync(100)).ReturnsAsync(CreateEmployee());
         var sut = CreateSut();
         sut.BizIdSearchInput = "100";
         await sut.SearchEmployeeByBizIdCommand.ExecuteAsync(null);
@@ -79,7 +77,7 @@ public class Form1ViewModelTests
 
         Assert.Equal(string.Empty, sut.EmployeeFullName);
         Assert.Equal(string.Empty, sut.DepartmentNames);
-        _queryService.Verify(q => q.GetByBizIdAsync(It.IsAny<int>()), Times.Once);
+        _useCase.Verify(u => u.ExecuteAsync(It.IsAny<int>()), Times.Once);
     }
 
     [Fact]
@@ -91,13 +89,13 @@ public class Form1ViewModelTests
         await sut.SearchEmployeeByBizIdCommand.ExecuteAsync(null);
 
         Assert.StartsWith("入力エラー", sut.EmployeeFullName);
-        _queryService.Verify(q => q.GetByBizIdAsync(It.IsAny<int>()), Times.Never);
+        _useCase.Verify(u => u.ExecuteAsync(It.IsAny<int>()), Times.Never);
     }
 
     [Fact]
     public async Task Search_QueryThrows_ShowsErrorAndClearsDepartmentNames()
     {
-        _queryService.Setup(q => q.GetByBizIdAsync(100)).ThrowsAsync(new InvalidOperationException("boom"));
+        _useCase.Setup(u => u.ExecuteAsync(100)).ThrowsAsync(new InvalidOperationException("boom"));
         var sut = CreateSut();
         sut.BizIdSearchInput = "100";
 

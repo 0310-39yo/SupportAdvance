@@ -20,7 +20,8 @@ public static class DependencyInjection
     /// <returns>メソッドチェーン用の <paramref name="services"/> 自身</returns>
     /// <exception cref="ArgumentNullException"><paramref name="services"/> が <see langword="null"/> の場合</exception>
     /// <remarks>
-    /// <para>【登録内容】<c>EmployeeQueryService</c> は 1 つのインスタンスを <c>IQueryServiceWithBizId</c>／<c>IQueryService</c>／<c>IEmployeeQueryService</c> の 3 つの型で共有（いずれも Scoped）</para>
+    /// <para>【登録内容】<c>EmployeeQueryService</c> は 1 つのインスタンスを <c>IQueryServiceWithBizId</c>／<c>IQueryService</c> の 2 つの型で共有（いずれも Scoped）</para>
+    /// <para>【アーキテクチャ】ジェネリック Query Service パターンに統一。他 Context が Entity → DTO 変換を責務とする</para>
     /// </remarks>
     public static IServiceCollection AddEmployeeApplicationModels(
         this IServiceCollection services)
@@ -40,13 +41,11 @@ public static class DependencyInjection
         // Query Service（Context間でのドメインモデル参照）
         // IEmployee インターフェース経由で参照を提供（Domain Entity は隠蔽）
         // IQueryServiceWithBizId を実装（BizId での検索対応）
-        // IEmployeeQueryService を実装（汎用層のインターフェース、BC間参照用）
+        // ジェネリック Query Service パターン：他 Context が Entity → DTO 変換を責務とする
         services.AddScoped<EmployeeQueryService>();
         services.AddScoped<IQueryServiceWithBizId<IEmployee, EmployeeRowId>>(sp =>
             sp.GetRequiredService<EmployeeQueryService>());
         services.AddScoped<IQueryService<IEmployee, EmployeeRowId>>(sp =>
-            sp.GetRequiredService<EmployeeQueryService>());
-        services.AddScoped<IEmployeeQueryService>(sp =>
             sp.GetRequiredService<EmployeeQueryService>());
 
         return services;

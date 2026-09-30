@@ -12,6 +12,7 @@
     <ProjectReference Include="..\..\..\SharedKernel\SharedKernel.csproj" />
     <ProjectReference Include="..\..\..\Crosscutting\Crosscutting.csproj" />
     <ProjectReference Include="..\IntegrationPrototype.Domain\IntegrationPrototype.Domain.csproj" />
+    <ProjectReference Include="..\..\..\Contexts\Employee\Employee.Application\Employee.Application.csproj" />
   </ItemGroup>
 
 </Project>

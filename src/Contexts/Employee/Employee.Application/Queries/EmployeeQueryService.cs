@@ -1,5 +1,4 @@
 using SupportAdvance.Application.Queries;
-using SupportAdvance.Contexts.Employee.Application.Dtos;
 using SupportAdvance.Contexts.Employee.Application.Repositories;
 using SupportAdvance.Contexts.Employee.Domain.ValueObjects.Employee;
 using SupportAdvance.SharedKernel.Entities;
@@ -11,11 +10,11 @@ namespace SupportAdvance.Contexts.Employee.Application.Queries;
 /// 他の Bounded Context からの従業員の読み取りを提供する、Employee 集約の問い合わせサービス
 /// </summary>
 /// <remarks>
-/// <para>【実装するインターフェース】<see cref="IQueryServiceWithBizId{TAggregate, TId}"/>（<see cref="IEmployee"/> を返す）と、
-/// <see cref="IEmployeeQueryService"/>（汎用層の <see cref="IEmployeeQueryResult"/> を返す、BC 間参照用）</para>
+/// <para>【実装するインターフェース】<see cref="IQueryServiceWithBizId{TAggregate, TId}"/>（<see cref="IEmployee"/> を返す、標準パターン）</para>
 /// <para>【依存関係】<see cref="IEmployeeRepository"/> のみ</para>
+/// <para>【アーキテクチャ】ジェネリック Query Service パターンに統一。他 Context が Entity → DTO 変換を責務とする</para>
 /// </remarks>
-public class EmployeeQueryService : IQueryServiceWithBizId<IEmployee, EmployeeRowId>, IEmployeeQueryService
+public class EmployeeQueryService : IQueryServiceWithBizId<IEmployee, EmployeeRowId>
 {
     private readonly IEmployeeRepository _repository;
 
@@ -64,35 +63,4 @@ public class EmployeeQueryService : IQueryServiceWithBizId<IEmployee, EmployeeRo
         return await _repository.GetByBizIdAsync(bizId);
     }
 
-    /// <summary>
-    /// BizId（ビジネスID）で Employee を検索する（IEmployeeQueryService 実装）
-    /// </summary>
-    /// <remarks>
-    /// <para>【責務】Repository 経由で Employee を取得し、EmployeeDto に変換</para>
-    /// <para>【戻り値】IEmployeeQueryResult インターフェース経由で返す（BC間参照用）</para>
-    /// <para>【用途】IntegrationPrototype など、他 Context が汎用層インターフェース経由でアクセス</para>
-    /// </remarks>
-    async Task<IEmployeeQueryResult?> IEmployeeQueryService.GetByBizIdAsync(int bizId)
-    {
-        if (bizId <= 0)
-        {
-            throw new ArgumentException("BizId must be greater than 0", nameof(bizId));
-        }
-
-        var employee = await _repository.GetByBizIdAsync(bizId);
-        return employee == null ? null : Extensions.EmployeeExtensions.ToDto(employee);
-    }
-
-    /// <summary>
-    /// EmployeeRowId で Employee を検索する（IEmployeeQueryService 実装）
-    /// </summary>
-    /// <remarks>
-    /// <para>【責務】Repository 経由で Employee を取得し、EmployeeDto に変換</para>
-    /// <para>【戻り値】IEmployeeQueryResult インターフェース経由で返す（BC間参照用）</para>
-    /// </remarks>
-    async Task<IEmployeeQueryResult?> IEmployeeQueryService.GetByRowIdAsync(long rowId)
-    {
-        var employee = await _repository.GetByIdAsync(EmployeeRowId.From(rowId));
-        return employee == null ? null : Extensions.EmployeeExtensions.ToDto(employee);
-    }
 }

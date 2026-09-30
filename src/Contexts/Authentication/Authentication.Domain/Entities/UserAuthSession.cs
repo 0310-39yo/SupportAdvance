@@ -91,9 +91,8 @@ public sealed class UserAuthSession : AggregateRoot<UserAuthSessionRowId>
         bool isAdAuthenticated,
         bool loginSuccess,
         LocalDateTime loggedInAt,
-        UsedLoginCredentialsRowId loginCredentialsRowId)
-    {
-        return new UserAuthSession(
+        UsedLoginCredentialsRowId loginCredentialsRowId) =>
+        new(
             id,
             authorityRowId,
             isAdAuthenticated,
@@ -101,7 +100,6 @@ public sealed class UserAuthSession : AggregateRoot<UserAuthSessionRowId>
             loggedInAt,
             LoggedOutAt.Unset(),
             loginCredentialsRowId);
-    }
 
     /// <summary>
     /// DB から読み込んだ値による認証セッションの復元（全項目指定）

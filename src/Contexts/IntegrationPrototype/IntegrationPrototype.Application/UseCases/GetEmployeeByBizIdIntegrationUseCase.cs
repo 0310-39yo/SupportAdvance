@@ -1,5 +1,9 @@
 using SupportAdvance.Application.Queries;
+using SupportAdvance.Contexts.Employee.Application.Extensions;
+using SupportAdvance.Contexts.Employee.Domain.Entities;
 using SupportAdvance.Crosscutting.Logging;
+using SupportAdvance.SharedKernel.Entities;
+using SupportAdvance.SharedKernel.ValueObjects.Identifiers;
 
 namespace SupportAdvance.Contexts.IntegrationPrototype.Application.UseCases;
 
@@ -9,35 +13,35 @@ namespace SupportAdvance.Contexts.IntegrationPrototype.Application.UseCases;
 /// <remarks>
 /// <para>【責務】</para>
 /// <list type="bullet">
-/// <item><description>汎用 Application層の IEmployeeQueryService 経由で Employee を取得</description></item>
+/// <item><description>ジェネリック Query Service（IQueryServiceWithBizId）経由で Employee Entity を取得</description></item>
+/// <item><description>Entity を IEmployeeQueryResult（DTO）に変換して返却</description></item>
 /// <item><description>Context間連携（BC間直接参照なし）のプロトタイプを示す</description></item>
 /// </list>
 /// <para>【依存関係】</para>
 /// <list type="bullet">
-/// <item><description>IEmployeeQueryService（汎用層）</description></item>
-/// <item><description>Employee Context Application への直接参照なし ✓ アーキテクチャ準拠</description></item>
-/// <item><description>Employee Context の型（EmployeeDto）への参照なし ✓ BC間参照なし</description></item>
+/// <item><description>IQueryServiceWithBizId&lt;IEmployee, EmployeeRowId&gt;（汎用層）— Entity を返す標準パターン</description></item>
+/// <item><description>IEmployee, EmployeeRowId（SharedKernel）— BC間で共有可能な型</description></item>
+/// <item><description>EmployeeExtensions.ToDto（Employee Context の拡張メソッド）— Entity → DTO 変換</description></item>
 /// </list>
 /// <para>【アーキテクチャ】</para>
 /// <list type="bullet">
-/// <item><description>IntegrationPrototype → 汎用 Application層（IEmployeeQueryService）</description></item>
-/// <item><description>Employee Context が汎用層のインターフェースを実装</description></item>
-/// <item><description>BC間の直接参照を完全に回避（型参照も含む）</description></item>
+/// <item><description>IntegrationPrototype → ジェネリック Query Service（IQueryServiceWithBizId、汎用層）</description></item>
+/// <item><description>Entity → DTO 変換は IntegrationPrototype が責務を持つ</description></item>
 /// </list>
 /// </remarks>
 public class GetEmployeeByBizIdIntegrationUseCase
 {
-    private readonly IEmployeeQueryService _employeeQuery;
+    private readonly IQueryServiceWithBizId<IEmployee, EmployeeRowId> _employeeQuery;
     private readonly IAppLogging<GetEmployeeByBizIdIntegrationUseCase> _logger;
 
     /// <summary>
     /// <see cref="GetEmployeeByBizIdIntegrationUseCase"/> クラスの新しいインスタンスの初期化
     /// </summary>
-    /// <param name="employeeQuery">汎用層経由で従業員を検索する問い合わせサービス</param>
+    /// <param name="employeeQuery">ジェネリック Query Service（汎用層）</param>
     /// <param name="logger">ログの出力先</param>
     /// <exception cref="ArgumentNullException">いずれかの引数が <see langword="null"/> の場合</exception>
     public GetEmployeeByBizIdIntegrationUseCase(
-        IEmployeeQueryService employeeQuery,
+        IQueryServiceWithBizId<IEmployee, EmployeeRowId> employeeQuery,
         IAppLogging<GetEmployeeByBizIdIntegrationUseCase> logger)
     {
         _employeeQuery = employeeQuery ?? throw new ArgumentNullException(nameof(employeeQuery));
@@ -45,14 +49,18 @@ public class GetEmployeeByBizIdIntegrationUseCase
     }
 
     /// <summary>
-    /// BizId で Employee を検索（汎用層経由）
+    /// BizId で Employee を検索（ジェネリック Query Service 経由）
     /// </summary>
     /// <param name="bizId">ビジネスID（従業員番号、1以上）</param>
-    /// <returns>見つかった従業員のクエリ結果（IEmployeeQueryResult）、または null</returns>
+    /// <returns>見つかった従業員のクエリ結果（IEmployeeQueryResult DTO）、または null</returns>
     /// <exception cref="ArgumentException">bizId が無効な場合</exception>
     /// <remarks>
-    /// <para>【責務】Query Service 経由で IEmployeeQueryResult を取得</para>
-    /// <para>【特徴】Employee Context の型に依存しない（汎用層のインターフェースのみ）</para>
+    /// <para>【処理フロー】</para>
+    /// <list type="number">
+    /// <item><description>ジェネリック Query Service で Entity を取得</description></item>
+    /// <item><description>Entity を IEmployeeQueryResult（DTO）に変換</description></item>
+    /// <item><description>DTO を返却（BC間での型隠蔽）</description></item>
+    /// </list>
     /// </remarks>
     public async Task<IEmployeeQueryResult?> ExecuteAsync(int bizId)
     {
@@ -65,16 +73,19 @@ public class GetEmployeeByBizIdIntegrationUseCase
 
         try
         {
-            // 汎用 Application層の Query Service 経由で Employee を取得
-            // BC間直接参照なし、アーキテクチャ準拠
-            // 戻り値は IEmployeeQueryResult（汎用層のインターフェース）
-            var employeeResult = await _employeeQuery.GetByBizIdAsync(bizId);
+            // ジェネリック Query Service 経由で Employee Entity を取得
+            var employee = await _employeeQuery.GetByBizIdAsync(bizId);
 
-            if (employeeResult == null)
+            if (employee == null)
             {
                 _logger.LogInformation($"[IntegrationPrototype] No employee found for BizId: {bizId}");
                 return null;
             }
+
+            // Entity を DTO に変換して返却（BC間での型隠蔽）
+            // IEmployee インターフェース経由で受け取った Entity を具体型にキャストして拡張メソッドを呼び出す
+            var employeeEntity = (SupportAdvance.Contexts.Employee.Domain.Entities.Employee)employee;
+            var employeeResult = employeeEntity.ToDto();
 
             _logger.LogInformation(
                 $"[IntegrationPrototype] Employee found: {employeeResult.PersonLastName} {employeeResult.PersonFirstName}, BizId: {bizId}");
