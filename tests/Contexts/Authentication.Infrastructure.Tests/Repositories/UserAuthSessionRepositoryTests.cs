@@ -7,6 +7,7 @@ using SupportAdvance.Common.Configuration;
 using SupportAdvance.Contexts.Authentication.Application.Repositories;
 using SupportAdvance.Contexts.Authentication.Domain.Entities;
 using SupportAdvance.Contexts.Authentication.Domain.ValueObjects;
+using SupportAdvance.Contexts.Authentication.Infrastructure.Mappers;
 using SupportAdvance.Contexts.Authentication.Infrastructure.Repositories;
 using SupportAdvance.Infrastructure.Persistence;
 using SupportAdvance.Infrastructure.Providers;
@@ -57,7 +58,8 @@ public class UserAuthSessionRepositoryTests : RepositoryTestBase
 
         // 【重要】リポジトリにもテスト用シーケンス（s_test_row_id_sequence）を渡す。
         //         本番シーケンス（s_row_id_sequence）は、テストでは消費しない。
-        _repository = new UserAuthSessionRepository(_connectionFactory, _clock, queryLoader, _testSequenceProvider);
+        _repository = new UserAuthSessionRepository(_connectionFactory, _clock, queryLoader, _testSequenceProvider,
+            new UserAuthSessionMapper());
         return Task.CompletedTask;
     }
 

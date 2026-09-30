@@ -49,18 +49,20 @@ public class UserAuthSessionRepository : IUserAuthSessionRepository
     /// <param name="clock">監査列（<c>*_at</c>）に記録する現在時刻（JST）の取得元</param>
     /// <param name="sqlQueryLoader">検索用 SQL ファイルの読み込み元</param>
     /// <param name="sequenceProvider">行ID の採番元</param>
+    /// <param name="mapper">Entity と DbModel の変換</param>
     /// <exception cref="ArgumentNullException">いずれかの引数が <see langword="null"/> の場合</exception>
     public UserAuthSessionRepository(
         IDbConnectionFactory connectionFactory,
         IClock clock,
         SqlQueryLoader sqlQueryLoader,
-        ISequenceProvider sequenceProvider)
+        ISequenceProvider sequenceProvider,
+        UserAuthSessionMapper mapper)
     {
         _connectionFactory = connectionFactory ?? throw new ArgumentNullException(nameof(connectionFactory));
         _clock = clock ?? throw new ArgumentNullException(nameof(clock));
         _sqlQueryLoader = sqlQueryLoader ?? throw new ArgumentNullException(nameof(sqlQueryLoader));
         _sequenceProvider = sequenceProvider ?? throw new ArgumentNullException(nameof(sequenceProvider));
-        _mapper = new UserAuthSessionMapper();
+        _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
     }
 
     /// <summary>

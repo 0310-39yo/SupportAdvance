@@ -17,7 +17,7 @@ using SupportAdvance.Crosscutting;
 using SupportAdvance.Infrastructure;
 using SupportAdvance.Application.Abstractions.Services;
 using SupportAdvance.Presentation.Shared;
-using SupportAdvance.Presentation.WinTrial.Services;
+using SupportAdvance.Presentation.Shared.Services;
 using SupportAdvance.Presentation.WinTrial.Views;
 
 namespace SupportAdvance.Presentation.WinTrial;

@@ -17,7 +17,7 @@ using SupportAdvance.Contexts.IntegrationPrototype.Application;
 using SupportAdvance.Crosscutting;
 using SupportAdvance.Infrastructure;
 using SupportAdvance.Presentation.Shared;
-using SupportAdvance.Presentation.WpfTrial.Services;
+using SupportAdvance.Presentation.Shared.Services;
 using SupportAdvance.Presentation.WpfTrial.Views;
 using Syncfusion.SfSkinManager;
 using System.Windows;

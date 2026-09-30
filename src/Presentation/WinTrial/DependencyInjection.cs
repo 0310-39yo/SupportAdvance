@@ -1,5 +1,4 @@
 using Microsoft.Extensions.DependencyInjection;
-using SupportAdvance.Contexts.Employee.Application.UseCases;
 using SupportAdvance.Presentation.Shared;
 using SupportAdvance.Presentation.Shared.ViewModels;
 using SupportAdvance.Presentation.WinTrial.Views;
@@ -20,9 +19,6 @@ public static class DependencyInjection
     public static IServiceCollection AddWinTrialModules(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);
-
-        // Use Cases（Presentation が直接使用する場合）
-        services.AddScoped<GetEmployeeByBizIdUseCase>();
 
         // ViewModels（Presentation.Shared の共通 ViewModel。ViewModel に Use Case を DI する）
         // アプリケーションの識別情報（オープニング画面に表示する名前）

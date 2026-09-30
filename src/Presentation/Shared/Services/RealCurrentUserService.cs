@@ -2,7 +2,7 @@ using SupportAdvance.Application.Abstractions.Services;
 using SupportAdvance.Common.Clocks;
 using EmployeeRowIdVo = SupportAdvance.SharedKernel.ValueObjects.Identifiers.EmployeeRowId;
 
-namespace SupportAdvance.Presentation.WpfTrial.Services;
+namespace SupportAdvance.Presentation.Shared.Services;
 
 /// <summary>
 /// 現在のユーザー情報サービス 実装
@@ -22,7 +22,7 @@ namespace SupportAdvance.Presentation.WpfTrial.Services;
 /// <para>【スレッドセーフティ】</para>
 /// <list type="bullet">
 /// <item><description>UI スレッドでのみ実行される前提</description></item>
-/// <item><description>WPF の Dispatcher に依存</description></item>
+/// <item><description>UI フレームワーク（WinForms / WPF）に依存しない</description></item>
 /// </list>
 /// </remarks>
 public sealed class RealCurrentUserService : ICurrentUserService
