@@ -21,12 +21,12 @@
         <syncfusion:ButtonAdv Grid.Row="0"
                 Label="テストボタン"
                 HorizontalAlignment="Left"
-                Width="125"
+                Width="100"
                 SizeMode="Normal"
                 IconWidth="0"
                 IconHeight="0"
                 FontFamily="Yu Gothic UI"
-                FontSize="18"
+                FontSize="14"
                 Command="{Binding ExecuteSampleUseCaseCommand}" />
 
         <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,16,0,0">
@@ -42,7 +42,7 @@
                     IconWidth="0"
                     IconHeight="0"
                     FontFamily="Yu Gothic UI"
-                    FontSize="18"
+                    FontSize="14"
                     Command="{Binding SearchEmployeeByBizIdCommand}" />
             <TextBlock Text="{Binding EmployeeFullName}"
                        VerticalAlignment="Center"
