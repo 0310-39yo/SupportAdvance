@@ -40,6 +40,11 @@ public partial class App : System.Windows.Application
     private IHost? _host;
 
     /// <summary>
+    /// ログイン画面とメイン画面が共有する DI スコープ（<see cref="OnExit"/> で破棄）
+    /// </summary>
+    private IServiceScope? _uiScope;
+
+    /// <summary>
     /// DI ホストの構築と、ログインウィンドウ → メインウィンドウの起動
     /// </summary>
     /// <param name="e">起動イベントの引数</param>
@@ -95,14 +100,15 @@ public partial class App : System.Windows.Application
         // MainWindow 表示まではアプリ終了を抑止する。
         ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
-        var scope = _host.Services.CreateScope();
-        var loginWindow = scope.ServiceProvider.GetRequiredService<LoginWindow>();
+        // ウィンドウが使い続けるためここでは破棄せず、OnExit で破棄する
+        _uiScope = _host.Services.CreateScope();
+        var loginWindow = _uiScope.ServiceProvider.GetRequiredService<LoginWindow>();
         var loginResult = loginWindow.ShowDialog();
 
         if (loginResult == true)
         {
             // ログイン成功時は MainWindow を表示
-            var mainWindow = scope.ServiceProvider.GetRequiredService<MainWindow>();
+            var mainWindow = _uiScope.ServiceProvider.GetRequiredService<MainWindow>();
             MainWindow = mainWindow;
             ShutdownMode = ShutdownMode.OnMainWindowClose;
             mainWindow.Show();
@@ -126,6 +132,7 @@ public partial class App : System.Windows.Application
     /// <list type="number">
     /// <item><description>ログイン中のセッションをログアウト（LogoutUseCase で logged_out_at を DB に記録）</description></item>
     /// <item><description>BusinessDayClockの場合は業務日の終了（OFF）</description></item>
+    /// <item><description>ウィンドウが使っていた DI スコープを破棄</description></item>
     /// <item><description>DI ホストを停止</description></item>
     /// <item><description>リソースを解放</description></item>
     /// </list>
@@ -177,7 +184,18 @@ public partial class App : System.Windows.Application
 
         try
         {
-            // ステップ3: DI ホストの停止と破棄
+            // ステップ3: ウィンドウが使っていた DI スコープの破棄（ホストの破棄より先に行う）
+            _uiScope?.Dispose();
+            _uiScope = null;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"UI scope cleanup failed: {ex.Message}");
+        }
+
+        try
+        {
+            // ステップ4: DI ホストの停止と破棄
             _host?.StopAsync().GetAwaiter().GetResult();
             _host?.Dispose();
         }
